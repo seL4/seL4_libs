@@ -1,0 +1,52 @@
+#
+# Copyright 2014, NICTA
+#
+# This software may be distributed and modified according to the terms of
+# the BSD 2-Clause license. Note that NO WARRANTY is provided.
+# See "LICENSE_BSD2.txt" for details.
+#
+# @TAG(NICTA_BSD)
+#
+
+menuconfig LIB_SEL4_MUSLC_SYS
+    bool "Minimal muslc syscall"
+    default y
+    depends on LIB_SEL4 && LIB_MUSL_C && LIB_SEL4_UTILS && LIB_SEL4_VSPACE && LIB_CPIO
+    help
+        Minimal muslc syscall implementation for seL4.
+
+config LIB_SEL4_MUSLC_SYS_MORECORE_BYTES
+    int "Malloc limit"
+    default 1048576
+    depends on LIB_SEL4_MUSLC_SYS
+    help
+        This value sets the number of bytes reserved for the region malloc
+        allocates from. Note that you won't actually be able to allocate this
+        entire amount because there is some bookkeeping overhead. This area is
+        allocated statically.
+
+config LIB_SEL4_MUSLC_SYS_DEBUG_HALT
+    bool "Perform seL4_DebugHalt on _exit and _abort"
+    default true
+    depends on LIB_SEL4_MUSLC_SYS
+    help
+        Controls whether or not a DebugHalt should be called to implement Exit
+        style syscalls. This is useful if you have a single app and thread, but
+        should be turned off if using multiple threads that may wish to exit
+        independently of the whole system
+
+config LIB_SEL4_MUSLC_SYS_CPIO_FS
+    bool "Implementation of a simple file system using CPIO archives"
+    default false
+    depends on LIB_SEL4_MUSLC_SYS
+    help
+        If this is enabled open and read syscalls will attempt to use the cpio archive
+        _cpio_archive. This implements a basic read only POSIX interface to that file system
+
+config LIB_SEL4_MUSLC_SYS_ARCH_PUTCHAR_WEAK
+    bool "Make __arch_putchar a weak symbol"
+    default n
+    depends on LIB_SEL4_MUSLC_SYS
+    help
+        This allows you to override __arch_putchar in another library or your
+	application.

@@ -14,172 +14,270 @@
  *         Qian Ge
  */
 
-#include <assert.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
+
 #include <sel4/sel4.h>
+#include <vka/capops.h>
 
-#include "vmm/config.h"
+#include "vmm/debug.h"
 #include "vmm/vmm.h"
-#include "vmm/vmexit.h"
-#include "vmm/vmcs.h"
+#include "vmm/platform/boot_guest.h"
 
-/* The guest control block that belongs to this vmm. */
-gcb_t vmm_gc;
+static void vmm_sync_guest_context(vmm_t *vmm) {
+    if (IS_MACHINE_STATE_MODIFIED(vmm->guest_state.machine.context)) {
+        seL4_UserContext context;
+        context.eip = vmm_read_user_context(&vmm->guest_state, USER_CONTEXT_EIP);
+        context.esp = vmm_read_user_context(&vmm->guest_state, USER_CONTEXT_ESP);
+        context.eflags = vmm_read_user_context(&vmm->guest_state, USER_CONTEXT_EFLAGS);
+        context.eax = vmm_read_user_context(&vmm->guest_state, USER_CONTEXT_EAX);
+        context.ebx = vmm_read_user_context(&vmm->guest_state, USER_CONTEXT_EBX);
+        context.ecx = vmm_read_user_context(&vmm->guest_state, USER_CONTEXT_ECX);
+        context.edx = vmm_read_user_context(&vmm->guest_state, USER_CONTEXT_EDX);
+        context.esi = vmm_read_user_context(&vmm->guest_state, USER_CONTEXT_ESI);
+        context.edi = vmm_read_user_context(&vmm->guest_state, USER_CONTEXT_EDI);
+        context.ebp = vmm_read_user_context(&vmm->guest_state, USER_CONTEXT_EBP);
+        context.tls_base = vmm_read_user_context(&vmm->guest_state, USER_CONTEXT_TLS_BASE);
+        context.fs = vmm_read_user_context(&vmm->guest_state, USER_CONTEXT_FS);
+        context.gs = vmm_read_user_context(&vmm->guest_state, USER_CONTEXT_GS);
+        seL4_TCB_WriteRegisters(vmm->guest_tcb, false, 0, 13, &context);
+        /* Sync our context */
+        MACHINE_STATE_SYNC(vmm->guest_state.machine.context);
+    }
+}
 
-static vmexit_handler_ptr vmexit_handlers[VMM_EXIT_REASON_NUM];
+static void vmm_reply_vm_exit(vmm_t *vmm) {
+    assert(vmm->guest_state.exit.in_exit);
+    int msg_len = 0;
 
-/*reply vm exit exception, guest OS is resumed*/
-static void vmm_reply_vm_exit(void) {
+    if (IS_MACHINE_STATE_MODIFIED(vmm->guest_state.machine.context)) {
+        seL4_SetMR(0, vmm_read_user_context(&vmm->guest_state, USER_CONTEXT_EIP));
+        seL4_SetMR(1, vmm_read_user_context(&vmm->guest_state, USER_CONTEXT_ESP));
+        seL4_SetMR(2, vmm_read_user_context(&vmm->guest_state, USER_CONTEXT_EFLAGS));
+        seL4_SetMR(3, vmm_read_user_context(&vmm->guest_state, USER_CONTEXT_EAX));
+        seL4_SetMR(4, vmm_read_user_context(&vmm->guest_state, USER_CONTEXT_EBX));
+        seL4_SetMR(5, vmm_read_user_context(&vmm->guest_state, USER_CONTEXT_ECX));
+        seL4_SetMR(6, vmm_read_user_context(&vmm->guest_state, USER_CONTEXT_EDX));
+        seL4_SetMR(7, vmm_read_user_context(&vmm->guest_state, USER_CONTEXT_ESI));
+        seL4_SetMR(8, vmm_read_user_context(&vmm->guest_state, USER_CONTEXT_EDI));
+        seL4_SetMR(9, vmm_read_user_context(&vmm->guest_state, USER_CONTEXT_EBP));
+        seL4_SetMR(10, vmm_read_user_context(&vmm->guest_state, USER_CONTEXT_TLS_BASE));
+        seL4_SetMR(11, vmm_read_user_context(&vmm->guest_state, USER_CONTEXT_FS));
+        seL4_SetMR(12, vmm_read_user_context(&vmm->guest_state, USER_CONTEXT_GS));
+        /* Sync our context */
+        MACHINE_STATE_SYNC(vmm->guest_state.machine.context);
+        msg_len = 13;
+    }
 
-    seL4_SetMR(0, vmm_gc.context.eip);
-    seL4_SetMR(1, vmm_gc.context.esp);
-    seL4_SetMR(2, vmm_gc.context.eflags);
-    seL4_SetMR(3, vmm_gc.context.eax);
-    seL4_SetMR(4, vmm_gc.context.ebx);
-    seL4_SetMR(5, vmm_gc.context.ecx);
-    seL4_SetMR(6, vmm_gc.context.edx);
-    seL4_SetMR(7, vmm_gc.context.esi);
-    seL4_SetMR(8, vmm_gc.context.edi);
-    seL4_SetMR(9, vmm_gc.context.ebp);
-    seL4_SetMR(10, vmm_gc.context.tls_base);
-    seL4_SetMR(11, vmm_gc.context.fs);
-    seL4_SetMR(12, vmm_gc.context.gs);
+    seL4_MessageInfo_t msg = seL4_MessageInfo_new(0, 0, 0, msg_len);
 
-    seL4_MessageInfo_t msg = seL4_MessageInfo_new(0, 0, 0, 13);
+    /* Before we resume the guest, ensure there is no dirty state around */
+    assert(vmm_guest_state_no_modified(&vmm->guest_state));
+    vmm_guest_state_invalidate_all(&vmm->guest_state);
 
-    seL4_Reply(msg);
+    seL4_Send(vmm->reply_slot.capPtr, msg);
 
+    vmm->guest_state.exit.in_exit = 0;
+}
+
+static void vmm_sync_guest_state(vmm_t *vmm) {
+    vmm_guest_state_sync_control_entry(&vmm->guest_state, vmm->guest_vcpu);
+    vmm_guest_state_sync_control_ppc(&vmm->guest_state, vmm->guest_vcpu);
+    vmm_guest_state_sync_cr0(&vmm->guest_state, vmm->guest_vcpu);
+    vmm_guest_state_sync_cr3(&vmm->guest_state, vmm->guest_vcpu);
+    vmm_guest_state_sync_cr4(&vmm->guest_state, vmm->guest_vcpu);
+
+    if (vmm->guest_state.exit.in_exit && !vmm->guest_state.virt.interrupt_halt) {
+        /* Guest is blocked, but we are no longer halted. Reply to it */
+        vmm_reply_vm_exit(vmm);
+    }
 }
 
 
 /* Handle VM exit in VMM module. */
-static void vmm_handle_vm_exit(seL4_Word sender) {
-
-    /* Save the guest context. */
-    unsigned int reason = seL4_GetMR(0);
-    vmm_gc.reason = seL4_GetMR(0);
-    vmm_gc.qualification = seL4_GetMR(1);
-    vmm_gc.instruction_length = seL4_GetMR(2);
-    vmm_gc.guest_physical = seL4_GetMR(3);
-    vmm_gc.rflags = seL4_GetMR(4);
-    vmm_gc.guest_interruptibility = seL4_GetMR(5);
-    vmm_gc.control_entry = seL4_GetMR(6);
-    vmm_gc.cr3 = seL4_GetMR(7);
-    vmm_gc.sender = sender;
-
-    vmm_gc.context.eip = seL4_GetMR(8);
-    vmm_gc.context.esp = seL4_GetMR(9);
-    vmm_gc.context.eflags = seL4_GetMR(10);
-    vmm_gc.context.eax = seL4_GetMR(11);
-    vmm_gc.context.ebx = seL4_GetMR(12);
-    vmm_gc.context.ecx = seL4_GetMR(13);
-    vmm_gc.context.edx = seL4_GetMR(14);
-    vmm_gc.context.esi = seL4_GetMR(15);
-    vmm_gc.context.edi = seL4_GetMR(16);
-    vmm_gc.context.ebp = seL4_GetMR(17);
-    vmm_gc.context.tls_base = seL4_GetMR(18);
-    vmm_gc.context.fs = seL4_GetMR(19);
-    vmm_gc.context.gs = seL4_GetMR(20);
-
-    vmm_gc.cr0 = vmm_vmcs_read(LIB_VMM_VCPU_CAP, VMX_GUEST_CR0);
-    vmm_gc.cr4 = vmm_vmcs_read(LIB_VMM_VCPU_CAP, VMX_GUEST_CR4);
+static void vmm_handle_vm_exit(vmm_t *vmm) {
+    int reason = vmm_guest_exit_get_reason(&vmm->guest_state);
 
     /* Distribute the task according to the exit info. */
-    vmm_print_guest_context(3);
+    vmm_print_guest_context(3, vmm);
 
-    if (!vmexit_handlers[reason]) {
+    if (!vmm->vmexit_handlers[reason]) {
         printf("VM_FATAL_ERROR ::: vm exit handler is NULL for reason 0x%x.\n", reason);
-        vmm_print_guest_context(0);
+        vmm_print_guest_context(0, vmm);
         return;
     }
 
     /* Call the handler. */
-    if (vmexit_handlers[reason](&vmm_gc) != LIB_VMM_SUCC) {
+    if (vmm->vmexit_handlers[reason](vmm)) {
         printf("VM_FATAL_ERROR ::: vmexit handler return error\n");
-        vmm_print_guest_context(0);
+        vmm_print_guest_context(0, vmm);
         return;
     }
 
     /* Reply to the VM exit exception to resume guest. */
-    vmm_reply_vm_exit();
+    vmm_sync_guest_state(vmm);
 }
 
+static void vmm_update_guest_state_from_fault(vmm_t *vmm, seL4_Word *msg) {
+    assert(vmm->guest_state.exit.in_exit);
+    vmm->guest_state.exit.reason = msg[0];
+    vmm->guest_state.exit.qualification = msg[1];
+    vmm->guest_state.exit.instruction_length = msg[2];
+    vmm->guest_state.exit.guest_physical = msg[3];
 
+    MACHINE_STATE_READ(vmm->guest_state.machine.rflags, msg[4]);
+    MACHINE_STATE_READ(vmm->guest_state.machine.guest_interruptibility, msg[5]);
+    MACHINE_STATE_READ(vmm->guest_state.machine.control_entry, msg[6]);
+
+    MACHINE_STATE_READ(vmm->guest_state.machine.cr3, msg[7]);
+
+    seL4_UserContext context;
+    context.eip = msg[8];
+    context.esp = msg[9];
+    context.eflags = msg[10];
+    context.eax = msg[11];
+    context.ebx = msg[12];
+    context.ecx = msg[13];
+    context.edx = msg[14];
+    context.esi = msg[15];
+    context.edi = msg[16];
+    context.ebp = msg[17];
+    context.tls_base = msg[18];
+    context.fs = msg[19];
+    context.gs = msg[20];
+    MACHINE_STATE_READ(vmm->guest_state.machine.context, context);
+}
+
+void interrupt_pending_callback(vmm_t *vmm)
+{
+    /* TODO: there is a really annoying race between our need to stop the guest thread
+     * so that we can inspect its state and potentially inject an interrupt (this
+     * is done in vmm_have_pending_interrupt). Unfortunatley if we just stop it
+     * and it has decided to fault, we will lose the fault message. One option
+     * is a 'SuspendIf' style syscall, however this requires kernel changes
+     * that are maybe disagreeable. The other option is to ask the kernel to atomically
+     * inspect the state, inject if possible, and the ntell you waht happened. THis
+     * is the approach we will eventually use, but it requires 'locking' the interrupt
+     * controller such that you can poll the current interrupt, and then still have
+     * that be the current pending interrupt after calling the kernel and then
+     * knowing if it was actually injected or not. Do this once interrupt overhead
+     * starts to matter */
+    if (vmm->guest_state.exit.in_exit) {
+        /* in an exit, can call the regular injection method */
+        vmm_have_pending_interrupt(vmm);
+        vmm_sync_guest_state(vmm);
+    } else {
+        /* Make the guest exit as soon as possible so that we handle this
+         * from a fault context */
+        wait_for_guest_ready(vmm);
+        vmm_guest_state_sync_control_ppc(&vmm->guest_state, vmm->guest_vcpu);
+    }
+#if 0
+    int did_suspend = 0;
+    /* Pause the guest so we can sensibly inspect its state, unless it is
+     * already blocked */
+    if (!vmm->guest_state.exit.in_exit) {
+        int state = seL4_TCB_SuspendIf(vmm->guest_tcb);
+        if (!state) {
+            did_suspend = 1;
+            /* All state is invalid as the guest was running */
+            vmm_guest_state_invalidate_all(&vmm->guest_state);
+        }
+    }
+    vmm_have_pending_interrupt(vmm);
+    vmm_sync_guest_state(vmm);
+    if (did_suspend) {
+        seL4_TCB_Resume(vmm->guest_tcb);
+        /* Guest is running, everything invalid again */
+        vmm_guest_state_invalidate_all(&vmm->guest_state);
+    }
+#endif
+}
 
 /* Entry point of of VMM main host module. */
-void vmm_run(void) {
-    seL4_MessageInfo_t msg;
-    seL4_Word sender;
-    seL4_Word msg_len, msg_label; 
-    int halted = 0;
+void vmm_run(vmm_t *vmm) {
+    DPRINTF(2, "VMM MAIN HOST MODULE STARTED\n");
 
-    dprintf(2, "VMM MAIN HOST MODULE STARTED\n");
+    vmm->guest_state.virt.interrupt_halt = 0;
+    vmm->guest_state.exit.in_exit = 0;
 
-    /* Init value for managing guest OS. */
-    vmm_gc.cr0_mask = VMM_VMCS_CR0_MASK;
-    vmm_gc.cr0_shadow = VMM_VMCS_CR0_SHADOW;
-    vmm_gc.cr0 = VMM_VMCS_CR0_SHADOW;
+    /* sync the existing guest state */
+    vmm_sync_guest_state(vmm);
+    vmm_sync_guest_context(vmm);
+    /* now invalidate everything */
+    assert(vmm_guest_state_no_modified(&vmm->guest_state));
+    vmm_guest_state_invalidate_all(&vmm->guest_state);
 
-    vmm_gc.cr4_mask = VMM_VMCS_CR4_MASK;
-    vmm_gc.cr4_shadow = VMM_VMCS_CR4_SHADOW;
-    vmm_gc.cr4 = VMM_VMCS_CR4_SHADOW;
-    vmm_gc.interrupt_halt = 0;
+    /* Start the guest running */
+    seL4_TCB_Resume(vmm->guest_tcb);
+
+    /* Get our interrupt pending callback happening */
+    seL4_TCB_BindAEP(simple_get_init_cap(&vmm->host_simple, seL4_CapInitThreadTCB), vmm->plat_callbacks.get_int_pending_aep());
 
     while (1) {
         /* Block and wait for incoming msg or VM exits. */
-        msg = seL4_Wait(LIB_VMM_GUEST_OS_FAULT_EP_CAP, &sender);
-        msg_len = seL4_MessageInfo_get_length(msg);
-        msg_label = seL4_MessageInfo_ptr_get_label(&msg);
+        seL4_Word badge;
+        seL4_MessageInfo_t msg = seL4_Wait(vmm->guest_fault_ep, &badge);
 
-        dprintf(3, "VMM: receive msg from %d len %d label %d\n", sender, msg_len, msg_label);
-        (void) msg_label;
+        seL4_Word msg_len = seL4_MessageInfo_get_length(msg);
 
-        vmm_print_ipc_msg(msg_len);
 
-        if (sender & LIB_VMM_DRIVER_ASYNC_MESSAGE_BADGE) {
-            /* Received some kind of async notification. Currently assume
-             * this means pending interrupt from the interrupt handler.
-             * Assume interrupts are only for guest 0. TODO: proper support for interrupt
-             * distribution to multiple guests. */
-            vmm_gc.sender = LIB_VMM_GUEST_OS_BADGE_START;
-            vmm_have_pending_interrupt(&vmm_gc);
-
-        } else if (seL4_MessageInfo_get_length(msg) == LIB_VMM_VM_EXIT_MSG_LEN) {
-            /* Received a guest OS VM Exit message from the seL4 kernel. */
-            vmm_handle_vm_exit(sender);
-        } else {
-            panic("VMM main host module :: unknown message recieved.\n");
+        if (badge != LIB_VMM_GUEST_OS_FAULT_EP_BADGE) {
+            /* assume interrupt */
+            interrupt_pending_callback(vmm);
+            continue;
         }
-        int new_halted = vmm_gc.interrupt_halt;
-        if (!halted && new_halted) {
-            /* suspend */
-            seL4_TCB_Suspend(LIB_VMM_GUEST_TCB_CAP);
-        }
-        if (halted && !new_halted) {
-            /* resume */
-            seL4_TCB_Resume(LIB_VMM_GUEST_TCB_CAP);
-        }
-        halted = new_halted;
 
-        dprintf(5, "VMM main host blocking for another message...\n");
+        /* We only accept guest faults */
+        assert(msg_len == LIB_VMM_VM_EXIT_MSG_LEN);
+
+        seL4_Word fault_message[LIB_VMM_VM_EXIT_MSG_LEN];
+        for (int i = 0 ; i < LIB_VMM_VM_EXIT_MSG_LEN; i++) {
+            fault_message[i] = seL4_GetMR(i);
+        }
+
+        vka_cnode_saveCaller(&vmm->reply_slot);
+
+        /* Set all our state to invalid as we just received a fault and
+         * none of it can conceivably be valid */
+        vmm_guest_state_invalidate_all(&vmm->guest_state);
+
+        /* We in a fault */
+        vmm->guest_state.exit.in_exit = 1;
+        /* Save the information we got in the fault */
+        vmm_update_guest_state_from_fault(vmm, fault_message);
+
+        /* Handle the vm exit */
+        vmm_handle_vm_exit(vmm);
+
+        DPRINTF(5, "VMM main host blocking for another message...\n");
     }
 
 }
 
-
-/* Initialise VMM library. */
-void vmm_init(void) {
+static void vmm_exit_init(vmm_t *vmm) {
     /* Connect VM exit handlers to correct function pointers */
-    memset(vmexit_handlers, 0, sizeof (vmexit_handler_ptr) * VMM_EXIT_REASON_NUM);
-    vmexit_handlers[EXIT_REASON_PENDING_INTERRUPT] = vmm_pending_interrupt_handler;
-    vmexit_handlers[EXIT_REASON_EXCEPTION_NMI] = vmm_exception_handler;
-    vmexit_handlers[EXIT_REASON_CPUID] = vmm_cpuid_handler;
-    vmexit_handlers[EXIT_REASON_MSR_READ] = vmm_rdmsr_handler;
-    vmexit_handlers[EXIT_REASON_MSR_WRITE] = vmm_wrmsr_handler;
-    vmexit_handlers[EXIT_REASON_EPT_VIOLATION] = vmm_ept_violation_handler;
-    vmexit_handlers[EXIT_REASON_CR_ACCESS] = vmm_cr_access_handler;
-    vmexit_handlers[EXIT_REASON_IO_INSTRUCTION] = vmm_io_instruction_handler;
-    vmexit_handlers[EXIT_REASON_RDTSC] = vmm_rdtsc_instruction_handler;
-    vmexit_handlers[EXIT_REASON_HLT] = vmm_hlt_handler;
+    vmm->vmexit_handlers[EXIT_REASON_PENDING_INTERRUPT] = vmm_pending_interrupt_handler;
+/*    vmm->vmexit_handlers[EXIT_REASON_EXCEPTION_NMI] = vmm_exception_handler;*/
+    vmm->vmexit_handlers[EXIT_REASON_CPUID] = vmm_cpuid_handler;
+    vmm->vmexit_handlers[EXIT_REASON_MSR_READ] = vmm_rdmsr_handler;
+    vmm->vmexit_handlers[EXIT_REASON_MSR_WRITE] = vmm_wrmsr_handler;
+    vmm->vmexit_handlers[EXIT_REASON_EPT_VIOLATION] = vmm_ept_violation_handler;
+    vmm->vmexit_handlers[EXIT_REASON_CR_ACCESS] = vmm_cr_access_handler;
+    vmm->vmexit_handlers[EXIT_REASON_IO_INSTRUCTION] = vmm_io_instruction_handler;
+/*    vmm->vmexit_handlers[EXIT_REASON_RDTSC] = vmm_rdtsc_instruction_handler;*/
+    vmm->vmexit_handlers[EXIT_REASON_HLT] = vmm_hlt_handler;
+    vmm->vmexit_handlers[EXIT_REASON_VMX_TIMER] = vmm_vmx_timer_handler;
+}
+
+int vmm_finalize(vmm_t *vmm) {
+    int err;
+    vmm_exit_init(vmm);
+    vmm_init_guest_thread_state(vmm);
+    err = vmm_io_port_init_guest(&vmm->io_port, &vmm->host_simple, vmm->guest_vcpu);
+    if (err) {
+        return err;
+    }
+    return 0;
 }

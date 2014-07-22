@@ -9,49 +9,55 @@
  */
 /* x86 VMM PCI Driver, which manages the host's PCI devices, and handles guest OS PCI config space
  * read & writes.
- *     Authors:
- *         Qian Ge
- *         Xi Ma Chen
- */
+*/
 
 #ifndef __LIB_VMM_DRIVER_PCI_H__
 #define __LIB_VMM_DRIVER_PCI_H__
 
 #include <stdint.h>
-#include <stdbool.h>
-#include <assert.h>
-#include <sel4/sel4.h>
-#include <pci/pci.h>
 
-#include "vmm/config.h"
-#include "vmm/helper.h"
+typedef struct vmm_pci_address {
+    uint8_t bus;
+    uint8_t dev;
+    uint8_t fun;
+} vmm_pci_address_t;
 
-#define LABEL_PCI_FIND_DEVICE 0x2f3d
+/* Functions for accessing the pci config space */
+typedef struct vmm_pci_config {
+    void *cookie;
+    uint8_t (*ioread8)(void *cookie, vmm_pci_address_t addr, unsigned int offset);
+    uint16_t (*ioread16)(void *cookie, vmm_pci_address_t addr, unsigned int offset);
+    uint32_t (*ioread32)(void *cookie, vmm_pci_address_t addr, unsigned int offset);
+    void (*iowrite8)(void *cookie, vmm_pci_address_t addr, unsigned int offset, uint8_t val);
+    void (*iowrite16)(void *cookie, vmm_pci_address_t addr, unsigned int offset, uint16_t val);
+    void (*iowrite32)(void *cookie, vmm_pci_address_t addr, unsigned int offset, uint32_t val);
+} vmm_pci_config_t;
 
-static inline bool vmm_driver_pci_find_device(seL4_CPtr ep, uint16_t vendor_id, uint16_t device_id,
-        libpci_device_t *out, int j) {
-    assert(out);
+/* Abstract virtual PCI thing. Could be a device or anything. This
+ * can be inserted into the virtual PCI configuration space */
+typedef struct vmm_pci_entry {
+    /* Callback functions for reading or writing its configuration space.
+     * Returns 0 on success, nonzero if an error occured */
+    void *cookie;
+    int (*ioread)(void *cookie, int offset, int size, uint32_t *result);
+    int (*iowrite)(void *cookie, int offset, int size, uint32_t value);
+} vmm_pci_entry_t;
 
-    dprintf(4, "  sending IPC to LIB_VMM_DRIVER_PCI_CAP asking for device vid 0x%x did 0x%x\n",
-            vendor_id, device_id);
+typedef struct vmm_pci_space {
+    /* Only support one bus at the moment. */
+    vmm_pci_entry_t *bus0[32][8];
+    /* For IO port emulation this is the current config address */
+    uint32_t conf_port_addr;
+} vmm_pci_space_t;
 
-    /* IPC the PCI driver to find info about this device. */
-    seL4_MessageInfo_t msg = seL4_MessageInfo_new(LABEL_PCI_FIND_DEVICE, 0, 0, 3);
-    seL4_SetMR(0, vendor_id);
-    seL4_SetMR(1, device_id);
-    seL4_SetMR(2, j);
+/* Initialize PCI space */
+int vmm_pci_init(vmm_pci_space_t *space);
 
-    seL4_MessageInfo_t reply_msg = seL4_Call(ep, msg);
+/* Add a PCI entry. Optionally reports where it is located */
+int vmm_pci_add_entry(vmm_pci_space_t *space, vmm_pci_entry_t entry, vmm_pci_address_t *addr);
 
-    int reply_len = seL4_MessageInfo_get_length(reply_msg);
-    if (reply_len == 0) {
-        /* Failed to find device. */
-        return false;
-    }
-    /* Found device. */
-    assert(reply_len == ROUND_UP(sizeof(libpci_device_t), 4) / 4);
-    vmm_get_buf(0, (char*)out, sizeof(libpci_device_t));
-    return true;
-}
+/* Functions for emulating PCI config spaces over IO ports */
+int vmm_pci_io_port_in(void *cookie, unsigned int port_no, unsigned int size, unsigned int *result);
+int vmm_pci_io_port_out(void *cookie, unsigned int port_no, unsigned int size, unsigned int value);
 
 #endif /* __LIB_VMM_DRIVER_PCI_H__ */

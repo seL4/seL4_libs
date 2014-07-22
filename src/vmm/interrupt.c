@@ -11,51 +11,38 @@
 /* vm exits and general handling of interrupt injection */
 
 #include <stdio.h>
-#include <stdint.h>
-#include <stdbool.h>
-#include <assert.h>
+#include <stdlib.h>
 
 #include <sel4/sel4.h>
 
-#include "vmm/config.h"
 #include "vmm/vmm.h"
-#include "vmm/vmexit.h"
-#include "vmm/vmcs.h"
-#include "vmm/helper.h"
-#include "vmm/driver/int_manger.h"
 
-#define DEBUG_INTERRUPT_LVL 5
-
-static void resume_guest(gcb_t *guest) {
+static void resume_guest(vmm_t *vmm) {
     /* Disable exit-for-interrupt in guest state to allow the guest to resume. */
-    dprintf(DEBUG_INTERRUPT_LVL, "vmm int : guest%d allowed to resume.\n",
-            VMM_GUEST_BADGE_TO_ID(guest->sender));
-    uint32_t state = vmm_vmcs_read(LIB_VMM_VCPU_CAP, VMX_CONTROL_PRIMARY_PROCESSOR_CONTROLS);
+    uint32_t state = vmm_guest_state_get_control_ppc(&vmm->guest_state, vmm->guest_vcpu);
     state &= ~BIT(2); /* clear the exit for interrupt flag */
-    vmm_vmcs_write(LIB_VMM_VCPU_CAP, VMX_CONTROL_PRIMARY_PROCESSOR_CONTROLS, state);
+    vmm_guest_state_set_control_ppc(&vmm->guest_state, state);
 }
 
-static void inject_irq(int irq, gcb_t *guest) {
+static void inject_irq(vmm_t *vmm, int irq) {
     /* Inject an IRQ into the guest's execution state. */
     assert((irq & 0xff) == irq);
     irq &= 0xff;
-    vmm_vmcs_write(LIB_VMM_VCPU_CAP, VMX_CONTROL_ENTRY_INTERRUPTION_INFO,  BIT(31) | irq);
+    vmm_guest_state_set_control_entry(&vmm->guest_state, BIT(31) | irq);
 }
 
-static void wait_for_guest_ready(gcb_t *guest) {
+void wait_for_guest_ready(vmm_t *vmm) {
     /* Request that the guest exit at the earliest point that we can inject an interrupt. */
-    dprintf(DEBUG_INTERRUPT_LVL, "vmm int : guest%d forced to exit for interrupt.\n",
-            VMM_GUEST_BADGE_TO_ID(guest->sender));
-    uint32_t state = vmm_vmcs_read(LIB_VMM_VCPU_CAP, VMX_CONTROL_PRIMARY_PROCESSOR_CONTROLS);
+    uint32_t state = vmm_guest_state_get_control_ppc(&vmm->guest_state, vmm->guest_vcpu);
     state |= BIT(2); /* set the exit for interrupt flag */
-    vmm_vmcs_write(LIB_VMM_VCPU_CAP, VMX_CONTROL_PRIMARY_PROCESSOR_CONTROLS, state);
+    vmm_guest_state_set_control_ppc(&vmm->guest_state, state);
 }
 
-static int can_inject(gcb_t *guest) {
-    uint32_t rflags = vmm_vmcs_read(LIB_VMM_VCPU_CAP, VMX_GUEST_RFLAGS);
-    uint32_t guest_int = vmm_vmcs_read(LIB_VMM_VCPU_CAP, VMX_GUEST_INTERRUPTABILITY);
-    uint32_t int_control = vmm_vmcs_read(LIB_VMM_VCPU_CAP, VMX_CONTROL_ENTRY_INTERRUPTION_INFO);
-    
+int can_inject(vmm_t *vmm) {
+    uint32_t rflags = vmm_guest_state_get_rflags(&vmm->guest_state, vmm->guest_vcpu);
+    uint32_t guest_int = vmm_guest_state_get_interruptibility(&vmm->guest_state, vmm->guest_vcpu);
+    uint32_t int_control = vmm_guest_state_get_control_entry(&vmm->guest_state, vmm->guest_vcpu);
+
     /* we can only inject if the interrupt mask flag is not set in flags,
        guest is not in an uninterruptable state and we are not already trying to
        inject an interrupt */
@@ -66,64 +53,44 @@ static int can_inject(gcb_t *guest) {
     return 0;
 }
 
-static int message_driver(gcb_t *guest, int message) {
-    seL4_MessageInfo_t msgInfo = seL4_MessageInfo_new(message, 0, 0, 1);
-
-    seL4_SetMR(0, guest->sender);
-
-    msgInfo = seL4_Call(LIB_VMM_DRIVER_INTERRUPT_CAP, msgInfo);
-    assert(seL4_MessageInfo_get_length(msgInfo) == 1);
-    return seL4_GetMR(0);
-}
-
-static int get_interrupt(gcb_t *guest) {
-    return message_driver(guest, LABEL_INT_MAN_GET_INTERRUPT);
-}
-
-int interrupt_pending(gcb_t *guest) {
-    return message_driver(guest, LABEL_INT_MAN_HAS_INTERRUPT);
-}
-
-void vmm_have_pending_interrupt(gcb_t *guest) {
+void vmm_have_pending_interrupt(vmm_t *vmm) {
     /* This function is called when a new interrupt has occured. */
-    if (can_inject(guest)) {
-        int irq = get_interrupt(guest);
+    if (can_inject(vmm)) {
+        int irq = vmm->plat_callbacks.get_interrupt();
         if (irq != -1) {
             /* there is actually an interrupt to inject */
-            if (guest->interrupt_halt) {
+            if (vmm->guest_state.virt.interrupt_halt) {
                 /* currently halted. need to put the guest
                  * in a state where it can inject again */
-                wait_for_guest_ready(guest);
-                guest->interrupt_halt = 0;
+                wait_for_guest_ready(vmm);
+                vmm->guest_state.virt.interrupt_halt = 0;
             } else {
-                inject_irq(irq, guest);
+                inject_irq(vmm, irq);
                 /* see if there are more */
-                if (interrupt_pending(guest)) {
-                    wait_for_guest_ready(guest);
+                if (vmm->plat_callbacks.has_interrupt()) {
+                    wait_for_guest_ready(vmm);
                 }
             }
         }
     } else {
-        wait_for_guest_ready(guest);
-        guest->interrupt_halt = 0;
+        wait_for_guest_ready(vmm);
+        vmm->guest_state.virt.interrupt_halt = 0;
     }
 }
 
-int vmm_pending_interrupt_handler(gcb_t *guest) {
-    assert(guest->sender >= LIB_VMM_GUEST_OS_BADGE_START);
-    dprintf(DEBUG_INTERRUPT_LVL, "vmm int : guest%d exited for pending interrupt.\n",
-            VMM_GUEST_BADGE_TO_ID(guest->sender));
+int vmm_pending_interrupt_handler(vmm_t *vmm) {
     /* see if there is actually a pending interrupt */
-    int irq = get_interrupt(guest);
+    assert(can_inject(vmm));
+    int irq = vmm->plat_callbacks.get_interrupt();
     if (irq == -1) {
-        resume_guest(guest);
+        resume_guest(vmm);
     } else {
         /* inject the interrupt */
-        inject_irq(irq, guest);
-        if (!interrupt_pending(guest)) {
-            resume_guest(guest);
+        inject_irq(vmm, irq);
+        if (!vmm->plat_callbacks.has_interrupt()) {
+            resume_guest(vmm);
         }
+        vmm->guest_state.virt.interrupt_halt = 0;
     }
-    guest->interrupt_halt = 0;
-    return LIB_VMM_SUCC;
+    return 0;
 }

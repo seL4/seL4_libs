@@ -19,7 +19,9 @@
 #ifndef _LIB_VMM_CPUID_H_
 #define _LIB_VMM_CPUID_H_
 
-#define F(x) bit(X86_FEATURE_##x)
+#include <utils/util.h>
+
+#define F(x) BIT( (X86_FEATURE_##x) & 31)
 
 /* Basic information for the processor P4 hyperthread. */
 #define VMM_CPUID_EAX_P4_HT    0x5
@@ -46,9 +48,5 @@ struct cpuid_val {
     unsigned int ecx;
     unsigned int edx;
 }; 
-
-static inline unsigned int bit(int bitno) {
-	return 1 << (bitno & 31);
-}
 
 #endif /* _LIB_VMM_CPUID_H_ */

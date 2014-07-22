@@ -7,10 +7,8 @@
  *
  * @TAG(NICTA_GPL)
  */
-/* Guest OS boot information structures. Some of these structures may be Linux-specific.
- *     Authors:
- *         Qian Ge
- */
+
+/* Pretty sure most of this header was ripped straight from Linux */
 
 #ifndef _LIB_VMM_PLAT_BOOTINFO_H_
 #define _LIB_VMM_PLAT_BOOTINFO_H_

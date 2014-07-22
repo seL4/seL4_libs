@@ -8,264 +8,330 @@
  * @TAG(NICTA_GPL)
  */
 
+#include <autoconf.h>
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <cpio/cpio.h>
-#include <elf/elf.h>
-#include <autoconf.h>
-#include "vmm/config.h"
+
+#include <sel4/sel4.h>
+#include <utils/util.h>
+
+#include "vmm/vmm.h"
+#include "vmm/debug.h"
 #include "vmm/platform/guest_memory.h"
-#include "vmm/platform/sys.h"
 
-#define MEMAREA_INVALID 0xFFFFDEAD
-extern char _cpio_archive[];
+static void push_guest_ram_region(guest_memory_t *guest_memory, uintptr_t start, size_t size, int allocated) {
+    int last_region = guest_memory->num_ram_regions;
+    if (size == 0) return;
+    guest_memory->ram_regions = realloc(guest_memory->ram_regions, sizeof(guest_ram_region_t) * (last_region + 1));
+    assert(guest_memory->ram_regions);
 
-/* Pre-defined mem info for zone DMA, ELF mapping, initrd mapping, and boot info structures.
- * e820 regions should be contiguous. */
-
-uint32_t vmm_plat_guest_n_mem_boot _UNUSED_ = 5;
-guest_mem_area_t vmm_plat_guest_mem_areas_boot[] _UNUSED_ = {
-    /* First 4MB page. Reserved to be used for zone DMA. */
-    {.start = 0x0,     .end = 0x1F000,  .type = E820_RAM, .perm = seL4_AllRights},
-    {.start = 0x1F000, .end = 0x400000, .type = E820_RESERVED, .perm = seL4_AllRights},
-
-    /* The next few pages are used for bootinfo. */
-    {.start = 0x400000, .end = 0x404000,
-     .type = E820_RESERVED, .perm = seL4_AllRights},
-
-    /* Connector to ELF/initrd region (the .end will be relocated). No RAM exists here. */
-    {.start = 0x404000, .end = MEMAREA_INVALID,
-     .type = E820_RESERVED, .perm = seL4_AllRights},
- 
-    /* The kernel ELF & initrd region (This section is dynamic and will be relocated).
-     * This section has to be the last section. */
-    {
-     .start = MEMAREA_INVALID,
-     .end = MEMAREA_INVALID,
-     .type = E820_RAM,
-     .perm = seL4_AllRights
-    }
-
-    /* Actual guest usable RAM sections will be dynamically allocated via the guest_ram_alloc
-     * allocator and appended here. */
-};
-
-uint32_t vmm_plat_guest_n_mem_init _UNUSED_ = 4;
-guest_mem_area_t vmm_plat_guest_mem_areas_init[] _UNUSED_ = {
-    /* First page of memory - reserved to be used for zone DMA. */
-    {
-     .start = 0x0,
-     .end = 0x400000,
-     .type = DMA_ZONE,
-     .perm = seL4_AllRights
-    },
-
-    /* The next few pages are used for bootinfo. */
-    {
-     .start = 0x400000,
-     .end = 0x408000,
-     .type = DMA_IGNORE,
-     .perm = seL4_AllRights
-    },
-
-    /* Connector to ELF/initrd region (the .end will be relocated). No RAM exists here. */
-    {.start = 0x408000, .end = MEMAREA_INVALID,
-     .type = E820_RESERVED, .perm = seL4_AllRights},
-
-    /* The kernel ELF & initrd region (This section is dynamic and will be relocated).
-     * This section has to be the last section. */
-    {
-     .start = MEMAREA_INVALID,
-     .end = MEMAREA_INVALID,
-     .type = E820_RAM,
-     .perm = seL4_AllRights
-    }
-
-    /* Actual guest usable RAM sections will be dynamically allocated via the guest_ram_alloc
-     * allocator and appended here. */
-};
-
-static void vmm_guest_mem_clone_readjust(uint32_t base_gpaddr, uint32_t size_bytes,
-        uint32_t src_n, guest_mem_area_t *src_areas,
-        uint32_t *dest_n, guest_mem_area_t **dest_areas,
-        int n_memareas_allocate) {
-
-    assert(dest_n && dest_areas);
-    assert(src_n > 0 && src_areas);
-    assert(src_n <= n_memareas_allocate && n_memareas_allocate <= E820_MAX_REGIONS);
-    assert(base_gpaddr >= LIB_VMM_GUEST_PHYSADDR_MIN);
-    assert(base_gpaddr % LIB_VMM_GUEST_PHYSADDR_ALIGN == 0);
-    assert(size_bytes > 0);
-
-    /* Create a copy of the pre-defined mem regions. */
-    guest_mem_area_t *mem = (guest_mem_area_t*) malloc(n_memareas_allocate *
-            sizeof(guest_mem_area_t));
-    assert(mem);
-    memset(mem, 0, sizeof(n_memareas_allocate * sizeof(guest_mem_area_t)));
-    memcpy(mem, src_areas, src_n * sizeof(guest_mem_area_t));
-
-    /* Readjust the memory regions above to match what the allocator can actually allocate.
-     * We assume here that the LAST memory area is the kernel ELF + initrd region, to be
-     * dynamically relocated. */
- 
-    uint32_t rindex = src_n - 1;
-    assert(mem[rindex].type == E820_RAM);
-    mem[rindex].start = base_gpaddr;
-    mem[rindex].end = base_gpaddr + size_bytes;
-
-    /* Readjust the second last index's .end to match the new base addr. */
-    if (rindex - 1 > 0) {
-        mem[rindex - 1].end = base_gpaddr;
-        assert(mem[rindex - 1].start <= mem[rindex - 1].end);
-    }
-
-    /* Write output. */
-    (*dest_n) = src_n;
-    (*dest_areas) = mem;
+    guest_memory->ram_regions[last_region].start = start;
+    guest_memory->ram_regions[last_region].size = size;
+    guest_memory->ram_regions[last_region].allocated = allocated;
+    guest_memory->num_ram_regions++;
 }
 
-void vmm_guest_mem_create(uint32_t base_gpaddr, uint32_t size_bytes,
-        uint32_t *n_mem_areas, guest_mem_area_t **mem_areas,
-        uint32_t *n_bootinfo_mem_areas, guest_mem_area_t **bootinfo_mem_areas) {
-
-    assert(n_mem_areas && mem_areas);
-    assert(n_bootinfo_mem_areas && bootinfo_mem_areas);
-
-    /* Clone and adjust the guest init mem area. */
-    vmm_guest_mem_clone_readjust(base_gpaddr, size_bytes,
-            vmm_plat_guest_n_mem_init, vmm_plat_guest_mem_areas_init,
-            n_mem_areas, mem_areas,
-            vmm_plat_guest_n_mem_init);
-
-    /* Clone and adjust the guest bootinfo mem area that we pass through the e820. */
-    vmm_guest_mem_clone_readjust(base_gpaddr, size_bytes,
-            vmm_plat_guest_n_mem_boot, vmm_plat_guest_mem_areas_boot,
-            n_bootinfo_mem_areas, bootinfo_mem_areas,
-            E820_MAX_REGIONS);
-
+static int ram_region_cmp(const void *a, const void *b) {
+    const guest_ram_region_t *aa = a;
+    const guest_ram_region_t *bb = b;
+    return aa->start - bb->start;
 }
 
-void vmm_plat_parse_elf_name_params(char *kernel_cmdline, char *elf_name, char *elf_params);
+static void sort_guest_ram_regions(guest_memory_t *guest_memory) {
+    qsort(guest_memory->ram_regions, guest_memory->num_ram_regions, sizeof(guest_ram_region_t), ram_region_cmp);
+}
 
-uint32_t vmm_guest_mem_determine_kernel_initrd_size(uint32_t num_guest_os,
-        char *guest_kernel, char *guest_initrd) {
-    int page_size;
-#ifdef CONFIG_VMM_USE_4M_FRAMES
-    page_size = seL4_4MBits;
-#else
-    page_size = seL4_PageBits;
-#endif
-    /* Can't printf here, called during boot. */
-    assert(num_guest_os < LIB_VMM_GUEST_NUMBER);
-    assert(guest_kernel);
+static void guest_ram_remove_region(guest_memory_t *guest_memory, int region) {
+    assert(region < guest_memory->num_ram_regions);
+    guest_memory->num_ram_regions--;
+    memcpy(&guest_memory->ram_regions[region], &guest_memory->ram_regions[region + 1], sizeof(guest_ram_region_t) * (guest_memory->num_ram_regions - region));
+    /* realloc it smaller */
+    guest_memory->ram_regions = realloc(guest_memory->ram_regions, sizeof(guest_ram_region_t) * guest_memory->num_ram_regions);
+    assert(guest_memory->ram_regions);
+}
 
-    /* Determine size of kernel. */
-    long unsigned int kernel_size = 0;
-    static char elf_name[LIB_VMM_MAX_BUFFER_LEN];
-    static char elf_params[LIB_VMM_MAX_BUFFER_LEN];
-    vmm_plat_parse_elf_name_params(guest_kernel, elf_name, elf_params);
+static void collapse_guest_ram_regions(guest_memory_t *guest_memory) {
+    int i;
+    for (i = 1; i < guest_memory->num_ram_regions;) {
+        /* Only collapse regions with the same allocation flag that are contiguous */
+        if (guest_memory->ram_regions[i - 1].allocated == guest_memory->ram_regions[i]. allocated &&
+            guest_memory->ram_regions[i - 1].start + guest_memory->ram_regions[i - 1].size == guest_memory->ram_regions[i].start) {
 
-    char* kernel_file = cpio_get_file(_cpio_archive, elf_name, &kernel_size);
-    if (!kernel_file) {
-        printf("Kernel file not found: [%s]\n", guest_kernel);
-        panic("vmm_guest_mem_determine_kernel_initrd_size: Kernel file not found!");
-        return 0;
-    }
-    assert(kernel_size > 0);
-    if (elf_checkFile(kernel_file)) {
-        panic("Kernel ELF file check failed.");
-        return 0;
-    }
-    uint32_t kernel_elf_start = 0xFFFFFFFF;
-    uint32_t kernel_elf_end = 0;
-    int n_headers = elf_getNumProgramHeaders(kernel_file);
-    assert(n_headers);
-    for (int i = 0; i < n_headers; i++) {
-        uint32_t segment_size = elf_getProgramHeaderMemorySize(kernel_file, i);
-        uint32_t dest_addr = (uint32_t) elf_getProgramHeaderPaddr(kernel_file, i);
-        uint32_t segment_end = dest_addr + segment_size;
-        if (segment_end > kernel_elf_end) {
-            kernel_elf_end = segment_end;
-        }
-        if (dest_addr < kernel_elf_start) {
-            kernel_elf_start = dest_addr;
+            guest_memory->ram_regions[i - 1].size += guest_memory->ram_regions[i].size;
+            guest_ram_remove_region(guest_memory, i);
+        } else {
+            /* We are satisified that this entry cannot be merged. So now we
+             * move onto the next one */
+            i++;
         }
     }
-    kernel_elf_end = ((kernel_elf_end - kernel_elf_start) >> page_size) << page_size;
-    kernel_elf_end += (1 << page_size);
-
-    /* Determine size of initrd. */
-    long unsigned int initrd_size = 0;
-#ifdef LIB_VMM_INITRD_SUPPORT
-    char* initrd_file = cpio_get_file(_cpio_archive, guest_initrd, &initrd_size);
-    if (!initrd_file) {
-        panic("vmm_guest_mem_determine_kernel_initrd_size: Initrd file not found!");
-        return 0;
-    }
-    assert(initrd_size > 0);
-#endif
-
-    uint32_t zone_dma_xtra = CONFIG_VMM_ZONE_DMA_RAM * (1024 * 1024);
-#ifndef CONFIG_VMM_ZONE_DMA_WORKAROUND
-    zone_dma_xtra = 0;
-#endif
-    uint32_t total_size = kernel_elf_end + initrd_size + zone_dma_xtra;
-    assert(total_size);
-
-    return total_size;
 }
 
-uint32_t vmm_guest_get_initrd_size(char *guest_initrd) {
-    /* Can't printf here, called during boot. */
-    #ifdef LIB_VMM_INITRD_SUPPORT
-    long unsigned int initrd_size = 0;
-    char* initrd_file = cpio_get_file(_cpio_archive, guest_initrd, &initrd_size);
-    if (!initrd_file) {
-        panic("vmm_guest_mem_determine_kernel_initrd_size: Initrd file not found!");
-        return 0;
-    }
-    assert(initrd_size > 0);
-    return initrd_size;
-#else
-    (void) guest_initrd;
+static int expand_guest_ram_region(guest_memory_t *guest_memory, uintptr_t start, size_t bytes) {
+    /* blindly put a new region at the end */
+    push_guest_ram_region(guest_memory, start, bytes, 0);
+    /* sort the region we just added */
+    sort_guest_ram_regions(guest_memory);
+    /* collapse any contiguous regions */
+    collapse_guest_ram_regions(guest_memory);
     return 0;
-#endif
 }
 
-uint32_t vmm_guest_get_kernel_initrd_memarea_index(void) {
-    /* The last static pre-defined mem area is assumed to be the one used to map
-     * the kernel and initrd. */
-    return vmm_plat_guest_n_mem_init - 1;
-}
-
-bool vmm_guest_mem_check_elf_segment(thread_rec_t *resource,
-        uint32_t addr_start, uint32_t addr_end) {
-    assert(resource);
-    assert(addr_end >= addr_start);
-    uint32_t ix = vmm_guest_get_kernel_initrd_memarea_index();
-    if (addr_start < resource->guest_mem_start) {
-        goto checkfail;
+uintptr_t guest_ram_largest_free_region_start(guest_memory_t *guest_memory) {
+    int largest = -1;
+    int i;
+    /* find a first region */
+    for (i = 0; i < guest_memory->num_ram_regions && largest == -1; i++) {
+        if (!guest_memory->ram_regions[i].allocated) {
+            largest = i;
+        }
     }
-    if (addr_start < resource->mem_areas[ix].start) {
-        goto checkfail;
+    assert(largest != -1);
+    for (i++; i < guest_memory->num_ram_regions; i++) {
+        if (!guest_memory->ram_regions[i].allocated &&
+            guest_memory->ram_regions[i].size > guest_memory->ram_regions[largest].size) {
+            largest = i;
+        }
     }
-    if (addr_end > resource->mem_areas[ix].end) {
-        goto checkfail;
-    }
-    return true;
-
-checkfail:
-    printf("ERROR: Kernel has loadable segment outside valid address range.\n");
-    printf("       Attempted to create segment 0x%x - 0x%x\n", addr_start, addr_end);
-    printf("       All segments must lie between 0x%x - 0x%x\n",
-        resource->mem_areas[ix].start,
-        resource->mem_areas[ix].end);
-    return false;
+    return guest_memory->ram_regions[largest].start;
 }
 
-uint32_t vmm_guest_mem_get_max_e820_addr(thread_rec_t *resource) {
-    assert(resource);
-    return resource->guest_bootinfo_mem_areas[resource->n_guest_bootinfo_mem_areas - 1].end;
+void print_guest_ram_regions(guest_memory_t *guest_memory) {
+    int i;
+    for (i = 0; i < guest_memory->num_ram_regions; i++) {
+        char size_char = 'B';
+        size_t size = guest_memory->ram_regions[i].size;
+        if (size >= 1024) {
+            size >>= 10;
+            size_char = 'K';
+        }
+        if (size >= 1024) {
+            size >>= 10;
+            size_char = 'M';
+        }
+        printf("\t0x%x-0x%x (%d%c) %s\n",
+               (unsigned int)guest_memory->ram_regions[i].start,
+               (unsigned int)(guest_memory->ram_regions[i].start + guest_memory->ram_regions[i].size),
+               size, size_char,
+               guest_memory->ram_regions[i].allocated ? "allocated" : "free");
+    }
 }
 
+void guest_ram_mark_allocated(guest_memory_t *guest_memory, uintptr_t start, size_t bytes) {
+    /* Find the region */
+    int i;
+    int region = -1;
+    for (i = 0; i < guest_memory->num_ram_regions; i++) {
+        if (guest_memory->ram_regions[i].start <= start &&
+            guest_memory->ram_regions[i].start + guest_memory->ram_regions[i].size >= start + bytes) {
+            region = i;
+            break;
+        }
+    }
+    assert(region != -1);
+    assert(!guest_memory->ram_regions[region].allocated);
+    /* Remove the region */
+    guest_ram_region_t r = guest_memory->ram_regions[region];
+    guest_ram_remove_region(guest_memory, region);
+    /* Split the region into three pieces and add them */
+    push_guest_ram_region(guest_memory, r.start, start - r.start, 0);
+    push_guest_ram_region(guest_memory, start, bytes, 1);
+    push_guest_ram_region(guest_memory, start + bytes, r.size - bytes - (start - r.start), 0);
+    /* sort and collapse */
+    sort_guest_ram_regions(guest_memory);
+    collapse_guest_ram_regions(guest_memory);
+}
+
+uintptr_t guest_ram_allocate(guest_memory_t *guest_memory, size_t bytes) {
+    /* Do the obvious dumb search through the regions */
+    for (int i = 0; i < guest_memory->num_ram_regions; i++) {
+        if (!guest_memory->ram_regions[i].allocated && guest_memory->ram_regions[i].size >= bytes) {
+            uintptr_t addr = guest_memory->ram_regions[i].start;
+            guest_ram_mark_allocated(guest_memory, addr, bytes);
+            return addr;
+        }
+    }
+    LOG_ERROR("Failed to allocate %d bytes of guest RAM", bytes);
+    return 0;
+}
+
+static int vmm_alloc_guest_ram_one_to_one(vmm_t *vmm, size_t bytes) {
+    int ret;
+    int i;
+    int page_size = vmm->page_size;
+    int num_pages = ROUND_UP(bytes, BIT(page_size)) >> page_size;
+    guest_memory_t *guest_memory = &vmm->guest_mem;
+
+    DPRINTF(0, "Allocating %d frames of size %d for guest RAM\n", num_pages, page_size);
+    /* Allocate all the frames first */
+    vka_object_t *objects = malloc(sizeof(vka_object_t) * num_pages);
+    assert(objects);
+    for (i = 0; i < num_pages; i++) {
+        ret = vka_alloc_frame(&vmm->vka, page_size, &objects[i]);
+        if (ret) {
+            LOG_ERROR("Failed to allocate frame %d/%d", i, num_pages);
+            return -1;
+        }
+    }
+
+    for (i = 0; i < num_pages; i++) {
+        /* Get its physical address */
+        uintptr_t paddr = vka_object_paddr(&vmm->vka, &objects[i]);
+        if (paddr == 0) {
+            LOG_ERROR("Allocated frame has no physical address");
+            return -1;
+        }
+        reservation_t *reservation = vspace_reserve_range_at(&guest_memory->vspace, (void*)paddr, BIT(page_size), seL4_AllRights, 1);
+        if (!reservation) {
+            LOG_INFO("Failed to reserve address 0x%x in guest vspace. Skipping frame and leaking memory!", (unsigned int)paddr);
+            continue;
+        }
+        /* Map in */
+        ret = vspace_map_pages_at_vaddr(&guest_memory->vspace, &objects[i].cptr, (void*)paddr, 1, page_size, reservation);
+        if (ret) {
+            LOG_ERROR("Failed to map page %d/%d into guest vspace at 0x%x\n", i, num_pages, (unsigned int)paddr);
+            return -1;
+        }
+        /* Free the reservation */
+        vspace_free_reservation(&guest_memory->vspace, reservation);
+
+        /* Add the frame to our list */
+        ret = expand_guest_ram_region(guest_memory, paddr, BIT(page_size));
+        if (ret) {
+            return ret;
+        }
+    }
+    printf("Guest RAM regions after allocation:\n");
+    print_guest_ram_regions(guest_memory);
+    /* free the objects */
+    LOG_INFO("sys_munmap not currently implemented. Leaking memory!");
+    //free(objects);
+    return 0;
+}
+
+int vmm_alloc_guest_device_at(vmm_t *vmm, uintptr_t start, size_t bytes) {
+    int page_size = vmm->page_size;
+    int num_pages = ROUND_UP(bytes, BIT(page_size)) >> page_size;
+    int ret;
+    int i;
+    guest_memory_t *guest_memory = &vmm->guest_mem;
+    uintptr_t page_start = ROUND_DOWN(start, BIT(page_size));
+    printf("Add guest memory region 0x%x-0x%x\n", (unsigned int)start, (unsigned int)(start + bytes));
+    printf("Will be allocating region 0x%x-0x%x after page alignment\n", (unsigned int)page_start, (unsigned int)(page_start + num_pages * BIT(page_size)));
+    for (i = 0; i < num_pages; i++) {
+        reservation_t *reservation = vspace_reserve_range_at(&guest_memory->vspace, (void*)(page_start + i * BIT(page_size)), 1, seL4_AllRights, 1);
+        if (!reservation) {
+            LOG_INFO("Failed to create reservation for guest memory page 0x%x size %d, assuming already allocated", (unsigned int)(page_start + i * BIT(page_size)), page_size);
+            continue;
+        }
+        ret = vspace_new_pages_at_vaddr(&guest_memory->vspace, (void*)(page_start + i * BIT(page_size)), 1, page_size, reservation);
+        if (ret) {
+            LOG_ERROR("Failed to create page 0x%x size %d in guest memory region", (unsigned int)(page_start + i * BIT(page_size)), page_size);
+            return -1;
+        }
+        vspace_free_reservation(&guest_memory->vspace, reservation);
+    }
+    return 0;
+}
+
+static int vmm_map_guest_device_reservation(vmm_t *vmm, uintptr_t paddr, size_t bytes, reservation_t *reservation, uintptr_t map_base) {
+    int page_size = vmm->page_size;
+    int error;
+    guest_memory_t *guest_memory = &vmm->guest_mem;
+    LOG_INFO("Mapping passthrough device region 0x%x-0x%x to 0x%x", (unsigned int)paddr, (unsigned int)(paddr + bytes), (unsigned int)map_base);
+    /* Go through and try and map all the frames */
+    uintptr_t current_paddr;
+    uintptr_t current_map;
+    for (current_paddr = paddr, current_map = map_base; current_paddr < paddr + bytes; current_paddr += BIT(page_size), current_map += BIT(page_size)) {
+        cspacepath_t path;
+        error = vka_cspace_alloc_path(&vmm->vka, &path);
+        if (error) {
+            LOG_ERROR("Failed to allocate cslot");
+            return error;
+        }
+        error = simple_get_frame_cap(&vmm->host_simple, (void*)current_paddr, page_size, &path);
+        if (error) {
+            LOG_ERROR("Failed to find device frame 0x%x size 0x%x for region 0x%x 0x%x", (unsigned int)current_paddr, (unsigned int)BIT(page_size), (unsigned int)paddr, (unsigned int)bytes);
+            return error;
+        }
+        error = vspace_map_pages_at_vaddr(&guest_memory->vspace, &path.capPtr, (void*)current_map, 1, page_size, reservation);
+        if (error) {
+            LOG_ERROR("Failed to map device page 0x%x at 0x%x from region 0x%x 0x%x\n", (unsigned int)current_paddr, (unsigned int)current_map, (unsigned int)paddr, (unsigned int)bytes);
+            return error;
+        }
+    }
+    return 0;
+}
+
+uintptr_t vmm_map_guest_device(vmm_t *vmm, uintptr_t paddr, size_t bytes, size_t align) {
+    int error;
+    /* Reserve a region that is guaranteed to have an aligned region in it */
+    guest_memory_t *guest_memory = &vmm->guest_mem;
+    uintptr_t reservation_base;
+    reservation_t *reservation = vspace_reserve_range(&guest_memory->vspace, bytes + align, seL4_AllRights, 1, (void**)&reservation_base);
+    /* Round up reservation so it is aligned. Hopefully it also ends up page aligned with the
+     * sun moon and stars and we can actually find a frame cap and map it */
+    uintptr_t map_base = ROUND_UP(reservation_base, align);
+    error = vmm_map_guest_device_reservation(vmm, paddr, bytes, reservation, map_base);
+    vspace_free_reservation(&guest_memory->vspace, reservation);
+    if (error) {
+        return 0;
+    }
+    return map_base;
+}
+
+int vmm_map_guest_device_at(vmm_t *vmm, uintptr_t vaddr, uintptr_t paddr, size_t bytes) {
+    int error;
+    /* Reserve a region that is guaranteed to have an aligned region in it */
+    guest_memory_t *guest_memory = &vmm->guest_mem;
+    reservation_t *reservation = vspace_reserve_range_at(&guest_memory->vspace, (void*)vaddr, bytes, seL4_AllRights, 1);
+    error = vmm_map_guest_device_reservation(vmm, paddr, bytes, reservation, vaddr);
+    vspace_free_reservation(&guest_memory->vspace, reservation);
+    return error;
+}
+
+int vmm_alloc_guest_ram_at(vmm_t *vmm, uintptr_t start, size_t bytes) {
+    int ret;
+    ret = vmm_alloc_guest_device_at(vmm, start, bytes);
+    if (ret) {
+        return ret;
+    }
+    ret = expand_guest_ram_region(&vmm->guest_mem, start, bytes);
+    if (ret) {
+        return ret;
+    }
+    printf("Guest RAM regions after allocating range 0x%x-0x%x:\n", (unsigned int)start, (unsigned int)(start + bytes));
+    print_guest_ram_regions(&vmm->guest_mem);
+    return 0;
+}
+
+int vmm_alloc_guest_ram(vmm_t *vmm, size_t bytes, int onetoone) {
+    if (onetoone) {
+        return vmm_alloc_guest_ram_one_to_one(vmm, bytes);
+    }
+    /* Allocate ram anywhere */
+    guest_memory_t *guest_memory = &vmm->guest_mem;
+    int page_size = vmm->page_size;
+    uintptr_t base;
+    int num_pages = ROUND_UP(bytes, BIT(page_size)) >> page_size;
+    reservation_t *reservation = vspace_reserve_range(&guest_memory->vspace, num_pages * BIT(page_size), seL4_AllRights, 1, (void**)&base);
+    if (!reservation) {
+        LOG_ERROR("Failed to create reservation for %d guest ram bytes", bytes);
+        return -1;
+    }
+    /* Create pages */
+    int error = vspace_new_pages_at_vaddr(&guest_memory->vspace, (void*)base, num_pages, page_size, reservation);
+    if (error) {
+        LOG_ERROR("Failed to create %d pages of size %d for guest memory", num_pages, page_size);
+        return error;
+    }
+    error = expand_guest_ram_region(&vmm->guest_mem, base, bytes);
+    if (error) {
+        return error;
+    }
+    printf("Guest RAM regions after allocating range 0x%x-0x%x:\n", (unsigned int)base, (unsigned int)(base + bytes));
+    print_guest_ram_regions(&vmm->guest_mem);
+    return 0;
+}

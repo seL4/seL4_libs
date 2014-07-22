@@ -13,103 +13,112 @@
 #ifndef _LIB_VMM_VMM_H_
 #define _LIB_VMM_VMM_H_
 
-#include <autoconf.h>
 #include <sel4/sel4.h>
 
-#include "vmm/processor/platfeature.h"
+#include <vka/vka.h>
+#include <simple/simple.h>
+#include <vspace/vspace.h>
 
+#include "vmm/platform/vmexit.h"
+#include "vmm/driver/pci.h"
+#include "vmm/io.h"
+#include "vmm/platform/guest_memory.h"
+#include "vmm/guest_state.h"
+#include "vmm/vmexit.h"
 
+/* TODO: Use a badge and/or this constant should be defined in libsel4 */
 #define LIB_VMM_VM_EXIT_MSG_LEN    21
 
+/* The badge used for the fault endpoint */
+#define LIB_VMM_GUEST_OS_FAULT_EP_BADGE   42
 
-/*the init value for vmcs*/
-#define VMM_VMCS_CR0_MASK           (X86_CR0_PG | X86_CR0_PE)
-#define VMM_VMCS_CR0_SHADOW         (X86_CR0_PG | X86_CR0_PE)
+/* System callbacks passed from the user to the library. These need to
+ * be passed in as their definitions are invisible to this library */
+typedef struct platform_callbacks {
+    int (*get_interrupt)();
+    int (*has_interrupt)();
+    seL4_CPtr (*get_int_pending_aep)();
+} platform_callbacks_t;
 
-#ifdef CONFIG_VMM_ENABLE_PAE
-#define VMM_VMCS_CR4_MASK           (X86_CR4_PSE | X86_CR4_PAE)
-#else
-#define VMM_VMCS_CR4_MASK           (X86_CR4_PSE)
-#endif
+/* Stores informatoin about the guest image we are loading. This information probably stops
+ * being relevant / useful after we start running. Most of this assumes
+ * we are loading a guest kernel elf image and that we are acting as some kind of bootloader */
+typedef struct guest_image {
+    /* Alignment we used when loading the kernel image */
+    size_t alignment;
+    /* Entry point when the VM starts */
+    uintptr_t entry;
+    /* Base address (in guest physical) where the image was loaded */
+    uintptr_t load_paddr;
+    /* Base physical address the image was linked for */
+    uintptr_t link_paddr;
+    uintptr_t link_vaddr;
+    /* If we are loading a guest elf then we may not have been able to put it where it
+     * requested. This is the relocation offset */
+    int relocation_offset;
+    /* Guest physical address of where we built its page directory */
+    uintptr_t pd;
+    /* Guest physical address of where we stashed the kernel cmd line */
+    uintptr_t cmd_line;
+    size_t cmd_line_len;
+    /* Guest physical address of where we created the boot information */
+    uintptr_t boot_info;
+    /* Boot module information */
+    uintptr_t boot_module_paddr;
+    size_t boot_module_size;
+} guest_image_t;
 
-#define VMM_VMCS_CR4_SHADOW         VMM_VMCS_CR4_MASK
+typedef struct vmm {
+    /* Debugging state for sanity */
+    int done_host_init;
+    int done_guest_init;
+    /* Allocators, vspaces, and other things for resource management */
+    vka_t vka;
+    simple_t host_simple;
+    vspace_t host_vspace;
 
+    /* platform callback functions */
+    platform_callbacks_t plat_callbacks;
 
+    /* Default page size to use */
+    int page_size;
 
+    /* Endpoint that will be given to guest TCB for fault handling */
+    seL4_CPtr guest_fault_ep;
 
-/*GPR sequence, strictly follow the qualification rules (vm exits)*/
-enum kvm_reg {
-	VCPU_REGS_RAX = 0,
-	VCPU_REGS_RCX = 1,
-	VCPU_REGS_RDX = 2,
-	VCPU_REGS_RBX = 3,
-	VCPU_REGS_RSP = 4,
-	VCPU_REGS_RBP = 5,
-	VCPU_REGS_RSI = 6,
-	VCPU_REGS_RDI = 7,
-	VCPU_REGS_RIP,
-	NR_VCPU_REGS
-};
+    /* Reply slot for guest messages */
+    cspacepath_t reply_slot;
 
+    /* Guest objects */
+    seL4_CPtr guest_tcb;
+    seL4_CPtr guest_cnode;
+    seL4_CPtr guest_pd;
+    seL4_CPtr guest_vcpu;
 
+    /* Guest memory information and management */
+    guest_memory_t guest_mem;
+    guest_image_t guest_image;
 
-/*guest control block*/
-typedef struct gcb {
-    
-    seL4_UserContext context;
+    /* Exit handling table */
+    vmexit_handler_ptr vmexit_handlers[VMM_EXIT_REASON_NUM];
 
-    /*exit information */
-    unsigned int reason;
-    unsigned int qualification;
-    unsigned int instruction_length;
-    unsigned int guest_physical;
-    unsigned int rflags;
-    unsigned int guest_interruptibility;
-    unsigned int control_entry;
-    unsigned int sender;
+    /* Guest emulation state */
+    guest_state_t guest_state;
 
-    /*are we hlt'ed waiting for an interrupted */
-    int interrupt_halt;
+    /* PCI emulation state */
+    vmm_pci_space_t pci;
 
-    /*vmcs setting*/
-    unsigned int cr0;
-    unsigned int cr0_mask;
-    unsigned int cr0_shadow;
-    unsigned int cr2;
-    unsigned int cr3;
-    unsigned int cr4;
-    unsigned int cr4_mask;
-    unsigned int cr4_shadow;
+    /* IO port management */
+    vmm_io_port_list_t io_port;
+} vmm_t;
 
-    /*replicated reg set used by vm exit handlers*/
-    unsigned int regs[NR_VCPU_REGS];
-    
-    unsigned int state;
-} gcb_t;
-
-
-
-
-
-/*debugging interfaces*/
-void vmm_print_guest_context(int);
-void vmm_print_ipc_msg(seL4_Word);
-
-
-/*interfaces in the vmm moudle*/
-int vmm_vmcs_read(seL4_CPtr vcpu, unsigned int field);
-void vmm_vmcs_write(seL4_CPtr vcpu, unsigned int field, unsigned int value); 
-void vmm_vmcs_init_guest(seL4_CPtr vcpu, seL4_Word pd);
-
-
-/*external interfaces*/
-/*init vmm moudle */
-void vmm_init(void);
+/* Finalize the VM before running it */
+int vmm_finalize(vmm_t *vmm);
 
 /*running vmm moudle*/
-void vmm_run(void);
+void vmm_run(vmm_t *vmm);
 
-void vmm_have_pending_interrupt(gcb_t *guest);
-int interrupt_pending(gcb_t *guest);
+/* TODO: Move to somewhere fucking sensible */
+void vmm_have_pending_interrupt(vmm_t *vmm);
 
 #endif

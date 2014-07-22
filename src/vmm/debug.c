@@ -13,63 +13,34 @@
  *         Qian Ge
  */
 
-#include <stdint.h>
 #include <stdio.h>
-#include <assert.h>
+#include <stdlib.h>
+
 #include <sel4/sel4.h>
-#include "vmm/config.h"
-#include "vmm/vmm.h"
-#include "vmm/vmexit.h"
 
-extern gcb_t vmm_gc;
-
-static exit_reasons_table_t vmm_exit_reasons[] = { VMX_EXIT_REASONS };  
-
-static inline const char *vmm_get_exit_reason (unsigned int exit_code) {
-    unsigned int i = 0;
-    while (i != VMM_EXIT_REASON_NUM) {
-       if (vmm_exit_reasons[i].exit_code == exit_code) {
-           return vmm_exit_reasons[i].reason;
-       }
-       i++;
-    }
-    return NULL;
-}
+#include "vmm/debug.h"
 
 /* Print out the context of a guest OS thread. */
-void vmm_print_guest_context(int level) {
+void vmm_print_guest_context(int level, vmm_t *vmm) {
+    DPRINTF(level, "================== GUEST OS CONTEXT =================\n");
 
-    dprintf(level, "================== GUEST OS CONTEXT =================\n");
+    DPRINTF(level, "exit info : reason 0x%x    qualification 0x%x   instruction len 0x%x\n",
+                    vmm_guest_exit_get_reason(&vmm->guest_state), vmm_guest_exit_get_qualification(&vmm->guest_state), vmm_guest_exit_get_int_len(&vmm->guest_state));
+    DPRINTF(level, "            guest physical 0x%x     rflags 0x%x \n",
+                   vmm_guest_exit_get_physical(&vmm->guest_state), vmm_guest_state_get_rflags(&vmm->guest_state, vmm->guest_vcpu));
+    DPRINTF(level, "            guest interruptibility 0x%x   control entry 0x%x\n",
+                   vmm_guest_state_get_interruptibility(&vmm->guest_state, vmm->guest_vcpu), vmm_guest_state_get_control_entry(&vmm->guest_state, vmm->guest_vcpu));
 
-    dprintf(level, "exit info : reason 0x%x    qualification 0x%x   instruction len 0x%x\n",
-                    vmm_gc.reason, vmm_gc.qualification, vmm_gc.instruction_length);
-    dprintf(level, "            guest physical 0x%x     rflags 0x%x \n",
-                   vmm_gc.guest_physical, vmm_gc.rflags);
-    dprintf(level, "            guest interruptibility 0x%x   control entry 0x%x\n",
-                   vmm_gc.guest_interruptibility, vmm_gc.control_entry);
+    DPRINTF(level, "eip 0x%8x         esp 0x%8x      eflags 0x%8x\n",
+                   vmm_read_user_context(&vmm->guest_state, USER_CONTEXT_EIP), vmm_read_user_context(&vmm->guest_state, USER_CONTEXT_ESP), vmm_read_user_context(&vmm->guest_state, USER_CONTEXT_EFLAGS));
+    DPRINTF(level, "eax 0x%8x         ebx 0x%8x      ecx 0x%8x\n",
+                   vmm_read_user_context(&vmm->guest_state, USER_CONTEXT_EAX), vmm_read_user_context(&vmm->guest_state, USER_CONTEXT_EBX), vmm_read_user_context(&vmm->guest_state, USER_CONTEXT_ECX));
+    DPRINTF(level, "edx 0x%8x         esi 0x%8x      edi 0x%8x\n",
+                   vmm_read_user_context(&vmm->guest_state, USER_CONTEXT_EDX), vmm_read_user_context(&vmm->guest_state, USER_CONTEXT_ESI), vmm_read_user_context(&vmm->guest_state, USER_CONTEXT_EDI));
+    DPRINTF(level, "ebp 0x%8x         tls_base 0x%8x      fs 0x%8x\n",
+                   vmm_read_user_context(&vmm->guest_state, USER_CONTEXT_EBP), vmm_read_user_context(&vmm->guest_state, USER_CONTEXT_TLS_BASE), vmm_read_user_context(&vmm->guest_state, USER_CONTEXT_FS));
+    DPRINTF(level, "gs 0x%8x \n", vmm_read_user_context(&vmm->guest_state, USER_CONTEXT_GS));
 
-    dprintf(level, "eip 0x%8x         esp 0x%8x      eflags 0x%8x\n",
-                   vmm_gc.context.eip, vmm_gc.context.esp, vmm_gc.context.eflags);
-    dprintf(level, "eax 0x%8x         ebx 0x%8x      ecx 0x%8x\n",
-                   vmm_gc.context.eax, vmm_gc.context.ebx, vmm_gc.context.ecx);
-    dprintf(level, "edx 0x%8x         esi 0x%8x      edi 0x%8x\n",
-                   vmm_gc.context.edx, vmm_gc.context.esi, vmm_gc.context.edi);
-    dprintf(level, "ebp 0x%8x         tls_base 0x%8x      fs 0x%8x\n",
-                   vmm_gc.context.ebp, vmm_gc.context.tls_base, vmm_gc.context.fs);
-    dprintf(level, "gs 0x%8x \n", vmm_gc.context.gs);
-
-    dprintf(level, "cr0 0x%x      cr3 0x%x   cr4 0x%x\n", vmm_gc.cr0, vmm_gc.cr3, vmm_gc.cr4);
-
-    dprintf(level, "exit reason: %s \n", vmm_get_exit_reason(vmm_gc.reason));
+    DPRINTF(level, "cr0 0x%x      cr3 0x%x   cr4 0x%x\n", vmm_guest_state_get_cr0(&vmm->guest_state, vmm->guest_vcpu), vmm_guest_state_get_cr3(&vmm->guest_state, vmm->guest_vcpu), vmm_guest_state_get_cr4(&vmm->guest_state, vmm->guest_vcpu));
 
 }
-
-/* Print out the IPC buffer content. */
-void vmm_print_ipc_msg(seL4_Word msg_len) {
-    dprintf(3, "msg content: \n");
-    for (int i = 0; i < msg_len; i++) {
-        dprintf(3, "%d:    0x%x\n", i, seL4_GetMR(i));
-    }
-    dprintf(3, "\n");
-}
-

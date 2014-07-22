@@ -10,138 +10,119 @@
 
 /*vm exit handler for control register access*/
 
-#include <stdlib.h>
 #include <stdio.h>
-#include <assert.h>
+#include <stdlib.h>
 
 #include <sel4/sel4.h>
+#include <utils/util.h>
 
-#include "vmm/config.h"
-#include "vmm/vmcs.h"
+#include "vmm/debug.h"
+#include "vmm/processor/platfeature.h"
+#include "vmm/platform/vmcs.h"
 
 #include "vmm/vmm.h"
 
-#include "vmm/vmexit.h"
-#include "vmm/helper.h"
-#include "vmm/platform/sys.h"
-
-static int vmm_cr_set_cr0(gcb_t *guest, unsigned int value) {
+static int vmm_cr_set_cr0(vmm_t *vmm, unsigned int value) {
 
     if (value & CR0_RESERVED_BITS)
-        return LIB_VMM_ERR;
+        return -1;
 
     /*read the cr0 value*/
-    int set = vmm_vmcs_read(LIB_VMM_VCPU_CAP, VMX_GUEST_CR0);
+    int set = vmm_guest_state_get_cr0(&vmm->guest_state, vmm->guest_vcpu);
 
-    dprintf(4, "cr0 val 0x%x guest set 0x%x\n", set, value);
+    DPRINTF(4, "cr0 val 0x%x guest set 0x%x\n", set, value);
 
     /*set the cr0 value with the shadow value*/
-    value |= (guest->cr0_mask & guest->cr0_shadow);
+    value |= (vmm->guest_state.virt.cr.cr0_mask & vmm->guest_state.virt.cr.cr0_shadow);
 
     if (value == set) 
-        return LIB_VMM_SUCC;
+        return 0;
 
-    vmm_vmcs_write(LIB_VMM_VCPU_CAP, VMX_GUEST_CR0, value);
+    vmm_guest_state_set_cr0(&vmm->guest_state, value);
 
-    return LIB_VMM_SUCC;
+    return 0;
 }
 
-static int vmm_cr_set_cr3(gcb_t *guest, unsigned int value) {
-    
-    static int init_flag = 0;
-    
-    /*guest os trying to reset the page table structure*/
-    int set = vmm_vmcs_read(LIB_VMM_VCPU_CAP, VMX_GUEST_CR3);
-
-    dprintf(4, "cr3 val 0x%x guest set 0x%x\n", set, value);
-
-    vmm_vmcs_write(LIB_VMM_VCPU_CAP, VMX_GUEST_CR3, value);
-
-    /*cancel the big page set by platform/boot.c & vmcs_init()*/
-    if (!init_flag) {
-        guest->cr4_mask &= ~X86_CR4_PSE;
-        guest->cr4_shadow &= ~X86_CR4_PSE;
-
-        set = vmm_vmcs_read(LIB_VMM_VCPU_CAP, VMX_GUEST_CR4);
-        value = set & (~X86_CR4_PSE);
-
-        if (set & X86_CR4_PSE)
-            vmm_vmcs_write(LIB_VMM_VCPU_CAP, VMX_GUEST_CR4, set & (~X86_CR4_PSE));
-       
-        dprintf(4, "cr4 val 0x%x guest set 0x%x\n", set, value);
-
-        init_flag = 1;
-    
-    }
-    return LIB_VMM_SUCC;
+static int vmm_cr_set_cr3(vmm_t *vmm, unsigned int value) {
+    assert(!"Should not get cr3 access");
+    return -1;
 }
 
-static int vmm_cr_get_cr3(gcb_t *guest, unsigned int *value) {
-
-    *value = guest->cr3;
-    
-    return LIB_VMM_SUCC;
+static int vmm_cr_get_cr3(vmm_t *vmm, unsigned int *value) {
+    *value = vmm_guest_state_get_cr3(&vmm->guest_state, vmm->guest_vcpu);
+    return 0;
 
 }
 
 
-static int vmm_cr_set_cr4(gcb_t *guest, unsigned int value) {
-    
+static int vmm_cr_set_cr4(vmm_t *vmm, unsigned int value) {
+
     if (value & CR4_RESERVED_BITS)
-        return LIB_VMM_ERR;
+        return -1;
 
-    int set = vmm_vmcs_read(LIB_VMM_VCPU_CAP, VMX_GUEST_CR4);
+    int set = vmm_guest_state_get_cr4(&vmm->guest_state, vmm->guest_vcpu);
 
-    dprintf(4, "cr4 val 0x%x guest set 0x%x\n", set, value);
-       
+    DPRINTF(4, "cr4 val 0x%x guest set 0x%x\n", set, value);
+
     /*set the cr0 value with the shadow value*/
-    value |= (guest->cr4_shadow & guest->cr4_mask);
-    
+    value |= (vmm->guest_state.virt.cr.cr4_shadow & vmm->guest_state.virt.cr.cr4_mask);
+
     if (set == value)
-        return LIB_VMM_SUCC;
+        return 0;
 
-    vmm_vmcs_write(LIB_VMM_VCPU_CAP, VMX_GUEST_CR4, value);
+    vmm_guest_state_set_cr4(&vmm->guest_state, value);
 
-    return LIB_VMM_SUCC;
+    return 0;
 }
 
 
-static int vmm_cr_clts(gcb_t *guest) {
+static int vmm_cr_clts(vmm_t *vmm) {
+    LOG_INFO("Ignoring call of clts");
 
-    return LIB_VMM_ERR;
+    return -1;
 }
 
-static int vmm_cr_lmsw(gcb_t *guest, unsigned int value) {
+static int vmm_cr_lmsw(vmm_t *vmm, unsigned int value) {
+    LOG_INFO("Ignoring call of lmsw");
 
-    return LIB_VMM_ERR;
+    return -1;
 
 }
 
+/* Convert exit regs to seL4 user context */
+static int crExitRegs[] = {
+    USER_CONTEXT_EAX,
+    USER_CONTEXT_ECX,
+    USER_CONTEXT_EDX,
+    USER_CONTEXT_EBX,
+    USER_CONTEXT_ESP,
+    USER_CONTEXT_EBP,
+    USER_CONTEXT_ESI,
+    USER_CONTEXT_EDI
+};
 
-int vmm_cr_access_handler(gcb_t *guest) {
+int vmm_cr_access_handler(vmm_t *vmm) {
 
     unsigned int exit_qualification, val;
-    int cr, reg, ret = LIB_VMM_ERR;
+    int cr, reg, ret = -1;
 
-    exit_qualification = guest->qualification;
+    exit_qualification = vmm_guest_exit_get_qualification(&vmm->guest_state);
     cr = exit_qualification & 15;
     reg = (exit_qualification >> 8) & 15;
 
-    vm_exit_copyin_regs(guest);
-
     switch ((exit_qualification >> 4) & 3) {
         case 0: /* mov to cr */
-            val = guest->regs[reg];
+            val = vmm_read_user_context(&vmm->guest_state, crExitRegs[reg]);
 
             switch (cr) {
                 case 0:
-                    ret = vmm_cr_set_cr0(guest, val);
+                    ret = vmm_cr_set_cr0(vmm, val);
                     break;
                 case 3:
-                    ret = vmm_cr_set_cr3(guest, val);
+                    ret = vmm_cr_set_cr3(vmm, val);
                     break;
                 case 4:
-                    ret = vmm_cr_set_cr4(guest, val);
+                    ret = vmm_cr_set_cr4(vmm, val);
                     break;
                 case 8: 
 
@@ -160,7 +141,7 @@ int vmm_cr_access_handler(gcb_t *guest) {
 #endif
 
                 default: 
-                    dprintf(4, "unhandled control register: op %d cr %d\n",
+                    DPRINTF(4, "unhandled control register: op %d cr %d\n",
                             (int)(exit_qualification >> 4) & 3, cr);
                     break;
 
@@ -171,9 +152,9 @@ int vmm_cr_access_handler(gcb_t *guest) {
             switch (cr) {
                 case 3:
 
-                    ret = vmm_cr_get_cr3(guest, &val);
-                    if (ret == LIB_VMM_SUCC)
-                        guest->regs[reg] = val;
+                    ret = vmm_cr_get_cr3(vmm, &val);
+                    if (!ret)
+                        vmm_set_user_context(&vmm->guest_state, crExitRegs[reg], val);
 
                     break;
                 case 8:
@@ -185,34 +166,30 @@ int vmm_cr_access_handler(gcb_t *guest) {
                     return 1;
 #endif
                 default:
-                    dprintf(4, "unhandled control register: op %d cr %d\n",
+                    DPRINTF(4, "unhandled control register: op %d cr %d\n",
                             (int)(exit_qualification >> 4) & 3, cr);
                     break;
 
             }
             break;
         case 2: /* clts */
-            ret = vmm_cr_clts(guest);
+            ret = vmm_cr_clts(vmm);
             break;
 
         case 3: /* lmsw */
             val = (exit_qualification >> LMSW_SOURCE_DATA_SHIFT) & 0x0f;
-            ret = vmm_cr_lmsw(guest, val);
+            ret = vmm_cr_lmsw(vmm, val);
             break;
         
         default:
-            dprintf(4, "unhandled control register: op %d cr %d\n",
+            DPRINTF(4, "unhandled control register: op %d cr %d\n",
                     (int)(exit_qualification >> 4) & 3, cr);
             break;
     }
 
-    if (ret == LIB_VMM_SUCC) {
-        vm_exit_copyout_regs(guest);
-        guest->context.eip += guest->instruction_length;
+    if (!ret) {
+        vmm_guest_exit_next_instruction(&vmm->guest_state);
     }
 
     return ret;
 }
-
-
-

@@ -15,17 +15,15 @@
  *         Qian Ge
  */
 
-#include <stdint.h>
 #include <stdio.h>
-#include <assert.h>
+#include <stdlib.h>
 
 #include <sel4/sel4.h>
 
-#include "vmm/config.h"
+#include "vmm/debug.h"
 
 #include "vmm/vmm.h"
 
-#include "vmm/vmexit.h"
 #include "vmm/processor/cpuid.h"
 #include "vmm/processor/cpufeature.h"
 
@@ -94,7 +92,7 @@ static int vmm_cpuid_virt(unsigned int function, unsigned int index, struct cpui
 
     /* Virtualize the return value according to the function. */
 
-    dprintf(4, "cpuid function 0x%x index 0x%x eax 0x%x ebx 0%x ecx 0x%x edx 0x%x\n", function, index, eax, ebx, ecx, edx);
+    DPRINTF(4, "cpuid function 0x%x index 0x%x eax 0x%x ebx 0%x ecx 0x%x edx 0x%x\n", function, index, eax, ebx, ecx, edx);
 
     /* ref: http://www.sandpile.org/x86/cpuid.htm */
 
@@ -153,8 +151,8 @@ static int vmm_cpuid_virt(unsigned int function, unsigned int index, struct cpui
 
         default:
             /* TODO: Adding more CPUID functions whenever necessary */
-            dprintf(1, "CPUID unimplemented function 0x%x\n", function);
-            return LIB_VMM_ERR;
+            DPRINTF(1, "CPUID unimplemented function 0x%x\n", function);
+            return -1;
 
     }
 
@@ -163,9 +161,9 @@ static int vmm_cpuid_virt(unsigned int function, unsigned int index, struct cpui
     val->ecx = ecx;
     val->edx = edx;
 
-    dprintf(4, "cpuid virt value eax 0x%x ebx 0x%x ecx 0x%x edx 0x%x\n", eax, ebx, ecx, edx);
+    DPRINTF(4, "cpuid virt value eax 0x%x ebx 0x%x ecx 0x%x edx 0x%x\n", eax, ebx, ecx, edx);
 
-    return LIB_VMM_SUCC;
+    return 0;
 
 }
 
@@ -347,29 +345,28 @@ static int vmm_cpuid_virt(unsigned int function, unsigned int index, struct cpui
 #endif
 
 /* VM exit handler: for the CPUID instruction. */
-int vmm_cpuid_handler(gcb_t *guest) {
+int vmm_cpuid_handler(vmm_t *vmm) {
 
     int ret;
     struct cpuid_val val;
 
     /* Read parameter information. */
-    unsigned int function = guest->context.eax;
-    unsigned int index = guest->context.ecx;
+    unsigned int function = vmm_read_user_context(&vmm->guest_state, USER_CONTEXT_EAX);
+    unsigned int index = vmm_read_user_context(&vmm->guest_state, USER_CONTEXT_ECX);
 
     /* Virtualise the CPUID instruction. */
     ret = vmm_cpuid_virt(function, index, &val);
-    if (ret != LIB_VMM_SUCC)
+    if (ret)
         return ret;
 
     /* Set the return values in guest context. */
-    guest->context.eax = val.eax;
-    guest->context.ebx = val.ebx;
-    guest->context.ecx = val.ecx;
-    guest->context.edx = val.edx;
+    vmm_set_user_context(&vmm->guest_state, USER_CONTEXT_EAX, val.eax);
+    vmm_set_user_context(&vmm->guest_state, USER_CONTEXT_EBX, val.ebx);
+    vmm_set_user_context(&vmm->guest_state, USER_CONTEXT_ECX, val.ecx);
+    vmm_set_user_context(&vmm->guest_state, USER_CONTEXT_EDX, val.edx);
 
-    /* Advance the eip by instruction length. */
-    guest->context.eip += guest->instruction_length;
+    vmm_guest_exit_next_instruction(&vmm->guest_state);
 
     /* Return success. */
-    return LIB_VMM_SUCC;
+    return 0;
 }

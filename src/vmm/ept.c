@@ -11,31 +11,29 @@
 /*vm exits related with ept violations*/
 
 #include <stdio.h>
-#include <stdint.h>
-#include <assert.h>
+#include <stdlib.h>
 
 #include <sel4/sel4.h>
 
-#include "vmm/config.h"
+#include "vmm/debug.h"
 #include "vmm/vmm.h"
-#include "vmm/vmexit.h"
-#include "vmm/vmcs.h"
+#include "vmm/platform/vmcs.h"
 
 /* Handling EPT violation VMExit Events. */
-int vmm_ept_violation_handler(gcb_t *guest) {
+int vmm_ept_violation_handler(vmm_t *vmm) {
     /* Read linear address that guest is trying to access. */
-    unsigned int linear_address = vmm_vmcs_read(LIB_VMM_VCPU_CAP, VMX_DATA_GUEST_LINEAR_ADDRESS);
+    unsigned int linear_address = vmm_vmcs_read(vmm->guest_vcpu, VMX_DATA_GUEST_LINEAR_ADDRESS);
     printf(COLOUR_R "!!!!!!!! ALERT :: GUEST OS PAGE FAULT !!!!!!!!\n");
-    printf("    Guest OS 0x%x VMExit due to EPT Violation:\n", guest->sender);
+    printf("    Guest OS VMExit due to EPT Violation:\n");
     printf("        Linear address 0x%x.\n", linear_address);
-    printf("        Guest-Physical address 0x%x.\n", guest->guest_physical);
-    printf("        Instruction pointer 0x%x.\n", guest->context.eip);
-    printf("    This is most likely due to a bug or misconfiguration.\n");          
-    printf("    The faulting Guest OS thread will now be blocked forever.\n" COLOUR_RESET);
-#ifdef CONFIG_VMM_IGNORE_EPT_VIOLATION
-    guest->context.eip += guest->instruction_length;
-    return LIB_VMM_SUCC;
+    printf("        Guest-Physical address 0x%x.\n", vmm_guest_exit_get_physical(&vmm->guest_state));
+    printf("        Instruction pointer 0x%x.\n", vmm_read_user_context(&vmm->guest_state, USER_CONTEXT_EIP));
+    printf("    This is most likely due to a bug or misconfiguration.\n" COLOUR_RESET);
+#ifndef CONFIG_VMM_IGNORE_EPT_VIOLATION
+    printf(COLOUR_R "    The faulting Guest OS thread will now be blocked forever.\n" COLOUR_RESET);
+    return -1;
 #else
-    return LIB_VMM_ERR;
+    vmm_guest_exit_next_instruction(&vmm->guest_state);
+    return 0;
 #endif
 }

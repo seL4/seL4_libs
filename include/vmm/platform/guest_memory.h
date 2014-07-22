@@ -8,65 +8,46 @@
  * @TAG(NICTA_GPL)
  */
 
-/* The Guest OS memory configuration.
- *
- *     Authors:
- *         Qian Ge
- *         Adrian Danis
- *         Xi (Ma) Chen
- *
- *     Tue 05 Nov 2013 14:42:17 EST 
- */
-
 #ifndef __LIB_VMM_GUEST_MEMORY_H_
 #define __LIB_VMM_GUEST_MEMORY_H_
 
-#include <autoconf.h>
-#include "vmm/config.h"
-#include "vmm/platform/sys.h"
+#include <stdint.h>
+#include <vspace/vspace.h>
 
-/* Guest kernel start address alignment requirements. */
-#define LIB_VMM_GUEST_PHYSADDR_ALIGN 0x400000
-#define LIB_VMM_GUEST_PHYSADDR_MIN   0x2000000
+typedef struct guest_ram_region {
+    /* Guest physical start address */
+    uintptr_t start;
+    /* size in bytes */
+    size_t size;
+    /* whether or not this region has been 'allocated'
+     * an allocated region has initial guest information loaded into it
+     * this could be elf, initrd modules, etc */
+    int allocated;
+} guest_ram_region_t;
 
-/* Where the bootinfo will be mapped. Must be a valid E820_RAM region.
- * and must be addressable in real mode. */
-#define LIB_VMM_GUEST_BOOTINFO_ADDR 0x400000
+typedef struct guest_memory {
+    /* Guest vspace management. This manages ALL mappings in the guest
+     * address space. This may include memory that we may tell the guest
+     * is not present/reserved */
+    vspace_t vspace;
+    /* We maintain all pieces of ram as a sorted list of regions.
+     * This is memory that we will specifically give the guest as actual RAM */
+    int num_ram_regions;
+    guest_ram_region_t *ram_regions;
+} guest_memory_t;
 
-/* e820 memory region types. */
-#define E820_RAM        1
-#define E820_RESERVED   2
-#define E820_ACPI       3
-#define E820_NVS        4
-#define E820_UNUSABLE   5
-#define DMA_NONE        0
-#define DMA_IGNORE      0xff
-#define DMA_ZONE        0xfe
+struct vmm;
 
-#define E820_MAX_REGIONS 128 /* E820 supports up to 128. */
+uintptr_t guest_ram_largest_free_region_start(guest_memory_t *guest_memory);
+void print_guest_ram_regions(guest_memory_t *guest_memory);
+void guest_ram_mark_allocated(guest_memory_t *guest_memory, uintptr_t start, size_t bytes);
+uintptr_t guest_ram_allocate(guest_memory_t *guest_memory, size_t bytes);
 
-/* Allocate and set up guest memory areas, readjusting its kernel ELF regions to appear at the given
- * base addr. */
-void vmm_guest_mem_create(uint32_t base_gpaddr, uint32_t size_bytes,
-        uint32_t *n_mem_areas, guest_mem_area_t **mem_areas,
-        uint32_t *n_bootinfo_mem_areas, guest_mem_area_t **bootinfo_mem_areas);
-
-/* Determine the combines size of the contiguous region in which the kernel + initrd will be. */
-uint32_t vmm_guest_mem_determine_kernel_initrd_size(uint32_t num_guest_os,
-        char *guest_kernel, char *guest_initrd);
-
-/* Determine size of the initrd file in the CPIO archive. */
-uint32_t vmm_guest_get_initrd_size(char *guest_initrd);
-
-/* Get the mem area index of the kernel & initrd mapping region. */
-uint32_t vmm_guest_get_kernel_initrd_memarea_index(void);
-
-/* Check if given segment is within the kernel & initrd mapping region. */
-bool vmm_guest_mem_check_elf_segment(thread_rec_t *resource,
-        uint32_t addr_start, uint32_t addr_end);
-
-/* Get the very bottom address of any mapped RAM. */
-uint32_t vmm_guest_mem_get_max_e820_addr(thread_rec_t *resource);
+int vmm_alloc_guest_device_at(struct vmm *vmm, uintptr_t start, size_t bytes);
+uintptr_t vmm_map_guest_device(struct vmm *vmm, uintptr_t paddr, size_t bytes, size_t align);
+int vmm_map_guest_device_at(struct vmm *vmm, uintptr_t vaddr, uintptr_t paddr, size_t bytes);
+int vmm_alloc_guest_ram_at(struct vmm *vmm, uintptr_t start, size_t bytes);
+int vmm_alloc_guest_ram(struct vmm *vmm, size_t bytes, int onetoone);
 
 #endif /* __LIB_VMM_GUEST_MEMORY_H_ */
 

@@ -9,200 +9,173 @@
  */
 
 /*vm exits related with io instructions*/
+
 #include <stdio.h>
-#include <stdint.h>
-#include <stdbool.h>
-#include <assert.h>
+#include <stdlib.h>
 
 #include <sel4/sel4.h>
 #include <sel4utils/util.h>
+#include <simple/simple.h>
 
-
-#include "vmm/config.h"
-#include "vmm/helper.h"
+#include "vmm/debug.h"
 #include "vmm/io.h"
-#include "vmm/platform/guest_devices.h"
-#include "vmm/platform/sys.h"
-#include "vmm/vmcs.h"
-#include "vmm/vmexit.h"
 #include "vmm/vmm.h"
 
-#include <simple/simple.h>
-#include <simple-stable/simple-stable.h>
+static int io_port_cmp(const void *pkey, const void *pelem) {
+    unsigned int key = (unsigned int)pkey;
+    const ioport_range_t *elem = (const ioport_range_t*)pelem;
+    if (key < elem->port_start) {
+        return -1;
+    }
+    if (key > elem->port_end) {
+        return 1;
+    }
+    return 0;
+}
+
+static int io_port_cmp2(const void *a, const void *b) {
+    const ioport_range_t *aa = (const ioport_range_t*) a;
+    const ioport_range_t *bb = (const ioport_range_t*) b;
+    return aa->port_start - bb->port_start;
+}
+
+static ioport_range_t *search_port(vmm_io_port_list_t *io_port, unsigned int port_no) {
+    return (ioport_range_t*)bsearch((void*)port_no, io_port->ioports, io_port->num_ioports, sizeof(ioport_range_t), io_port_cmp);
+}
 
 /* Debug helper function for port no. */
-#ifdef LIB_VMM_DEBUG
-static const char* vmm_debug_io_portno_desc(int port_no) {
-    const char* desc = "Unknown IO Port";
-    for (int i = 0; ioport_global_map[i].port_start != X86_IO_INVALID; i++) {
-        if (ioport_global_map[i].port_start <= port_no && ioport_global_map[i].port_end >= port_no) {
-            desc = ioport_global_map[i].desc;
-            break;
-        }
-    }
-    return desc;
-}
-#endif
-
-/* Send message to host VMM thread and wait for reply. */
-static inline void vmm_io_sw_msg(seL4_CPtr cap_no, void *send, unsigned int len, void *recv) {
-    seL4_MessageInfo_t send_msg = seL4_MessageInfo_new(LABEL_VMM_GUEST_IO_MESSAGE, 0, 0, len);
-    seL4_MessageInfo_t recv_msg; 
-    unsigned int recv_len;
-
-    vmm_put_msg(send, len);
-
-    recv_msg = seL4_Call(cap_no, send_msg);
-    recv_len = seL4_MessageInfo_get_length(recv_msg);
-
-    vmm_get_msg(recv, recv_len);
-}
-
-static void vmm_io_printout(io_msg_t send) {
-    dprintf(0, "vm exit io ERROR: string %d  in %d rep %d  port no 0x%x (%s) size %d\n", 0,
-            send.in, 0, send.port_no, vmm_debug_io_portno_desc(send.port_no), send.size);
+static const char* vmm_debug_io_portno_desc(vmm_io_port_list_t *io_port, int port_no) {
+    ioport_range_t *port = search_port(io_port, port_no);
+    return port ? port->desc : "Unknown IO Port";
 }
 
 /* IO instruction execution handler. */
-int vmm_io_instruction_handler(gcb_t *guest) {
+int vmm_io_instruction_handler(vmm_t *vmm) {
 
-    unsigned int exit_qualification = guest->qualification;
+    unsigned int exit_qualification = vmm_guest_exit_get_qualification(&vmm->guest_state);
     unsigned int string, rep;
-    int ret = LIB_VMM_ERR;
-    seL4_CPtr cap_no = LIB_VMM_CAP_INVALID;
-    bool cap_found = false;
-    io_msg_t send, recv;
+    int ret;
+    unsigned int port_no;
+    unsigned int size;
+    unsigned int value;
+    int is_in;
 
     string = (exit_qualification & 16) != 0;
-    send.sender = guest->sender;
-    send.in = (exit_qualification & 8) != 0;
-    send.port_no = exit_qualification >> 16;
-    send.size = (exit_qualification & 7) + 1;
+    is_in = (exit_qualification & 8) != 0;
+    port_no = exit_qualification >> 16;
+    size = (exit_qualification & 7) + 1;
     rep = (exit_qualification & 0x20) >> 5;
 
-    dprintf(4, "vm exit io request: string %d  in %d rep %d  port no 0x%x (%s) size %d\n", string,
-            send.in, rep, send.port_no, vmm_debug_io_portno_desc(send.port_no), send.size);
+    DPRINTF(4, "vm exit io request: string %d  in %d rep %d  port no 0x%x (%s) size %d\n", string,
+            is_in, rep, port_no, vmm_debug_io_portno_desc(&vmm->io_port, port_no), size);
 
     /*FIXME: does not support string and rep instructions*/
     if (string || rep) {
-        dprintf(0, "vm exit io request: FIXME: does not support string and rep instructions");
-        vmm_io_printout(send);
-        return ret;
+        DPRINTF(0, "vm exit io request: FIXME: does not support string and rep instructions");
+        DPRINTF(0, "vm exit io ERROR: string %d  in %d rep %d  port no 0x%x (%s) size %d\n", 0,
+                is_in, 0, port_no, vmm_debug_io_portno_desc(&vmm->io_port, port_no), size);
+        return -1;
     }
 
-    if (!send.in) {
-        send.val = guest->context.eax;
-        if (send.size < 4)
-            send.val &= MASK(send.size * 8);
-        dprintf(4, "vm exit io request: out instruction val 0x%x\n", send.val);
-    }
-
-    /* Find the right cap for IO request*/
-    for (int i = 0; ioport_global_map[i].port_start != X86_IO_INVALID; i++) {
-        if (ioport_global_map[i].port_start <= send.port_no && ioport_global_map[i].port_end >= send.port_no) {
-            cap_no = ioport_global_map[i].cap_no;
-            cap_found = true;
-            break;
-        }
-    }
-
-    #ifndef LIB_VMM_IGNORE_UNDEFINED_IOPORTS
-    if (!cap_found) {
-        dprintf(0, "vm exit io request: WARNING - cap not found for port 0x% (%s)\n", send.port_no,
-                vmm_debug_io_portno_desc(send.port_no));
-        vmm_io_printout(send);
-        printf("EIP = 0x%x\n", guest->context.eip);
-        return ret;
-    }
-    #endif
-    
-    if (!cap_found || cap_no == LIB_VMM_CAP_INVALID) {
-        /* ignore unsupported IO request. */
+    ioport_range_t *port = search_port(&vmm->io_port, port_no);
+    if (!port) {
         static int last_port = -1;
-        if (last_port != send.port_no) {
-            dprintf(0, "vm exit io request: WARNING - ignoring unsupported ioport 0x%x (%s)\n", send.port_no,
-                    vmm_debug_io_portno_desc(send.port_no));
-            last_port = send.port_no;
+        if (last_port != port_no) {
+            LOG_INFO("vm exit io request: WARNING - ignoring unsupported ioport 0x%x (%s)", port_no,
+                    vmm_debug_io_portno_desc(&vmm->io_port, port_no));
+            last_port = port_no;
         }
-        if (send.in) {
-            if ( send.size < 4) {
-                guest->context.eax |= MASK(send.size * 8);
+        if (is_in) {
+            uint32_t eax;
+            if ( size < 4) {
+                eax = vmm_read_user_context(&vmm->guest_state, USER_CONTEXT_EAX);
+                eax |= MASK(size * 8);
             } else {
-                guest->context.eax = -1;
+                eax = -1;
             }
+            vmm_set_user_context(&vmm->guest_state, USER_CONTEXT_EAX, eax);
         }
-        guest->context.eip += guest->instruction_length;
-        return LIB_VMM_SUCC;
+        vmm_guest_exit_next_instruction(&vmm->guest_state);
+        return 0;
     }
 
-    vmm_io_sw_msg(cap_no, (void *)&send, sizeof (send), (void *)&recv);
-
-    if (recv.result == LIB_VMM_ERR) {
-        dprintf(0, "vm exit io request: handler returned error.");
-        vmm_io_printout(send);
-        return ret;
-    }
-
-    /*IN EAX, PORT NO*/
-    if (send.in) {
-        /* mask out the correct size from eax */
-        if (send.size < 4) {
-            guest->context.eax &= ~MASK(send.size * 8);
+    if (is_in) {
+        uint32_t eax;
+        ret = port->port_in(port->cookie, port_no, size, &value);
+        if (size < 4) {
+            eax = vmm_read_user_context(&vmm->guest_state, USER_CONTEXT_EAX);
+            eax &= ~MASK(size * 8);
+            eax |= value;
         } else {
-            guest->context.eax = 0;
+            eax = value;
         }
-        guest->context.eax |= recv.val;
-        dprintf(4, "vm exit io respond: in instruction val 0x%x\n", recv.val);
+        vmm_set_user_context(&vmm->guest_state, USER_CONTEXT_EAX, eax);
+    } else {
+        value = vmm_read_user_context(&vmm->guest_state, USER_CONTEXT_EAX);
+        if (size < 4)
+            value &= MASK(size * 8);
+        ret = port->port_out(port->cookie, port_no, size, value);
     }
-    guest->context.eip += guest->instruction_length;
 
-    return LIB_VMM_SUCC;
+    if (ret) {
+        LOG_ERROR("vm exit io request: handler returned error.");
+        LOG_ERROR("vm exit io ERROR: string %d  in %d rep %d  port no 0x%x (%s) size %d", 0,
+                is_in, 0, port_no, vmm_debug_io_portno_desc(&vmm->io_port, port_no), size);
+        return -1;
+    }
+
+    vmm_guest_exit_next_instruction(&vmm->guest_state);
+
+    return 0;
+}
+
+static int add_io_port_range(vmm_io_port_list_t *io_list, ioport_range_t port) {
+    /* grow the array */
+    io_list->ioports = realloc(io_list->ioports, sizeof(ioport_range_t) * (io_list->num_ioports + 1));
+    assert(io_list->ioports);
+    /* add the new entry */
+    io_list->ioports[io_list->num_ioports] = port;
+    io_list->num_ioports++;
+    /* sort */
+    qsort(io_list->ioports, io_list->num_ioports, sizeof(ioport_range_t), io_port_cmp2);
+    return 0;
+}
+
+int vmm_io_port_add_passthrough(vmm_io_port_list_t *io_list, uint16_t start, uint16_t end, const char *desc) {
+    return add_io_port_range(io_list, (ioport_range_t){start, end, 1, NULL, NULL, NULL, desc});
+}
+
+/* Add an io port range for emulation */
+int vmm_io_port_add_handler(vmm_io_port_list_t *io_list, uint16_t start, uint16_t end, void *cookie, ioport_in_fn port_in, ioport_out_fn port_out, const char *desc) {
+    return add_io_port_range(io_list, (ioport_range_t){start, end, 0, cookie, port_in, port_out, desc});
 }
 
 /*configure io ports for a guest*/
-void vmm_io_init_guest(simple_t *simple, thread_rec_t *guest, seL4_CPtr vcpu, seL4_Word badgen) {
+int vmm_io_port_init_guest(vmm_io_port_list_t *io_list, simple_t *simple, seL4_CPtr vcpu) {
     int error;
-    assert(simple);
-    assert(vcpu);
-    assert(guest);
 
-    /* Initialise IO ports (defaults to all fault and no passthrough). */
-    error = seL4_IA32_VCPU_SetIOPort(vcpu, 
-        simple_get_IOPort_cap(simple, 0, /* all 2^16 io ports */(1<<16)-1));
-    assert(error == seL4_NoError);
-
-    /* Set global IO port settings. */
-    for (int i = 0; ioport_global_map[i].port_start != X86_IO_INVALID; i++) {
-        dprintf(1, "vmm io: setting %s IO port 0x%x --> 0x%x to %s.\n", 
-                ioport_global_map[i].desc, ioport_global_map[i].port_start,
-                ioport_global_map[i].port_end,
-                ioport_global_map[i].passthrough_mode ? "PASSTHROUGH" : "CATCH_FAULT");
-
-        if (ioport_global_map[i].passthrough_mode != X86_IO_PASSTHROUGH) {
-            // We don't need to do anything here, as SetIOPort defaults to catch.
-            continue;
+    for (int i = 0; i < io_list->num_ioports; i++) {
+        ioport_range_t *port = &io_list->ioports[i];
+        if (port->passthrough) {
+            DPRINTF(1, "vmm io port: setting %s IO port 0x%x - 0x%x to passthrough\n", port->desc, port->port_start, port->port_end);
+            seL4_CPtr ioport = simple_get_IOPort_cap(simple, port->port_start, port->port_end);
+            if (!ioport) {
+                LOG_ERROR("Failed to get \"%s\" io port from simple for range 0x%x - 0x%x", port->desc, port->port_start, port->port_end);
+                return -1;
+            }
+            error = seL4_IA32_VCPU_SetIOPort(vcpu, ioport);
+            assert(error == seL4_NoError);
+            error = seL4_IA32_VCPU_SetIOPortMask(vcpu, port->port_start, port->port_end, 0);
+            assert(error == seL4_NoError);
         }
-
-        error = seL4_IA32_VCPU_SetIOPortMask(vcpu,
-                ioport_global_map[i].port_start, ioport_global_map[i].port_end, 0);
-        assert(error == seL4_NoError);
     }
 
-    /* Set per-guest IO port settings. */
-    for (int i = 0; guest->guest_ioport_map[i].port_start != X86_IO_INVALID; i++) {
-        dprintf(1, "vmm io: setting guest %s IO port 0x%x --> 0x%x to %s.\n", 
-                guest->guest_ioport_map[i].desc, guest->guest_ioport_map[i].port_start,
-                guest->guest_ioport_map[i].port_end,
-                guest->guest_ioport_map[i].passthrough_mode ? "PASSTHROUGH" : "CATCH_FAULT");
-
-        if (guest->guest_ioport_map[i].passthrough_mode != X86_IO_PASSTHROUGH) {
-            // We don't need to do anything here, as SetIOPort defaults to catch.
-            continue;
-        }
-
-        error = seL4_IA32_VCPU_SetIOPortMask(vcpu,
-                guest->guest_ioport_map[i].port_start, guest->guest_ioport_map[i].port_end, 0);
-        assert(error == seL4_NoError);
-    }
+    return 0;
 }
 
+int vmm_io_port_init(vmm_io_port_list_t *io_list) {
+    io_list->num_ioports = 0;
+    io_list->ioports = malloc(0);
+    assert(io_list->ioports);
+    return 0;
+}

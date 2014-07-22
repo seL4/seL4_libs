@@ -10,26 +10,23 @@
 
 /*handling msr read & write exceptions*/
 
-#include <stdint.h>
 #include <stdio.h>
-#include <assert.h>
+#include <stdlib.h>
 
 #include <sel4/sel4.h>
 
-#include "vmm/config.h"
+#include "vmm/debug.h"
 #include "vmm/vmm.h"
-#include "vmm/helper.h"
-#include "vmm/vmexit.h"
 #include "vmm/processor/msr.h"
 
 
-int vmm_rdmsr_handler(gcb_t *guest) {
+int vmm_rdmsr_handler(vmm_t *vmm) {
 
-    int ret = LIB_VMM_SUCC;
-    unsigned int msr_no = guest->context.ecx;
+    int ret = 0;
+    unsigned int msr_no = vmm_read_user_context(&vmm->guest_state, USER_CONTEXT_ECX);
     uint64_t data = 0;
 
-    dprintf(4, "rdmsr ecx 0x%x\n", guest->context.ecx);
+    DPRINTF(4, "rdmsr ecx 0x%x\n", msr_no);
 
     // src reference: Linux kernel 3.11 kvm arch/x86/kvm/x86.c
     switch (msr_no) {
@@ -64,28 +61,31 @@ int vmm_rdmsr_handler(gcb_t *guest) {
             break;
 
         default:
-            dprintf(1, "rdmsr WARNING unsupported msr_no 0x%x\n", msr_no);
-            ret = LIB_VMM_ERR;
+            DPRINTF(1, "rdmsr WARNING unsupported msr_no 0x%x\n", msr_no);
+            ret = -1;
             break;
 
    }
 
-    if (ret == LIB_VMM_SUCC) {
-        vmm_write_dword_reg(data, &guest->context.eax, &guest->context.edx);
-        guest->context.eip += guest->instruction_length;
+    if (!ret) {
+        vmm_set_user_context(&vmm->guest_state, USER_CONTEXT_EAX, (uint32_t)(data & 0xffffffff));
+        vmm_set_user_context(&vmm->guest_state, USER_CONTEXT_EDX, (uint32_t)(data >> 32));
+        vmm_guest_exit_next_instruction(&vmm->guest_state);
     }
 
     return ret;
 }
 
 
-int vmm_wrmsr_handler(gcb_t *guest) {
+int vmm_wrmsr_handler(vmm_t *vmm) {
 
-    int ret = LIB_VMM_SUCC;
+    int ret = 0;
 
-    unsigned int msr_no = guest->context.ecx;
+    unsigned int msr_no = vmm_read_user_context(&vmm->guest_state, USER_CONTEXT_ECX);
+    unsigned int val_high = vmm_read_user_context(&vmm->guest_state, USER_CONTEXT_EDX);
+    unsigned int val_low = vmm_read_user_context(&vmm->guest_state, USER_CONTEXT_EAX);
     
-    dprintf(4, "wrmsr ecx 0x%x   value: 0x%x  0x%x\n", guest->context.ecx, guest->context.edx, guest->context.eax);
+    DPRINTF(4, "wrmsr ecx 0x%x   value: 0x%x  0x%x\n", msr_no, val_high, val_low);
 
     // src reference: Linux kernel 3.11 kvm arch/x86/kvm/x86.c
     switch (msr_no) {
@@ -101,13 +101,13 @@ int vmm_wrmsr_handler(gcb_t *guest) {
             break;
 
         default:
-            dprintf(1, "wrmsr WARNING unsupported msr_no 0x%x\n", msr_no);
-            ret = LIB_VMM_ERR;
+            DPRINTF(1, "wrmsr WARNING unsupported msr_no 0x%x\n", msr_no);
+            ret = -1;
             break;
     }
 
-    if (ret == LIB_VMM_SUCC)
-        guest->context.eip += guest->instruction_length;
+    if (!ret)
+        vmm_guest_exit_next_instruction(&vmm->guest_state);
 
     return ret;
 }

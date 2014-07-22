@@ -11,24 +11,20 @@
 /*vm exits related with hlt'ing*/
 
 #include <stdio.h>
-#include <stdint.h>
-#include <assert.h>
+#include <stdlib.h>
 
 #include <sel4/sel4.h>
 
-#include "vmm/config.h"
 #include "vmm/vmm.h"
-#include "vmm/vmexit.h"
-#include "vmm/vmcs.h"
 
 /* Handling EPT violation VMExit Events. */
-int vmm_hlt_handler(gcb_t *guest) {
-    if (!(vmm_vmcs_read(LIB_VMM_VCPU_CAP, VMX_GUEST_RFLAGS) & BIT(9))) {
+int vmm_hlt_handler(vmm_t *vmm) {
+    if (!(vmm_guest_state_get_rflags(&vmm->guest_state, vmm->guest_vcpu) & BIT(9))) {
         printf("Halted forever :(\n");
     }
-    if (!interrupt_pending(guest)) {
-        guest->interrupt_halt = 1;
+    if (!vmm->plat_callbacks.has_interrupt()) {
+        vmm->guest_state.virt.interrupt_halt = 1;
     }
-    guest->context.eip += guest->instruction_length;
-    return LIB_VMM_SUCC;
+    vmm_guest_exit_next_instruction(&vmm->guest_state);
+    return 0;
 }

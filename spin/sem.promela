@@ -1,0 +1,142 @@
+/*
+ * Copyright 2014, NICTA
+ *
+ * This software may be distributed and modified according to the terms of
+ * the BSD 2-Clause license. Note that NO WARRANTY is provided.
+ * See "LICENSE_BSD2.txt" for details.
+ *
+ * @TAG(NICTA_BSD)
+ */
+
+
+#define MAX_SEM_VAL 1
+
+/* Semaphore value. */
+int sem_value = MAX_SEM_VAL;
+
+/* Endpoint. */
+chan endpoint = [0] of {bit};
+
+/* Users in critical section. */
+byte users = 0;
+
+inline do_wait(procnum)
+{
+    int new_val;
+
+    /* Atomic decrement. */
+    atomic {
+        sem_value--;
+        new_val = sem_value;
+    }
+
+    /* Conditional wait. */
+    if
+    :: (new_val < 0) -> endpoint ? 1;
+    :: (new_val >= 0) -> skip;
+    fi
+}
+
+inline do_try_wait(procnum)
+{
+    int observed_val;
+
+    do
+    :: true;
+       observed_val = sem_value;
+       if
+       :: (observed_val <= 0) ->
+           return 0;
+           break;
+       :: (observed_val > 0) ->
+               /* Atomic compare and set: compare observed value, set
+                * (observed_value - 1). */
+               atomic {
+                  if
+                  :: (sem_value == observed_val) ->
+                         sem_value = observed_val - 1;
+                         return 1;
+                         break;
+                  :: (sem_value != observed_val) -> skip;
+                  fi;
+               };
+       fi
+    od
+}
+
+inline do_signal(procnum)
+{
+    int new_val;
+
+    /* Atomic decrement. */
+    atomic {
+        sem_value++;
+        new_val = sem_value;
+    }
+
+    /* Conditional wake. */
+    if
+    :: (new_val <= 0) -> endpoint ! 1;
+    :: (new_val > 0) -> skip;
+    fi
+}
+
+proctype wait_cpu(byte procnum)
+{
+    do
+    :: true;
+progress_wait:;
+        /* Lock. */
+        printf("%d getting the lock.\n", procnum);
+        do_wait(procnum);
+        printf("%d got the lock.\n", procnum);
+
+        /* Use a common resource. */
+        users++;
+        assert(users <= MAX_SEM_VAL);
+        users--;
+
+        /* Release. */
+        printf("%d releasing the lock\n", procnum);
+        do_signal(procnum);
+        printf("%d released the lock.\n", procnum);
+    od
+}
+
+proctype trywait_cpu(byte procnum)
+{
+    byte x;
+    do
+    :: true;
+progress_trywait:;
+        /* Lock. */
+        printf("%d trying to get the lock.\n", procnum);
+        x = do_try_wait(procnum);
+        if
+        :: (x == 0) ->
+            printf("%d failed to get the lock.\n", procnum);
+        :: (x == 1) ->
+            printf("%d got the lock.\n", procnum);
+
+            /* Use a common resource. */
+            users++;
+            assert(users <= MAX_SEM_VAL);
+            users--;
+
+            /* Release. */
+            printf("%d releasing the lock\n", procnum);
+            do_signal(procnum);
+            printf("%d released the lock.\n", procnum);
+        fi
+    od
+}
+
+init {
+    atomic {
+        run wait_cpu(1);
+        run trywait_cpu(2);
+        run trywait_cpu(3);
+        run wait_cpu(4);
+    }
+}
+

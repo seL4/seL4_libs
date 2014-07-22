@@ -1,0 +1,50 @@
+#
+# Copyright 2014, NICTA
+#
+# This software may be distributed and modified according to the terms of
+# the BSD 2-Clause license. Note that NO WARRANTY is provided.
+# See "LICENSE_BSD2.txt" for details.
+#
+# @TAG(NICTA_BSD)
+#
+
+menuconfig LIB_SEL4_TEST
+    bool "sel4test printing library"
+    depends on HAVE_LIBC
+    default y
+    help
+        A test framework library
+
+config TESTPRINTER_REGEX
+    string "Tests to perform"
+    default ".*"
+    depends on LIB_SEL4_TEST
+    help
+        A POSIX regex pattern that is used to filter the tests to run
+
+
+config TESTPRINTER_HALT_ON_TEST_FAILURE
+    bool "Halt on the first test failure"
+    default n
+    depends on LIB_SEL4_TEST
+    help
+        Default behaviour is to try and run the test suite, regardless of any failures.
+        Turning this on will stop the test suite on the first error
+
+config PRINT_XML
+    bool "Print XML output"
+    default n
+    select BUFFER_OUTPUT
+    depends on LIB_SEL4_TEST
+    help
+        Print XML output
+
+config BUFFER_OUTPUT
+    bool "Buffer test output"
+    default n
+    depends on LIB_SEL4_TEST
+    help
+        Buffer the output and print in <stdout> blocks so that bamboo 
+        can parse the test logs properly. Turn this off for debugging your test suite
+
+

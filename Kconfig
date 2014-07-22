@@ -1,0 +1,64 @@
+#
+# Copyright 2014, NICTA
+#
+# This software may be distributed and modified according to the terms of
+# the BSD 2-Clause license. Note that NO WARRANTY is provided.
+# See "LICENSE_BSD2.txt" for details.
+#
+# @TAG(NICTA_BSD)
+#
+
+menuconfig LIB_SEL4_PLAT_SUPPORT
+    bool "Build sel4platsupport"
+    depends on LIB_SEL4_UTILS && LIB_SEL4 && HAVE_LIBC && LIB_SEL4_VSPACE && LIB_SEL4_SIMPLE && LIB_PLATSUPPORT && LIB_UTILS && LIB_SEL4_VKA
+    default y
+    help
+        A user level serial library for sel4
+
+choice
+    prompt "X86 PutChar implementation"
+    depends on LIB_SEL4_PLAT_SUPPORT && PLAT_PC99
+    default LIB_SEL4_PLAT_SUPPORT_X86_SERIAL_PUTCHAR
+    help
+        Choose where PutChar should get sent to. Current options include the 80x25
+        text mode EGA screen, and the regular serial port
+
+    config LIB_SEL4_PLAT_SUPPORT_X86_SERIAL_PUTCHAR
+        bool "Serial port"
+    config LIB_SEL4_PLAT_SUPPORT_X86_TEXT_EGA_PUTCHAR
+        bool "Text mode 80x25 EGA"
+endchoice
+
+choice
+    prompt "X86 serial port base address"
+    depends on LIB_SEL4_PLAT_SUPPORT && PLAT_PC99 && LIB_SEL4_PLAT_SUPPORT_X86_SERIAL_PUTCHAR
+    default LIB_SEL4_PLAT_SUPPORT_SERIAL_PORT_X86_COM1
+    help
+        The base address of the serial port that sel4platsupport will use for communicaton
+
+    config LIB_SEL4_PLAT_SUPPORT_SERIAL_PORT_X86_COM4
+       bool "0x2e8 COM4"
+    config LIB_SEL4_PLAT_SUPPORT_SERIAL_PORT_X86_COM2
+       bool "0x2f8 COM2"
+    config LIB_SEL4_PLAT_SUPPORT_SERIAL_PORT_X86_COM3
+       bool "0x3e8 COM3"
+    config LIB_SEL4_PLAT_SUPPORT_SERIAL_PORT_X86_COM1
+       bool "0x3f8 COM1"
+
+endchoice
+
+
+config LIB_SEL4_PLAT_SUPPORT_USE_SEL4_DEBUG_PUTCHAR
+    bool "Redirect putchar() to seL4_DebugPutchar()"
+    depends on LIB_SEL4_PLAT_SUPPORT && DEBUG_BUILD
+    default y
+    help
+        Direct putchar() to seL4_DebugPutchar() instead of writing directly to the COM port.
+
+config LIB_SEL4_PLAT_SUPPORT_START
+    bool "Supply entry point"
+    depends on LIB_SEL4_PLAT_SUPPORT
+    default y
+    help
+        Emit _start with a default definition that sets up a stack and does
+        what's required to enter main().

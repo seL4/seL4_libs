@@ -1,0 +1,17 @@
+#
+# Copyright 2014, NICTA
+#
+# This software may be distributed and modified according to the terms of
+# the BSD 2-Clause license. Note that NO WARRANTY is provided.
+# See "LICENSE_BSD2.txt" for details.
+#
+# @TAG(NICTA_BSD)
+#
+
+config LIB_SEL4_VSPACE
+    bool "Build sel4vspace"
+    depends on LIB_SEL4 && HAVE_LIBC && LIB_SEL4_VKA
+    select HAVE_SEL4_LIBS
+    default y
+    help
+        "Interface for virtual memory management"

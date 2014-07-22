@@ -1,0 +1,156 @@
+#
+# Copyright 2014, NICTA
+#
+# This software may be distributed and modified according to the terms of
+# the GNU General Public License version 2. Note that NO WARRANTY is provided.
+# See "LICENSE_GPLv2.txt" for details.
+#
+# @TAG(NICTA_GPL)
+#
+
+menuconfig LIB_SEL4_VMM
+    bool "seL4 VMM Library"
+    depends on LIB_SEL4 && HAVE_LIBC && LIB_PCI && LIB_CPIO
+    select HAVE_SEL4_LIBS
+    default y
+    help
+        VMM library on sel4.
+
+choice
+    prompt "DMA Support Implementation"
+    depends on LIB_SEL4_VMM
+    default VMM_GUEST_DMA_ONE_TO_ONE
+    help
+        Select how hardware DMA support is implemented.
+    config VMM_GUEST_DMA_ONE_TO_ONE
+        bool "One to one physical address mapping"
+    config VMM_GUEST_DMA_IOMMU
+        bool "IOMMU (unimplemented)"
+    config VMM_GUEST_DMA_NONE
+        bool "None"
+endchoice
+
+choice
+    prompt "Hardware Platform"
+    depends on LIB_SEL4_VMM
+    default VMM_HARDWARE_VMWARE
+    help
+        Select what hardware or emulated hardware platform to configure
+        seL4 VMM to run on.
+    config VMM_HARDWARE_VMWARE
+        bool "VMware Workstation / Player"
+    config VMM_HARDWARE_LITTLEBIRD
+        bool "Littlebird"
+endchoice
+
+config VMM_GUEST_RAM
+    int "Amount of RAM to give to guest OS, in megabytes."
+    depends on LIB_SEL4_VMM
+    default 350
+    help
+        The amount of ram, in megabytes (in MB, a.k.a 1048576 bytes) to give to the guest OS.
+        GUI desktop environments require more RAM, while minimal console busybox ones would
+        require less.
+
+config VMM_INITRD_SUPPORT
+    bool "Support For Loading initrd RAM disk"
+    depends on LIB_SEL4_VMM
+    default y
+    help
+        Support for loading initrd RAM disk images. If this option is disabled,
+        the guest kernel itself must be compiled with the initial disk image
+        instead.
+
+config VMM_INITRD_IMG
+    string "Initrd image file name"
+    depends on LIB_SEL4_VMM
+    default rootfs.cpio
+    help
+        Initrd file name that will be put ibn the CPIO archive. Any initrd format the guest kernel
+        supports is supported here. The initrd file is assumed to be in apps/linux/<filename>.
+
+config VMM_VESA_FRAMEBUFFER
+    bool "Expose VESA Frame Buffer"
+    depends on LIB_SEL4_VMM
+    default y
+    help
+        Support for mapping the VESA frame buffer frames into the guest OS.
+        This option is useful for working around non-working video drivers otherwise,
+        due to missing features or such.
+
+config VMM_DEBUG
+    bool "VMM Debug Output"
+    depends on LIB_SEL4_VMM
+    default n
+    help
+        Whether to enable debugging output in seL4 VMM.
+
+config VMM_DEBUG_LEVEL
+    int "VMM Debug Output"
+    depends on LIB_SEL4_VMM && VMM_DEBUG
+    default 3
+    help
+        Debug verbosity level.
+        5 levels for debug messages:
+           0: Always printout 
+           1: Main entry point in a module
+           2: 2nd level entry point in a module
+           3: Main entry point of a function 
+           4: Details inside a function
+
+config VMM_VMLINUZ_COMPRESSED
+    bool "Use compressed vmlinuz / bzImage file."
+    depends on LIB_SEL4_VMM
+    default y
+    help
+        Support compressed vmlinuz / bzImage files. The vmlinux will be
+        extracted, and assumed to already contain vmlinux.relocs concaternated
+        to it.  If this is off, then vmlinux is used as is, and we build and use
+        a separate vmlinux.relocs from given vmlinux file.
+
+config VMM_ZONE_DMA_WORKAROUND
+    bool "Enable workaround for zone DMA enabled guest kernels."
+    depends on LIB_SEL4_VMM
+    default n
+    help
+        Enable the workaround to support zone DMA enabled guest kernels. Since the seL4 kernel
+        exports The first few pages of RAM as a whole device (as there may be undiscovered devices
+        in there that the seL4 kernel can't properly detect). We simply map pages from this 'device'
+        into the guest OS. This will not work for multiple guest OSes without further hacks.
+
+config VMM_ZONE_DMA_RAM
+    int "RAM to reserve for zone DMA (MB)."
+    depends on LIB_SEL4_VMM
+    default 32
+    help
+        Amount of RAM to reserve for zone DMA workaround, in megabytes. The initrd/kernel memory
+        region of the guest will be increased by this amount.
+
+config VMM_INIT_MEMPOOL_SIZE
+    int "Initial memory pool size."
+    depends on LIB_SEL4_VMM
+    default 8388608
+    help
+        Initial host memory pool size. If this is too small the host allocator may fail to allocate
+        kernel objects.
+
+config VMM_ENABLE_PAE
+    bool "Enable PAE"
+    depends on LIB_SEL4_VMM
+    default y
+    help
+        Boots the guest with PAE enabled. This option and the guests use of PAE must match
+
+config VMM_IGNORE_EPT_VIOLATION
+    bool "Ignore EPT Violations"
+    depends on LIB_SEL4_VMM
+    default n
+    help
+        If set then EPT faults will be ignored and the guest will be resumed
+
+config VMM_USE_4M_FRAMES
+    bool "Use 4M Frames"
+    depends on LIB_SEL4_VMM
+    default n
+    help
+        Use 4M frames where possible, otherwise ONLY use 4K frames

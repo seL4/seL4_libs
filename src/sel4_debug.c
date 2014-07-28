@@ -8,10 +8,6 @@
  * @TAG(NICTA_BSD)
  */
 
-/*
-  Authors: Kevin Elphinstone
-*/
-
 #include <stdio.h> /* For fprintf() */
 #include <stdlib.h> /* For abort() */
 #include <sel4utils/sel4_debug.h>

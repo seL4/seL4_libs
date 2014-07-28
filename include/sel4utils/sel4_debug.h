@@ -9,13 +9,6 @@
  */
 
 /*
- Authors: Cristan Szmajda, Ben Leslie
- Description:
-  Program diagnostics as per 7.2
- Status: Complete.
-*/
-
-/*
  * <assert.h> may safely be included multiple times with or without NDEBUG
  */
 #undef sel4_error

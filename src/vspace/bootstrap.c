@@ -151,7 +151,7 @@ sel4utils_get_image_region(seL4_Word *va_start, seL4_Word *va_end) {
 
     *va_start = (seL4_Word) __executable_start;
     *va_end = (seL4_Word) _end;
-    *va_end = (seL4_Word) (seL4_Word)ROUND_UP((uint32_t) ((seL4_Word)va_end), (uint32_t) PAGE_SIZE_4K);
+    *va_end = (seL4_Word) (seL4_Word)ROUND_UP((uint32_t) ((seL4_Word)*va_end), (uint32_t) PAGE_SIZE_4K);
 }
 
 

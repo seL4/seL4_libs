@@ -215,7 +215,9 @@ _irq_thread_entry(struct irq_server_thread* st)
         if (sep != seL4_CapNull) {
             /* Synchronous endpoint registered. Send IPC */
             info = seL4_MessageInfo_new(label, 0, 0, 2);
-            seL4_SendWithMRs(sep, info, &badge, &node_ptr, NULL, NULL);
+            seL4_SetMR(0, badge);
+            seL4_SetMR(1, node_ptr);
+            seL4_Send(sep, info);
         } else {
             /* No synchronous endpoint. Call the handler directly */
             irq_server_node_handle_irq(st->node, badge);

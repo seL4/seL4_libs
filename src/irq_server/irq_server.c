@@ -17,6 +17,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <utils/util.h>
 
 //#define DEBUG_IRQ_SERVER
 
@@ -26,7 +27,7 @@
 #define DIRQSERVER(...) do{ }while(0)
 #endif
 
-#define NIRQS_PER_NODE        20
+#define NIRQS_PER_NODE        seL4_BadgeBits
 
 /*************************
  *** Generic functions ***
@@ -35,9 +36,11 @@
 void
 irq_data_ack_irq(struct irq_data* irq)
 {
-    assert(irq);
-    assert(irq->cap);
-    seL4_IRQHandler_Ack(irq->cap);
+    if (irq == NULL || irq->cap == seL4_CapNull) {
+        LOG_ERROR("IRQ data invalid when acknowledging IRQ\n");
+    } else {
+        seL4_IRQHandler_Ack(irq->cap);
+    }
 }
 
 /***********************
@@ -65,11 +68,11 @@ irq_server_node_handle_irq(struct irq_server_node *n, uint32_t badge)
     while (badge) {
         int irq_idx;
         struct irq_data* irq;
-        irq_idx = __builtin_ctz(badge);
+        irq_idx = CTZ(badge);
         irq = &irqs[irq_idx];
         DIRQSERVER("Received IRQ %d, badge 0x%x, index %d\n", irq->irq, badge, irq_idx);
         irq->cb(irq);
-        badge &= ~(1U << irq_idx);
+        badge &= ~BIT(irq_idx);
     }
 }
 
@@ -85,15 +88,14 @@ irq_bind(irq_t irq, seL4_CPtr aep_cap, int idx, vka_t* vka, seL4_CPtr irq_ctrl_c
     /* Create an IRQ cap */
     err = vka_cspace_alloc(vka, &irq_cap);
     if (err != 0) {
-        printf("Failed to allocate cslot for irq\n");
+        LOG_ERROR("Failed to allocate cslot for irq\n");
         return seL4_CapNull;
     }
     vka_cspace_make_path(vka, irq_cap, &irq_path);
     err = seL4_IRQControl_Get(seL4_CapIRQControl, irq, irq_path.root,
                               irq_path.capPtr, irq_path.capDepth);
     if (err != seL4_NoError) {
-        printf("Failed to get cap to irq_number %u\n", irq);
-        assert(0);
+        LOG_ERROR("Failed to get cap to irq_number %u\n", irq);
         vka_cspace_free(vka, irq_cap);
         return seL4_CapNull;
     }
@@ -101,7 +103,7 @@ irq_bind(irq_t irq, seL4_CPtr aep_cap, int idx, vka_t* vka, seL4_CPtr irq_ctrl_c
      * index of the associated IRQ data. */
     err = vka_cspace_alloc(vka, &baep_cap);
     if (err != 0) {
-        printf("Failed to allocate cslot for irq\n");
+        LOG_ERROR("Failed to allocate cslot for irq\n");
         vka_cspace_free(vka, irq_cap);
         return seL4_CapNull;
     }
@@ -109,8 +111,8 @@ irq_bind(irq_t irq, seL4_CPtr aep_cap, int idx, vka_t* vka, seL4_CPtr irq_ctrl_c
     vka_cspace_make_path(vka, baep_cap, &baep_path);
     badge = seL4_CapData_Badge_new(BIT(idx));
     err = vka_cnode_mint(&baep_path, &aep_path, seL4_AllRights, badge);
-    assert(!err);
     if (err != seL4_NoError) {
+        LOG_ERROR("Failed to badge IRQ notification endpoint\n");
         vka_cspace_free(vka, irq_cap);
         vka_cspace_free(vka, baep_cap);
         return seL4_CapNull;
@@ -118,7 +120,7 @@ irq_bind(irq_t irq, seL4_CPtr aep_cap, int idx, vka_t* vka, seL4_CPtr irq_ctrl_c
     /* bind the IRQ cap to our badged endpoint */
     err = seL4_IRQHandler_SetEndpoint(irq_cap, baep_cap);
     if (err != seL4_NoError) {
-        printf("seL4_IRQHandler_SetEndpoint failed with err %d\n", err);
+        LOG_ERROR("Faild to bind IRQ handler to asynchronous endpoint\n");
         vka_cspace_free(vka, irq_cap);
         vka_cspace_free(vka, baep_cap);
         return seL4_CapNull;
@@ -233,7 +235,7 @@ irq_server_thread_new(vspace_t* vspace, vka_t* vka, seL4_CPtr cspace, seL4_Word 
     if (st == NULL) {
         return NULL;
     }
-    st->node = irq_server_node_new(0, (1U << NIRQS_PER_NODE) - 1);
+    st->node = irq_server_node_new(0, MASK(NIRQS_PER_NODE));
     if (st->node == NULL) {
         free(st);
         return NULL;
@@ -245,15 +247,24 @@ irq_server_thread_new(vspace_t* vspace, vka_t* vka, seL4_CPtr cspace, seL4_Word 
     st->next = NULL;
     /* Create an endpoint to listen on */
     err = vka_alloc_async_endpoint(vka, &st->aep);
-    assert(!err);
+    if (err) {
+        LOG_ERROR("Failed to alocate IRQ notification endpoint for IRQ server thread\n");
+        return NULL;
+    }
     st->node->aep = st->aep.cptr;
     /* Create the IRQ thread */
     err = sel4utils_configure_thread(vka, vspace, seL4_CapNull, priority,
                                      cspace, seL4_NilData, &st->thread);
-    assert(!err);
+    if (err) {
+        LOG_ERROR("Failed to configure IRQ server thread\n");
+        return NULL;
+    }
     /* Start the thread */
     err = sel4utils_start_thread(&st->thread, (void*)_irq_thread_entry, st, NULL, 1);
-    assert(!err);
+    if (err) {
+        LOG_ERROR("Failed to start IRQ server thread\n");
+        return NULL;
+    }
     return st;
 }
 
@@ -284,9 +295,11 @@ irq_server_handle_irq_ipc(irq_server_t irq_server)
     (void)irq_server;
     badge = seL4_GetMR(0);
     node_ptr = seL4_GetMR(1);
-    assert(node_ptr);
-
-    irq_server_node_handle_irq((struct irq_server_node*)node_ptr, badge);
+    if (node_ptr == 0) {
+        LOG_ERROR("Invalid data in irq server IPC\n");
+    } else {
+        irq_server_node_handle_irq((struct irq_server_node*)node_ptr, badge);
+    }
 }
 
 /* Register for a function to be called when an IRQ arrives */
@@ -312,7 +325,11 @@ irq_server_register_irq(irq_server_t irq_server, irq_t irq,
         st = irq_server_thread_new(irq_server->vspace, irq_server->vka, irq_server->cspace,
                                    irq_server->thread_priority, irq_server->irq_ctrl_cap,
                                    irq_server->label, irq_server->delivery_ep);
-        assert(st);
+        if (st == NULL) {
+            LOG_ERROR("Failed to create server thread\n");
+            return NULL;
+        }
+
         st->next = irq_server->server_threads;
         irq_server->server_threads = st;
         irq_data = irq_server_node_register_irq(st->node, irq, cb, token,
@@ -338,6 +355,7 @@ irq_server_new(vspace_t* vspace, vka_t* vka, seL4_CPtr cspace, seL4_Word priorit
     /* Structure allcoation and initialisation */
     irq_server = (struct irq_server*)malloc(sizeof(*irq_server));
     if (irq_server == NULL) {
+        LOG_ERROR("malloc failed on irq server memory allocation");
         return -1;
     }
     irq_server->delivery_ep = sync_ep;

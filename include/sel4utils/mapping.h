@@ -102,6 +102,34 @@ static inline int sel4utils_map_page_leaky(vka_t *vka, seL4_CPtr pd, seL4_CPtr f
     return sel4utils_map_page(vka, pd, frame, vaddr, rights, cacheable, &pagetable);
 }
 
+#ifdef CONFIG_LIB_SEL4_VSPACE
+
+#include <vspace/vspace.h>
+
+/* Duplicate a page cap and map it into a vspace
+ *
+ * @param vka Allocator for resources
+ * @param vspace vspace to map into
+ * @param page cptr to duplicate and map
+ * @param size_bits size of the page to map
+ *
+ * @return virtual address of mapping
+ */
+void * sel4utils_dup_and_map(vka_t *vka, vspace_t *vspace, seL4_CPtr page, size_t size_bits);
+
+/* Unmap a duplicated page cap and free any resources. Is the opposite
+ * of sel4utils_dup_and_map
+ *
+ * @param vka Allocator used to allocated resources
+ * @param vspace vspace that frame was mapped into
+ * @param mapping virtual address of mapping to remove
+ * @param size_bits size of the page to unmap
+ *
+ * @return none
+ */
+void sel4utils_unmap_dup(vka_t *vka, vspace_t *vspace, void *mapping, size_t size_bits);
+
+#endif /* CONFIG_LIB_SEL4_VSPACE */
 #endif /* CONFIG_LIB_SEL4_VKA */
 
 #ifdef CONFIG_ARCH_IA32
@@ -116,9 +144,7 @@ int sel4utils_map_iospace_page(vka_t *vka, seL4_CPtr iospace, seL4_CPtr frame, s
 int sel4utils_map_ept_page(vka_t *vka, seL4_CPtr pd, seL4_CPtr frame, seL4_Word vaddr,
                    seL4_CapRights rights, int cacheable, seL4_Word size_bits, vka_object_t *pagetable, vka_object_t *pagedir);
 
-#endif 
-#endif 
-
-
+#endif /* CONFIG_VTX */
+#endif /* CONFIG_ARCH_IA32 */
 
 #endif /* UTILS_MAPPING_H_ */

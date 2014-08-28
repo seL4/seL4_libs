@@ -40,6 +40,7 @@ typedef struct sel4utils_thread {
  * Configure a thread, allocating any resources required.
  *
  * @param vka initialised vka to allocate objects with
+ * @param parent vspace structure of the thread calling this function, used for temporary mappings
  * @param alloc initialised vspace structure to allocate virtual memory with
  * @param fault_endpoint endpoint to set as the threads fault endpoint. Can be 0.
  * @param priority seL4 priority for the thread to be scheduled with.
@@ -50,7 +51,7 @@ typedef struct sel4utils_thread {
  *
  * @return 0 on success, -1 on failure. Use CONFIG_DEBUG to see error messages.
  */
-int sel4utils_configure_thread(vka_t *vka, vspace_t *alloc, seL4_CPtr fault_endpoint,
+int sel4utils_configure_thread(vka_t *vka, vspace_t *parent, vspace_t *alloc, seL4_CPtr fault_endpoint,
         uint8_t priority, seL4_CNode cspace, seL4_CapData_t cspace_root_data,
         sel4utils_thread_t *res);
 

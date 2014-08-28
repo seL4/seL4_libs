@@ -20,14 +20,28 @@
 #include <vka/vka.h>
 #include <vka/object.h>
 #include <vspace/vspace.h>
+#include <sel4utils/mapping.h>
 #include <sel4utils/thread.h>
 #include <sel4utils/util.h>
 #include <sel4utils/arch/util.h>
 
 #include "helpers.h"
 
+static int
+write_ipc_buffer_user_data(vka_t *vka, vspace_t *vspace, seL4_CPtr ipc_buf, uintptr_t buf_loc)
+{
+    void *mapping = sel4utils_dup_and_map(vka, vspace, ipc_buf, seL4_PageBits);
+    if (!mapping) {
+        return -1;
+    }
+    seL4_IPCBuffer *buffer = (seL4_IPCBuffer*)mapping;
+    buffer->userData = buf_loc;
+    sel4utils_unmap_dup(vka, vspace, mapping, seL4_PageBits);
+    return 0;
+}
+
 int
-sel4utils_configure_thread(vka_t *vka, vspace_t *alloc, seL4_CPtr fault_endpoint,
+sel4utils_configure_thread(vka_t *vka, vspace_t *parent, vspace_t *alloc, seL4_CPtr fault_endpoint,
         uint8_t priority, seL4_CNode cspace, seL4_CapData_t cspace_root_data,
         sel4utils_thread_t *res)
 {
@@ -44,6 +58,11 @@ sel4utils_configure_thread(vka_t *vka, vspace_t *alloc, seL4_CPtr fault_endpoint
 
     if (res->ipc_buffer_addr == 0) {
         LOG_ERROR("ipc buffer allocation failed");
+        return -1;
+    }
+
+    if (write_ipc_buffer_user_data(vka, parent, res->ipc_buffer, res->ipc_buffer_addr)) {
+        LOG_ERROR("failed to set user data word in IPC buffer");
         return -1;
     }
 
@@ -208,7 +227,7 @@ sel4utils_start_fault_handler(seL4_CPtr fault_endpoint, vka_t *vka, vspace_t *vs
         uint8_t prio, seL4_CPtr cspace, seL4_CapData_t cap_data, char *name, 
         sel4utils_thread_t *res)
 {
-    int error = sel4utils_configure_thread(vka, vspace, 0, prio, cspace, 
+    int error = sel4utils_configure_thread(vka, vspace, vspace, 0, prio, cspace, 
             cap_data, res);
 
     if (error) {

@@ -494,7 +494,7 @@ int sel4utils_configure_process_custom(sel4utils_process_t *process, vka_t *vka,
 
     /* create the thread, do this *after* elf-loading so that we don't clobber
      * the required virtual memory*/
-    error = sel4utils_configure_thread(vka, &process->vspace, SEL4UTILS_ENDPOINT_SLOT,
+    error = sel4utils_configure_thread(vka, spawner_vspace, &process->vspace, SEL4UTILS_ENDPOINT_SLOT,
             config.priority, process->cspace.cptr, cspace_root_data, &process->thread);
 
     if (error) {

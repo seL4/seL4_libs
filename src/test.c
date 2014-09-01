@@ -26,7 +26,7 @@
 #ifdef CONFIG_BUFFER_OUTPUT
 static char sel4test_name[MAX_NAME_SIZE];
 static char current_stdout_bank[STDOUT_CACHE];
-static int index = BUFFERING_DISABLED;
+static int buf_index = BUFFERING_DISABLED;
 #endif
 
 static int num_tests = 0;
@@ -37,14 +37,14 @@ static int current_test_passed = 1;
 #undef printf
 void 
 sel4test_printf(const char *string) {
-    if(index == BUFFERING_DISABLED) {
+    if(buf_index == BUFFERING_DISABLED) {
         printf("%s", string);
-    } else if (index < STDOUT_CACHE && index >= 0) {
-        size_t len = STDOUT_CACHE - index;
-        snprintf(current_stdout_bank + index, len, "%s", string);
+    } else if (buf_index < STDOUT_CACHE && buf_index >= 0) {
+        size_t len = STDOUT_CACHE - buf_index;
+        snprintf(current_stdout_bank + buf_index, len, "%s", string);
         /* NULL terminate the destination in case 'string' was too long. */
         current_stdout_bank[STDOUT_CACHE - 1] = '\0';
-        index += strlen(string);
+        buf_index += strlen(string);
     }
 }
 #endif /* CONFIG_BUFFER_OUTPUT */
@@ -54,7 +54,7 @@ void
 sel4test_start_suite(char *name) {
 
 #ifdef CONFIG_PRINT_XML
-    index = 0;
+    buf_index = 0;
     printf("<testsuite>\n");
     strncpy(sel4test_name, name, MAX_NAME_SIZE);
     /* NULL terminate sel4test_name in case name was too long. */
@@ -72,7 +72,7 @@ void
 sel4test_end_suite(void) {
 #ifdef CONFIG_PRINT_XML
     printf("</testsuite>\n"); 
-    index = BUFFERING_DISABLED;
+    buf_index = BUFFERING_DISABLED;
 #else
     if (num_tests_passed != num_tests) {
         printf("Test suite failed. %d/%d tests passed.\n", num_tests_passed, num_tests);
@@ -85,7 +85,7 @@ sel4test_end_suite(void) {
 void 
 sel4test_start_test(const char *name) {
 #ifdef CONFIG_BUFFER_OUTPUT
-    index = 0;
+    buf_index = 0;
     memset(current_stdout_bank, 0, STDOUT_CACHE); 
 #endif /* CONFIG_BUFFER_OUTPUT */
 #ifdef CONFIG_PRINT_XML
@@ -126,9 +126,9 @@ sel4test_end_test(void) {
         _sel4test_failure("Test check failure (see log).", "", 0);
     }
 #ifdef CONFIG_BUFFER_OUTPUT
-    if (index != 0) {
+    if (buf_index != 0) {
         printf("\t\t<system-out>%s</system-out>\n", current_stdout_bank);
-        index = 0;
+        buf_index = 0;
     }
 #endif /* CONFIG_BUFFER_OUTPUT */
 #ifdef CONFIG_PRINT_XML

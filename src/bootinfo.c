@@ -16,11 +16,10 @@
 #include <sel4utils/util.h>
 
 #ifdef CONFIG_USER_DEBUG_BUILD
-void 
-debug_print_bootinfo(seL4_BootInfo *info) 
+void
+debug_print_bootinfo(seL4_BootInfo *info)
 {
-    
-#ifdef CONFIG_KERNEL_STABLE
+
     LOG_INFO("Node %u of %u", info->nodeID, info->numNodes);
     LOG_INFO("IOPT levels:     %u", info->numIOPTLevels);
     LOG_INFO("IPC buffer:      %p", info->ipcBuffer);
@@ -29,13 +28,13 @@ debug_print_bootinfo(seL4_BootInfo *info)
     LOG_INFO("userImageFrames: [%u --> %u)", info->userImageFrames.start, info->userImageFrames.end);
     LOG_INFO("userImagePTs:    [%u --> %u)", info->userImagePTs.start, info->userImagePTs.end);
     LOG_INFO("untypeds:        [%u --> %u)", info->untyped.start, info->untyped.end);
-    LOG_INFO("device untypeds: [%u --> %u)", info->deviceUntyped.start, info->deviceUntyped.end);
+    LOG_INFO("Initial thread domain: %u\n", info->initThreadDomain);
     LOG_INFO("Initial thread cnode size: %u", info->initThreadCNodeSizeBits);
     LOG_INFO("List of untypeds");
     LOG_INFO("------------------");
     LOG_INFO("Paddr    | Size   ");
-    
-    int sizes[32] = {0}; 
+
+    int sizes[32] = {0};
     for (int i = 0; i < CONFIG_MAX_NUM_BOOTINFO_UNTYPED_CAPS && i < (info->untyped.end - info->untyped.start); i++) {
         if (info->untypedPaddrList[i] != 0) {
             sizes[info->untypedSizeBitsList[i]]++;
@@ -50,6 +49,9 @@ debug_print_bootinfo(seL4_BootInfo *info)
         }
     }
 
+    /* mainline and experimental treat device regions differently*/
+#ifdef CONFIG_KERNEL_STABLE
+    LOG_INFO("device untypeds: [%u --> %u)", info->deviceUntyped.start, info->deviceUntyped.end);
     LOG_INFO("List of device untypes");
     LOG_INFO("Paddr    | Size   ");
     int start = info->untyped.end - info->untyped.start;
@@ -59,12 +61,16 @@ debug_print_bootinfo(seL4_BootInfo *info)
             LOG_INFO("0x%08x | %u", info->untypedPaddrList[i], info->untypedSizeBitsList[i]);
         }
     }
-
 #else
-
-    /* boot info has a different layout on mainline */
-    LOG_INFO("%s not implemented yet for non-searchable cdt kernels\n", __FUNCTION__);
-
+    LOG_INFO("DeviceRegions: %u\n", info->numDeviceRegions);
+    printf("List of deviceRegions\n");
+    printf("Paddr    | Size     | Slot Region\n");
+    for (int i = 0; i < info->numDeviceRegions; i++) {
+        printf("0x%08x | %08u | [%u <--> %u ]\n", info->deviceRegions[i].basePaddr,
+               info->deviceRegions[i].frameSizeBits,
+               info->deviceRegions[i].frames.start,
+               info->deviceRegions[i].frames.end);
+    }
 #endif /* CONFIG_KERNEL_STABLE */
 
 }

@@ -27,6 +27,6 @@
  * setting fault handlers currently.
  */
 int debug_fault_handler(seL4_CPtr faultep,
-    const char *(*senders)(seL4_Word badge));
+                        const char * (*senders)(seL4_Word badge));
 
 #endif

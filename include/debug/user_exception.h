@@ -14,6 +14,6 @@
 #include <sel4/sel4.h>
 
 void debug_user_exception_message(int (*printfn)(const char *format, ...),
-    seL4_Word* mrs);
+                                  seL4_Word* mrs);
 
 #endif

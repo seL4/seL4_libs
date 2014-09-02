@@ -12,7 +12,8 @@
 #include <debug/unknown_syscall.h>
 
 void debug_unknown_syscall_message(int (*printfn)(const char *format, ...),
-        seL4_Word* mrs) {
+                                   seL4_Word* mrs)
+{
     /* See section 5.2.2 of the manual. */
     for (unsigned int i = 0; i < 8; i++) {
         printfn(" R%u = %p\n", i, (void*)mrs[i]);
@@ -22,6 +23,6 @@ void debug_unknown_syscall_message(int (*printfn)(const char *format, ...),
             " LR = %p\n"
             " CPSR = %p\n"
             " syscall = %p\n",
-        (void*)mrs[8], (void*)mrs[9], (void*)mrs[10], (void*)mrs[11],
-        (void*)mrs[12]);
+            (void*)mrs[8], (void*)mrs[9], (void*)mrs[10], (void*)mrs[11],
+            (void*)mrs[12]);
 }

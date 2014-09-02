@@ -15,7 +15,8 @@
 /* Implemented in plat/.../serial.c. */
 int debug_plat_putchar(int c);
 
-int debug_putchar(int c) {
+int debug_putchar(int c)
+{
     if (c == '\n') {
         debug_putchar('\r');
     }

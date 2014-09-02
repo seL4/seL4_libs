@@ -12,14 +12,15 @@
 #include <debug/user_exception.h>
 
 void debug_user_exception_message(int (*printfn)(const char *format, ...),
-        seL4_Word* mrs) {
+                                  seL4_Word* mrs)
+{
     /* See section 5.2.3 of the manual. */
     printfn(" PC = %p\n"
             " SP = %p\n"
             " CPSR = %p\n"
             " exception number = %p\n"
             " exception code = %p\n",
-        (void*)mrs[0], (void*)mrs[1], (void*)mrs[2], (void*)mrs[3],
-        (void*)mrs[4]);
+            (void*)mrs[0], (void*)mrs[1], (void*)mrs[2], (void*)mrs[3],
+            (void*)mrs[4]);
 }
 

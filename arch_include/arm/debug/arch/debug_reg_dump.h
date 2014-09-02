@@ -25,7 +25,7 @@
  * the call, not after caller-register-save has been done.
  */
 static inline void debug_dump_registers(void)
-    __attribute__((always_inline));
+__attribute__((always_inline));
 
 /* WARNING: This function has not been extensively tested and may not work in
  * all scenarios. Where possible, you should avoid using this function and use
@@ -34,7 +34,8 @@ static inline void debug_dump_registers(void)
  * If you enter this function in a thumb code context everything will go pear-
  * shaped, but seL4 has no support for Thumb currently anyway.
  */
-static inline void debug_dump_registers(void) {
+static inline void debug_dump_registers(void)
+{
     /* A variable to store the current register set in. No reason this needs to
      * be a seL4_UserContext, but it's a convenient struct to store registers
      * in. This is marked static to ensure it doesn't get allocated on the
@@ -46,24 +47,24 @@ static inline void debug_dump_registers(void) {
     static seL4_UserContext *context;
 
     asm volatile (
-    /* Assume that the caller enters this function with an invalid or corrupt
-     * stack. We want to stash the stack pointer somewhere and then reassign it
-     * to a valid stack, but we can't reference anything sensible without
-     * losing the current SP, stomping on a register (we assume all the
-     * caller's registers need to be maintained) or assuming a particular
-     * address will contain a valid stack (we can't assume this because we
-     * don't know how the program we're executing in was linked).
-     *
-     * To dodge all of this, provide an inline stack right here. By inspecting
-     * the output, the printf call in this function needs 13 words of stack
-     * space so let's give it 20 just to be safe. Conveniently the register
-     * width on ARM is the same as the instruction width so we can just provide
-     * NOPs to measure this out. This doesn't affect the control flow because
-     * execution drops straight through the "stack" into the following code.
-     *
-     * Note, all of this will break in the face of read-only code mappings, but
-     * ARM ELF files never seem to do this which is fortunate.
-     */
+        /* Assume that the caller enters this function with an invalid or corrupt
+         * stack. We want to stash the stack pointer somewhere and then reassign it
+         * to a valid stack, but we can't reference anything sensible without
+         * losing the current SP, stomping on a register (we assume all the
+         * caller's registers need to be maintained) or assuming a particular
+         * address will contain a valid stack (we can't assume this because we
+         * don't know how the program we're executing in was linked).
+         *
+         * To dodge all of this, provide an inline stack right here. By inspecting
+         * the output, the printf call in this function needs 13 words of stack
+         * space so let's give it 20 just to be safe. Conveniently the register
+         * width on ARM is the same as the instruction width so we can just provide
+         * NOPs to measure this out. This doesn't affect the control flow because
+         * execution drops straight through the "stack" into the following code.
+         *
+         * Note, all of this will break in the face of read-only code mappings, but
+         * ARM ELF files never seem to do this which is fortunate.
+         */
         "\tnop                  \n"
         "\tnop                  \n"
         "\tnop                  \n"
@@ -84,8 +85,8 @@ static inline void debug_dump_registers(void) {
         "\tnop                  \n"
         "\tnop                  \n"
         "\tnop                  \n"
-        
-    /* Space on the temporary stack to store the register set... */
+
+        /* Space on the temporary stack to store the register set... */
         "\tnop                  \n" /*    ^    */
         "\tnop                  \n" /*    |    */
         "\tnop                  \n" /*    |    */
@@ -104,21 +105,21 @@ static inline void debug_dump_registers(void) {
         "\tnop                  \n" /*    |    */
         "\tnop                  \n" /*    v    */
 
-    /* ...and one word to stash the original SP. */
+        /* ...and one word to stash the original SP. */
         "\tnop                  \n"
 
-    /* Save the original SP in the preceeding word so we can retrieve it later.
-     * According to the ARM docs this method of addressing (PC-relative offset)
-     * is illegal, but it works so...
-     */
+        /* Save the original SP in the preceeding word so we can retrieve it later.
+         * According to the ARM docs this method of addressing (PC-relative offset)
+         * is illegal, but it works so...
+         */
         "\tstr sp, [pc, #-12]   \n"
 
-     /* Now switch to our temporary safe stack. */
+        /* Now switch to our temporary safe stack. */
         "\tsub sp, pc, #16      \n"
 
-     /* Push all the registers onto the stack in the reverse order of the
-      * layout of seL4_UserContext.
-      */
+        /* Push all the registers onto the stack in the reverse order of the
+         * layout of seL4_UserContext.
+         */
         "\tpush {r14}           \n"
         "\tpush {r7}            \n"
         "\tpush {r6}            \n"
@@ -134,29 +135,29 @@ static inline void debug_dump_registers(void) {
         "\tpush {r1}            \n"
         "\tpush {r0}            \n"
 
-    /* CPSR is a bit more complicated because we can't push it directly. Note
-     * that this stomps on r0 so we'll need to restore it later.
-     *
-     * FIXME: We've stomped on the APSR flags, but it doesn't have to be this
-     * way. We could stash the original CPSR (like the SP) before doing any
-     * arithmetic.
-     */
+        /* CPSR is a bit more complicated because we can't push it directly. Note
+         * that this stomps on r0 so we'll need to restore it later.
+         *
+         * FIXME: We've stomped on the APSR flags, but it doesn't have to be this
+         * way. We could stash the original CPSR (like the SP) before doing any
+         * arithmetic.
+         */
         "\tmrs r0, cpsr         \n"
         "\tpush {r0}            \n"
 
-    /* Push the ORIGINAL SP (addressed from the current SP). */
+        /* Push the ORIGINAL SP (addressed from the current SP). */
         "\tldr r0, [sp, #60]    \n"
         "\tpush {r0}            \n"
 
-    /* Push the originating PC. Calculated by the length of the
-     * instruction stream (including the initial NOP slide) subtracted from the
-     * current PC with some adjustment for pipeline effects.
-     */
+        /* Push the originating PC. Calculated by the length of the
+         * instruction stream (including the initial NOP slide) subtracted from the
+         * current PC with some adjustment for pipeline effects.
+         */
         "\tsub r0, pc, #240    \n"
         "\tpush {r0}           \n"
-       :
-       :
-       :"sp" /* We clobbered r0 as well, but we don't want GCC trying to save
+        :
+        :
+        :"sp" /* We clobbered r0 as well, but we don't want GCC trying to save
               * it for us. GCC can't actually do anything sensible about this
               * clobber anyway.
               */
@@ -170,9 +171,9 @@ static inline void debug_dump_registers(void) {
      */
     asm volatile (
         "\tmov %0, sp          \n"
-       :"=r"(context)
-       :
-       :
+        :"=r"(context)
+        :
+        :
     );
 
     printf(
@@ -214,13 +215,13 @@ static inline void debug_dump_registers(void) {
     );
 
     asm volatile (
-    /* Restore r0. */
+        /* Restore r0. */
         "\tmov r0, %0           \n"
-    /* Restore the SP. */
+        /* Restore the SP. */
         "\tldr sp, [sp, #68]    \n"
-       :
-       :"r"(context->regs.r0) /* FIXME: The compiler probably uses another register here that it will attempt to save on the stack (which we are about to rip out) if it can't find a dead one. */
-       :"r0","sp"
+        :
+        :"r"(context->regs.r0) /* FIXME: The compiler probably uses another register here that it will attempt to save on the stack (which we are about to rip out) if it can't find a dead one. */
+        :"r0", "sp"
     );
 
     /* Note that we just completely destroyed the NOP slide at the start of the

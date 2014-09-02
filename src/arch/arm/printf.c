@@ -15,7 +15,8 @@
 #include <stdio.h>
 
 int
-debug_safe_printf(const char *format, ...) {
+debug_safe_printf(const char *format, ...)
+{
     seL4_IPCBuffer shadow_buffer; /* XXX: Should we avoid allocating
                                    * this large struct on the stack?
                                    */

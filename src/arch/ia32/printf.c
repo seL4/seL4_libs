@@ -16,7 +16,8 @@
 #include <stdio.h>
 
 int
-debug_safe_printf(const char *format, ...) {
+debug_safe_printf(const char *format, ...)
+{
     seL4_IPCBuffer shadow_buffer; /* XXX: Should we avoid allocating
                                    * this large struct on the stack?
                                    */
@@ -34,7 +35,7 @@ debug_safe_printf(const char *format, ...) {
         shadow_buffer.caps_or_badges[i] = (seL4_Word)seL4_GetCap(i);
     }
     seL4_GetCapReceivePath(&shadow_buffer.receiveCNode,
-        &shadow_buffer.receiveIndex, &shadow_buffer.receiveDepth);
+                           &shadow_buffer.receiveIndex, &shadow_buffer.receiveDepth);
 
     /* Copied from printf: */
     int ret;
@@ -54,7 +55,7 @@ debug_safe_printf(const char *format, ...) {
         seL4_SetCap(i, (seL4_CPtr)shadow_buffer.caps_or_badges[i]);
     }
     seL4_SetCapReceivePath(shadow_buffer.receiveCNode,
-        shadow_buffer.receiveIndex, shadow_buffer.receiveDepth);
+                           shadow_buffer.receiveIndex, shadow_buffer.receiveDepth);
 
     return ret;
 }

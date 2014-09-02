@@ -67,10 +67,12 @@
  * allocated region. The actual algorithm used here is more or less irrelevant
  * as long as it is deterministic.
  */
-static uintptr_t pre_canary(void *ptr) {
+static uintptr_t pre_canary(void *ptr)
+{
     return ((uintptr_t)ptr) | PRE_EXTRA_BITS;
 }
-static uintptr_t post_canary(void *ptr) {
+static uintptr_t post_canary(void *ptr)
+{
     return ((uintptr_t)ptr) | POST_EXTRA_BITS;
 }
 
@@ -88,12 +90,14 @@ static int err = 0;
 /* Adjust a size that is about to be passed to the real allocation functions in
  * order to account for our instrumentation.
  */
-static size_t adjust_size(size_t size) {
+static size_t adjust_size(size_t size)
+{
     return size + sizeof(metadata_t) + sizeof(uintptr_t);
 }
 
 /* Wrap a (just-allocated) region with canary values. */
-static void *box(void *ptr, size_t size) {
+static void *box(void *ptr, size_t size)
+{
     if (ptr == NULL) {
         return ptr;
     }
@@ -124,7 +128,8 @@ static void *box(void *ptr, size_t size) {
     } while (0)
 
 /* Unwrap a canary-endowed region into the original allocated pointer. */
-static void *unbox(void *ptr, void *ret_addr) {
+static void *unbox(void *ptr, void *ret_addr)
+{
     if (ptr == NULL) {
         return ptr;
     }
@@ -135,7 +140,7 @@ static void *unbox(void *ptr, void *ret_addr) {
     /* Check the leading canary (underflow). */
     if (pre->canary != pre_canary(ptr)) {
         error("Leading corruption in heap memory pointed to by %p (called "
-            "prior to %p)\n", ptr, ret_addr);
+              "prior to %p)\n", ptr, ret_addr);
     }
 
     /* Check the trailing canary with memcmp so we don't need to care about
@@ -146,7 +151,7 @@ static void *unbox(void *ptr, void *ret_addr) {
     uintptr_t canary = post_canary(ptr);
     if (memcmp(&post->canary, &canary, sizeof(post->canary)) != 0) {
         error("Buffer overflow in heap memory pointed to by %p (called prior "
-            "to %p)\n", ptr, ret_addr);
+              "to %p)\n", ptr, ret_addr);
     }
 
     return (void*)pre;
@@ -157,12 +162,13 @@ static void *unbox(void *ptr, void *ret_addr) {
  * *boxed* pointers as these are the ones seen by the user.
  */
 #ifndef CONFIG_LIBSEL4DEBUG_ALLOC_BUFFER_ENTRIES
-    #define CONFIG_LIBSEL4DEBUG_ALLOC_BUFFER_ENTRIES 128
+#define CONFIG_LIBSEL4DEBUG_ALLOC_BUFFER_ENTRIES 128
 #endif
 static uintptr_t alloced[CONFIG_LIBSEL4DEBUG_ALLOC_BUFFER_ENTRIES];
 
 /* Track the given heap pointer as currently live. */
-static void track(void *ptr) {
+static void track(void *ptr)
+{
     if (sizeof(alloced) == 0 || ptr == NULL) {
         /* Disable tracking if we have no buffer and never track NULL. */
         return;
@@ -176,11 +182,12 @@ static void track(void *ptr) {
     }
     /* Failed to find a free slot. */
     error("Exhausted pointer tracking buffer; try increasing "
-        "CONFIG_LIBSEL4DEBUG_ALLOC_BUFFER_ENTRIES value\n");
+          "CONFIG_LIBSEL4DEBUG_ALLOC_BUFFER_ENTRIES value\n");
 }
 
 /* Stop tracking the given pointer (mark it as dead). */
-static void untrack(void *ptr, void *ret_addr) {
+static void untrack(void *ptr, void *ret_addr)
+{
     if (sizeof(alloced) == 0 || ptr == NULL) {
         /* Ignore tracking if we have no buffer or are freeing NULL. */
         return;
@@ -194,7 +201,7 @@ static void untrack(void *ptr, void *ret_addr) {
     }
     /* Failed to find it. */
     error("Attempt to free pointer %p that was never malloced (called prior "
-        "to %p)\n", ptr, ret_addr);
+          "to %p)\n", ptr, ret_addr);
 }
 
 /* Wrapped functions that will be exported to us from libmuslc. */
@@ -205,7 +212,8 @@ void *__real_realloc(void *ptr, size_t size);
 
 /* Actual allocation wrappers follow. */
 
-void *__wrap_malloc(size_t size) {
+void *__wrap_malloc(size_t size)
+{
     if (err) {
         return __real_malloc(size);
     }
@@ -217,7 +225,8 @@ void *__wrap_malloc(size_t size) {
     return ptr;
 }
 
-void __wrap_free(void *ptr) {
+void __wrap_free(void *ptr)
+{
     if (err) {
         __real_free(ptr);
         return;
@@ -240,7 +249,8 @@ void __wrap_free(void *ptr) {
     __real_free(ptr);
 }
 
-void *__wrap_calloc(size_t num, size_t size) {
+void *__wrap_calloc(size_t num, size_t size)
+{
     if (err) {
         return __real_calloc(num, size);
     }
@@ -257,7 +267,8 @@ void *__wrap_calloc(size_t num, size_t size) {
     return ptr;
 }
 
-void *__wrap_realloc(void *ptr, size_t size) {
+void *__wrap_realloc(void *ptr, size_t size)
+{
     if (err) {
         return __real_realloc(ptr, size);
     }

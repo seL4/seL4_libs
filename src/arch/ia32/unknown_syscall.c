@@ -12,7 +12,8 @@
 #include <debug/unknown_syscall.h>
 
 void debug_unknown_syscall_message(int (*printfn)(const char *format, ...),
-        seL4_Word* mrs) {
+                                   seL4_Word* mrs)
+{
     /* See section 5.2.2 of the manual. */
     printfn(" EAX = %p\n"
             " EBX = %p\n"
@@ -25,7 +26,7 @@ void debug_unknown_syscall_message(int (*printfn)(const char *format, ...),
             " ESP = %p\n"
             " EFLAGS = %p\n"
             " syscall = %p\n",
-        (void*)mrs[0], (void*)mrs[1], (void*)mrs[2], (void*)mrs[3],
-        (void*)mrs[4], (void*)mrs[5], (void*)mrs[6], (void*)mrs[7],
-        (void*)mrs[8], (void*)mrs[9], (void*)mrs[10]);
+            (void*)mrs[0], (void*)mrs[1], (void*)mrs[2], (void*)mrs[3],
+            (void*)mrs[4], (void*)mrs[5], (void*)mrs[6], (void*)mrs[7],
+            (void*)mrs[8], (void*)mrs[9], (void*)mrs[10]);
 }

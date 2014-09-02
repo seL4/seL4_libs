@@ -22,7 +22,8 @@
 #define USED_MRS 13
 
 int debug_fault_handler(seL4_CPtr faultep,
-        const char *(*senders)(seL4_Word badge)) {
+                        const char * (*senders)(seL4_Word badge))
+{
     char *sender_name = NULL;
 
     /* If we weren't passed a translation function, make sender_name a buffer
@@ -64,64 +65,64 @@ int debug_fault_handler(seL4_CPtr faultep,
 
         switch (label) {
 
-            case seL4_CapFault: {
-                /* See section 5.2.1 of the manual. */
-                assert(length > 4);
-                printf("debug: Cap fault in %s phase from %s\n"
-                       " PC   = %p\n"
-                       " CPtr = %p\n",
-                    mrs[2] == 1 ? "receive" : "send", sender_name,
-                    (void*)mrs[0], (void*)mrs[1]);
-                /* TODO: Failure description. */
-                break;
-            }
+        case seL4_CapFault: {
+            /* See section 5.2.1 of the manual. */
+            assert(length > 4);
+            printf("debug: Cap fault in %s phase from %s\n"
+                   " PC   = %p\n"
+                   " CPtr = %p\n",
+                   mrs[2] == 1 ? "receive" : "send", sender_name,
+                   (void*)mrs[0], (void*)mrs[1]);
+            /* TODO: Failure description. */
+            break;
+        }
 
-            case seL4_UnknownSyscall: {
-                /* See section 5.2.2 of the manual. */
-                printf("debug: Unknown syscall from %s\n", sender_name);
-                debug_unknown_syscall_message(printf, mrs);
-                break;
-            }
+        case seL4_UnknownSyscall: {
+            /* See section 5.2.2 of the manual. */
+            printf("debug: Unknown syscall from %s\n", sender_name);
+            debug_unknown_syscall_message(printf, mrs);
+            break;
+        }
 
-            case seL4_UserException: {
-                /* See section 5.2.3 of the manual. */
-                printf("debug: User exception from %s\n", sender_name);
-                debug_user_exception_message(printf, mrs);
-                break;
-            }
+        case seL4_UserException: {
+            /* See section 5.2.3 of the manual. */
+            printf("debug: User exception from %s\n", sender_name);
+            debug_user_exception_message(printf, mrs);
+            break;
+        }
 
-            case seL4_VMFault: {
-                /* See section 5.2.4 of the manual. */
-                assert(length == 4);
-                printf("debug: Virtual memory %s fault from %s\n"
-                       " PC                    = %p\n"
-                       " Fault address         = %p\n"
-                       " Fault status register = %p\n",
-                    mrs[2] == 1 ? "instruction" : "data", sender_name,
-                    (void*)mrs[0], (void*)mrs[1], (void*)mrs[3]);
-                /* TODO: Translate the FSR nicely for the user. */
-                break;
-            }
+        case seL4_VMFault: {
+            /* See section 5.2.4 of the manual. */
+            assert(length == 4);
+            printf("debug: Virtual memory %s fault from %s\n"
+                   " PC                    = %p\n"
+                   " Fault address         = %p\n"
+                   " Fault status register = %p\n",
+                   mrs[2] == 1 ? "instruction" : "data", sender_name,
+                   (void*)mrs[0], (void*)mrs[1], (void*)mrs[3]);
+            /* TODO: Translate the FSR nicely for the user. */
+            break;
+        }
 
 #ifndef CONFIG_AEP_BINDING
-            case seL4_Interrupt: {
-                printf("debug: Fault handler unexpectedly received an "
-                    "interrupt from %s\n", sender_name);
-                break;
-            }
+        case seL4_Interrupt: {
+            printf("debug: Fault handler unexpectedly received an "
+                   "interrupt from %s\n", sender_name);
+            break;
+        }
 #endif /* CONFIG_AEP_BINDING */
 
-            default: {
-                printf("debug: Unexpected fault %p from %s\n", (void*)label,
-                    sender_name);
-                for (unsigned int i = 0; i < length && i < USED_MRS; i++) {
-                    printf(" mr%u = %p\n", i, (void*)mrs[i]);
-                }
-                if (length > USED_MRS) {
-                    printf("  further %u registers not shown\n",
-                        length - USED_MRS);
-                }
+        default: {
+            printf("debug: Unexpected fault %p from %s\n", (void*)label,
+                   sender_name);
+            for (unsigned int i = 0; i < length && i < USED_MRS; i++) {
+                printf(" mr%u = %p\n", i, (void*)mrs[i]);
             }
+            if (length > USED_MRS) {
+                printf("  further %u registers not shown\n",
+                       length - USED_MRS);
+            }
+        }
         }
     }
 

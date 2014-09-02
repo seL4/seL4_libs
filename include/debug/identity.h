@@ -20,6 +20,6 @@
 #define _LIBSEL4DEBUG_IDENTITY_H_
 
 void debug_set_id(const char *s);
-void debug_set_id_fn(const char *(*fn)(void));
+void debug_set_id_fn(const char * (*fn)(void));
 
 #endif

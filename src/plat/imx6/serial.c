@@ -20,12 +20,14 @@
 
 static void *base;
 
-int debug_plat_serial_init(void *data) {
+int debug_plat_serial_init(void *data)
+{
     base = data;
     return 0;
 }
 
-int debug_plat_putchar(int c) {
+int debug_plat_putchar(int c)
+{
     if (base == NULL) {
         return -1;
     }

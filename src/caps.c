@@ -13,7 +13,7 @@
 #include <sel4/sel4.h>
 #include <stdio.h>
 
-void 
+void
 debug_cap_identify(seL4_CPtr cap)
 {
 #ifdef CONFIG_DEBUG_BUILD

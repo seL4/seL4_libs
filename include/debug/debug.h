@@ -21,8 +21,8 @@
  */
 int
 debug_safe_printf(const char *format, ...)
-    __attribute__((format(printf, 1, 2)))
-    __attribute__((no_instrument_function));
+__attribute__((format(printf, 1, 2)))
+__attribute__((no_instrument_function));
 
 void debug_cap_identify(seL4_CPtr cap);
 

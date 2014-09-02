@@ -15,20 +15,22 @@
  *
  * Enable this in your app by including:
  *  NK_CFLAGS += -finstrument-functions \
- *    -finstrument-functions-exclude-function-list=seL4_MessageInfo_get_length 
+ *    -finstrument-functions-exclude-function-list=seL4_MessageInfo_get_length
  * If you don't exclude seL4_MessageInfo_get_length, you will most likely find
- * that __seL4_*WithMRs will not function correctly because calls to 
+ * that __seL4_*WithMRs will not function correctly because calls to
  * seL4_MessageInfo_get_length will be instrumented and clobber necessary
  * registers for the following syscall.
  */
 void __cyg_profile_func_enter(void *func, void *caller)
-    __attribute__((no_instrument_function));
-void __cyg_profile_func_enter(void *func, void *caller) {
+__attribute__((no_instrument_function));
+void __cyg_profile_func_enter(void *func, void *caller)
+{
     debug_safe_printf("ENTER: %p called from %p\n", func, caller);
 }
 
 void __cyg_profile_func_exit(void *func, void *caller)
-    __attribute__((no_instrument_function));
-void __cyg_profile_func_exit(void *func, void *caller) {
+__attribute__((no_instrument_function));
+void __cyg_profile_func_exit(void *func, void *caller)
+{
     debug_safe_printf("EXIT: %p returning to %p\n", func, caller);
 }

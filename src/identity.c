@@ -8,7 +8,7 @@
  * @TAG(NICTA_BSD)
  */
 
-#include <debug/identity.h>
+#include <sel4debug/identity.h>
 #include "identity-internal.h"
 #include <stdlib.h>
 

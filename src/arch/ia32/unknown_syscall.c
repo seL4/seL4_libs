@@ -9,7 +9,7 @@
  */
 
 #include <sel4/sel4.h>
-#include <debug/unknown_syscall.h>
+#include <sel4debug/unknown_syscall.h>
 
 void debug_unknown_syscall_message(int (*printfn)(const char *format, ...),
                                    seL4_Word* mrs)

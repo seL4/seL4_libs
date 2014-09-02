@@ -14,9 +14,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <debug/faults.h>
-#include <debug/unknown_syscall.h>
-#include <debug/user_exception.h>
+#include <sel4debug/faults.h>
+#include <sel4debug/unknown_syscall.h>
+#include <sel4debug/user_exception.h>
 
 /* Maximum number of message registers used in any fault transmission. */
 #define USED_MRS 13

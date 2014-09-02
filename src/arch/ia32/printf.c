@@ -8,7 +8,7 @@
  * @TAG(NICTA_BSD)
  */
 
-#include <debug/debug.h>
+#include <sel4debug/debug.h>
 #include <stdlib.h> /* To squash errors in functions.h. */
 #include <sel4/types.h>
 #include <sel4/arch/functions.h>

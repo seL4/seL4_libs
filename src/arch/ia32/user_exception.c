@@ -9,7 +9,7 @@
  */
 
 #include <sel4/sel4.h>
-#include <debug/user_exception.h>
+#include <sel4debug/user_exception.h>
 
 void debug_user_exception_message(int (*printfn)(const char *format, ...),
                                   seL4_Word* mrs)

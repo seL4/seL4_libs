@@ -9,7 +9,7 @@
  */
 
 #include <autoconf.h>
-#include <debug/serial.h>
+#include <sel4debug/serial.h>
 #include <sel4/sel4.h>
 
 /* Implemented in plat/.../serial.c. */

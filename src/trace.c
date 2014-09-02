@@ -8,7 +8,7 @@
  * @TAG(NICTA_BSD)
  */
 
-#include <debug/debug.h>
+#include <sel4debug/debug.h>
 
 /* Function entry and exit printing. Useful for low effort tracing of
  * execution.

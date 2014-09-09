@@ -38,6 +38,7 @@ typedef struct {
     sel4utils_thread_t thread;
     vka_object_t fault_endpoint;
     void *entry_point;
+    uintptr_t sysinfo;
     object_node_t *allocated_object_list_head;
     /* if the elf wasn't loaded into the address space, this describes the regions.
      * this permits lazy loading / copy on write / page sharing / whatever crazy thing
@@ -68,8 +69,9 @@ typedef struct {
     /* Do you want the elf image preloaded? */
     bool do_elf_load;
     
-    /* otherwise what is the entry point? */
+    /* otherwise what is the entry point and sysinfo? */
     void *entry_point;
+    uintptr_t sysinfo;
 
     /* should we create a default single level cspace? */
     bool create_cspace;
@@ -152,6 +154,29 @@ void *sel4utils_copy_args(vspace_t *current, vspace_t *target, vka_t *vka,
  *
  */
 int sel4utils_spawn_process(sel4utils_process_t *process, vka_t *vka, vspace_t *vspace,
+        int argc, char *argv[], int resume);
+
+/**
+ * Start a process, and copy arguments into the processes address space.
+ *
+ * This is intented for use when loading applications that have a System V ABI compliant
+ * entry point. This means that the entry point should *not* be a 'main' that is expecting
+ * argc and argv in the form as passed here, but should be an _start routine that will
+ * take a stack frame with the arguments on it and construct an appropriate invocation
+ * to a main function. The stack frame passed to the entry point will have an auxv, envp
+ * and argv
+ *
+ * @param process initialised sel4utils process struct.
+ * @param vka     vka interface to use for allocation of frames.
+ * @param vspace  the current vspace.
+ * @param argc    the number of arguments.
+ * @param argv    a pointer to an array of strings in the current vspace.
+ * @param resume  1 to start the process, 0 to leave suspended.
+ *
+ * @return -1 on error, 0 on success.
+ *
+ */
+int sel4utils_spawn_process_v(sel4utils_process_t *process, vka_t *vka, vspace_t *vspace,
         int argc, char *argv[], int resume);
 
 /**

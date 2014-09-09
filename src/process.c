@@ -14,6 +14,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include <elf.h>
 #include <sel4/sel4.h>
 #include <vka/object.h>
 #include <vka/capops.h>
@@ -240,6 +241,63 @@ error:
     return NULL;
 }
 
+static int
+sel4utils_stack_write(vspace_t *current_vspace, vspace_t *target_vspace,
+                    vka_t *vka, void *buf, size_t len, uintptr_t *stack_top)
+{
+    size_t remaining = len;
+    size_t written = 0;
+    uintptr_t new_stack_top = (*stack_top) - len;
+    uintptr_t current_dest = new_stack_top;
+    while (remaining > 0) {
+        /* How many can we write on the current page ? */
+        size_t towrite = MIN(ROUND_UP(current_dest, PAGE_SIZE_4K) - current_dest, remaining);
+        /* Get the cap */
+        seL4_CPtr frame = vspace_get_cap(target_vspace, (void*)PAGE_ALIGN_4K(current_dest));
+        if (!frame) {
+            return -1;
+        }
+        /* map it in */
+        void *mapping = sel4utils_dup_and_map(vka, current_vspace, frame, seL4_PageBits);
+        if (!mapping) {
+            return -1;
+        }
+        /* Copy the portion */
+        memcpy(mapping + (current_dest % PAGE_SIZE_4K), buf + written, towrite);
+        /* Unmap */
+        sel4utils_unmap_dup(vka, current_vspace, mapping, seL4_PageBits);
+        remaining -= towrite;
+        written += towrite;
+        current_dest += towrite;
+    }
+    *stack_top = new_stack_top;
+    return 0;
+}
+
+static int
+sel4utils_stack_write_constant(vspace_t *current_vspace, vspace_t *target_vspace,
+                    vka_t *vka, long value, uintptr_t *stack_top)
+{
+    return sel4utils_stack_write(current_vspace, target_vspace, vka, &value, sizeof(value), stack_top);
+}
+
+static int
+sel4utils_stack_copy_args(vspace_t *current_vspace, vspace_t *target_vspace,
+                    vka_t *vka, int argc, char *argv[], uintptr_t *dest_argv, uintptr_t *stack_top)
+{
+    int i;
+    int error;
+    for (i = 0; i < argc; i++) {
+        error = sel4utils_stack_write(current_vspace, target_vspace, vka, argv[i], strlen(argv[i]) + 1, stack_top);
+        if (error) {
+            return error;
+        }
+        dest_argv[i] = *stack_top;
+        *stack_top = ROUND_DOWN(*stack_top, 4);
+    }
+    return 0;
+}
+
 int
 sel4utils_spawn_process(sel4utils_process_t *process, vka_t *vka, vspace_t *vspace, int argc,
         char *argv[], int resume)
@@ -298,6 +356,104 @@ sel4utils_spawn_process(sel4utils_process_t *process, vka_t *vka, vspace_t *vspa
                 (void *) argc, (void *) new_process_argv, resume, process->thread.stack_top);
 #endif /* CONFIG_ARCH_IA32 */
 
+    return error;
+}
+
+int
+sel4utils_spawn_process_v(sel4utils_process_t *process, vka_t *vka, vspace_t *vspace, int argc,
+        char *argv[], int resume)
+{
+    /* define an envp and auxp */
+    int envc = 1;
+    char ipc_buf_env[30];
+    sprintf(ipc_buf_env,"IPCBUFFER=0x%x", process->thread.ipc_buffer_addr);
+    char *envp[] = {ipc_buf_env};
+    int auxc = process->sysinfo ? 1 : 0;
+#if defined(CONFIG_ARCH_IA32) || defined(CONFIG_ARCH_ARM)
+    Elf32_auxv_t auxv[] = { {.a_type = AT_SYSINFO, .a_un = {process->sysinfo}}};
+#elif defined(CONFIG_X86_64)
+    Elf64_auxv_t auxv[] = { {.a_type = AT_SYSINFO, .a_un = {process->sysinfo}}};
+#else
+#error Not defined
+#endif
+    seL4_UserContext context;
+    memset(&context, 0, sizeof(context));
+    /* write all the strings into the stack */
+    uintptr_t stack_top = (uintptr_t)process->thread.stack_top - 4;
+    uintptr_t dest_argv[argc];
+    uintptr_t dest_envp[envc];
+    int error;
+    /* Copy over the user arguments */
+    error = sel4utils_stack_copy_args(vspace, &process->vspace, vka, argc, argv, dest_argv, &stack_top);
+    if (error) {
+        return -1;
+    }
+    /* copy the environment */
+    error = sel4utils_stack_copy_args(vspace, &process->vspace, vka, envc, envp, dest_envp, &stack_top);
+    if (error) {
+        return -1;
+    }
+
+#if defined(CONFIG_ARCH_IA32) || defined(CONFIG_ARCH_ARM) || defined(CONFIG_X86_64)
+    /* construct initial stack frame */
+    /* Null terminate aux */
+    error = sel4utils_stack_write_constant(vspace, &process->vspace, vka, 0, &stack_top);
+    if (error) {
+        return -1;
+    }
+    error = sel4utils_stack_write_constant(vspace, &process->vspace, vka, 0, &stack_top);
+    if (error) {
+        return -1;
+    }
+    /* write aux */
+    error = sel4utils_stack_write(vspace, &process->vspace, vka, auxv, sizeof(auxv[0]) * auxc, &stack_top);
+    if (error) {
+        return -1;
+    }
+    /* Null terminate environment */
+    error = sel4utils_stack_write_constant(vspace, &process->vspace, vka, 0, &stack_top);
+    if (error) {
+        return -1;
+    }
+    /* write environment */
+    error = sel4utils_stack_write(vspace, &process->vspace, vka, dest_envp, sizeof(dest_envp), &stack_top);
+    if (error) {
+        return -1;
+    }
+    /* Null terminate arguments */
+    error = sel4utils_stack_write(vspace, &process->vspace, vka, dest_argv, sizeof(dest_argv), &stack_top);
+    if (error) {
+        return -1;
+    }
+    /* Push argument count */
+    error = sel4utils_stack_write_constant(vspace, &process->vspace, vka, argc, &stack_top);
+    if (error) {
+        return -1;
+    }
+#else
+#error Not implemented yet
+#endif
+
+#if defined(CONFIG_ARCH_IA32)
+    /* No atexit pointer */
+    context.edx = 0;
+    context.esp = stack_top;
+    context.gs = IPCBUF_GDT_SELECTOR;
+    context.eip = (seL4_Word)process->entry_point;
+#elif defined(CONFIG_X86_64)
+    context.rdx = 0;
+    context.rsp = stack_top;
+    context.gs = IPCBUF_GDT_SELECTOR;
+    context.rip = (seL4_Word)process->entry_point;
+#elif defined(CONFIG_ARCH_ARM)
+    context.sp = stack_top;
+    context.pc = (seL4_Word)process->entry_point;
+#else
+#error Not implemented yet
+#endif
+
+    /* Write the registers */
+    error = seL4_TCB_WriteRegisters(process->thread.tcb.cptr, resume, 0, sizeof(context) / sizeof(seL4_Word), &context);
     return error;
 }
 
@@ -483,13 +639,16 @@ int sel4utils_configure_process_custom(sel4utils_process_t *process, vka_t *vka,
             }
             process->entry_point = sel4utils_elf_reserve(&process->vspace, config.image_name, process->elf_regions);
         }
-    
+
         if (process->entry_point == NULL) {
             LOG_ERROR("Failed to load elf file\n");
             goto error;
         }
+
+        process->sysinfo = sel4utils_elf_get_vsyscall(config.image_name);
     } else {
         process->entry_point = config.entry_point;
+        process->sysinfo = config.sysinfo;
     }
 
     /* create the thread, do this *after* elf-loading so that we don't clobber

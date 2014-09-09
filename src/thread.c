@@ -227,7 +227,7 @@ sel4utils_start_fault_handler(seL4_CPtr fault_endpoint, vka_t *vka, vspace_t *vs
         uint8_t prio, seL4_CPtr cspace, seL4_CapData_t cap_data, char *name, 
         sel4utils_thread_t *res)
 {
-    int error = sel4utils_configure_thread(vka, vspace, vspace, 0, prio, cspace, 
+    int error = sel4utils_configure_thread(vka, vspace, vspace, 0, prio, cspace,
             cap_data, res);
 
     if (error) {

@@ -294,6 +294,24 @@ sel4utils_elf_load_record_regions(vspace_t *loadee, vspace_t *loader, vka_t *loa
     return error == seL4_NoError ? (void*)(seL4_Word)entry_point : NULL;
 }
 
+uintptr_t sel4utils_elf_get_vsyscall(char *image_name)
+{
+    unsigned long elf_size;
+    char *elf_file = cpio_get_file(_cpio_archive, image_name, &elf_size);
+    if (elf_file == NULL) {
+        LOG_ERROR("ERROR: failed to lookup elf file %s", image_name);
+        return 0;
+    }
+    /* See if we can find the __vsyscall section */
+    void *addr = elf_getSectionNamed(elf_file, "__vsyscall");
+    if (addr) {
+        /* Hope everyting is good and just dereference it */
+        return *(uintptr_t*)addr;
+    } else {
+        return 0;
+    }
+}
+
 void *
 sel4utils_elf_load(vspace_t *loadee, vspace_t *loader, vka_t *loadee_vka, vka_t *loader_vka, char *image_name)
 {

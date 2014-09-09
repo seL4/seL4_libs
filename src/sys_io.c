@@ -27,7 +27,7 @@
 
 #include <sys/types.h>
 #include <sys/socket.h>
-#include <sys/syscall.h>
+#include <bits/syscall.h>
 
 #include <cpio/cpio.h>
 
@@ -68,7 +68,7 @@ static int *free_fd_table = NULL;
 /* head of the stack */
 static int free_fd_table_index;
 /* total number of fds */
-static int num_fds = OPEN_FILE_MAX;
+static int num_fds = 256;
 
 
 static void 
@@ -479,6 +479,8 @@ sys_lseek(va_list ap)
 
     return new_offset;
 }
+
+long syscall(long n, ...);
 
 long sys__llseek(va_list ap)
 {

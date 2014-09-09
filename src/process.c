@@ -25,20 +25,6 @@
 #include <sel4utils/mapping.h>
 #include "helpers.h"
 
-static size_t
-compute_length(int argc, char **argv)
-{
-    size_t length = 0;
-
-    assert(argv != NULL);
-    for (int i = 0; i < argc; i++) {
-        assert(argv[i] != NULL);
-        length += strlen(argv[i]) + 1;
-    }
-
-    return length;
-}
-
 static int recurse = 0;
 
 void
@@ -138,109 +124,6 @@ sel4utils_copy_cap_to_process(sel4utils_process_t *process, cspacepath_t src)
     return dest.capPtr;
 }
 
-void *
-sel4utils_copy_args(vspace_t *current_vspace, vspace_t *target_vspace,
-                    vka_t *vka, int argc, char *argv[])
-{
-    assert(current_vspace != target_vspace);
-
-    size_t length = compute_length(argc, argv);
-    size_t npages UNUSED = BYTES_TO_4K_PAGES(length);
-    //TODO handle multiple pages of args. Implement this if you need it.
-    assert(npages == 1);
-
-    /* allocate pages in the target address space */
-    vka_object_t target_page = {0};
-    cspacepath_t target_cap = {0};
-    cspacepath_t current_cap = {0};
-    void *target_vaddr = NULL;
-    void *current_vaddr = NULL;
-    seL4_CPtr slot = 0;
-
-    int error = vka_alloc_frame(vka, seL4_PageBits, &target_page);
-    vka_cspace_make_path(vka, target_page.cptr, &target_cap);
-    if (error) {
-        target_page.cptr = 0;
-        LOG_ERROR("Failed to allocate frame\n");
-        goto error;
-    }
-
-    error = vka_cspace_alloc(vka, &slot);
-    if (error) {
-        slot = 0;
-        LOG_ERROR("Failed to allocate cslot\n");
-        goto error;
-    }
-
-    vka_cspace_make_path(vka, slot, &current_cap);
-    error = vka_cnode_copy(&current_cap, &target_cap, seL4_AllRights);
-    if (error) {
-        LOG_ERROR("Failed to make a copy of frame cap\n");
-        current_cap.capPtr = 0;
-        goto error;
-    }
-
-    /* map the pages */
-    current_vaddr = vspace_map_pages(current_vspace, &current_cap.capPtr,
-                    seL4_AllRights, 1, seL4_PageBits, 1);
-    if (current_vaddr == NULL) {
-        LOG_ERROR("Failed to map page into current address space\n");
-        goto error;
-    }
-
-    target_vaddr = vspace_map_pages(target_vspace, &target_cap.capPtr, seL4_CanRead,
-                   1, seL4_PageBits, 1);
-    if (target_vaddr == NULL) {
-        LOG_ERROR("Failed to map page into target address space\n");
-        goto error;
-    }
-
-    /* we aren't bailing now - inform caller we allocated a frame */
-    vspace_maybe_call_allocated_object(current_vspace, target_page);
-
-    /* do the copy */
-    char **current_argv = current_vaddr;
-    char *strings = current_vaddr + (argc * sizeof(char*));
-
-    for (int i = 0; i < argc; i++) {
-        current_argv[i] = target_vaddr + ((uint32_t) ((seL4_Word)strings) % PAGE_SIZE_4K);
-        strncpy(strings, argv[i], strlen(argv[i]) + 1);
-        strings += strlen(argv[i]) + 1;
-    }
-
-    /* flush & unmap */
-#ifdef CONFIG_ARCH_ARM
-    seL4_ARM_Page_Unify_Instruction(current_cap.capPtr, 0, PAGE_SIZE_4K);
-    seL4_ARM_Page_Unify_Instruction(target_cap.capPtr, 0, PAGE_SIZE_4K);
-#endif /* CONFIG_ARCH_ARM */
-
-    vspace_unmap_pages(current_vspace, current_vaddr, 1, seL4_PageBits);
-
-    vka_cnode_delete(&current_cap);
-    vka_cspace_free(vka, slot);
-
-    return target_vaddr;
-
-error:
-    if (current_vaddr != NULL) {
-        vspace_unmap_pages(current_vspace, current_vaddr, 1, seL4_PageBits);
-    }
-
-    if (current_cap.capPtr != 0) {
-        vka_cnode_delete(&current_cap);
-    }
-
-    if (slot != 0) {
-        vka_cspace_free(vka, slot);
-    }
-
-    if (target_page.cptr != 0) {
-        vka_free_object(vka, &target_page);
-    }
-
-    return NULL;
-}
-
 static int
 sel4utils_stack_write(vspace_t *current_vspace, vspace_t *target_vspace,
                     vka_t *vka, void *buf, size_t len, uintptr_t *stack_top)
@@ -302,59 +185,39 @@ int
 sel4utils_spawn_process(sel4utils_process_t *process, vka_t *vka, vspace_t *vspace, int argc,
         char *argv[], int resume)
 {
-    char **new_process_argv = NULL;
+    uintptr_t stack_top = (uintptr_t)process->thread.stack_top - 4;
+    uintptr_t new_process_argv = 0;
+    int error;
+    /* write all the strings into the stack */
     if (argc > 0) {
-        new_process_argv = sel4utils_copy_args(vspace, &process->vspace, vka, argc, argv);
-        if (new_process_argv == NULL) {
+        uintptr_t dest_argv[argc];
+        /* Copy over the user arguments */
+        error = sel4utils_stack_copy_args(vspace, &process->vspace, vka, argc, argv, dest_argv, &stack_top);
+        if (error) {
             return -1;
         }
+        /* Put the new argv array on as well */
+        error = sel4utils_stack_write(vspace, &process->vspace, vka, dest_argv, sizeof(dest_argv), &stack_top);
+        if (error) {
+            return -1;
+        }
+        new_process_argv = stack_top;
     }
+    /* Some architectures want stack to be double word aligned */
+    stack_top = ROUND_DOWN(stack_top, sizeof(int) * 2);
 
     /* On arm we write the arguments to registers */
 #ifdef CONFIG_ARCH_IA32
-    /* map in the first page of the stack for this thread */
-    seL4_CPtr page_cap = vspace_get_cap(&process->vspace, process->thread.stack_top - PAGE_SIZE_4K);
-
-    /* make a copy of the cap */
-    seL4_CPtr page_cap_copy;
-    int error = vka_cspace_alloc(vka, &page_cap_copy);
+    /* Write 6 words to make the argument list */
+    uint32_t stack_args[6] = {0, (uint32_t)argc, (uint32_t)new_process_argv, process->thread.ipc_buffer, 0, 0};
+    error = sel4utils_stack_write(vspace, &process->vspace, vka, stack_args, sizeof(stack_args), &stack_top);
     if (error) {
-        LOG_ERROR("Failed to allocate cslot\n");
-        return error;
-    }
-
-    cspacepath_t src, dest;
-
-    vka_cspace_make_path(vka, page_cap, &src);
-    vka_cspace_make_path(vka, page_cap_copy, &dest);
-
-    error = vka_cnode_copy(&dest, &src, seL4_AllRights);
-    if (error) {
-        LOG_ERROR("Failed to copy cap of stack page, error: %d\n", error);
-        vka_cspace_free(vka, page_cap_copy);
-        return error;
-    }
-
-    /* map the page in */
-    void *stack = vspace_map_pages(vspace, &page_cap_copy, seL4_AllRights, 1, seL4_PageBits, 1);
-
-    if (stack == NULL) {
-        LOG_ERROR("Failed to map stack page into process loading vspace\n");
-        vka_cspace_free(vka, page_cap_copy);
         return -1;
     }
+#endif
 
     error = sel4utils_internal_start_thread(&process->thread, process->entry_point,
-            (void *) ((seL4_Word)argc), (void *) new_process_argv, resume, stack + PAGE_SIZE_4K);
-
-    /* unmap it */
-    vspace_free_pages(vspace, stack, 1, seL4_PageBits);
-    vka_cnode_delete(&dest);
-    vka_cspace_free(vka, page_cap_copy);
-#elif CONFIG_ARCH_ARM
-    int error = sel4utils_internal_start_thread(&process->thread, process->entry_point,
-                (void *) argc, (void *) new_process_argv, resume, process->thread.stack_top);
-#endif /* CONFIG_ARCH_IA32 */
+                (void *) argc, (void *) new_process_argv, resume, NULL, (void*)stack_top);
 
     return error;
 }

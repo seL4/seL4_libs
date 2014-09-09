@@ -105,28 +105,6 @@ typedef struct {
 } sel4utils_process_config_t;
 
 /**
- * Copy data from one vspace to another. Data is in POSIX standard argc, argv style.
- *
- * This is intented to use when loading applications of the format:
- *
- * int main(int argc, char **argv) { };
- *
- *
- * @param current the vspace we are loading the arguments from
- * @param target  the vspace we are loading the arguments to
- * @param vka     the vka allocation interface to use when allocating pages.
- *                the pages will first be mapped into the current vspace, then unmapped and
- *                mapped into the target vspace, and left that way.
- * @param argc    the number of strings
- * @param argv    an array of c strings.
- *
- * @return NULL on failure, otherwise a pointer in the target address space where argv has
- *              been written.
- */
-void *sel4utils_copy_args(vspace_t *current, vspace_t *target, vka_t *vka,
-        int argc, char *argv[]);
-
-/**
  * Start a process, and copy arguments into the processes address space.
  *
  * This is intented to use when loading applications of the format:

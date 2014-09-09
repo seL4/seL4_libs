@@ -13,11 +13,15 @@
 /**
  * Start a thread.
  *
- * @param stack_top address of the stack in the current vspace.
+ * @param local_stack_top address of the stack in the current vspace, or NULL if arguments
+ *                        have already been placed on the stack
+ * @param dest_stack_top  stack pointer to set in the newly running thread. This is passed in
+ *                        instead of being grabbed from thread in case values have been pushed
+ *                        onto it. Only one of local_stack_top and dest_stack_top should be set
  * Other parameters see sel4utils_start_thread.
  */
 int sel4utils_internal_start_thread(sel4utils_thread_t *thread, void *entry_point, void *arg0,
-        void *arg1, int resume, void *stack_top);
+        void *arg1, int resume, void *local_stack_top, void *dest_stack_top);
 
 
 #endif /* SEL4UTILS_HELPERS_H */

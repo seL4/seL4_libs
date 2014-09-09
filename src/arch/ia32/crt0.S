@@ -18,6 +18,10 @@
  */
 
 #define __ASM__
+#include <autoconf.h>
+
+#ifdef CONFIG_LIB_SEL4_PLAT_SUPPORT_START
+
 #include <sel4/arch/constants.h>
 
     .global _start
@@ -81,3 +85,5 @@ _start:
 _stack_bottom:
     .space  16384
 _stack_top:
+
+#endif /* CONFIG_LIB_SEL4_PLAT_SUPPORT_START */

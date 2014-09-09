@@ -17,6 +17,10 @@
  *     "-u _start" to ld).
  */
 
+#include <autoconf.h>
+
+#ifdef CONFIG_LIB_SEL4_PLAT_SUPPORT_START
+
 .text
 
 /*
@@ -47,3 +51,4 @@ _stack_bottom:
 .space  16384
 _stack_top:
 
+#endif /* CONFIG_LIB_SEL4_PLAT_SUPPORT_START */

@@ -19,10 +19,6 @@ CFILES += $(patsubst $(SOURCE_DIR)/%,%,$(wildcard ${SOURCE_DIR}/src/mach/$(MACH)
 
 ASMFILES := $(patsubst $(SOURCE_DIR)/%,%,$(wildcard ${SOURCE_DIR}/src/arch/$(ARCH)/*.S))
 
-ifneq (${CONFIG_LIB_SEL4_PLAT_SUPPORT_START},y)
-ASMFILES := $(filter-out %/crt0.S,${ASMFILES})
-endif
-
 # Header files/directories this library provides
 HDRFILES := \
     $(wildcard ${SOURCE_DIR}/include/*) \

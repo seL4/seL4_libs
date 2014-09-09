@@ -516,7 +516,7 @@ static int bootstrap_new_2level_cspace(bootstrap_info_t *bs, int l1size, int l2s
     cspace_two_level_t *cspace;
     int error;
     int i;
-    seL4_CPtr l2nodeforbackpointer;
+    seL4_CPtr l2nodeforbackpointer = 0;
     seL4_CPtr last_cap = MAX(cnode, old_cnode);
     /* create the actual cnodes */
     error = bootstrap_allocate_cnode(bs, l1size, &l1node);

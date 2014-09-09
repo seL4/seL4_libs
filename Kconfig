@@ -56,9 +56,17 @@ config LIB_SEL4_PLAT_SUPPORT_USE_SEL4_DEBUG_PUTCHAR
         Direct putchar() to seL4_DebugPutchar() instead of writing directly to the COM port.
 
 config LIB_SEL4_PLAT_SUPPORT_START
-    bool "Supply entry point"
+    bool "Supply _start entry point"
     depends on LIB_SEL4_PLAT_SUPPORT
-    default y
+    default y if !HAVE_CRT
     help
         Emit _start with a default definition that sets up a stack and does
         what's required to enter main().
+
+config LIB_SEL4_PLAT_SUPPORT_SEL4_START
+    bool "Supply _sel4_start entry point"
+    depends on LIB_SEL4_PLAT_SUPPORT
+    default y if HAVE_CRT
+    help
+        Emit a _sel4_start that sets up a stack and does
+        what's required to enter a regular _start routine

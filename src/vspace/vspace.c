@@ -19,6 +19,7 @@
 #include <sel4utils/vspace.h>
 
 #include <sel4utils/vspace_internal.h>
+#include <vka/capops.h>
 
 #include <utils/util.h>
 
@@ -38,11 +39,11 @@ create_level(vspace_t *vspace, void* vaddr)
 
     /* Otherwise we allocate our level out of the bootstrapper vspace -
      * which is where bookkeeping is mapped */
-    bottom_level_t *bottom_level = vspace_new_pages(data->bootstrap, seL4_AllRights, 1, seL4_PageBits);
+    bottom_level_t *bottom_level = vspace_new_pages(data->bootstrap, seL4_AllRights, 2, seL4_PageBits);
     if (bottom_level == NULL) {
         return -1;
     }
-    memset(bottom_level, 0, BIT(seL4_PageBits));
+    memset(bottom_level, 0, sizeof(bottom_level_t));
 
     data->top_level[TOP_LEVEL_INDEX(vaddr)] = bottom_level;
 
@@ -98,14 +99,14 @@ check_reserved_range(bottom_level_t *top_level[], void *vaddr, size_t num_pages,
 
 /* check that vaddr is actually in the reservation */
 static int
-check_reservation_bounds(reservation_t *reservation, void *vaddr, size_t num_pages, size_t size_bits)
+check_reservation_bounds(sel4utils_res_t *reservation, void *vaddr, size_t num_pages, size_t size_bits)
 {
     return (vaddr >= reservation->start) &&
            (vaddr + (num_pages * (1 << size_bits))) <= reservation->end;
 }
 
 static int
-check_reservation(bottom_level_t *top_level[], reservation_t *reservation, void *vaddr,
+check_reservation(bottom_level_t *top_level[], sel4utils_res_t *reservation, void *vaddr,
                   size_t num_pages, size_t size_bits)
 {
     return check_reservation_bounds(reservation, vaddr, num_pages, size_bits) &
@@ -113,11 +114,79 @@ check_reservation(bottom_level_t *top_level[], reservation_t *reservation, void 
 }
 
 static void
-perform_reservation(vspace_t *vspace, reservation_t *reservation, void *vaddr, size_t bytes,
+insert_reservation(sel4utils_alloc_data_t *data, sel4utils_res_t *reservation)
+{
+
+    /* insert at head */
+    assert(data != NULL);
+    assert(reservation != NULL);
+
+    reservation->next = NULL;
+    
+    if (data->reservation_head == NULL || reservation->start > data->reservation_head->start) {
+        reservation->next = data->reservation_head;
+        data->reservation_head = reservation;
+        return;
+    }
+
+    /* insert elsewhere */
+    sel4utils_res_t *prev = data->reservation_head;
+    sel4utils_res_t *current = prev->next;
+
+    while (current != NULL) {
+        /* insert in the middle */
+        if (reservation->start > current->start) {
+             reservation->next = current;
+             prev->next = reservation;
+             return;
+        }
+        prev = current;
+        current = current->next;
+    }
+
+    /* insert at the end */
+    prev->next = reservation;
+}
+
+static void 
+remove_reservation(sel4utils_alloc_data_t *data, sel4utils_res_t *reservation)
+{
+    /* remove head */
+    if (reservation == data->reservation_head) {
+        data->reservation_head = data->reservation_head->next;
+        reservation->next = NULL;
+        return;
+    }
+
+    sel4utils_res_t *prev = data->reservation_head;
+    sel4utils_res_t *current = prev->next;
+
+    while (current != NULL) {
+        /* remove middle */
+        if (current == reservation) {
+            prev->next = reservation->next;
+            reservation->next = NULL;
+            return;
+        }
+        prev = current;
+        current = current->next;
+    }
+
+    /* remove tail */
+    prev->next = NULL;
+    reservation->next = NULL;
+}
+
+static void
+perform_reservation(vspace_t *vspace, sel4utils_res_t *reservation, void *vaddr, size_t bytes,
                     seL4_CapRights rights, int cacheable)
 {
-    reservation->start = (void *) (seL4_Word)ROUND_DOWN((uint32_t) ((seL4_Word)vaddr), PAGE_SIZE_4K);
-    reservation->end = (void *) (seL4_Word)ROUND_UP((uint32_t) ((seL4_Word)vaddr) + bytes, PAGE_SIZE_4K);
+    assert(reservation != NULL);
+
+    reservation->start = (void *) (seL4_Word) ROUND_DOWN((uint32_t) ((seL4_Word)vaddr), 
+            PAGE_SIZE_4K);
+    reservation->end = (void *) (seL4_Word) ROUND_UP((uint32_t) ((seL4_Word)vaddr) + bytes, 
+            PAGE_SIZE_4K);
 
     reservation->rights = rights;
     reservation->cacheable = cacheable;
@@ -132,6 +201,9 @@ perform_reservation(vspace_t *vspace, reservation_t *reservation, void *vaddr, s
 
     /* return the amount we sucessfully reserved */
     reservation->end = v;
+
+    /* insert the reservation ordered */
+    insert_reservation(get_alloc_data(vspace), reservation);
 }
 
 int
@@ -141,7 +213,7 @@ sel4utils_map_page_pd(vspace_t *vspace, seL4_CPtr cap, void *vaddr, seL4_CapRigh
     vka_object_t pagetable = {0};
     sel4utils_alloc_data_t *data = get_alloc_data(vspace);
 
-    int error = sel4utils_map_page(data->vka, vspace->page_directory, cap, vaddr,
+    int error = sel4utils_map_page(data->vka, data->page_directory, cap, vaddr,
                 rights, cacheable, &pagetable);
     if (error) {
         /* everything has gone to hell. Do no clean up. */
@@ -166,7 +238,7 @@ sel4utils_map_page_ept(vspace_t *vspace, seL4_CPtr cap, void *vaddr, seL4_CapRig
     vka_object_t pagetable = {0};
     vka_object_t pagedir = {0};
 
-    int error = sel4utils_map_ept_page(data->vka, vspace->page_directory, cap,
+    int error = sel4utils_map_ept_page(data->vka, data->page_directory, cap,
                 (seL4_Word) vaddr, rights, cacheable, size_bits, &pagetable, &pagedir);
     if (error) {
         LOG_ERROR("Error mapping pages, bailing\n");
@@ -194,6 +266,24 @@ map_page(vspace_t *vspace, seL4_CPtr cap, void *vaddr, seL4_CapRights rights,
     sel4utils_alloc_data_t *data = get_alloc_data(vspace);
     return data->map_page(vspace, cap, vaddr, rights, cacheable, size_bits);
 }
+
+static sel4utils_res_t *
+find_reserve(sel4utils_alloc_data_t *data, void *vaddr) {
+
+    sel4utils_res_t *current = data->reservation_head;
+
+    while (current != NULL) {
+        if (vaddr >= current->start && vaddr < current->end) {
+            return current;
+        }
+
+        current = current->next;
+    }
+
+    return NULL;
+}
+
+
 
 static void *
 find_range(sel4utils_alloc_data_t *data, size_t num_pages, size_t size_bits)
@@ -229,38 +319,23 @@ find_range(sel4utils_alloc_data_t *data, size_t num_pages, size_t size_bits)
 }
 
 static int
-alloc_pages(vspace_t *vspace, seL4_CPtr pages[], size_t num_pages, size_t size_bits)
-{
-    sel4utils_alloc_data_t *data = get_alloc_data(vspace);
-    for (int i = 0; i < num_pages; i++) {
-        vka_object_t object;
-        if (vka_alloc_frame(data->vka, size_bits, &object) != 0) {
-            /* abort! */
-            LOG_ERROR("Failed to allocate page");
-            return -1;
-        }
-
-        vspace_maybe_call_allocated_object(vspace, object);
-        pages[i] = object.cptr;
-    }
-
-    return 0;
-}
-
-static int
-map_pages_at_vaddr(vspace_t *vspace, seL4_CPtr caps[], void *vaddr, size_t num_pages,
+map_pages_at_vaddr(vspace_t *vspace, seL4_CPtr caps[], uint32_t cookies[], 
+                   void *vaddr, size_t num_pages,
                    size_t size_bits, seL4_CapRights rights, int cacheable)
 {
+    void *start_vaddr = vaddr;
     int error = seL4_NoError;
     for (int i = 0; i < num_pages && error == seL4_NoError; i++) {
         assert(caps[i] != 0);
         error = map_page(vspace, caps[i], vaddr, rights, cacheable, size_bits);
 
         if (error == seL4_NoError) {
-            error = update_entries(vspace, vaddr, caps[i], size_bits);
+            uint32_t cookie = cookies == NULL ? 0 : cookies[i];
+            error = update_entries(vspace, vaddr, caps[i], size_bits, cookie);
             vaddr += (1 << size_bits);
         }
     }
+    
     return error;
 }
 
@@ -268,11 +343,35 @@ static int
 new_pages_at_vaddr(vspace_t *vspace, void *vaddr, size_t num_pages, size_t size_bits,
                    seL4_CapRights rights, int cacheable)
 {
-    seL4_CPtr pages[num_pages];
 
-    int error = alloc_pages(vspace, pages, num_pages, size_bits);
-    if (error == 0) {
-        error = map_pages_at_vaddr(vspace, pages, vaddr, num_pages, size_bits, rights, cacheable);
+    sel4utils_alloc_data_t *data = get_alloc_data(vspace);
+    int i;
+    int error = seL4_NoError;
+    void *start_vaddr = vaddr;
+
+    for (i = 0; i < num_pages; i++) {
+        vka_object_t object;
+        if (vka_alloc_frame(data->vka, size_bits, &object) != 0) {
+            /* abort! */
+            LOG_ERROR("Failed to allocate page");
+            break;
+        }
+
+        error = map_page(vspace, object.cptr, vaddr, rights, cacheable, size_bits);
+
+        if (error == seL4_NoError) {
+            error = update_entries(vspace, vaddr, object.cptr, size_bits, object.ut);
+            vaddr += (1 << size_bits);
+        } else {
+            vka_free_object(data->vka, &object);
+            break;
+        }
+
+    }
+
+    if (i < num_pages) {
+        /* we failed, clean up successfully allocated pages */
+        sel4utils_unmap_pages(vspace, start_vaddr, i, size_bits, data->vka);
     }
 
     return error;
@@ -281,33 +380,41 @@ new_pages_at_vaddr(vspace_t *vspace, void *vaddr, size_t num_pages, size_t size_
 /* VSPACE INTERFACE FUNCTIONS */
 
 int
-sel4utils_map_pages_at_vaddr(vspace_t *vspace, seL4_CPtr caps[], void *vaddr,
-        size_t num_pages, size_t size_bits, reservation_t *reservation)
+sel4utils_map_pages_at_vaddr(vspace_t *vspace, seL4_CPtr caps[], uint32_t cookies[], void *vaddr,
+        size_t num_pages, size_t size_bits, reservation_t reservation)
 {
     sel4utils_alloc_data_t *data = get_alloc_data(vspace);
+    sel4utils_res_t *res = reservation_to_res(reservation);
 
-    if (!check_reservation(data->top_level, reservation, vaddr, num_pages, size_bits)) {
+    if (!check_reservation(data->top_level, res, vaddr, num_pages, size_bits)) {
         return -1;
     }
 
-    return map_pages_at_vaddr(vspace, caps, vaddr, num_pages, size_bits,
-            reservation->rights, reservation->cacheable);
+    return map_pages_at_vaddr(vspace, caps, cookies, vaddr, num_pages, size_bits,
+            res->rights, res->cacheable);
 }
 
 seL4_CPtr
 sel4utils_get_cap(vspace_t *vspace, void *vaddr)
 {
     sel4utils_alloc_data_t *data = get_alloc_data(vspace);
-    seL4_CPtr entry = get_entry(data->top_level, vaddr);
+    seL4_CPtr cap = get_cap(data->top_level, vaddr);
 
-    if (entry == RESERVED) {
-        entry = 0;
+    if (cap == RESERVED) {
+        cap = 0;
     }
-    return entry;
+    return cap;
+}
+
+seL4_CPtr
+sel4utils_get_cookie(vspace_t *vspace, void *vaddr)
+{
+    sel4utils_alloc_data_t *data = get_alloc_data(vspace);
+    return get_cookie(data->top_level, vaddr);
 }
 
 void *
-sel4utils_map_pages(vspace_t *vspace, seL4_CPtr caps[], seL4_CapRights rights,
+sel4utils_map_pages(vspace_t *vspace, seL4_CPtr caps[], uint32_t cookies[], seL4_CapRights rights,
                     size_t num_pages, size_t size_bits, int cacheable)
 {
     struct sel4utils_alloc_data *data = get_alloc_data(vspace);
@@ -317,7 +424,7 @@ sel4utils_map_pages(vspace_t *vspace, seL4_CPtr caps[], seL4_CapRights rights,
         return NULL;
     }
 
-    int error = map_pages_at_vaddr(vspace, caps, vaddr, num_pages, size_bits, rights,
+    int error = map_pages_at_vaddr(vspace, caps, cookies, vaddr, num_pages, size_bits, rights,
                 cacheable);
     if (error == seL4_NoError) {
         return vaddr;
@@ -326,45 +433,40 @@ sel4utils_map_pages(vspace_t *vspace, seL4_CPtr caps[], seL4_CapRights rights,
     }
 }
 
-
-int sel4utils_unmap_reserved_pages(vspace_t *vspace, void *vaddr, size_t num_pages, size_t size_bits, reservation_t *reservation) {
-    sel4utils_alloc_data_t *data = get_alloc_data(vspace);
-
-    if (!check_reservation_bounds(reservation, vaddr, num_pages, size_bits)) {
-        printf("check reservation failed vaddr %p\n", vaddr);
-        return -1;
-    }
-    for (int i = 0; i < num_pages; i++) {
-        seL4_CPtr cap = sel4utils_get_cap(vspace, vaddr);
-
-        if (cap != 0) {
-            int error = seL4_ARCH_Page_Unmap(get_entry(data->top_level, vaddr));
-            if (error != seL4_NoError) {
-                LOG_ERROR("Failed to unmap page at vaddr %p", vaddr);
-            }
-
-            /*update entires*/
-            update_entries(vspace, vaddr, RESERVED, size_bits);
-        }
-
-        vaddr += (1 << size_bits);
-    }
-
-    return 0;
-}
-
 void
-sel4utils_unmap_pages(vspace_t *vspace, void *vaddr, size_t num_pages, size_t size_bits)
+sel4utils_unmap_pages(vspace_t *vspace, void *vaddr, size_t num_pages, size_t size_bits, vka_t *vka)
 {
     sel4utils_alloc_data_t *data = get_alloc_data(vspace);
+    sel4utils_res_t *reserve = find_reserve(data, vaddr);
+
+    if (vka == VSPACE_FREE) {
+        vka = data->vka;
+    }
+
     for (int i = 0; i < num_pages; i++) {
         seL4_CPtr cap = sel4utils_get_cap(vspace, vaddr);
 
+        /* unmap */
         if (cap != 0) {
-            int error = seL4_ARCH_Page_Unmap(get_entry(data->top_level, vaddr));
+            int error = seL4_ARCH_Page_Unmap(get_cap(data->top_level, vaddr));
             if (error != seL4_NoError) {
                 LOG_ERROR("Failed to unmap page at vaddr %p", vaddr);
             }
+        }
+
+        if (vka) {
+            cspacepath_t path;
+            vka_cspace_make_path(vka, cap, &path);
+            vka_cnode_delete(&path);
+            vka_cspace_free(vka, cap);
+            vka_utspace_free(vka, kobject_get_type(KOBJECT_FRAME, size_bits), 
+                    size_bits, sel4utils_get_cookie(vspace, vaddr));
+        }
+
+        if (reserve == NULL) {
+            clear_entries(vspace, vaddr, size_bits);
+        } else {
+            reserve_entries(vspace, vaddr, size_bits);
         }
 
         vaddr += (1 << size_bits);
@@ -373,17 +475,17 @@ sel4utils_unmap_pages(vspace_t *vspace, void *vaddr, size_t num_pages, size_t si
 
 int
 sel4utils_new_pages_at_vaddr(vspace_t *vspace, void *vaddr, size_t num_pages,
-        size_t size_bits, reservation_t *reservation)
+        size_t size_bits, reservation_t reservation)
 {
     struct sel4utils_alloc_data *data = get_alloc_data(vspace);
+    sel4utils_res_t *res = reservation_to_res(reservation);
 
-    if (!check_reservation(data->top_level, reservation, vaddr, num_pages, size_bits)) {
+    if (!check_reservation(data->top_level, res, vaddr, num_pages, size_bits)) {
         LOG_ERROR("Range for vaddr %p with "DFMT" 4k pages not reserved!", vaddr, num_pages);
         return -1;
     }
 
-    return new_pages_at_vaddr(vspace, vaddr, num_pages, size_bits,
-            reservation->rights, reservation->cacheable);
+    return new_pages_at_vaddr(vspace, vaddr, num_pages, size_bits, res->rights, res->cacheable);
 }
 
 void *
@@ -405,83 +507,8 @@ sel4utils_new_pages(vspace_t *vspace, seL4_CapRights rights, size_t num_pages,
     }
 }
 
-void
-sel4utils_free_pages(vspace_t *vspace, void *vaddr, size_t num_pages,
-        size_t size_bits)
-{
-    /* first unmap the pages */
-    sel4utils_unmap_pages(vspace, vaddr, num_pages, size_bits);
 
-    /* now mark them all as free */
-    for (int i = 0; i < num_pages; i++) {
-        clear_entries(vspace, vaddr, size_bits);
-        vaddr += PAGE_SIZE_4K;
-    }
-}
-
-void *
-sel4utils_new_stack(vspace_t *vspace)
-{
-    /* this implementation allocates stacks with small pages. */
-    int num_pages = BYTES_TO_4K_PAGES(CONFIG_SEL4UTILS_STACK_SIZE);
-    struct sel4utils_alloc_data *data = get_alloc_data(vspace);
-
-    void *vaddr = find_range(data, num_pages + 1, seL4_PageBits);
-
-    /* reserve the first page as the guard */
-    int error = reserve(vspace, vaddr);
-    if (error) {
-        return NULL;
-    }
-
-    void *stack_bottom = vaddr + PAGE_SIZE_4K;
-    error = new_pages_at_vaddr(vspace, stack_bottom, num_pages, seL4_PageBits,
-            seL4_AllRights, 1);
-
-    /* abort */
-    if (error != seL4_NoError) {
-        clear(vspace, vaddr);
-        return NULL;
-    }
-
-    /* return a pointer to the TOP of the stack */
-    return stack_bottom + CONFIG_SEL4UTILS_STACK_SIZE;
-}
-
-void
-sel4utils_free_stack(vspace_t *vspace, void *stack_top)
-{
-    int num_pages = BYTES_TO_4K_PAGES(CONFIG_SEL4UTILS_STACK_SIZE);
-
-    sel4utils_free_pages(vspace, stack_top - CONFIG_SEL4UTILS_STACK_SIZE,
-            num_pages, seL4_PageBits);
-
-    /* unreserve the guard page */
-    clear(vspace, stack_top - CONFIG_SEL4UTILS_STACK_SIZE - PAGE_SIZE_4K);
-}
-
-void *
-sel4utils_new_ipc_buffer(vspace_t *vspace, seL4_CPtr *page)
-{
-    void *vaddr = sel4utils_new_pages(vspace, seL4_AllRights, 1, seL4_PageBits);
-    if (vaddr == NULL) {
-        LOG_ERROR("Failed to create ipc buffer");
-        return NULL;
-    }
-
-    *page = sel4utils_get_cap(vspace, vaddr);
-
-    return vaddr;
-}
-
-void
-sel4utils_free_ipc_buffer(vspace_t *vspace, void *vaddr)
-{
-    sel4utils_free_pages(vspace, vaddr, 1, seL4_PageBits);
-}
-
-
-int sel4utils_reserve_range_no_alloc(vspace_t *vspace, reservation_t *reservation, size_t size,
+int sel4utils_reserve_range_no_alloc(vspace_t *vspace, sel4utils_res_t *reservation, size_t size,
         seL4_CapRights rights, int cacheable, void **result)
 {
     sel4utils_alloc_data_t *data = get_alloc_data(vspace);
@@ -496,26 +523,30 @@ int sel4utils_reserve_range_no_alloc(vspace_t *vspace, reservation_t *reservatio
     return 0;
 }
 
-reservation_t *
+reservation_t 
 sel4utils_reserve_range(vspace_t *vspace, size_t size, seL4_CapRights rights,
         int cacheable, void **result)
 {
-    reservation_t *reservation = malloc(sizeof(struct reservation));
-    if (reservation == NULL) {
+    reservation_t reservation;
+    reservation.res = malloc(sizeof(sel4utils_res_t));
+    
+    if (reservation.res == NULL) {
         LOG_ERROR("Malloc failed");
-        return NULL;
+        reservation.res = NULL;
+        return reservation;
     }
 
-    int error = sel4utils_reserve_range_no_alloc(vspace, reservation, size, rights, cacheable, result);
+    int error = sel4utils_reserve_range_no_alloc(vspace, reservation.res, size, rights, 
+            cacheable, result);
     if (error) {
-        free(reservation);
-        return NULL;
+        free(reservation.res);
+        reservation.res = NULL;
     }
 
     return reservation;
 }
 
-int sel4utils_reserve_range_at_no_alloc(vspace_t *vspace, reservation_t *reservation, void *vaddr,
+int sel4utils_reserve_range_at_no_alloc(vspace_t *vspace, sel4utils_res_t *reservation, void *vaddr,
         size_t size, seL4_CapRights rights, int cacheable)
 {
     sel4utils_alloc_data_t *data = get_alloc_data(vspace);
@@ -528,39 +559,60 @@ int sel4utils_reserve_range_at_no_alloc(vspace_t *vspace, reservation_t *reserva
     return 0;
 }
 
-reservation_t *
+reservation_t 
 sel4utils_reserve_range_at(vspace_t *vspace, void *vaddr, size_t size, seL4_CapRights
         rights, int cacheable)
 {
-    reservation_t *reservation = malloc(sizeof(struct reservation));
-    if (reservation == NULL) {
+    reservation_t reservation;
+    reservation.res = malloc(sizeof(sel4utils_res_t));
+
+    if (reservation.res == NULL) {
         LOG_ERROR("Malloc failed");
-        return NULL;
+        reservation.res = NULL;
+        return reservation;
     }
 
-    int error = sel4utils_reserve_range_at_no_alloc(vspace, reservation, vaddr, size, rights, cacheable);
+    int error = sel4utils_reserve_range_at_no_alloc(vspace, reservation.res, vaddr, size, rights, cacheable);
     if (error) {
-        free(reservation);
-        return NULL;
+        free(reservation.res);
+        reservation.res = NULL;
     }
     return reservation;
 }
 
-void sel4utils_free_reservation_no_alloc(vspace_t *vspace, reservation_t *reservation)
+void sel4utils_free_reservation_no_alloc(vspace_t *vspace, sel4utils_res_t *res)
 {
     sel4utils_alloc_data_t *data = get_alloc_data(vspace);
-    for (void *current = reservation->start; current < reservation->end; current += PAGE_SIZE_4K) {
-        if (get_entry(data->top_level, current) == RESERVED) {
+
+    for (void *current = res->start; current < res->end; current += PAGE_SIZE_4K) {
+        if (get_cap(data->top_level, current) == RESERVED) {
             clear(vspace, current);
         }
     }
+    remove_reservation(data, res);
 }
 
 void
-sel4utils_free_reservation(vspace_t *vspace, reservation_t *reservation)
+sel4utils_free_reservation(vspace_t *vspace, reservation_t reservation)
 {
-    sel4utils_free_reservation_no_alloc(vspace, reservation);
-    free(reservation);
+    sel4utils_free_reservation_no_alloc(vspace, reservation.res);
+    free(reservation.res);
 }
+
+void 
+sel4utils_free_reservation_by_vaddr(vspace_t *vspace, void *vaddr) {
+
+    reservation_t reservation;
+    reservation.res = (void *) find_reserve(get_alloc_data(vspace), vaddr);
+    sel4utils_free_reservation(vspace, reservation);
+}
+
+seL4_CPtr
+sel4utils_get_root(vspace_t *vspace) 
+{
+     sel4utils_alloc_data_t *data = get_alloc_data(vspace);
+     return data->page_directory;
+}
+
 
 #endif /* CONFIG_LIB_SEL4_VKA && CONFIG_LIB_SEL4_VSPACE */

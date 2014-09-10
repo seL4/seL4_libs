@@ -351,7 +351,7 @@ create_reservations(vspace_t *vspace, int num, sel4utils_elf_region_t regions[])
         if (region == NULL) {
             LOG_ERROR("Failed to create region\n");
             for (int j = i - 1; j >= 0; j--) {
-                free(regions[i].reservation);
+                vspace_free_reservation(vspace, regions[i].reservation);
             }
             return -1;
         }
@@ -538,7 +538,7 @@ error:
 
     if (config.create_vspace && process->pd.cptr != 0) {
         vka_free_object(vka, &process->pd);
-        if (process->vspace.page_directory != 0) {
+        if (process->vspace.data != 0) {
             LOG_ERROR("Could not clean up vspace\n");
         }
     }

@@ -33,11 +33,11 @@
  * 0xe0000000 ↓
  * 0xdfffffff ↑
  *            | bottom level page tables
- * 0xdfc00000 ↓
- * 0xdfbfffff ↑
+ * 0xdf800000 ↓
+ * 0xdf7fffff ↑
  *            | top level page table
- * 0xdfbff000 ↓
- * 0xdfbfefff ↑
+ * 0xdf7ff000 ↓
+ * 0xdf7fefff ↑
  *            | available address space
  * 0x00001000 ↓
  * 0x00000fff ↑
@@ -57,19 +57,25 @@
 #define TOP_LEVEL_PAGE_TABLE_VADDR (FIRST_BOTTOM_LEVEL_PAGE_TABLE_VADDR - PAGE_SIZE_4K)
 /* reserve the first page to catch null pointer dereferences */
 #define FIRST_VADDR (0 + PAGE_SIZE_4K)
+#define PAGES_FOR_BOTTOM_LEVEL (sizeof(bottom_level_t) / PAGE_SIZE_4K)
+/* when bootstrapping we need to allocate 1 bottom level page table to store the top level page table 
+ * index in, and enough bottom levels to store indexes of all possible bottom levels */
+#define INITIAL_BOTTOM_LEVEL_PAGES 6
+#define INITIAL_BOTTOM_LEVEL_TABLES (INITIAL_BOTTOM_LEVEL_PAGES / PAGES_FOR_BOTTOM_LEVEL)
 
 /* sanity checks - check our constants above are what we say they are */
 #ifndef CONFIG_X86_64
-compile_time_assert(sel4utils_vspace_1, TOP_LEVEL_INDEX(TOP_LEVEL_PAGE_TABLE_VADDR) == 894);
+compile_time_assert(sel4utils_vspace_1, TOP_LEVEL_INDEX(TOP_LEVEL_PAGE_TABLE_VADDR) == 893);
 compile_time_assert(sel4utils_vspace_2, BOTTOM_LEVEL_INDEX(TOP_LEVEL_PAGE_TABLE_VADDR) == 1023);
-compile_time_assert(sel4utils_vspace_3, TOP_LEVEL_INDEX(FIRST_BOTTOM_LEVEL_PAGE_TABLE_VADDR) == 895);
+compile_time_assert(sel4utils_vspace_3, TOP_LEVEL_INDEX(FIRST_BOTTOM_LEVEL_PAGE_TABLE_VADDR) == 894);
 compile_time_assert(sel4utils_vspace_4, BOTTOM_LEVEL_INDEX(FIRST_BOTTOM_LEVEL_PAGE_TABLE_VADDR) == 0);
 #endif
 
-/* check our data structures are 4K page sized like the rest of the code assumes they are */
-compile_time_assert(bottom_level_4k, sizeof(bottom_level_t) == PAGE_SIZE_4K);
+/* check our data structures are 4K*2 page sized like the rest of the code assumes they are */
+compile_time_assert(bottom_level_4k, sizeof(bottom_level_t) == (PAGE_SIZE_4K*2));
 compile_time_assert(top_level_4k, sizeof(bottom_level_t *) * VSPACE_LEVEL_SIZE == PAGE_SIZE_4K);
-
+compile_time_assert(bah, INITIAL_BOTTOM_LEVEL_PAGES == 6);
+compile_time_assert(bah2, INITIAL_BOTTOM_LEVEL_TABLES == 3); 
 static int
 common_init(vspace_t *vspace, vka_t *vka, seL4_CPtr page_directory,
             vspace_allocated_object_fn allocated_object_fn, void *cookie)
@@ -78,7 +84,7 @@ common_init(vspace_t *vspace, vka_t *vka, seL4_CPtr page_directory,
     data->vka = vka;
     data->last_allocated = (void *) 0x10000000;
 
-    vspace->page_directory = page_directory;
+    data->page_directory = page_directory;
     vspace->allocated_object = allocated_object_fn;
     vspace->allocated_object_cookie = cookie;
 
@@ -99,26 +105,21 @@ common_init_post_bootstrap(vspace_t *vspace, sel4utils_map_page_fn map_page)
     data->map_page = map_page;
 
     /* initialise the rest of the functions now that they are useable */
-    vspace->new_stack = sel4utils_new_stack;
-    vspace->free_stack = sel4utils_free_stack;
-
-    vspace->new_ipc_buffer = sel4utils_new_ipc_buffer;
-    vspace->free_ipc_buffer = sel4utils_free_ipc_buffer;
-
     vspace->new_pages = sel4utils_new_pages;
     vspace->new_pages_at_vaddr = sel4utils_new_pages_at_vaddr;
-    vspace->free_pages = sel4utils_free_pages;
 
     vspace->map_pages = sel4utils_map_pages;
     vspace->map_pages_at_vaddr = sel4utils_map_pages_at_vaddr;
     vspace->unmap_pages = sel4utils_unmap_pages;
-    vspace->unmap_reserved_pages = sel4utils_unmap_reserved_pages;
 
     vspace->reserve_range = sel4utils_reserve_range;
     vspace->reserve_range_at = sel4utils_reserve_range_at;
     vspace->free_reservation = sel4utils_free_reservation;
+    vspace->free_reservation_by_vaddr = sel4utils_free_reservation_by_vaddr;
 
     vspace->get_cap = sel4utils_get_cap;
+    vspace->get_cookie = sel4utils_get_cookie;
+    vspace->get_root = sel4utils_get_root;
 }
 
 static int
@@ -197,7 +198,7 @@ alloc_and_map_bootstrap_frame(vspace_t *vspace, vka_object_t *frame, void *vaddr
 
     vka_object_t pagetable = {0};
 
-    error = sel4utils_map_page(data->vka, vspace->page_directory, frame->cptr, vaddr,
+    error = sel4utils_map_page(data->vka, data->page_directory, frame->cptr, vaddr,
             seL4_AllRights, 1, &pagetable);
 
     if (error) {
@@ -219,20 +220,28 @@ int
 bootstrap_create_level(vspace_t *vspace, void *vaddr)
 {
     sel4utils_alloc_data_t *data = get_alloc_data(vspace);
+    UNUSED int error;
 
-    vka_object_t bottom_level = {0};
-    if (alloc_and_map_bootstrap_frame(vspace, &bottom_level,
-            data->next_bottom_level_vaddr) != seL4_NoError) {
-        return -1;
+    void *pt_vaddr = data->next_bottom_level_vaddr;
+    for (int i = 0; i < PAGES_FOR_BOTTOM_LEVEL; i++) {
+        vka_object_t bottom_level = {0};
+
+        if (alloc_and_map_bootstrap_frame(vspace, &bottom_level, pt_vaddr) != seL4_NoError) {
+            LOG_ERROR("Failed to bootstrap a level, everything is broken.");
+            /* leak memory, can't really recover */
+            return -1;
+        }
+
+        error = update(vspace, pt_vaddr, bottom_level.cptr, bottom_level.ut);
+        /* this cannot fail */
+        assert(error == seL4_NoError);
+        pt_vaddr += PAGE_SIZE_4K;
     }
+        
 
-    int error __attribute__((unused)) = update(vspace, data->next_bottom_level_vaddr, bottom_level.cptr);
-    /* this cannot fail */
-    assert(error == seL4_NoError);
-
+    printf("Allocated level between %p <--> %p\n", data->next_bottom_level_vaddr, pt_vaddr);
     data->top_level[TOP_LEVEL_INDEX(vaddr)] = (bottom_level_t *) data->next_bottom_level_vaddr;
-
-    data->next_bottom_level_vaddr += PAGE_SIZE_4K;
+    data->next_bottom_level_vaddr = pt_vaddr;
 
     return 0;
 }
@@ -248,47 +257,47 @@ bootstrap_page_table(vspace_t *vspace)
         return -1;
     }
 
-    /* The top level page table vaddr is the last entry in the second last bottom level
-     * page table - create that level and map it in*/
-    vka_object_t first_bottom_level = {0};
-    if (alloc_and_map_bootstrap_frame(vspace, &first_bottom_level,
-            (void *) FIRST_BOTTOM_LEVEL_PAGE_TABLE_VADDR)) {
-        return -1;
-    }
-
-    /* The level we just created is the first entry in the last bottom level page table -
-     * create that level and map it in */
-    vka_object_t second_bottom_level = {0};
-    if (alloc_and_map_bootstrap_frame(vspace, &second_bottom_level,
-            (void *) FIRST_BOTTOM_LEVEL_PAGE_TABLE_VADDR + PAGE_SIZE_4K)) {
-        return -1;
-    }
-
-    /* set up the pointers to our new page tables */
+    /* set up the pointer to top level page table */
     data->top_level = (bottom_level_t **) TOP_LEVEL_PAGE_TABLE_VADDR;
-    data->top_level[TOP_LEVEL_INDEX(TOP_LEVEL_PAGE_TABLE_VADDR)] =
-        (bottom_level_t *) FIRST_BOTTOM_LEVEL_PAGE_TABLE_VADDR;
-    data->top_level[TOP_LEVEL_INDEX(FIRST_BOTTOM_LEVEL_PAGE_TABLE_VADDR)] =
-        (bottom_level_t *) (FIRST_BOTTOM_LEVEL_PAGE_TABLE_VADDR + PAGE_SIZE_4K);
+
+    vka_object_t bottom_levels[6];
+    void *vaddr = (void *) FIRST_BOTTOM_LEVEL_PAGE_TABLE_VADDR;
+    for (int i = 0; i < INITIAL_BOTTOM_LEVEL_PAGES; i++) {
+        if (alloc_and_map_bootstrap_frame(vspace, &bottom_levels[i], vaddr)) {
+            return -1;
+        }
+        vaddr += PAGE_SIZE_4K;
+    }
+
+    /* set up pointers to bottom level page tables */
+    vaddr = (void *) FIRST_BOTTOM_LEVEL_PAGE_TABLE_VADDR;
+    for (int i = 0; i < INITIAL_BOTTOM_LEVEL_TABLES; i++) {
+        data->top_level[TOP_LEVEL_INDEX(TOP_LEVEL_PAGE_TABLE_VADDR) + i] = vaddr;
+        vaddr += (PAGES_FOR_BOTTOM_LEVEL * PAGE_SIZE_4K);
+    }
 
     /* now update those entries in our new page tables */
     /* these cannot fail - failure is only caused by lack of a bottom level page table,
      * and we just allocated them. */
-    int error = update(vspace, (void *) TOP_LEVEL_PAGE_TABLE_VADDR, top_level.cptr);
-    (void)error;
+    UNUSED int error = update(vspace, (void *) TOP_LEVEL_PAGE_TABLE_VADDR, top_level.cptr, top_level.ut);
     assert(error == seL4_NoError);
-    error = update(vspace, (void *) FIRST_BOTTOM_LEVEL_PAGE_TABLE_VADDR, first_bottom_level.cptr);
-    assert(error == seL4_NoError);
-    error = update(vspace, (void *) FIRST_BOTTOM_LEVEL_PAGE_TABLE_VADDR + PAGE_SIZE_4K,
-                   second_bottom_level.cptr);
-    assert(error == seL4_NoError);
-
-    /* Finally reserve the rest of the entries for the rest of the bottom level page tables */
-    void *vaddr = (void *) FIRST_BOTTOM_LEVEL_PAGE_TABLE_VADDR;
-    data->next_bottom_level_vaddr = vaddr + (2 * PAGE_SIZE_4K);
-    for (int i = 2; i < VSPACE_LEVEL_SIZE; i++) {
-        error = reserve(vspace, vaddr + (i * PAGE_SIZE_4K));
+   
+    vaddr = (void *) FIRST_BOTTOM_LEVEL_PAGE_TABLE_VADDR;
+    for (int i = 0; i < INITIAL_BOTTOM_LEVEL_PAGES; i++) {
+        error = update(vspace, vaddr, bottom_levels[i].cptr, bottom_levels[i].ut);
         assert(error == seL4_NoError);
+        vaddr += PAGE_SIZE_4K;
+    }
+
+    vaddr = (void *) FIRST_BOTTOM_LEVEL_PAGE_TABLE_VADDR + (6 * PAGE_SIZE_4K);
+    data->next_bottom_level_vaddr = vaddr;
+    
+    /* reserve the rest of them */
+    for (int i = INITIAL_BOTTOM_LEVEL_PAGES; i < VSPACE_LEVEL_SIZE * PAGES_FOR_BOTTOM_LEVEL; i++) {
+        assert(data->top_level[TOP_LEVEL_INDEX(vaddr)] != NULL);
+        error = reserve(vspace, vaddr);
+        assert(error == seL4_NoError);
+        vaddr += PAGE_SIZE_4K;
     }
 
     return 0;
@@ -387,8 +396,9 @@ sel4utils_bootstrap_vspace_with_bootinfo(vspace_t *vspace, sel4utils_alloc_data_
 }
 
 int 
-sel4utils_bootstrap_clone_into_vspace(vspace_t *current, vspace_t *clone, reservation_t *image)
-{  
+sel4utils_bootstrap_clone_into_vspace(vspace_t *current, vspace_t *clone, reservation_t image)
+{ 
+    sel4utils_res_t *res = reservation_to_res(image);
     seL4_CPtr slot;
     int error = vka_cspace_alloc(get_alloc_data(current)->vka, &slot);
 
@@ -399,7 +409,7 @@ sel4utils_bootstrap_clone_into_vspace(vspace_t *current, vspace_t *clone, reserv
     cspacepath_t dest;
     vka_cspace_make_path(get_alloc_data(current)->vka, slot, &dest);
    
-    for (void *page = image->start; page < image->end - 1; page += PAGE_SIZE_4K) {
+    for (void *page = res->start; page < res->end - 1; page += PAGE_SIZE_4K) {
        /* we don't know if the current vspace has caps to its mappings - 
         * it probably doesn't.
         *
@@ -422,7 +432,8 @@ sel4utils_bootstrap_clone_into_vspace(vspace_t *current, vspace_t *clone, reserv
         assert(error == 0);
 
         /* map a copy of it the current vspace */
-        void *dest_addr = vspace_map_pages(current, &dest.capPtr, seL4_AllRights, 1, seL4_PageBits, 1);
+        void *dest_addr = vspace_map_pages(current, &dest.capPtr, NULL, seL4_AllRights, 
+                1, seL4_PageBits, 1);
         if (dest_addr == NULL) {
             /* vspace will be left inconsistent */
             LOG_ERROR("Error! Vspace mapping failed, bailing\n");
@@ -438,7 +449,7 @@ sel4utils_bootstrap_clone_into_vspace(vspace_t *current, vspace_t *clone, reserv
 #endif /* CONFIG_ARCH_ARM */
 
         /* unmap our copy */
-        vspace_unmap_pages(current, dest_addr, 1, seL4_PageBits);
+        vspace_unmap_pages(current, dest_addr, 1, seL4_PageBits, VSPACE_PRESERVE);
         vka_cnode_delete(&dest);
     }
 

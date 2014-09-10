@@ -56,7 +56,7 @@ static int
 load_segment(vspace_t *loadee_vspace, vspace_t *loader_vspace,
              vka_t *loadee_vka, vka_t *loader_vka,
              char *src, size_t segment_size, size_t file_size, uint32_t dst,
-             reservation_t *reservation)
+             reservation_t reservation)
 {
     int error = seL4_NoError;
 
@@ -101,7 +101,7 @@ load_segment(vspace_t *loadee_vspace, vspace_t *loader_vspace,
         }
 
         /* map the frame into the loader address space */
-        loader_vaddr = vspace_map_pages(loader_vspace, &loader_frame_cap.capPtr, seL4_AllRights,
+        loader_vaddr = vspace_map_pages(loader_vspace, &loader_frame_cap.capPtr, NULL, seL4_AllRights,
                        1, seL4_PageBits, 1);
         if (loader_vaddr == NULL) {
             LOG_ERROR("failed to map frame into loader vspace.");
@@ -123,7 +123,7 @@ load_segment(vspace_t *loadee_vspace, vspace_t *loader_vspace,
 #endif /* CONFIG_ARCH_ARM */
 
         /* now unmap the page in the loader address space */
-        vspace_unmap_pages(loader_vspace, (void *) loader_vaddr, 1, seL4_PageBits);
+        vspace_unmap_pages(loader_vspace, (void *) loader_vaddr, 1, seL4_PageBits, VSPACE_PRESERVE);
         vka_cnode_delete(&loader_frame_cap);
 
         pos += nbytes;
@@ -182,7 +182,7 @@ make_region(vspace_t *loadee, unsigned long flags, unsigned long segment_size,
                 region->rights,
                 1);
         }
-        return !region->reservation;
+        return !region->reservation.res;
     }
 
     return 0;
@@ -213,7 +213,7 @@ sel4utils_elf_reserve(vspace_t *loadee, char *image_name, sel4utils_elf_region_t
             if (make_region(loadee, flags, segment_size, vaddr, &regions[region], 0)) {
                 for (region--; region >= 0; region--) {
                     vspace_free_reservation(loadee, regions[region].reservation);
-                    regions[region].reservation = NULL;
+                    regions[region].reservation.res = NULL;
                 }
                 LOG_ERROR("Failed to create reservation");
                 return NULL;

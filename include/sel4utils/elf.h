@@ -25,7 +25,7 @@ typedef struct sel4utils_elf_region {
     void *elf_vstart;
     void *reservation_vstart;
     uint32_t size;
-    reservation_t *reservation;
+    reservation_t reservation;
     int cacheable;
 } sel4utils_elf_region_t;
 

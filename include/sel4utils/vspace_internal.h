@@ -55,7 +55,7 @@ get_alloc_data(vspace_t *vspace)
 }
 
 static inline int
-update_entry(vspace_t *vspace, void *vaddr, seL4_CPtr page)
+update_entry(vspace_t *vspace, void *vaddr, seL4_CPtr page, uint32_t cookie)
 {
     sel4utils_alloc_data_t *data = get_alloc_data(vspace);
 
@@ -66,30 +66,30 @@ update_entry(vspace_t *vspace, void *vaddr, seL4_CPtr page)
     assert(data->top_level[TOP_LEVEL_INDEX(vaddr)] != (void *) RESERVED);
     assert(data->top_level[TOP_LEVEL_INDEX(vaddr)] != NULL);
     data->top_level[TOP_LEVEL_INDEX(vaddr)]->bottom_level[BOTTOM_LEVEL_INDEX(vaddr)] = page;
+    data->top_level[TOP_LEVEL_INDEX(vaddr)]->cookies[BOTTOM_LEVEL_INDEX(vaddr)] = cookie;
 
     return seL4_NoError;
 }
 
 static inline int
-update(vspace_t *vspace, void *vaddr, seL4_CPtr page)
+update(vspace_t *vspace, void *vaddr, seL4_CPtr page, uint32_t cookie)
 {
-   
-#if 0
+    
     if (page == RESERVED) {
         LOG_ERROR("Cap %x cannot be used!", RESERVED);
         return -1;
     }
-#endif 
+    
     assert(page != 0);
     assert(get_alloc_data(vspace)->top_level[TOP_LEVEL_INDEX(vaddr)] != (void *) RESERVED);
-    return update_entry(vspace, vaddr, page);
+    return update_entry(vspace, vaddr, page, cookie);
 }
 
 static inline int
 reserve(vspace_t *vspace, void *vaddr)
 {
     assert(get_alloc_data(vspace)->top_level[TOP_LEVEL_INDEX(vaddr)] != (void *) RESERVED);
-    return update_entry(vspace, vaddr, RESERVED);
+    return update_entry(vspace, vaddr, RESERVED, 0);
 }
 
 static inline void
@@ -100,14 +100,14 @@ clear(vspace_t *vspace, void *vaddr)
     assert(data->top_level[TOP_LEVEL_INDEX(vaddr)] != NULL);
     assert(data->top_level[TOP_LEVEL_INDEX(vaddr)] != (void *) RESERVED);
 
-    update_entry(vspace, vaddr, 0);
+    update_entry(vspace, vaddr, 0, 0);
     if (vaddr < data->last_allocated) {
         data->last_allocated = vaddr;
     }
 }
 
 static inline seL4_CPtr
-get_entry(bottom_level_t *top[], void *vaddr)
+get_cap(bottom_level_t *top[], void *vaddr)
 {
     if (top[TOP_LEVEL_INDEX(vaddr)] == NULL) {
         return 0;
@@ -116,13 +116,23 @@ get_entry(bottom_level_t *top[], void *vaddr)
     return top[TOP_LEVEL_INDEX(vaddr)]->bottom_level[BOTTOM_LEVEL_INDEX(vaddr)];
 }
 
+static inline uint32_t
+get_cookie(bottom_level_t *top[], void *vaddr) {
+    
+    if (top[TOP_LEVEL_INDEX(vaddr)] == NULL) {
+        return 0;
+    }
+
+    return top[TOP_LEVEL_INDEX(vaddr)]->cookies[BOTTOM_LEVEL_INDEX(vaddr)];
+}
+
 /* update entry in page table and handle large pages */
 static inline int
-update_entries(vspace_t *vspace, void *vaddr, seL4_CPtr cap, size_t size_bits)
+update_entries(vspace_t *vspace, void *vaddr, seL4_CPtr cap, size_t size_bits, uint32_t cookie)
 {
     int error = seL4_NoError;
     for (int i = 0; i < (1 << size_bits) && error == seL4_NoError; i += PAGE_SIZE_4K) {
-        error = update(vspace, vaddr + i, cap);
+        error = update(vspace, vaddr + i, cap, cookie);
     }
 
     return error;
@@ -174,9 +184,7 @@ is_reserved(bottom_level_t *top_level[VSPACE_LEVEL_SIZE], void *vaddr)
     if (top_level[TOP_LEVEL_INDEX(vaddr)] == NULL) {
         return 0;
     }
-#if 0
-    printf("is reserved vaddr 0x%x 0x%x \n",vaddr, top_level[TOP_LEVEL_INDEX(vaddr)]->bottom_level[BOTTOM_LEVEL_INDEX(vaddr)]);
-#endif
+    
     return top_level[TOP_LEVEL_INDEX(vaddr)]->bottom_level[BOTTOM_LEVEL_INDEX(vaddr)] == RESERVED;
 }
 
@@ -187,31 +195,26 @@ int sel4utils_map_page_ept(vspace_t *vspace, seL4_CPtr cap, void *vaddr, seL4_Ca
 #endif /* CONFIG_VTX */
 
 /* interface functions */
-int sel4utils_map_pages_at_vaddr(vspace_t *vspace, seL4_CPtr caps[], void *vaddr,
-        size_t num_pages, size_t size_bits, reservation_t *reservation);
+seL4_CPtr sel4utils_get_root(vspace_t *vspace);
 seL4_CPtr sel4utils_get_cap(vspace_t *vspace, void *vaddr);
-void *sel4utils_map_pages(vspace_t *vspace, seL4_CPtr caps[], seL4_CapRights rights,
-        size_t num_pages, size_t size_bits, int cacheable);
-void sel4utils_unmap_pages(vspace_t *vspace, void *vaddr, size_t num_pages, size_t size_bits);
+uint32_t sel4utils_get_cookie(vspace_t *vspace, void *vaddr);
 
-int sel4utils_unmap_reserved_pages(vspace_t *vspace, void *vaddr, size_t num_pages, size_t size_bits, reservation_t *reservation);
+int sel4utils_map_pages_at_vaddr(vspace_t *vspace, seL4_CPtr caps[], uint32_t cookies[], void *vaddr,
+        size_t num_pages, size_t size_bits, reservation_t reservation);
+void *sel4utils_map_pages(vspace_t *vspace, seL4_CPtr caps[], uint32_t cookies[], seL4_CapRights rights,
+        size_t num_pages, size_t size_bits, int cacheable);
+void sel4utils_unmap_pages(vspace_t *vspace, void *vaddr, size_t num_pages, size_t size_bits, vka_t *vka);
 
 int sel4utils_new_pages_at_vaddr(vspace_t *vspace, void *vaddr, size_t num_pages,
-        size_t size_bits, reservation_t *reservation);
+        size_t size_bits, reservation_t reservation);
 void *sel4utils_new_pages(vspace_t *vspace, seL4_CapRights rights, size_t num_pages,
         size_t size_bits);
-void sel4utils_free_pages(vspace_t *vspace, void *vaddr, size_t num_pages, size_t size_bits);
 
-void *sel4utils_new_stack(vspace_t *vspace);
-void sel4utils_free_stack(vspace_t *vspace, void *stack_top);
-
-void * sel4utils_new_ipc_buffer(vspace_t *vspace, seL4_CPtr *page);
-void sel4utils_free_ipc_buffer(vspace_t *vspace, void *vaddr);
-
-reservation_t *sel4utils_reserve_range(vspace_t *vspace, size_t size, seL4_CapRights rights,
+reservation_t sel4utils_reserve_range(vspace_t *vspace, size_t size, seL4_CapRights rights,
         int cacheable, void **vaddr);
-reservation_t *sel4utils_reserve_range_at(vspace_t *vspace, void *vaddr, size_t size,
+reservation_t sel4utils_reserve_range_at(vspace_t *vspace, void *vaddr, size_t size,
         seL4_CapRights rights, int cacheable);
-void sel4utils_free_reservation(vspace_t *vspace, reservation_t *reservation);
+void sel4utils_free_reservation(vspace_t *vspace, reservation_t reservation);
+void sel4utils_free_reservation_by_vaddr(vspace_t *vspace, void *vaddr);
 
 #endif /* __SEL4UILS_VSPACE_PRIVATE_H */

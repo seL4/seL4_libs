@@ -17,7 +17,9 @@
 
 typedef struct vspace vspace_t;
 
-typedef struct reservation reservation_t;
+typedef struct reservation {
+    void *res;
+} reservation_t;
 
 /**
  * Create a stack. The determines stack size.
@@ -27,27 +29,27 @@ typedef struct reservation reservation_t;
  * @return virtual address of the top of the created stack.
  *         NULL on failure.
  */
-typedef void *(*vspace_new_stack_fn)(vspace_t *vspace);
+void *vspace_new_stack(vspace_t *vspace);
 
 /**
  * Free a stack. This will only free virtual resources, not physical resources.
  *
- * @param vspace the virtual memory allocator used.
- * @param stack_top the top of the stack.
+ * @param[in] vspace the virtual memory allocator used.
+ * @param[out] stack_top the top of the stack.
  *
  */
-typedef void (*vspace_free_stack_fn)(vspace_t *vspace, void *stack_top);
+void vspace_free_stack(vspace_t *vspace, void *stack_top);
 
 /**
  * Create an IPC buffer.
  *
- * @param vspace the virtual memory allocator used.
- * @param page capability to that the IPC buffer was mapped in with
+ * @param[in] vspace the virtual memory allocator used.
+ * @param[out] page capability to that the IPC buffer was mapped in with
  *
  * @return vaddr of the mapped in IPC buffer
  *         NULL on failure.
  */
-typedef void *(*vspace_new_ipc_buffer_fn)(vspace_t *vspace, seL4_CPtr *page);
+void *vspace_new_ipc_buffer(vspace_t *vspace, seL4_CPtr *page);
 
 /**
  * Free an IPC buffer. This will only free virtual resources, not physical resources.
@@ -57,7 +59,7 @@ typedef void *(*vspace_new_ipc_buffer_fn)(vspace_t *vspace, seL4_CPtr *page);
  * @param addr address the IPC buffer was mapped in to.
  *
  */
-typedef void (*vspace_free_ipc_buffer_fn)(vspace_t *vspace, void *addr);
+void vspace_free_ipc_buffer(vspace_t *vspace, void *addr);
 
 /**
  * Create a virtually contiguous area of mapped pages.
@@ -72,7 +74,7 @@ typedef void (*vspace_free_ipc_buffer_fn)(vspace_t *vspace, void *addr);
  *         NULL on failure.
  */
 typedef void *(*vspace_new_pages_fn)(vspace_t *vspace, seL4_CapRights rights,
-                                          size_t num_pages, size_t size_bits);
+                                     size_t num_pages, size_t size_bits);
 
 /**
  * Create a virtually contiguous area of mapped pages, at the specified virtual address.
@@ -92,25 +94,15 @@ typedef void *(*vspace_new_pages_fn)(vspace_t *vspace, seL4_CapRights rights,
  * @return seL4_NoError on success, -1 otherwise.
  */
 typedef int (*vspace_new_pages_at_vaddr_fn)(vspace_t *vspace, void *vaddr, size_t num_pages,
-                                            size_t size_bits, reservation_t *reservation);
-
-/**
- * Free a virtually contiguous area of mapped pages.
- * This does not free physical resources.
- *
- * @param vspace the virtual memory allocator used.
- * @param vaddr vaddr that the pages were mapped in to.
- * @param num_pages the number of pages to free.
- * @param size_bits size of the pages, in bits.
- */
-typedef void (*vspace_free_pages_fn)(vspace_t *vspace, void *vaddr,
-                                          size_t num_pages, size_t size_bits);
+                                            size_t size_bits, reservation_t reservation);
 
 /**
  * Map in existing page capabilities, using contiguos virtual memory.
  *
  * @param vspace the virtual memory allocator used.
  * @param seL4_CPtr caps array of caps to map in
+ * @param uint32_t cookies array of allocation cookies. Populate this if you want the vspace to
+ *                         be able to free the caps for you with a vka. NULL acceptable.
  * @param rights the rights to map the pages in with
  * @param size_bits size, in bits, of an individual page -- all pages must be the same size.
  * @param num_pages the number of pages to map in (must correspond to the size of the array).
@@ -119,17 +111,19 @@ typedef void (*vspace_free_pages_fn)(vspace_t *vspace, void *vaddr,
  * @return vaddr at the start of the device mapping
  *         NULL on failure.
  */
-typedef void *(*vspace_map_pages_fn)(vspace_t *vspace, seL4_CPtr caps[],
-                                          seL4_CapRights rights, size_t num_pages, size_t size_bits,
-                                          int cacheable);
+typedef void *(*vspace_map_pages_fn)(vspace_t *vspace, seL4_CPtr caps[], uint32_t cookies[],
+                                     seL4_CapRights rights, size_t num_pages, size_t size_bits,
+                                     int cacheable);
 
 /**
  * Map in existing page capabilities, using contiguos virtual memory at the specified virtual address.
  *
  * This will FAIL if the virtual address is already mapped in.
- *
+ *`
  * @param vspace the virtual memory allocator used.
  * @param seL4_CPtr caps array of caps to map in
+ * @param uint32_t cookies array of allocation cookies. Populate this if you want the vspace to
+ *                         be able to free the caps for you with a vka. NULL acceptable.
  * @param size_bits size, in bits, of an individual page -- all pages must be the same size.
  * @param num_pages the number of pages to map in (must correspond to the size of the array).
  * @param reservation reservation to the range the allocation will take place in.
@@ -137,39 +131,33 @@ typedef void *(*vspace_map_pages_fn)(vspace_t *vspace, seL4_CPtr caps[],
  * @return seL4_NoError on success. -1 on failure.
  *         NULL on failure.
  */
-typedef int (*vspace_map_pages_at_vaddr_fn)(vspace_t *vspace, seL4_CPtr caps[],
-                                          void *vaddr, size_t num_pages,
-                                          size_t size_bits, reservation_t *reservation);
+typedef int (*vspace_map_pages_at_vaddr_fn)(vspace_t *vspace, seL4_CPtr caps[], uint32_t cookies[],
+                                            void *vaddr, size_t num_pages,
+                                            size_t size_bits, reservation_t reservation);
+
+
+/* potential values for vspace_unmap_pages */
+#define VSPACE_FREE ((vka_t *) 0xffffffff)
+#define VSPACE_PRESERVE ((vka_t *) 0)
 
 /**
  * Unmap in existing page capabilities that use contiguos virtual memory.
- * This function will not free the virtual memory.
- * Unmapped memory is marked as free, even if a reservation exists
+ * Free associated frames if user requets.
+ *
+ * Reservations are preserved.
  *
  * @param vspace the virtual memory allocator used.
  * @param vaddr the start of the contiguous region.
  * @param size_bits size, in bits, of an individual page -- all pages must be the same size.
  * @param num_pages the number of pages to map in (must correspond to the size of the array).
+ * @param vka interface to free frame objects with, options:
+ *             + VSPACE_FREE to free the frames with the vspace internal vka,
+ *             + VSPACE_PRESERVE to not free the frames or
+ *             + a pointer to a custom vka to free the frames with.
  *
  */
 typedef void (*vspace_unmap_pages_fn)(vspace_t *vspace, void *vaddr, size_t num_pages,
-        size_t size_bits);
-
-/**
- * Unmap in existing page capabilities that use contiguos virtual memory.
- * This function will not free the virtual memory.
- * This function will update unmapped area as reserved, provided the correct
- * reservation is passed in
- *
- * @param vspace the virtual memory allocator used.
- * @param vaddr the start of the contiguous region.
- * @param size_bits size, in bits, of an individual page -- all pages must be the same size.
- * @param num_pages the number of pages to map in (must correspond to the size of the array).
- *
- * @return Returns 0 on success
- */
-typedef int (*vspace_unmap_reserved_pages_fn)(vspace_t *vspace, void *vaddr, size_t num_pages,
-        size_t size_bits, reservation_t *reservation);
+                                      size_t size_bits, vka_t *free);
 
 /**
  * Reserve a range to map memory into later.
@@ -183,8 +171,8 @@ typedef int (*vspace_unmap_reserved_pages_fn)(vspace_t *vspace, void *vaddr, siz
  *
  * @return a reservation to use when mapping pages in the range.
  */
-typedef reservation_t *(*vspace_reserve_range_fn)(vspace_t *vspace, size_t bytes,
-        seL4_CapRights rights, int cacheable, void **vaddr);
+typedef reservation_t (*vspace_reserve_range_fn)(vspace_t *vspace, size_t bytes,
+                                                 seL4_CapRights rights, int cacheable, void **vaddr);
 
 /**
  * Reserve a range to map memory in to later at a specific address.
@@ -198,8 +186,8 @@ typedef reservation_t *(*vspace_reserve_range_fn)(vspace_t *vspace, size_t bytes
  *
  * @return a reservation to use when mapping pages in the range.
  */
-typedef reservation_t *(*vspace_reserve_range_at_fn)(vspace_t *vspace, void *vaddr,
-        size_t bytes, seL4_CapRights rights, int cacheable);
+typedef reservation_t (*vspace_reserve_range_at_fn)(vspace_t *vspace, void *vaddr,
+                                                    size_t bytes, seL4_CapRights rights, int cacheable);
 
 /**
  * Free a reservation.
@@ -209,7 +197,19 @@ typedef reservation_t *(*vspace_reserve_range_at_fn)(vspace_t *vspace, void *vad
  * @param vspace the virtual memory allocator to use.
  * @param reservation the reservation to free.
  */
-typedef void (*vspace_free_reservation_fn)(vspace_t *vspace, reservation_t *reservation);
+typedef void (*vspace_free_reservation_fn)(vspace_t *vspace, reservation_t reservation);
+
+/**
+ * Free a reservation by vaddr.
+ *
+ * This will not touch any pages, but will unreserve any reserved addresses in the reservation.
+ *
+ * @param vspace the virtual memory allocator to use.
+ * @param reservation the reservation to free.
+ */
+typedef void (*vspace_free_reservation_by_vaddr_fn)(vspace_t *vspace, void *vaddr);
+
+
 
 /**
  * Get the capability mapped at a virtual address.
@@ -220,7 +220,18 @@ typedef void (*vspace_free_reservation_fn)(vspace_t *vspace, reservation_t *rese
  *
  * @return the cap mapped to this virtual address, 0 otherwise.
  */
- typedef seL4_CPtr (*vspace_get_cap_fn)(vspace_t *vspace, void *vaddr);
+typedef seL4_CPtr (*vspace_get_cap_fn)(vspace_t *vspace, void *vaddr);
+
+/**
+ * Get the vka allocation cookie for an the frame mapped at a virtual address.
+ *
+ * @param vspace the virtual memory allocator to use.
+ * @param vaddr the virtual address to get the cap for.
+ *
+ * @return the allocation cookie mapped to this virtual address, 0 otherwise.
+ */
+typedef seL4_CPtr (*vspace_get_cookie_fn)(vspace_t *vspace, void *vaddr);
+
 
 /**
  * Function that the vspace allocator will call if it allocates any memory.
@@ -235,31 +246,31 @@ typedef void (*vspace_free_reservation_fn)(vspace_t *vspace, reservation_t *rese
  */
 typedef void (*vspace_allocated_object_fn)(void *allocated_object_cookie, vka_object_t object);
 
+
+/* @return the page directory for this vspace
+ */
+typedef seL4_CPtr (*vspace_get_root_fn)(vspace_t *vspace);
+
 /* Portable virtual memory allocation interface */
 struct vspace {
     void *data;
-    vspace_new_stack_fn new_stack;
-    vspace_free_stack_fn free_stack;
-
-    vspace_new_ipc_buffer_fn new_ipc_buffer;
-    vspace_free_ipc_buffer_fn free_ipc_buffer;
 
     vspace_new_pages_fn new_pages;
     vspace_new_pages_at_vaddr_fn new_pages_at_vaddr;
-    vspace_free_pages_fn free_pages;
 
     vspace_map_pages_fn map_pages;
     vspace_map_pages_at_vaddr_fn map_pages_at_vaddr;
+
     vspace_unmap_pages_fn unmap_pages;
-    vspace_unmap_reserved_pages_fn unmap_reserved_pages;
 
     vspace_reserve_range_fn reserve_range;
     vspace_reserve_range_at_fn reserve_range_at;
     vspace_free_reservation_fn free_reservation;
+    vspace_free_reservation_by_vaddr_fn free_reservation_by_vaddr;
 
     vspace_get_cap_fn get_cap;
-
-    seL4_CPtr page_directory;
+    vspace_get_root_fn get_root;
+    vspace_get_cookie_fn get_cookie;
 
     vspace_allocated_object_fn allocated_object;
     void *allocated_object_cookie;
@@ -267,46 +278,9 @@ struct vspace {
 
 /* convenient wrappers */
 
-static inline void * 
-vspace_new_stack(vspace_t *vspace)
-{
-    assert(vspace);
-    assert(vspace->new_stack);
-    return vspace->new_stack(vspace);
-}
-
-static inline void
-vspace_free_stack(vspace_t *vspace, void *stack_top)
-{
-    assert(vspace);
-    assert(vspace->free_stack);
-
-    vspace->free_stack(vspace, stack_top);
-}
-
-static inline void *
-vspace_new_ipc_buffer(vspace_t *vspace, seL4_CPtr *page)
-{
-    assert(vspace);
-    assert(page);
-    assert(vspace->new_ipc_buffer);
-
-    return vspace->new_ipc_buffer(vspace, page);
-}
-
-static inline void 
-vspace_free_ipc_buffer(vspace_t *vspace, void *vaddr)
-{
-    assert(vspace);
-    assert(vaddr);
-    assert(vspace->free_ipc_buffer);
-
-    vspace->free_ipc_buffer(vspace, vaddr);
-}
-
 static inline void *
 vspace_new_pages(vspace_t *vspace, seL4_CapRights rights, size_t num_pages,
-                size_t size_bits)
+                 size_t size_bits)
 {
     assert(vspace);
     assert(vspace->new_pages);
@@ -316,28 +290,17 @@ vspace_new_pages(vspace_t *vspace, seL4_CapRights rights, size_t num_pages,
 
 static inline int
 vspace_new_pages_at_vaddr(vspace_t *vspace, void *vaddr, size_t num_pages, size_t size_bits,
-        reservation_t *reservation)
+                          reservation_t reservation)
 {
     assert(vspace);
     assert(num_pages > 0);
-    assert(reservation);
     assert(vspace->new_pages_at_vaddr);
 
     return vspace->new_pages_at_vaddr(vspace, vaddr, num_pages, size_bits, reservation);
 }
 
-static inline void
-vspace_free_pages(vspace_t *vspace, void *vaddr, size_t num_pages, size_t size_bits)
-{
-    assert(vspace);
-    assert(vaddr);
-    assert(vspace->free_pages);
-
-    vspace->free_pages(vspace, vaddr, num_pages, size_bits);
-}
-
 static inline void *
-vspace_map_pages(vspace_t *vspace, seL4_CPtr caps[], seL4_CapRights rights,
+vspace_map_pages(vspace_t *vspace, seL4_CPtr caps[], uint32_t cookies[], seL4_CapRights rights,
                  size_t num_caps, size_t size_bits, int cacheable)
 {
     assert(vspace);
@@ -345,25 +308,24 @@ vspace_map_pages(vspace_t *vspace, seL4_CPtr caps[], seL4_CapRights rights,
     assert(size_bits > 0);
     assert(vspace->map_pages);
 
-    return vspace->map_pages(vspace, caps, rights, num_caps, size_bits, cacheable);
+    return vspace->map_pages(vspace, caps, cookies, rights, num_caps, size_bits, cacheable);
 }
 
 static inline int
-vspace_map_pages_at_vaddr(vspace_t *vspace, seL4_CPtr caps[], void *vaddr, size_t num_pages,
-        size_t size_bits, reservation_t *reservation)
+vspace_map_pages_at_vaddr(vspace_t *vspace, seL4_CPtr caps[], uint32_t cookies[], void *vaddr,
+                          size_t num_pages, size_t size_bits, reservation_t reservation)
 {
     assert(vspace);
     assert(num_pages > 0);
     assert(size_bits > 0);
     assert(vaddr);
-    assert(reservation);
     assert(vspace->map_pages_at_vaddr);
 
-    return vspace->map_pages_at_vaddr(vspace, caps, vaddr, num_pages, size_bits, reservation);
+    return vspace->map_pages_at_vaddr(vspace, caps, cookies, vaddr, num_pages, size_bits, reservation);
 }
 
 static inline void
-vspace_unmap_pages(vspace_t *vspace, void *vaddr, size_t num_pages, size_t size_bits)
+vspace_unmap_pages(vspace_t *vspace, void *vaddr, size_t num_pages, size_t size_bits, vka_t *vka)
 {
     assert(vspace);
     assert(num_pages > 0);
@@ -371,24 +333,12 @@ vspace_unmap_pages(vspace_t *vspace, void *vaddr, size_t num_pages, size_t size_
     assert(vaddr);
     assert(vspace->unmap_pages);
 
-    vspace->unmap_pages(vspace, vaddr, num_pages, size_bits);
+    vspace->unmap_pages(vspace, vaddr, num_pages, size_bits, vka);
 }
 
-static inline int
-vspace_unmap_reserved_pages(vspace_t *vspace, void *vaddr, size_t num_pages, size_t size_bits, reservation_t *reservation)
-{
-    assert(vspace);
-    assert(num_pages > 0);
-    assert(size_bits > 0);
-    assert(vaddr);
-    assert(vspace->unmap_reserved_pages);
-
-    return vspace->unmap_reserved_pages(vspace, vaddr, num_pages, size_bits, reservation);
-}
-
-static inline reservation_t *
+static inline reservation_t
 vspace_reserve_range(vspace_t *vspace, size_t bytes, seL4_CapRights rights,
-        int cacheable, void **vaddr)
+                     int cacheable, void **vaddr)
 {
     assert(vspace);
     assert(bytes > 0);
@@ -398,9 +348,9 @@ vspace_reserve_range(vspace_t *vspace, size_t bytes, seL4_CapRights rights,
     return vspace->reserve_range(vspace, bytes, rights, cacheable, vaddr);
 }
 
-static inline reservation_t *
+static inline reservation_t
 vspace_reserve_range_at(vspace_t *vspace, void *vaddr,
-        size_t bytes, seL4_CapRights rights, int cacheable)
+                        size_t bytes, seL4_CapRights rights, int cacheable)
 {
     assert(vspace);
     assert(bytes > 0);
@@ -410,13 +360,22 @@ vspace_reserve_range_at(vspace_t *vspace, void *vaddr,
 }
 
 static inline void
-vspace_free_reservation(vspace_t *vspace, reservation_t *reservation)
+vspace_free_reservation(vspace_t *vspace, reservation_t reservation)
 {
     assert(vspace);
-    assert(reservation);
     assert(vspace->free_reservation);
 
     vspace->free_reservation(vspace, reservation);
+}
+
+static inline void
+vspace_free_reservation_by_vaddr(vspace_t *vspace, void *vaddr)
+{
+    assert(vspace);
+    assert(vaddr);
+    assert(vspace->free_reservation);
+
+    vspace->free_reservation_by_vaddr(vspace, vaddr);
 }
 
 static inline seL4_CPtr
@@ -428,6 +387,17 @@ vspace_get_cap(vspace_t *vspace, void *vaddr)
 
     return vspace->get_cap(vspace, vaddr);
 }
+
+static inline uint32_t
+vspace_get_cookie(vspace_t *vspace, void *vaddr)
+{
+    assert(vspace);
+    assert(vaddr);
+    assert(vspace->get_cookie);
+
+    return vspace->get_cookie(vspace, vaddr);
+}
+
 
 /* Helper functions */
 
@@ -445,7 +415,7 @@ static inline seL4_CPtr
 vspace_get_root(vspace_t *vspace)
 {
     assert(vspace);
-    return vspace->page_directory;
+    return vspace->get_root(vspace);
 }
 
 #endif /* _INTERFACE_VSPACE_H_ */

@@ -103,7 +103,7 @@ sys_mremap(va_list ap)
  * main function of your app. And setup something like
     sel4utils_reserve_range_no_alloc(&vspace, &muslc_brk_reservation_memory, BRK_VIRTUAL_SIZE, seL4_AllRights, 1, &muslc_brk_reservation_start);
     muslc_this_vspace = &vspace;
-    muslc_brk_reservation = &muslc_brk_reservation_memory;
+    muslc_brk_reservation.res = &muslc_brk_reservation_memory;
 
     In the case that you need dynamic morecore for some apps and static for others, just
     define more_core area in your app itself and set the global morecore_area before calling malloc.
@@ -112,7 +112,7 @@ sys_mremap(va_list ap)
   */
 
 vspace_t *muslc_this_vspace = NULL;
-reservation_t *muslc_brk_reservation = NULL;
+reservation_t muslc_brk_reservation = {.res = NULL};
 void *muslc_brk_reservation_start = NULL;
 
 char *morecore_area = NULL;
@@ -154,9 +154,9 @@ sys_brk_dynamic(va_list ap)
 
     uintptr_t ret;
     uintptr_t newbrk = va_arg(ap, uintptr_t);
-    if (!muslc_this_vspace || !muslc_brk_reservation || !muslc_brk_reservation_start) {
+    if (!muslc_this_vspace || !muslc_brk_reservation.res || !muslc_brk_reservation_start) {
         LOG_ERROR("Need to assign vspace for sys_brk to work!\n");
-        assert(muslc_this_vspace && muslc_brk_reservation && muslc_brk_reservation_start);
+        assert(muslc_this_vspace && muslc_brk_reservation.res && muslc_brk_reservation_start);
         return 0;
     }
 
@@ -238,9 +238,9 @@ sys_mmap2_dynamic(va_list ap)
     (void)prot;
     (void)fd;
     (void)offset;
-    if (!muslc_this_vspace || !muslc_brk_reservation || !muslc_brk_reservation_start) {
+    if (!muslc_this_vspace || !muslc_brk_reservation.res || !muslc_brk_reservation_start) {
         LOG_ERROR("Need to assign vspace for sys_brk to work!\n");
-        assert(muslc_this_vspace && muslc_brk_reservation && muslc_brk_reservation_start);
+        assert(muslc_this_vspace && muslc_brk_reservation.res && muslc_brk_reservation_start);
         return 0;
     }
     if (flags & MAP_ANONYMOUS) {
@@ -293,24 +293,26 @@ sys_mremap_dynamic(va_list ap)
     /* first find all the old caps */
     int num_pages = old_size >> seL4_PageBits;
     seL4_CPtr caps[num_pages];
+    uint32_t cookies[num_pages];
     int i;
     for (i = 0; i < num_pages; i++) {
         void *vaddr = old_address + i * BIT(seL4_PageBits);
         caps[i] = vspace_get_cap(muslc_this_vspace, vaddr);
+        cookies[i] = vspace_get_cookie(muslc_this_vspace, vaddr);
     }
     /* unmap the previous mapping */
-    vspace_free_pages(muslc_this_vspace, old_address, num_pages, seL4_PageBits);
+    vspace_unmap_pages(muslc_this_vspace, old_address, num_pages, seL4_PageBits, VSPACE_PRESERVE);
     /* reserve a new region */
     int error;
     void *new_address;
     int new_pages = new_size >> seL4_PageBits;
-    reservation_t *reservation = vspace_reserve_range(muslc_this_vspace, new_pages * PAGE_SIZE_4K, seL4_AllRights, 1, &new_address);
-    if (!reservation) {
+    reservation_t reservation = vspace_reserve_range(muslc_this_vspace, new_pages * PAGE_SIZE_4K, seL4_AllRights, 1, &new_address);
+    if (!reservation.res) {
         LOG_ERROR("Failed to make reservation for remap\n");
         goto restore;
     }
     /* map all the existing pages into the reservation */
-    error = vspace_map_pages_at_vaddr(muslc_this_vspace, caps, new_address, num_pages, seL4_PageBits, reservation);
+    error = vspace_map_pages_at_vaddr(muslc_this_vspace, caps, cookies, new_address, num_pages, seL4_PageBits, reservation);
     if (error) {
         LOG_ERROR("Mapping existing pages into new reservation failed\n");
         vspace_free_reservation(muslc_this_vspace, reservation);
@@ -320,7 +322,7 @@ sys_mremap_dynamic(va_list ap)
     error = vspace_new_pages_at_vaddr(muslc_this_vspace, new_address + num_pages * PAGE_SIZE_4K, new_pages - num_pages, seL4_PageBits, reservation);
     if (error) {
         LOG_ERROR("Creating new pages for remap region failed\n");
-        vspace_free_pages(muslc_this_vspace, new_address, num_pages, seL4_PageBits);
+        vspace_unmap_pages(muslc_this_vspace, new_address, num_pages, seL4_PageBits, VSPACE_PRESERVE);
         vspace_free_reservation(muslc_this_vspace, reservation);
         goto restore;
     }
@@ -330,8 +332,9 @@ sys_mremap_dynamic(va_list ap)
 restore:
     /* try and recreate the original mapping */
     reservation = vspace_reserve_range_at(muslc_this_vspace, old_address, num_pages * PAGE_SIZE_4K, seL4_AllRights, 1);
-    assert(reservation);
-    error = vspace_map_pages_at_vaddr(muslc_this_vspace, caps, old_address, num_pages, seL4_PageBits, reservation);
+    assert(reservation.res);
+    error = vspace_map_pages_at_vaddr(muslc_this_vspace, caps, cookies, old_address,
+            num_pages, seL4_PageBits, reservation);
     assert(!error);
     return -ENOMEM;
 }

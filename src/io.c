@@ -171,7 +171,7 @@ sel4platsupport_map_paddr_with_page_size(sel4platsupport_io_mapper_cookie_t *io_
     }
 
     /* Now map the frames in */
-    void *vaddr = vspace_map_pages(vspace, frames, seL4_AllRights, num_pages, page_size_bits, cached);
+    void *vaddr = vspace_map_pages(vspace, frames, NULL, seL4_AllRights, num_pages, page_size_bits, cached);
     if (vaddr) {
         /* fill out and insert the node */
         *node = (io_mapping_t) {
@@ -299,7 +299,8 @@ sel4platsupport_unmap_vaddr(void *cookie, void *vaddr, size_t size)
     vspace_t *vspace = &io_mapper->vspace;
     vka_t *vka = &io_mapper->vka;
 
-    vspace_unmap_pages(vspace, mapping->mapped_addr, mapping->num_pages, mapping->page_size);
+    vspace_unmap_pages(vspace, mapping->mapped_addr, mapping->num_pages, mapping->page_size, 
+            VSPACE_PRESERVE);
 
     for (int i = 0; i < mapping->num_pages; i++) {
         cspacepath_t path;

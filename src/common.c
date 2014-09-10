@@ -125,7 +125,7 @@ __map_device_page_regular(seL4_Word paddr, seL4_Word bits) {
     cap = _platsupport_find_device_cap(paddr, bits, simple, vka);
     assert(cap);
 
-    vaddr = vspace_map_pages(vspace, &cap, seL4_AllRights, 1, bits, 0);
+    vaddr = vspace_map_pages(vspace, &cap, NULL, seL4_AllRights, 1, bits, 0);
     if (!vaddr) {
         printf("Failed to map serial device :(\n");
         for(;;);

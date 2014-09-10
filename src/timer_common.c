@@ -89,7 +89,7 @@ timer_common_init(vspace_t *vspace, simple_t *simple,
     }
 
     /* map in the frame */
-    timer_data->vaddr = vspace_map_pages(vspace, &frame_cap, seL4_AllRights, 1, seL4_PageBits, 0);
+    timer_data->vaddr = vspace_map_pages(vspace, &frame_cap, NULL, seL4_AllRights, 1, seL4_PageBits, 0);
     if (timer_data->vaddr == NULL) {
         LOG_ERROR("Failed to map page at vaddr %p\n", timer_data->vaddr);
         goto error;
@@ -129,7 +129,7 @@ timer_common_destroy(timer_common_data_t *timer_data, vka_t *vka, vspace_t *vspa
             vka_cspace_free(vka, timer_data->irq);
         }
         if (timer_data->vaddr != NULL) {
-            vspace_free_pages(vspace, timer_data->vaddr, 1, seL4_PageBits);
+            vspace_unmap_pages(vspace, timer_data->vaddr, 1, seL4_PageBits, VSPACE_PRESERVE);
         }
         if (timer_data->frame.capPtr != 0) {
             vka_cnode_delete(&timer_data->frame);

@@ -205,7 +205,7 @@ typedef void (*vspace_free_reservation_fn)(vspace_t *vspace, reservation_t reser
  * This will not touch any pages, but will unreserve any reserved addresses in the reservation.
  *
  * @param vspace the virtual memory allocator to use.
- * @param reservation the reservation to free.
+ * @param vaddr a vaddr in the reservation (will free entire reservation).
  */
 typedef void (*vspace_free_reservation_by_vaddr_fn)(vspace_t *vspace, void *vaddr);
 
@@ -230,7 +230,7 @@ typedef seL4_CPtr (*vspace_get_cap_fn)(vspace_t *vspace, void *vaddr);
  *
  * @return the allocation cookie mapped to this virtual address, 0 otherwise.
  */
-typedef seL4_CPtr (*vspace_get_cookie_fn)(vspace_t *vspace, void *vaddr);
+typedef uint32_t (*vspace_get_cookie_fn)(vspace_t *vspace, void *vaddr);
 
 
 /**

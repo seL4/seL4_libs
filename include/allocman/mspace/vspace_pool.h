@@ -28,7 +28,7 @@
 
 struct mspace_vspace_pool_config {
     uint32_t vstart;
-    reservation_t *reservation;
+    reservation_t reservation;
     vspace_t vspace;
 };
 
@@ -36,7 +36,7 @@ typedef struct mspace_vspace_pool {
     uint32_t pool_ptr;
     uint32_t pool_top;
     /* reservation inside the vspace_t */
-    reservation_t *reservation;
+    reservation_t reservation;
     vspace_t vspace;
     mspace_k_r_malloc_t k_r_malloc;
     struct allocman *morecore_alloc;

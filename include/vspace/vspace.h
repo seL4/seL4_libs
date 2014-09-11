@@ -142,7 +142,10 @@ typedef int (*vspace_map_pages_at_vaddr_fn)(vspace_t *vspace, seL4_CPtr caps[], 
 
 /**
  * Unmap in existing page capabilities that use contiguos virtual memory.
- * Free associated frames if user requets.
+ *
+ * This function can also free the cslots and frames that back the virtual memory in the region.
+ * This can be done by the internal vka that the vspace was created with, or the user can provide
+ * a vka to free with. The vka must be the same vka that the frame object and cslot were allocated with.
  *
  * Reservations are preserved.
  *
@@ -150,14 +153,39 @@ typedef int (*vspace_map_pages_at_vaddr_fn)(vspace_t *vspace, seL4_CPtr caps[], 
  * @param vaddr the start of the contiguous region.
  * @param size_bits size, in bits, of an individual page -- all pages must be the same size.
  * @param num_pages the number of pages to map in (must correspond to the size of the array).
- * @param vka interface to free frame objects with, options:
- *             + VSPACE_FREE to free the frames with the vspace internal vka,
- *             + VSPACE_PRESERVE to not free the frames or
- *             + a pointer to a custom vka to free the frames with.
+ * @param free interface to free frame objects and cslots with, options:
+ *             + VSPACE_FREE to free the frames/cslots with the vspace internal vka,
+ *             + VSPACE_PRESERVE to not free the frames/cslots or
+ *             + a pointer to a custom vka to free the frames/cslots with.
  *
  */
 typedef void (*vspace_unmap_pages_fn)(vspace_t *vspace, void *vaddr, size_t num_pages,
                                       size_t size_bits, vka_t *free);
+
+
+/**
+ * Tear down a vspace, freeing any memory allocated by the vspace itself.
+ *
+ * Like vspace_unmap_pages this function can also free the frames and cslots backing
+ * the vspace, if a vka is provided.
+ *
+ * When using this function to tear down all backing frames/cslots the user MUST make sure
+ * that any frames/cslots not allocated by the vka being used to free have already been unmapped
+ * from the vspace *or* that the cookies for these custom mappings are set to 0.
+ * If this is not done the vspace will attempt to use the wrong vka to free
+ * frames and cslots resulting in allocator corruption.
+ *
+ * To completely free a vspace the user should also free any objects/cslots that the vspace
+ * called vspace_allocated_object_fn on, as the vspace has essentially delegated control
+ * of these objects/cslots to the user.
+ *
+ * @param vspace the vspace to tear down.
+ * @param free vka to use to free the cslots/frames, options:
+ *             + VSPACE_FREE to use the internal vka,
+ *             + VSPACE_PRESERVE to not free the frames/cslots,
+ *             + a pointer to a custom vka to free the frames/cslots with.
+ */
+typedef void (*vspace_tear_down_fn)(vspace_t *vspace, vka_t *free);
 
 /**
  * Reserve a range to map memory into later.
@@ -262,6 +290,7 @@ struct vspace {
     vspace_map_pages_at_vaddr_fn map_pages_at_vaddr;
 
     vspace_unmap_pages_fn unmap_pages;
+    vspace_tear_down_fn tear_down;
 
     vspace_reserve_range_fn reserve_range;
     vspace_reserve_range_at_fn reserve_range_at;
@@ -335,6 +364,17 @@ vspace_unmap_pages(vspace_t *vspace, void *vaddr, size_t num_pages, size_t size_
 
     vspace->unmap_pages(vspace, vaddr, num_pages, size_bits, vka);
 }
+
+static inline void
+vspace_tear_down(vspace_t *vspace, vka_t *vka)
+{
+    assert(vspace);
+    assert(vka);
+    assert(vspace->tear_down);
+
+    vspace->tear_down(vspace, vka);
+}
+
 
 static inline reservation_t
 vspace_reserve_range(vspace_t *vspace, size_t bytes, seL4_CapRights rights,

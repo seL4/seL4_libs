@@ -645,37 +645,35 @@ sel4utils_tear_down(vspace_t *vspace, vka_t *vka)
     }
 
     /* now clear all the pages in the vspace (not the page tables) */
-    void *start = (void *) FIRST_VADDR;
-    void *end = (void *) KERNEL_RESERVED_START;
+    uint32_t start = TOP_LEVEL_INDEX(FIRST_VADDR);
+    uint32_t end = TOP_LEVEL_INDEX(KERNEL_RESERVED_START) + 1;
+    uint32_t idx;
 
-    while (start != end) {
-        bottom_level_t *bottom_level = data->top_level[TOP_LEVEL_INDEX(start)];
+    for (idx = start; idx < end; idx++) {
+        bottom_level_t *bottom_level = data->top_level[idx];
 
         if (bottom_level != NULL && (uint32_t) bottom_level != RESERVED) {
             /* free all of the pages in the vspace */
             for (uint32_t i = 0; i < VSPACE_LEVEL_SIZE; i++) {
-                uint32_t size = PAGE_SIZE_4K;
-                uint32_t cookie = get_cookie(data->top_level, start);
+                uint32_t page4k = 1;
+                uint32_t cookie = bottom_level->cookies[i];
+                uintptr_t vaddr = (idx << TOP_LEVEL_BITS_OFFSET) | (i << BOTTOM_LEVEL_BITS_OFFSET);
                 /* if the cookie isn't 0 we free the object/frame */
                 if (cookie != 0) {
                     /* we might be unmapping a large page, figure out how big it
                      * is by looking for consecutive, identical entries */
-                    while (get_cookie(data->top_level, start + size) == cookie) {
-                        size += PAGE_SIZE_4K;
-                    }
-                    assert(IS_POWER_OF_2(size));
-                    sel4utils_unmap_pages(vspace, start, 1, CTZ(size), vka);
+                    for (uint32_t j = i + 1; j < VSPACE_LEVEL_SIZE && bottom_level->cookies[j] == cookie; j++, page4k++);
+                    sel4utils_unmap_pages(vspace, vaddr, 1, PAGE_BITS_4K * page4k, vka);
                 }
-                start += size;
             }
             /* now free the level we were using */
-            vspace_unmap_pages(data->bootstrap, bottom_level, PAGES_FOR_BOTTOM_LEVEL, PAGE_SIZE_4K,
+            vspace_unmap_pages(data->bootstrap, bottom_level, PAGES_FOR_BOTTOM_LEVEL, PAGE_BITS_4K,
                                VSPACE_FREE);
         }
     }
 
     /* now free the top level */
-    vspace_unmap_pages(data->bootstrap, data->top_level, 1, PAGE_SIZE_4K, VSPACE_FREE);
+    vspace_unmap_pages(data->bootstrap, data->top_level, 1, PAGE_BITS_4K, VSPACE_FREE);
 
 }
 

@@ -55,10 +55,7 @@
 /* we also need some memory for top level structure. place that just below all our bottom
    level page tables. no good way of specifying the size, will assume one page */
 #define TOP_LEVEL_PAGE_TABLE_VADDR (FIRST_BOTTOM_LEVEL_PAGE_TABLE_VADDR - PAGE_SIZE_4K)
-/* reserve the first page to catch null pointer dereferences */
-#define FIRST_VADDR (0 + PAGE_SIZE_4K)
-#define PAGES_FOR_BOTTOM_LEVEL (sizeof(bottom_level_t) / PAGE_SIZE_4K)
-/* when bootstrapping we need to allocate 1 bottom level page table to store the top level page table 
+/* when bootstrapping we need to allocate 1 bottom level page table to store the top level page table
  * index in, and enough bottom levels to store indexes of all possible bottom levels */
 #define INITIAL_BOTTOM_LEVEL_PAGES 6
 #define INITIAL_BOTTOM_LEVEL_TABLES (INITIAL_BOTTOM_LEVEL_PAGES / PAGES_FOR_BOTTOM_LEVEL)
@@ -72,10 +69,9 @@ compile_time_assert(sel4utils_vspace_4, BOTTOM_LEVEL_INDEX(FIRST_BOTTOM_LEVEL_PA
 #endif
 
 /* check our data structures are 4K*2 page sized like the rest of the code assumes they are */
-compile_time_assert(bottom_level_4k, sizeof(bottom_level_t) == (PAGE_SIZE_4K*2));
+compile_time_assert(bottom_level_8k, sizeof(bottom_level_t) == (PAGE_SIZE_4K * 2));
 compile_time_assert(top_level_4k, sizeof(bottom_level_t *) * VSPACE_LEVEL_SIZE == PAGE_SIZE_4K);
-compile_time_assert(bah, INITIAL_BOTTOM_LEVEL_PAGES == 6);
-compile_time_assert(bah2, INITIAL_BOTTOM_LEVEL_TABLES == 3); 
+
 static int
 common_init(vspace_t *vspace, vka_t *vka, seL4_CPtr page_directory,
             vspace_allocated_object_fn allocated_object_fn, void *cookie)
@@ -126,7 +122,7 @@ static int
 reserve_range(vspace_t *vspace, void *start, void *end)
 {
     int pages = BYTES_TO_4K_PAGES(ROUND_UP((uint32_t) ((seL4_Word)end), PAGE_SIZE_4K) -
-                ROUND_DOWN((uint32_t) ((seL4_Word)start), PAGE_SIZE_4K));
+                                  ROUND_DOWN((uint32_t) ((seL4_Word)start), PAGE_SIZE_4K));
 
     int error = 0;
     for (int i = 0; i < pages && error == 0; i++) {
@@ -146,20 +142,21 @@ reserve_range(vspace_t *vspace, void *start, void *end)
  * what virtual addresses are taken up by the current task
  */
 void
-sel4utils_get_image_region(seL4_Word *va_start, seL4_Word *va_end) {
+sel4utils_get_image_region(seL4_Word *va_start, seL4_Word *va_end)
+{
     extern char __executable_start[];
     extern char _end[];
 
     *va_start = (seL4_Word) __executable_start;
     *va_end = (seL4_Word) _end;
-    *va_end = (seL4_Word) (seL4_Word)ROUND_UP((uint32_t) ((seL4_Word)*va_end), (uint32_t) PAGE_SIZE_4K);
+    *va_end = (seL4_Word) (seL4_Word)ROUND_UP((uint32_t) ((seL4_Word) * va_end), (uint32_t) PAGE_SIZE_4K);
 }
 
 
 static int
 reserve_initial_task_regions(vspace_t *vspace, void *existing_frames[])
 {
-    
+
     /* mark the code and data segments as used */
     seL4_Word va_start, va_end;
 
@@ -199,7 +196,7 @@ alloc_and_map_bootstrap_frame(vspace_t *vspace, vka_object_t *frame, void *vaddr
     vka_object_t pagetable = {0};
 
     error = sel4utils_map_page(data->vka, data->page_directory, frame->cptr, vaddr,
-            seL4_AllRights, 1, &pagetable);
+                               seL4_AllRights, 1, &pagetable);
 
     if (error) {
         LOG_ERROR("Failed to map bootstrap frame at %p, error: %d", vaddr, error);
@@ -237,9 +234,7 @@ bootstrap_create_level(vspace_t *vspace, void *vaddr)
         assert(error == seL4_NoError);
         pt_vaddr += PAGE_SIZE_4K;
     }
-        
 
-    printf("Allocated level between %p <--> %p\n", data->next_bottom_level_vaddr, pt_vaddr);
     data->top_level[TOP_LEVEL_INDEX(vaddr)] = (bottom_level_t *) data->next_bottom_level_vaddr;
     data->next_bottom_level_vaddr = pt_vaddr;
 
@@ -260,7 +255,7 @@ bootstrap_page_table(vspace_t *vspace)
     /* set up the pointer to top level page table */
     data->top_level = (bottom_level_t **) TOP_LEVEL_PAGE_TABLE_VADDR;
 
-    vka_object_t bottom_levels[6];
+    vka_object_t bottom_levels[INITIAL_BOTTOM_LEVEL_PAGES];
     void *vaddr = (void *) FIRST_BOTTOM_LEVEL_PAGE_TABLE_VADDR;
     for (int i = 0; i < INITIAL_BOTTOM_LEVEL_PAGES; i++) {
         if (alloc_and_map_bootstrap_frame(vspace, &bottom_levels[i], vaddr)) {
@@ -281,7 +276,7 @@ bootstrap_page_table(vspace_t *vspace)
      * and we just allocated them. */
     UNUSED int error = update(vspace, (void *) TOP_LEVEL_PAGE_TABLE_VADDR, top_level.cptr, top_level.ut);
     assert(error == seL4_NoError);
-   
+
     vaddr = (void *) FIRST_BOTTOM_LEVEL_PAGE_TABLE_VADDR;
     for (int i = 0; i < INITIAL_BOTTOM_LEVEL_PAGES; i++) {
         error = update(vspace, vaddr, bottom_levels[i].cptr, bottom_levels[i].ut);
@@ -289,9 +284,9 @@ bootstrap_page_table(vspace_t *vspace)
         vaddr += PAGE_SIZE_4K;
     }
 
-    vaddr = (void *) FIRST_BOTTOM_LEVEL_PAGE_TABLE_VADDR + (6 * PAGE_SIZE_4K);
+    vaddr = (void *) FIRST_BOTTOM_LEVEL_PAGE_TABLE_VADDR + (INITIAL_BOTTOM_LEVEL_PAGES * PAGE_SIZE_4K);
     data->next_bottom_level_vaddr = vaddr;
-    
+
     /* reserve the rest of them */
     for (int i = INITIAL_BOTTOM_LEVEL_PAGES; i < VSPACE_LEVEL_SIZE * PAGES_FOR_BOTTOM_LEVEL; i++) {
         assert(data->top_level[TOP_LEVEL_INDEX(vaddr)] != NULL);
@@ -307,8 +302,8 @@ bootstrap_page_table(vspace_t *vspace)
 
 int
 sel4utils_get_vspace_with_map(vspace_t *loader, vspace_t *new_vspace, sel4utils_alloc_data_t *data,
-        vka_t *vka, seL4_CPtr page_directory,
-        vspace_allocated_object_fn allocated_object_fn, void *allocated_object_cookie, sel4utils_map_page_fn map_page)
+                              vka_t *vka, seL4_CPtr page_directory,
+                              vspace_allocated_object_fn allocated_object_fn, void *allocated_object_cookie, sel4utils_map_page_fn map_page)
 {
     new_vspace->data = (void *) data;
 
@@ -331,15 +326,15 @@ sel4utils_get_vspace_with_map(vspace_t *loader, vspace_t *new_vspace, sel4utils_
 
 int
 sel4utils_get_vspace(vspace_t *loader, vspace_t *new_vspace, sel4utils_alloc_data_t *data,
-        vka_t *vka, seL4_CPtr page_directory,
-        vspace_allocated_object_fn allocated_object_fn, void *allocated_object_cookie)
+                     vka_t *vka, seL4_CPtr page_directory,
+                     vspace_allocated_object_fn allocated_object_fn, void *allocated_object_cookie)
 {
     return sel4utils_get_vspace_with_map(loader, new_vspace, data, vka, page_directory, allocated_object_fn, allocated_object_cookie, sel4utils_map_page_pd);
 }
 
 #ifdef CONFIG_VTX
 int sel4utils_get_vspace_ept(vspace_t *loader, vspace_t *new_vspace, vka_t *vka,
-        seL4_CPtr ept, vspace_allocated_object_fn allocated_object_fn, void *allocated_object_cookie)
+                             seL4_CPtr ept, vspace_allocated_object_fn allocated_object_fn, void *allocated_object_cookie)
 {
     sel4utils_alloc_data_t *data = malloc(sizeof(*data));
     if (!data) {
@@ -352,8 +347,8 @@ int sel4utils_get_vspace_ept(vspace_t *loader, vspace_t *new_vspace, vka_t *vka,
 
 int
 sel4utils_bootstrap_vspace(vspace_t *vspace, sel4utils_alloc_data_t *data,
-        seL4_CPtr page_directory, vka_t *vka,
-        vspace_allocated_object_fn allocated_object_fn, void *cookie, void *existing_frames[])
+                           seL4_CPtr page_directory, vka_t *vka,
+                           vspace_allocated_object_fn allocated_object_fn, void *cookie, void *existing_frames[])
 {
     vspace->data = (void *) data;
 
@@ -377,9 +372,9 @@ sel4utils_bootstrap_vspace(vspace_t *vspace, sel4utils_alloc_data_t *data,
 
 int
 sel4utils_bootstrap_vspace_with_bootinfo(vspace_t *vspace, sel4utils_alloc_data_t *data,
-        seL4_CPtr page_directory,
-        vka_t *vka, seL4_BootInfo *info, vspace_allocated_object_fn allocated_object_fn,
-        void *allocated_object_cookie)
+                                         seL4_CPtr page_directory,
+                                         vka_t *vka, seL4_BootInfo *info, vspace_allocated_object_fn allocated_object_fn,
+                                         void *allocated_object_cookie)
 {
     void *existing_frames[] = {
         (void *) info,
@@ -392,12 +387,12 @@ sel4utils_bootstrap_vspace_with_bootinfo(vspace_t *vspace, sel4utils_alloc_data_
     };
 
     return sel4utils_bootstrap_vspace(vspace, data, page_directory, vka, allocated_object_fn,
-            allocated_object_cookie, existing_frames);
+                                      allocated_object_cookie, existing_frames);
 }
 
-int 
+int
 sel4utils_bootstrap_clone_into_vspace(vspace_t *current, vspace_t *clone, reservation_t image)
-{ 
+{
     sel4utils_res_t *res = reservation_to_res(image);
     seL4_CPtr slot;
     int error = vka_cspace_alloc(get_alloc_data(current)->vka, &slot);
@@ -408,13 +403,13 @@ sel4utils_bootstrap_clone_into_vspace(vspace_t *current, vspace_t *clone, reserv
 
     cspacepath_t dest;
     vka_cspace_make_path(get_alloc_data(current)->vka, slot, &dest);
-   
+
     for (void *page = res->start; page < res->end - 1; page += PAGE_SIZE_4K) {
-       /* we don't know if the current vspace has caps to its mappings - 
-        * it probably doesn't.
-        *
-        * So we map the page in and copy the data across instead :( */
-        
+        /* we don't know if the current vspace has caps to its mappings -
+         * it probably doesn't.
+         *
+         * So we map the page in and copy the data across instead :( */
+
         /* create the page in the clone vspace */
         int error = vspace_new_pages_at_vaddr(clone, page, 1, seL4_PageBits, image);
         if (error) {
@@ -432,8 +427,8 @@ sel4utils_bootstrap_clone_into_vspace(vspace_t *current, vspace_t *clone, reserv
         assert(error == 0);
 
         /* map a copy of it the current vspace */
-        void *dest_addr = vspace_map_pages(current, &dest.capPtr, NULL, seL4_AllRights, 
-                1, seL4_PageBits, 1);
+        void *dest_addr = vspace_map_pages(current, &dest.capPtr, NULL, seL4_AllRights,
+                                           1, seL4_PageBits, 1);
         if (dest_addr == NULL) {
             /* vspace will be left inconsistent */
             LOG_ERROR("Error! Vspace mapping failed, bailing\n");

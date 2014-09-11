@@ -131,7 +131,7 @@ static int find_dup_and_map_many(client_server_vspace_t *cs_vspace, void *caddr,
 }
 
 static reservation_t cs_reserve_range(vspace_t *vspace, size_t size, seL4_CapRights rights,
-        int cacheable, void **result)
+                                      int cacheable, void **result)
 {
     client_server_vspace_t *cs_vspace = (client_server_vspace_t*)vspace->data;
     assert(cacheable);
@@ -141,7 +141,7 @@ static reservation_t cs_reserve_range(vspace_t *vspace, size_t size, seL4_CapRig
 }
 
 static reservation_t cs_reserve_range_at(vspace_t *vspace, void *vaddr, size_t size, seL4_CapRights
-        rights, int cacheable)
+                                         rights, int cacheable)
 {
     client_server_vspace_t *cs_vspace = (client_server_vspace_t*)vspace->data;
     assert(cacheable);
@@ -158,7 +158,7 @@ static void cs_free_reservation(vspace_t *vspace, reservation_t reservation)
 }
 
 static int cs_map_pages_at_vaddr(vspace_t *vspace, seL4_CPtr caps[], uint32_t cookies[], void *vaddr,
-        size_t num_pages, size_t size_bits, reservation_t reservation)
+                                 size_t num_pages, size_t size_bits, reservation_t reservation)
 {
     client_server_vspace_t *cs_vspace = (client_server_vspace_t*)vspace->data;
     get_alloc_data(cs_vspace->client)->page_directory = get_alloc_data(vspace)->page_directory;
@@ -190,15 +190,15 @@ static seL4_CPtr cs_get_cap(vspace_t *vspace, void *vaddr)
 }
 
 static void *cs_map_pages(vspace_t *vspace, seL4_CPtr caps[], uint32_t cookies[], seL4_CapRights rights,
-        size_t num_pages, size_t size_bits, int cacheable)
+                          size_t num_pages, size_t size_bits, int cacheable)
 {
     client_server_vspace_t *cs_vspace = (client_server_vspace_t*)vspace->data;
     get_alloc_data(cs_vspace->client)->page_directory = get_alloc_data(vspace)->page_directory;
     assert(size_bits >= 12);
     assert(cacheable);
     /* first map all the pages into the client */
-    void *result = vspace_map_pages(cs_vspace->client, caps, cookies, rights, num_pages, 
-            size_bits, cacheable);
+    void *result = vspace_map_pages(cs_vspace->client, caps, cookies, rights, num_pages,
+                                    size_bits, cacheable);
     if (!result) {
         LOG_ERROR("Error mapping pages into client vspace");
         return result;
@@ -225,7 +225,7 @@ static void cs_unmap_pages(vspace_t *vspace, void *vaddr, size_t num_pages, size
 }
 
 static int cs_new_pages_at_vaddr(vspace_t *vspace, void *vaddr, size_t num_pages,
-        size_t size_bits, reservation_t reservation)
+                                 size_t size_bits, reservation_t reservation)
 {
     client_server_vspace_t *cs_vspace = (client_server_vspace_t*)vspace->data;
     get_alloc_data(cs_vspace->client)->page_directory = get_alloc_data(vspace)->page_directory;
@@ -246,7 +246,7 @@ static int cs_new_pages_at_vaddr(vspace_t *vspace, void *vaddr, size_t num_pages
 }
 
 static void *cs_new_pages(vspace_t *vspace, seL4_CapRights rights, size_t num_pages,
-        size_t size_bits)
+                          size_t size_bits)
 {
     client_server_vspace_t *cs_vspace = (client_server_vspace_t*)vspace->data;
     get_alloc_data(cs_vspace->client)->page_directory = get_alloc_data(vspace)->page_directory;
@@ -274,7 +274,7 @@ int sel4utils_get_cs_vspace(vspace_t *vspace, vka_t *vka, vspace_t *server, vspa
     cs_vspace->vka = vka;
 
     error = sel4utils_get_vspace(server, &cs_vspace->translation, &cs_vspace->translation_data,
-            vka, 0, NULL, NULL);
+                                 vka, 0, NULL, NULL);
     if (error) {
         LOG_ERROR("Failed to create translation vspace");
         free(cs_vspace);

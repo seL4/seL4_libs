@@ -24,6 +24,10 @@
 #define RESERVED 0xFFFFFFFF
 #define EMPTY    0
 
+/* reserve the first page to catch null pointer dereferences */
+#define FIRST_VADDR (0 + PAGE_SIZE_4K)
+#define PAGES_FOR_BOTTOM_LEVEL (sizeof(bottom_level_t) / PAGE_SIZE_4K)
+
 /* Bits to remove to get to the start of the second level translation bits. There are
  * many implicit assumptions in the code that this is actually 12 bits and hence
  * translation addresses can be stepped using the PAGE_SIZE_4K constant. */

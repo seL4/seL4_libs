@@ -60,6 +60,7 @@ struct sel4utils_res {
     void *end;
     seL4_CapRights rights;
     int cacheable;
+    int malloced;
     struct sel4utils_res *next;
 };
 

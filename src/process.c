@@ -571,7 +571,10 @@ sel4utils_destroy_process(sel4utils_process_t *process, vka_t *vka)
 
     /* destroy the cnode */
     vka_free_object(vka, &process->cspace);
-    
+   
+    /* tear down the vspace */
+    vspace_tear_down(&process->vspace, VSPACE_FREE);
+
     /* free any objects created by the vspace */
     clear_objects(process, vka);
 

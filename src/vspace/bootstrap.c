@@ -116,6 +116,8 @@ common_init_post_bootstrap(vspace_t *vspace, sel4utils_map_page_fn map_page)
     vspace->get_cap = sel4utils_get_cap;
     vspace->get_cookie = sel4utils_get_cookie;
     vspace->get_root = sel4utils_get_root;
+
+    vspace->tear_down = sel4utils_tear_down;
 }
 
 static int

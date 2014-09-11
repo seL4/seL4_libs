@@ -220,5 +220,6 @@ reservation_t sel4utils_reserve_range_at(vspace_t *vspace, void *vaddr, size_t s
         seL4_CapRights rights, int cacheable);
 void sel4utils_free_reservation(vspace_t *vspace, reservation_t reservation);
 void sel4utils_free_reservation_by_vaddr(vspace_t *vspace, void *vaddr);
+void sel4utils_tear_down(vspace_t *vspace, vka_t *vka);
 
 #endif /* __SEL4UILS_VSPACE_PRIVATE_H */

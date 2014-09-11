@@ -108,7 +108,16 @@ page_map_retry:
         }
 
         /* now map in the frame again, if pagetable allocation was successful */
-        if (!error) {
+        if (!error || error == seL4_DeleteFirst) {
+            if (error == seL4_DeleteFirst) {
+                /* It's possible that in allocated the page table, we needed to allocate/map
+                * in some memory, which caused a page table to get mapped in at the
+                * same location we are wanting one. If this has happened then we can just
+                * delete this page table and try the frame mapping again */
+                vka_free_object(vka, pagetable);
+                *pagetable = (vka_object_t){0};
+            }
+
             error = seL4_ARCH_Page_Map(frame, pd, (seL4_Word) vaddr, rights, attr);
         } else {
             LOG_ERROR("Page table mapping failed, %d", error);

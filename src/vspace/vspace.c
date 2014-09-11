@@ -663,7 +663,7 @@ sel4utils_tear_down(vspace_t *vspace, vka_t *vka)
                     /* we might be unmapping a large page, figure out how big it
                      * is by looking for consecutive, identical entries */
                     for (uint32_t j = i + 1; j < VSPACE_LEVEL_SIZE && bottom_level->cookies[j] == cookie; j++, page4k++);
-                    sel4utils_unmap_pages(vspace, vaddr, 1, PAGE_BITS_4K * page4k, vka);
+                    sel4utils_unmap_pages(vspace, (void*)vaddr, 1, PAGE_BITS_4K * page4k, vka);
                 }
             }
             /* now free the level we were using */

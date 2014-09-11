@@ -10,7 +10,7 @@
 
 config LIB_SEL4_VSPACE
     bool "Build sel4vspace"
-    depends on LIB_SEL4 && HAVE_LIBC && LIB_SEL4_VKA
+    depends on LIB_SEL4 && HAVE_LIBC && LIB_SEL4_VKA && LIB_UTILS
     select HAVE_SEL4_LIBS
     default y
     help

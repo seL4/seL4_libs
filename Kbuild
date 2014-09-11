@@ -9,4 +9,4 @@
 #
 
 libs-$(CONFIG_LIB_SEL4_VSPACE) += libsel4vspace
-libsel4vspace: libsel4vka libsel4 common $(libc)
+libsel4vspace: libsel4vka libsel4 libutils common $(libc)

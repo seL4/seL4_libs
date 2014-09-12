@@ -13,16 +13,13 @@
 
 #include <sel4/sel4.h>
 #include <sel4utils/util.h>
-
-/* Functions provided from arch layer to platform code. */
-void*
-__map_device_page(seL4_Word paddr, seL4_Word bits);
+#include <platsupport/io.h>
 
 /* Functions provided from platform layer to arch code. */
 void
 __plat_serial_input_init_IRQ(void);
-void
-__plat_serial_init(void);
+int
+__plat_serial_init(ps_io_ops_t* io_ops);
 void
 __plat_putchar(int c);
 int

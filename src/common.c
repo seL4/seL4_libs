@@ -29,6 +29,7 @@
 #include <stdio.h>
 #include <vka/capops.h>
 #include <string.h>
+#include <sel4platsupport/arch/io.h>
 
 #ifdef CONFIG_KERNEL_STABLE
     #include <simple-stable/simple-stable.h>
@@ -60,6 +61,21 @@ static vka_t _vka_mem;
 static seL4_CPtr device_cap = 0;
 extern char __executable_start[];
 
+
+#if !(defined(CONFIG_LIB_SEL4_PLAT_SUPPORT_USE_SEL4_DEBUG_PUTCHAR) && defined(SEL4_DEBUG_KERNEL))
+static void* __map_device_page(void* cookie, uintptr_t paddr, size_t size,
+                               int cached, ps_mem_flags_t flags);
+
+static ps_io_ops_t io_ops = {
+    .io_mapper = {
+        .io_map_fn = &__map_device_page,
+        .io_unmap_fn = NULL,
+    },
+};
+
+#endif
+
+
 /* completely hacky way of getting a virtual address. This is used a last ditch attempt to
  * get serial device going so we can print out an error */
 static seL4_Word
@@ -88,8 +104,10 @@ _platsupport_find_device_cap(seL4_Word paddr, seL4_Word page_bits, simple_t *sim
 }
 
 static void*
-__map_device_page_failsafe(seL4_Word paddr, seL4_Word bits)
+__map_device_page_failsafe(void* cookie UNUSED, uintptr_t paddr, size_t size, 
+                          int cached UNUSED, ps_mem_flags_t flags UNUSED)
 {
+    int bits = CTZ(size);
     int error;
     seL4_Word vaddr;
 
@@ -118,7 +136,10 @@ __map_device_page_failsafe(seL4_Word paddr, seL4_Word bits)
 }
 
 static void*
-__map_device_page_regular(seL4_Word paddr, seL4_Word bits) {
+__map_device_page_regular(void* cookie UNUSED, uintptr_t paddr, size_t size, 
+                          int cached UNUSED, ps_mem_flags_t flags UNUSED)
+{
+    int bits = CTZ(size);
     void *vaddr;
     seL4_CPtr cap;
 
@@ -136,11 +157,13 @@ __map_device_page_regular(seL4_Word paddr, seL4_Word bits) {
 }
 
 void*
-__map_device_page(seL4_Word paddr, seL4_Word bits) {
+__map_device_page(void* cookie, uintptr_t paddr, size_t size,
+                  int cached, ps_mem_flags_t flags)
+{
     if (setup_status == START_REGULAR_SETUP && vspace) {
-        return __map_device_page_regular(paddr, bits);
+        return __map_device_page_regular(cookie, paddr, size, cached, flags);
     } else if(setup_status == START_FAILSAFE_SETUP || !vspace) {
-        return __map_device_page_failsafe(paddr, bits);
+        return __map_device_page_failsafe(cookie, paddr, size, cached, flags);
     }
     printf("Unknown setup status!\n");
     for(;;);
@@ -183,9 +206,26 @@ platsupport_serial_input_init_IRQ(void)
     __plat_serial_input_init_IRQ();
 }
 
-void platsupport_serial_setup_bootinfo_failsafe(void) {
+int
+platsupport_serial_setup_io_ops(ps_io_ops_t* io_ops)
+{
+    int err = 0;
     if (setup_status == SETUP_COMPLETE) {
-        return;
+        return 0;
+    }
+    err = __plat_serial_init(io_ops);
+    if(!err){
+        setup_status = SETUP_COMPLETE;
+    }
+    return err;
+}
+
+int
+platsupport_serial_setup_bootinfo_failsafe(void)
+{
+    int err = 0;
+    if (setup_status == SETUP_COMPLETE) {
+        return 0;
     }
     memset(&_simple_mem, 0, sizeof(simple_t));
     memset(&_vka_mem, 0, sizeof(vka_t));
@@ -202,22 +242,28 @@ void platsupport_serial_setup_bootinfo_failsafe(void) {
     simple = &_simple_mem;
     vka = &_vka_mem;
     simple_make_vka(simple, vka);
-    __plat_serial_init();
-    setup_status = SETUP_COMPLETE;
+#ifndef ARCH_ARM
+    sel4platsupport_get_io_port_ops(&io_ops.io_port_ops, simple);
 #endif
+    err = platsupport_serial_setup_io_ops(&io_ops);
+#endif
+    return err;
 }
 
-void platsupport_serial_setup_simple(
+int
+platsupport_serial_setup_simple(
         vspace_t *_vspace __attribute__((unused)),
         simple_t *_simple __attribute__((unused)),
-        vka_t *_vka __attribute__((unused))) {
+        vka_t *_vka __attribute__((unused)))
+{
+    int err = 0;
     if (setup_status == SETUP_COMPLETE) {
-        return;
+        return 0;
     }
     if (setup_status != NOT_INITIALIZED) {
         printf("Trying to initialise a partially initialised serial. Current setup status is %d\n", setup_status);
         assert(!"You cannot recover");
-        return;
+        return -1;
     }
 #if defined(CONFIG_LIB_SEL4_PLAT_SUPPORT_USE_SEL4_DEBUG_PUTCHAR) && defined(SEL4_DEBUG_KERNEL)
     /* only support putchar on a debug kernel */
@@ -228,13 +274,16 @@ void platsupport_serial_setup_simple(
     vspace = _vspace;
     simple = _simple;
     vka = _vka;
-    __plat_serial_init();
+#ifndef ARCH_ARM
+    sel4platsupport_get_io_port_ops(&io_ops.io_port_ops, simple);
+#endif
+    err = platsupport_serial_setup_io_ops(&io_ops);
     /* done */
     vspace = NULL;
     simple = NULL;
     /* Don't reset vka here */
-    setup_status = SETUP_COMPLETE;
 #endif
+    return err;
 }
 
 static void __serial_setup() {
@@ -286,13 +335,7 @@ __arch_putchar(int c)
     if (setup_status != SETUP_COMPLETE) {
         __serial_setup();
     }
-#if defined(CONFIG_LIB_SEL4_PLAT_SUPPORT_USE_SEL4_DEBUG_PUTCHAR) || \
-         (defined(SEL4_DEBUG_KERNEL) && defined(ARCH_ARM)) 
-/* Sel4 on ARM does not export our serial device memory in debug mode */
-    seL4_DebugPutChar((char)c);
-#else
     __plat_putchar(c);
-#endif /* SEL4_DEBUG_KERNEL */
 }
 
 int
@@ -301,11 +344,5 @@ __arch_getchar(void)
     if (setup_status != SETUP_COMPLETE) {
         __serial_setup();
     }
-#if defined(CONFIG_LIB_SEL4_PLAT_SUPPORT_USE_SEL4_DEBUG_PUTCHAR) || \
-         (defined(SEL4_DEBUG_KERNEL) && defined(ARCH_ARM))
-/* Sel4 on ARM does not export our serial device memory in debug mode */
-    return 0;
-#else
     return __plat_getchar();
-#endif /* SEL4_DEBUG_KERNEL */
 }

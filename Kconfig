@@ -15,20 +15,6 @@ menuconfig LIB_SEL4_PLAT_SUPPORT
     help
         A user level serial library for sel4
 
-choice
-    prompt "X86 PutChar implementation"
-    depends on LIB_SEL4_PLAT_SUPPORT && PLAT_PC99
-    default LIB_SEL4_PLAT_SUPPORT_X86_SERIAL_PUTCHAR
-    help
-        Choose where PutChar should get sent to. Current options include the 80x25
-        text mode EGA screen, and the regular serial port
-
-    config LIB_SEL4_PLAT_SUPPORT_X86_SERIAL_PUTCHAR
-        bool "Serial port"
-    config LIB_SEL4_PLAT_SUPPORT_X86_TEXT_EGA_PUTCHAR
-        bool "Text mode 80x25 EGA"
-endchoice
-
 config LIB_SEL4_PLAT_SUPPORT_USE_SEL4_DEBUG_PUTCHAR
     bool "Redirect putchar() to seL4_DebugPutchar()"
     depends on LIB_SEL4_PLAT_SUPPORT && DEBUG_BUILD

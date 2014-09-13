@@ -12,19 +12,25 @@
 #include <sel4/sel4.h>
 #include <platsupport/chardev.h>
 
-static int
-debug_putchar(ps_chardevice_t* d UNUSED, int c)
+static ssize_t
+debug_write(ps_chardevice_t* device UNUSED, const void* vdata, size_t count,
+            chardev_callback_t cb UNUSED, void* token UNUSED)
 {
 #ifdef SEL4_DEBUG_KERNEL
-    seL4_DebugPutChar(c);
+    size_t sent = 0;
+    const char* data = (const char*)vdata;
+    for (sent = 0; sent < count; sent++) {
+        seL4_DebugPutChar(*data++);
+    }
 #else
-    (void)c;
+    /* /dev/null */
+    (void)vdata;
 #endif
-    return 0;
+    return count;
 }
 
 static struct ps_chardevice console_device = {
-    .putchar = &debug_putchar
+    .write = &debug_write
 };
 static struct ps_chardevice* console = &console_device;
 
@@ -44,15 +50,15 @@ int
 __plat_serial_init(ps_io_ops_t* io_ops)
 {
     struct ps_chardevice temp_device;
-    if(ps_cdev_init(PS_SERIAL_DEFAULT, io_ops, &temp_device)){
+    if (ps_cdev_init(PS_SERIAL_DEFAULT, io_ops, &temp_device)) {
         /* Apply the changes */
 #if defined(CONFIG_LIB_SEL4_PLAT_SUPPORT_USE_SEL4_DEBUG_PUTCHAR)
-        temp_device.putchar = &debug_putchar;
+        temp_device.write = &debug_write;
 #endif
         console_device = temp_device;
         console = &console_device;
         return 0;
-    }else{
+    } else {
         return -1;
     }
 }
@@ -60,7 +66,7 @@ __plat_serial_init(ps_io_ops_t* io_ops)
 void
 __plat_putchar(int c)
 {
-    if(console){
+    if (console) {
         ps_cdev_putchar(console, c);
     }
 }
@@ -68,9 +74,9 @@ __plat_putchar(int c)
 int
 __plat_getchar(void)
 {
-    if(console){
+    if (console) {
         return ps_cdev_getchar(console);
-    }else{
+    } else {
         return EOF;
     }
 }

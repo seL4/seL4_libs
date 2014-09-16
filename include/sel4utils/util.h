@@ -15,6 +15,7 @@
 #include <assert.h>
 #include <stdint.h>
 
+#include <sel4utils/arch/util.h>
 #include <utils/util.h>
 
 #endif

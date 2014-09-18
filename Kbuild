@@ -9,4 +9,4 @@
 #
 libs-$(CONFIG_LIB_SEL4_SYNC) += libsel4sync
 
-libsel4sync: libsel4 $(libc) libutils
+libsel4sync: libsel4 $(libc) libutils common

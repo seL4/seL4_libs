@@ -183,13 +183,13 @@ static int vmm_alloc_guest_ram_one_to_one(vmm_t *vmm, size_t bytes) {
             LOG_ERROR("Allocated frame has no physical address");
             return -1;
         }
-        reservation_t *reservation = vspace_reserve_range_at(&guest_memory->vspace, (void*)paddr, BIT(page_size), seL4_AllRights, 1);
-        if (!reservation) {
+        reservation_t reservation = vspace_reserve_range_at(&guest_memory->vspace, (void*)paddr, BIT(page_size), seL4_AllRights, 1);
+        if (!reservation.res) {
             LOG_INFO("Failed to reserve address 0x%x in guest vspace. Skipping frame and leaking memory!", (unsigned int)paddr);
             continue;
         }
         /* Map in */
-        ret = vspace_map_pages_at_vaddr(&guest_memory->vspace, &objects[i].cptr, (void*)paddr, 1, page_size, reservation);
+        ret = vspace_map_pages_at_vaddr(&guest_memory->vspace, &objects[i].cptr, NULL, (void*)paddr, 1, page_size, reservation);
         if (ret) {
             LOG_ERROR("Failed to map page %d/%d into guest vspace at 0x%x\n", i, num_pages, (unsigned int)paddr);
             return -1;
@@ -221,8 +221,8 @@ int vmm_alloc_guest_device_at(vmm_t *vmm, uintptr_t start, size_t bytes) {
     printf("Add guest memory region 0x%x-0x%x\n", (unsigned int)start, (unsigned int)(start + bytes));
     printf("Will be allocating region 0x%x-0x%x after page alignment\n", (unsigned int)page_start, (unsigned int)(page_start + num_pages * BIT(page_size)));
     for (i = 0; i < num_pages; i++) {
-        reservation_t *reservation = vspace_reserve_range_at(&guest_memory->vspace, (void*)(page_start + i * BIT(page_size)), 1, seL4_AllRights, 1);
-        if (!reservation) {
+        reservation_t reservation = vspace_reserve_range_at(&guest_memory->vspace, (void*)(page_start + i * BIT(page_size)), 1, seL4_AllRights, 1);
+        if (!reservation.res) {
             LOG_INFO("Failed to create reservation for guest memory page 0x%x size %d, assuming already allocated", (unsigned int)(page_start + i * BIT(page_size)), page_size);
             continue;
         }
@@ -236,7 +236,7 @@ int vmm_alloc_guest_device_at(vmm_t *vmm, uintptr_t start, size_t bytes) {
     return 0;
 }
 
-static int vmm_map_guest_device_reservation(vmm_t *vmm, uintptr_t paddr, size_t bytes, reservation_t *reservation, uintptr_t map_base) {
+static int vmm_map_guest_device_reservation(vmm_t *vmm, uintptr_t paddr, size_t bytes, reservation_t reservation, uintptr_t map_base) {
     int page_size = vmm->page_size;
     int error;
     guest_memory_t *guest_memory = &vmm->guest_mem;
@@ -256,7 +256,7 @@ static int vmm_map_guest_device_reservation(vmm_t *vmm, uintptr_t paddr, size_t 
             LOG_ERROR("Failed to find device frame 0x%x size 0x%x for region 0x%x 0x%x", (unsigned int)current_paddr, (unsigned int)BIT(page_size), (unsigned int)paddr, (unsigned int)bytes);
             return error;
         }
-        error = vspace_map_pages_at_vaddr(&guest_memory->vspace, &path.capPtr, (void*)current_map, 1, page_size, reservation);
+        error = vspace_map_pages_at_vaddr(&guest_memory->vspace, &path.capPtr, NULL, (void*)current_map, 1, page_size, reservation);
         if (error) {
             LOG_ERROR("Failed to map device page 0x%x at 0x%x from region 0x%x 0x%x\n", (unsigned int)current_paddr, (unsigned int)current_map, (unsigned int)paddr, (unsigned int)bytes);
             return error;
@@ -270,7 +270,7 @@ uintptr_t vmm_map_guest_device(vmm_t *vmm, uintptr_t paddr, size_t bytes, size_t
     /* Reserve a region that is guaranteed to have an aligned region in it */
     guest_memory_t *guest_memory = &vmm->guest_mem;
     uintptr_t reservation_base;
-    reservation_t *reservation = vspace_reserve_range(&guest_memory->vspace, bytes + align, seL4_AllRights, 1, (void**)&reservation_base);
+    reservation_t reservation = vspace_reserve_range(&guest_memory->vspace, bytes + align, seL4_AllRights, 1, (void**)&reservation_base);
     /* Round up reservation so it is aligned. Hopefully it also ends up page aligned with the
      * sun moon and stars and we can actually find a frame cap and map it */
     uintptr_t map_base = ROUND_UP(reservation_base, align);
@@ -286,7 +286,7 @@ int vmm_map_guest_device_at(vmm_t *vmm, uintptr_t vaddr, uintptr_t paddr, size_t
     int error;
     /* Reserve a region that is guaranteed to have an aligned region in it */
     guest_memory_t *guest_memory = &vmm->guest_mem;
-    reservation_t *reservation = vspace_reserve_range_at(&guest_memory->vspace, (void*)vaddr, bytes, seL4_AllRights, 1);
+    reservation_t reservation = vspace_reserve_range_at(&guest_memory->vspace, (void*)vaddr, bytes, seL4_AllRights, 1);
     error = vmm_map_guest_device_reservation(vmm, paddr, bytes, reservation, vaddr);
     vspace_free_reservation(&guest_memory->vspace, reservation);
     return error;
@@ -316,8 +316,8 @@ int vmm_alloc_guest_ram(vmm_t *vmm, size_t bytes, int onetoone) {
     int page_size = vmm->page_size;
     uintptr_t base;
     int num_pages = ROUND_UP(bytes, BIT(page_size)) >> page_size;
-    reservation_t *reservation = vspace_reserve_range(&guest_memory->vspace, num_pages * BIT(page_size), seL4_AllRights, 1, (void**)&base);
-    if (!reservation) {
+    reservation_t reservation = vspace_reserve_range(&guest_memory->vspace, num_pages * BIT(page_size), seL4_AllRights, 1, (void**)&base);
+    if (!reservation.res) {
         LOG_ERROR("Failed to create reservation for %d guest ram bytes", bytes);
         return -1;
     }

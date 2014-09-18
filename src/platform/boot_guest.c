@@ -181,8 +181,8 @@ static void vmm_plat_touch_guest_frame(vmm_t *vmm, uintptr_t addr, size_t size,
 
     /* Create a reservation in our address space */
     void *map_addr;
-    reservation_t *reservation = vspace_reserve_range(&vmm->host_vspace, num_frames << page_size, seL4_AllRights, 1, &map_addr);
-    assert(reservation);
+    reservation_t reservation = vspace_reserve_range(&vmm->host_vspace, num_frames << page_size, seL4_AllRights, 1, &map_addr);
+    assert(reservation.res);
     for (i = 0; i < num_frames; i++) {
         /* Get the frame cap in the guest address space */
         seL4_CPtr cap = vspace_get_cap(&vmm->guest_mem.vspace, (void*)(addr + (i << page_size)));
@@ -196,7 +196,7 @@ static void vmm_plat_touch_guest_frame(vmm_t *vmm, uintptr_t addr, size_t size,
         ret = vka_cnode_copy(&dup_path, &cap_path, seL4_AllRights);
         assert(ret == seL4_NoError);
         /* Now map it into the reservation */
-        ret = vspace_map_pages_at_vaddr(&vmm->host_vspace, &dup_path.capPtr, map_addr + (i << page_size), 1, page_size, reservation);
+        ret = vspace_map_pages_at_vaddr(&vmm->host_vspace, &dup_path.capPtr, NULL, map_addr + (i << page_size), 1, page_size, reservation);
         assert(!ret);
     }
 
@@ -213,8 +213,7 @@ static void vmm_plat_touch_guest_frame(vmm_t *vmm, uintptr_t addr, size_t size,
         assert(cap);
         cspacepath_t cap_path;
         vka_cspace_make_path(&vmm->vka, cap, &cap_path);
-        ret = vspace_unmap_reserved_pages(&vmm->host_vspace, map_addr + (i << page_size), 1, page_size, reservation);
-        assert(!ret);
+        vspace_unmap_pages(&vmm->host_vspace, map_addr + (i << page_size), 1, page_size, NULL);
         ret = vka_cnode_delete(&cap_path);
         assert(!ret);
         vka_cspace_free(&vmm->vka, cap_path.capPtr);
@@ -474,7 +473,7 @@ static int vmm_load_guest_segment(vmm_t *vmm, seL4_Word source_addr,
 
         /* Copy cap and map into our vspace */
         vka_cnode_copy(&dup_slot, &cap_path, seL4_AllRights);
-        void *map_vaddr = vspace_map_pages(&vmm->host_vspace, &dup_slot.capPtr, seL4_AllRights, 1, page_size, 1);
+        void *map_vaddr = vspace_map_pages(&vmm->host_vspace, &dup_slot.capPtr, NULL, seL4_AllRights, 1, page_size, 1);
         if (!map_vaddr) {
             LOG_ERROR("Failed to map page into host vspace");
             return -1;
@@ -502,7 +501,7 @@ static int vmm_load_guest_segment(vmm_t *vmm, seL4_Word source_addr,
         remain -= copy_len;
 
         /* Unamp the page and delete the temporary cap */
-        vspace_free_pages(&vmm->host_vspace, map_vaddr, 1, page_size);
+        vspace_unmap_pages(&vmm->host_vspace, map_vaddr, 1, page_size, NULL);
         vka_cnode_delete(&dup_slot);
     }
     return 0;

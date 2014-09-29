@@ -612,6 +612,74 @@ sel4utils_free_reservation_by_vaddr(vspace_t *vspace, void *vaddr)
     sel4utils_free_reservation(vspace, reservation);
 }
 
+int
+sel4utils_move_resize_reservation(vspace_t *vspace, reservation_t reservation, void *vaddr,
+                                  size_t bytes)
+{
+    assert(reservation.res != NULL);
+    sel4utils_res_t *res = reservation.res;
+    sel4utils_alloc_data_t *data = get_alloc_data(vspace);
+
+    void *new_start = (void *) (seL4_Word) ROUND_DOWN((uint32_t) ((seL4_Word)vaddr), PAGE_SIZE_4K);
+    void *new_end = (void *) (seL4_Word) ROUND_UP((uint32_t) ((seL4_Word)vaddr) + bytes,
+                                                  PAGE_SIZE_4K);
+    void *v = NULL;
+
+    /* Sanity checks that newly asked reservation space is available. */
+    if (new_start < res->start) {
+        size_t prepending_region_size = (char*) res->start - (char*) new_start;
+        if (!check_empty_range(data->top_level, new_start,
+                    BYTES_TO_4K_PAGES(prepending_region_size), seL4_PageBits)) {
+            return -1;
+        }
+    }
+    if (new_end > res->end) {
+        size_t appending_region_size = (char*) new_end - (char*) res->end;
+        if (!check_empty_range(data->top_level, res->end,
+                    BYTES_TO_4K_PAGES(appending_region_size), seL4_PageBits)) {
+            return -2;
+        }
+    }
+
+    for (v = new_start; v < new_end; v += PAGE_SIZE_4K) {
+        if (v < res->start || v >= res->end) {
+            /* Any outside the reservation must be unreserved. */
+            int error = reserve(vspace, v);
+            /* Should not cause any errors as we have just checked the regions are free. */
+            assert(!error);
+        } else {
+            v = res->end - PAGE_SIZE_4K;
+        }
+    }
+
+    for (v = res->start; v < res->end; v += PAGE_SIZE_4K) {
+        if (v < new_start || v >= new_end) {
+            /* Clear any regions that aren't reserved by the new region any more. */
+            if (get_cap(data->top_level, v) == RESERVED) {
+                clear(vspace, v);
+            }
+        } else {
+            v = new_end - PAGE_SIZE_4K;
+        }
+    }
+
+    char need_reinsert = 0;
+    if (res->start != new_start) {
+        need_reinsert = 1;
+    }
+
+    res->start = new_start;
+    res->end = new_end;
+
+    /* We may need to re-insert the reservation into the list to keep it sorted by start address. */
+    if (need_reinsert) {
+        remove_reservation(data, res);
+        insert_reservation(data, res);
+    }
+
+    return 0;
+}
+
 seL4_CPtr
 sel4utils_get_root(vspace_t *vspace)
 {

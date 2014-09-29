@@ -236,7 +236,7 @@ sel4utils_bootstrap_vspace_leaky(vspace_t *vspace, sel4utils_alloc_data_t *data,
  * @param cacheable 1 if the pages should be mapped with cacheable attributes. 0 for DMA.
  * @param vaddr the virtual address of the reserved range will be returned here.
  *
- * @param Returns 0 on success
+ * @return 0 on success
  */
 int sel4utils_reserve_range_no_alloc(vspace_t *vspace, sel4utils_res_t *reservation, size_t size,
         seL4_CapRights rights, int cacheable, void **result);
@@ -254,7 +254,7 @@ int sel4utils_reserve_range_no_alloc(vspace_t *vspace, sel4utils_res_t *reservat
  * @param rights the rights to map the pages in with in this reservatio
  * @param cacheable 1 if the pages should be mapped with cacheable attributes. 0 for DMA.
  *
- * @param Returns 0 on success
+ * @return 0 on success
  */
 int sel4utils_reserve_range_at_no_alloc(vspace_t *vspace, sel4utils_res_t *reservation, void *vaddr,
         size_t size, seL4_CapRights rights, int cacheable);
@@ -267,6 +267,19 @@ int sel4utils_reserve_range_at_no_alloc(vspace_t *vspace, sel4utils_res_t *reser
  * @param reservation the reservation to free.
  */
 void sel4utils_free_reservation_no_alloc(vspace_t *vspace, sel4utils_res_t *reservation);
+
+/**
+ * Move and/or resizes a reservation in any direction, allowing for both start and/or end address to
+ * be changed. Any overlapping region will keep their reservation, any non-overlapping regions will
+ * be unreserved. Does not make any mapping changes.
+ * @param vspace the virtual memory allocator to use.
+ * @param reservation the reservation to move.
+ * @param vaddr the start virtual address to move the reservation to.
+ * @param bytes the size in bytes of new reservation.
+ * @return 0 on success, -1 if region start could not be moved, -2 if end could not be moved.
+ */
+int sel4utils_move_resize_reservation(vspace_t *vspace, reservation_t reservation, void *vaddr,
+        size_t bytes);
 
 /*
  * Copy the code and data segment (the image effectively) from current vspace

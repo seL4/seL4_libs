@@ -260,6 +260,31 @@ sel4utils_map_page_ept(vspace_t *vspace, seL4_CPtr cap, void *vaddr, seL4_CapRig
 }
 #endif /* CONFIG_VTX */
 
+#ifdef CONFIG_IOMMU
+int
+sel4utils_map_page_iommu(vspace_t *vspace, seL4_CPtr cap, void *vaddr, seL4_CapRights rights,
+                       int cacheable, size_t size_bits)
+{
+    struct sel4utils_alloc_data *data = get_alloc_data(vspace);
+    int num_pts = 0;
+    /* The maximum number of page table levels current intel hardware implements is 6 */
+    vka_object_t pts[7];
+
+    int error = sel4utils_map_iospace_page(data->vka, data->page_directory, cap,
+                                       (seL4_Word) vaddr, rights, cacheable, size_bits, pts, &num_pts);
+    if (error) {
+        LOG_ERROR("Error mapping pages, bailing");
+        return -1;
+    }
+
+    for (int i = 0; i < num_pts; i++) {
+        vspace_maybe_call_allocated_object(vspace, pts[i]);
+    }
+
+    return seL4_NoError;
+}
+#endif /* CONFIG_IOMMU */
+
 static int
 map_page(vspace_t *vspace, seL4_CPtr cap, void *vaddr, seL4_CapRights rights,
          int cacheable, size_t size_bits)

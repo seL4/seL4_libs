@@ -197,6 +197,9 @@ int sel4utils_map_page_pd(vspace_t *vspace, seL4_CPtr cap, void *vaddr, seL4_Cap
 #ifdef CONFIG_VTX
 int sel4utils_map_page_ept(vspace_t *vspace, seL4_CPtr cap, void *vaddr, seL4_CapRights rights, int cacheable, size_t size_bits);
 #endif /* CONFIG_VTX */
+#ifdef CONFIG_IOMMU
+int sel4utils_map_page_iommu(vspace_t *vspace, seL4_CPtr cap, void *vaddr, seL4_CapRights rights, int cacheable, size_t size_bits);
+#endif /* CONFIG_IOMMU */
 
 /* interface functions */
 seL4_CPtr sel4utils_get_root(vspace_t *vspace);

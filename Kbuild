@@ -11,4 +11,5 @@
 libs-$(CONFIG_LIB_SEL4_UTILS) += libsel4utils
 libsel4vspace-$(CONFIG_LIB_SEL4_VSPACE) := libsel4vspace
 libsel4vka-$(CONFIG_LIB_SEL4_VKA) := libsel4vka
-libsel4utils: $(libsel4vspace-y) $(libsel4vka-y) libutils libelf libcpio libsel4 common $(libc)
+libplatsupport-$(CONFIG_LIB_PLATSUPPORT) := libplatsupport
+libsel4utils: $(libsel4vspace-y) $(libsel4vka-y) $(libplatsupport-y) libutils libelf libcpio libsel4 common $(libc)

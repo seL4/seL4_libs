@@ -669,7 +669,7 @@ sel4utils_move_resize_reservation(vspace_t *vspace, reservation_t reservation, v
     for (v = new_start; v < new_end; v += PAGE_SIZE_4K) {
         if (v < res->start || v >= res->end) {
             /* Any outside the reservation must be unreserved. */
-            int error = reserve(vspace, v);
+            int error UNUSED = reserve(vspace, v);
             /* Should not cause any errors as we have just checked the regions are free. */
             assert(!error);
         } else {

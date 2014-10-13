@@ -49,7 +49,7 @@ static void unmap_range(dma_man_t *dma, uintptr_t addr, size_t size) {
     }
 }
 
-void* dma_alloc(void *cookie, size_t size, int align, int cached, ps_mem_flags_t flags) {
+static void* dma_alloc(void *cookie, size_t size, int align, int cached, ps_mem_flags_t flags) {
     dma_man_t *dma = (dma_man_t*)cookie;
     int error;
     if (cached || flags != PS_MEM_NORMAL) {
@@ -150,20 +150,20 @@ void* dma_alloc(void *cookie, size_t size, int align, int cached, ps_mem_flags_t
     }
 }
 
-void dma_free(void *cookie, void *addr, size_t size) {
+static void dma_free(void *cookie, void *addr, size_t size) {
     dma_man_t *dma = (dma_man_t*)cookie;
     unmap_range(dma, (uintptr_t)addr, size);
     free(addr);
 }
 
-uintptr_t dma_pin(void *cookie, void *addr, size_t size) {
+static uintptr_t dma_pin(void *cookie, void *addr, size_t size) {
     return (uintptr_t)addr;
 }
 
-void dma_unpin(void *cookie, void *addr, size_t size) {
+static void dma_unpin(void *cookie, void *addr, size_t size) {
 }
 
-void dma_cache_op(void *cookie, void *addr, size_t size, dma_cache_op_t op) {
+static void dma_cache_op(void *cookie, void *addr, size_t size, dma_cache_op_t op) {
     /* I have no way of knowing what this function should do on an architecture
      * that is both non cache coherent with respect to DMA, and has an IOMMU.
      * When there is a working implementation of an arm IOMMU this function

@@ -21,11 +21,12 @@
 #include <platsupport/io.h>
 
 /**
- * Creates an implementation of a dma manager that is designed to allocate in a single page granularity.
- * This means that allocations < 1 page will be rounded up, and allocations > 1 page will always fail.
- * @param vka Allocation interface that needs to be the same one as used by the vspace for the
-              unmapping of pages
- * @param vspace Virtual memory manager used for creating frames
+ * Creates an implementation of a dma manager that is designed to allocate at page granularity. Due
+ * to implementation details it will round up all allocations to the next power of 2, or 4k (whichever
+ * is larger). This allocator will put mappings into the vspace with custom cookie values and you
+ * must free all dma allocations before tearing down the vspace
+ * @param vka Allocation interface for allocating untypeds (for frames) and slots
+ * @param vspace Virtual memory manager used for mapping frames
  * @param dma_man Pointer to dma manager struct that will be filled out
  * @return 0 on success
  */

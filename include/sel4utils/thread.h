@@ -36,6 +36,17 @@ typedef struct sel4utils_thread {
     seL4_Word ipc_buffer_addr;
 } sel4utils_thread_t;
 
+typedef struct sel4utils_thread_config {
+    /* fault_endpoint endpoint to set as the threads fault endpoint. Can be seL4_CapNull. */
+    seL4_CPtr fault_endpoint;
+    /* seL4 priority for the thread to be scheduled with. */
+    uint8_t priority;
+    /* root of the cspace to start the thread in */
+    seL4_CNode cspace;
+    /* data for cspace access */
+    seL4_CapData_t cspace_root_data;
+} sel4utils_thread_config_t;
+
 /**
  * Configure a thread, allocating any resources required.
  *
@@ -54,6 +65,13 @@ typedef struct sel4utils_thread {
 int sel4utils_configure_thread(vka_t *vka, vspace_t *parent, vspace_t *alloc, seL4_CPtr fault_endpoint,
         uint8_t priority, seL4_CNode cspace, seL4_CapData_t cspace_root_data,
         sel4utils_thread_t *res);
+
+
+/** 
+ * As per sel4utils_configure_thread, but using a config struct.
+ */
+int sel4utils_configure_thread_config(vka_t *vka, vspace_t *parent, vspace_t *alloc,
+                                      sel4utils_thread_config_t config, sel4utils_thread_t *res);
 
 /**
  * Start a thread, allocating any resources required.

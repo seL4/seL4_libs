@@ -40,10 +40,23 @@ write_ipc_buffer_user_data(vka_t *vka, vspace_t *vspace, seL4_CPtr ipc_buf, uint
     return 0;
 }
 
+int sel4utils_configure_thread(vka_t *vka, vspace_t *parent, vspace_t *alloc, seL4_CPtr fault_endpoint, 
+    uint8_t priority, seL4_CNode cspace, seL4_CapData_t cspace_root_data, sel4utils_thread_t *res) {
+
+    sel4utils_thread_config_t config = {
+        .fault_endpoint = fault_endpoint,
+        .priority = priority, 
+        .cspace = cspace, 
+        .cspace_root_data = cspace_root_data,
+    };
+
+    return sel4utils_configure_thread_config(vka, parent, alloc, config, res);
+}
+
+
 int
-sel4utils_configure_thread(vka_t *vka, vspace_t *parent, vspace_t *alloc, seL4_CPtr fault_endpoint,
-        uint8_t priority, seL4_CNode cspace, seL4_CapData_t cspace_root_data,
-        sel4utils_thread_t *res)
+sel4utils_configure_thread_config(vka_t *vka, vspace_t *parent, vspace_t *alloc, 
+        sel4utils_thread_config_t config, sel4utils_thread_t *res)
 {
     memset(res, 0, sizeof(sel4utils_thread_t));
 
@@ -67,9 +80,8 @@ sel4utils_configure_thread(vka_t *vka, vspace_t *parent, vspace_t *alloc, seL4_C
     }
 
     seL4_CapData_t null_cap_data = {{0}};
-    error = seL4_TCB_Configure(res->tcb.cptr, fault_endpoint, priority, cspace, cspace_root_data,
-            vspace_get_root(alloc), null_cap_data,
-            res->ipc_buffer_addr, res->ipc_buffer);
+    error = seL4_TCB_Configure(res->tcb.cptr, config.fault_endpoint, config.priority, config.cspace,
+            config.cspace_root_data, vspace_get_root(alloc), null_cap_data, res->ipc_buffer_addr, res->ipc_buffer);
 
     if (error != seL4_NoError) {
         LOG_ERROR("TCB configure failed with seL4 error code %d", error);

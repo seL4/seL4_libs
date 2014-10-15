@@ -15,7 +15,7 @@
 #include <utils/stack.h>
 
 int
-sel4utils_run_on_stack(vspace_t *vspace, int (*func)(void)) 
+sel4utils_run_on_stack(vspace_t *vspace, int (*func)(void))
 {
     void *stack_top = vspace_new_stack(vspace);
     if (stack_top == NULL) {

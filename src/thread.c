@@ -40,13 +40,14 @@ write_ipc_buffer_user_data(vka_t *vka, vspace_t *vspace, seL4_CPtr ipc_buf, uint
     return 0;
 }
 
-int sel4utils_configure_thread(vka_t *vka, vspace_t *parent, vspace_t *alloc, seL4_CPtr fault_endpoint, 
-    uint8_t priority, seL4_CNode cspace, seL4_CapData_t cspace_root_data, sel4utils_thread_t *res) {
+int sel4utils_configure_thread(vka_t *vka, vspace_t *parent, vspace_t *alloc, seL4_CPtr fault_endpoint,
+                               uint8_t priority, seL4_CNode cspace, seL4_CapData_t cspace_root_data, sel4utils_thread_t *res)
+{
 
     sel4utils_thread_config_t config = {
         .fault_endpoint = fault_endpoint,
-        .priority = priority, 
-        .cspace = cspace, 
+        .priority = priority,
+        .cspace = cspace,
         .cspace_root_data = cspace_root_data,
     };
 
@@ -55,8 +56,8 @@ int sel4utils_configure_thread(vka_t *vka, vspace_t *parent, vspace_t *alloc, se
 
 
 int
-sel4utils_configure_thread_config(vka_t *vka, vspace_t *parent, vspace_t *alloc, 
-        sel4utils_thread_config_t config, sel4utils_thread_t *res)
+sel4utils_configure_thread_config(vka_t *vka, vspace_t *parent, vspace_t *alloc,
+                                  sel4utils_thread_config_t config, sel4utils_thread_t *res)
 {
     memset(res, 0, sizeof(sel4utils_thread_t));
 
@@ -81,7 +82,7 @@ sel4utils_configure_thread_config(vka_t *vka, vspace_t *parent, vspace_t *alloc,
 
     seL4_CapData_t null_cap_data = {{0}};
     error = seL4_TCB_Configure(res->tcb.cptr, config.fault_endpoint, config.priority, config.cspace,
-            config.cspace_root_data, vspace_get_root(alloc), null_cap_data, res->ipc_buffer_addr, res->ipc_buffer);
+                               config.cspace_root_data, vspace_get_root(alloc), null_cap_data, res->ipc_buffer_addr, res->ipc_buffer);
 
     if (error != seL4_NoError) {
         LOG_ERROR("TCB configure failed with seL4 error code %d", error);
@@ -102,7 +103,7 @@ sel4utils_configure_thread_config(vka_t *vka, vspace_t *parent, vspace_t *alloc,
 
 int
 sel4utils_internal_start_thread(sel4utils_thread_t *thread, void *entry_point, void *arg0,
-        void *arg1, int resume, void *local_stack_top, void *dest_stack_top)
+                                void *arg1, int resume, void *local_stack_top, void *dest_stack_top)
 {
     seL4_UserContext context = {0};
     size_t context_size = sizeof(seL4_UserContext) / sizeof(seL4_Word);
@@ -169,7 +170,7 @@ sel4utils_internal_start_thread(sel4utils_thread_t *thread, void *entry_point, v
 
 int
 sel4utils_start_thread(sel4utils_thread_t *thread, void *entry_point, void *arg0, void *arg1,
-        int resume)
+                       int resume)
 {
     return sel4utils_internal_start_thread(thread, entry_point, arg0, arg1, resume, thread->stack_top, NULL);
 }
@@ -193,57 +194,58 @@ sel4utils_clean_up_thread(vka_t *vka, vspace_t *alloc, sel4utils_thread_t *threa
 }
 
 void
-sel4utils_print_fault_message(seL4_MessageInfo_t tag, char *thread_name) 
+sel4utils_print_fault_message(seL4_MessageInfo_t tag, char *thread_name)
 {
     switch (seL4_MessageInfo_get_label(tag)) {
-        case SEL4_PFIPC_LABEL:
-            assert(seL4_MessageInfo_get_length(tag) == SEL4_PFIPC_LENGTH);
-            printf("%sPagefault from [%s]: %s %s at PC: 0x"XFMT" vaddr: 0x"XFMT"%s\n",
-                   COLOR_ERROR,
-                   thread_name,
-                   sel4utils_is_read_fault() ? "read" : "write",
-                   seL4_GetMR(SEL4_PFIPC_PREFETCH_FAULT) ? "prefetch fault" : "fault",
-                   seL4_GetMR(SEL4_PFIPC_FAULT_IP),
-                   seL4_GetMR(SEL4_PFIPC_FAULT_ADDR),
-                   COLOR_NORMAL);
-            break;
+    case SEL4_PFIPC_LABEL:
+        assert(seL4_MessageInfo_get_length(tag) == SEL4_PFIPC_LENGTH);
+        printf("%sPagefault from [%s]: %s %s at PC: 0x"XFMT" vaddr: 0x"XFMT"%s\n",
+               COLOR_ERROR,
+               thread_name,
+               sel4utils_is_read_fault() ? "read" : "write",
+               seL4_GetMR(SEL4_PFIPC_PREFETCH_FAULT) ? "prefetch fault" : "fault",
+               seL4_GetMR(SEL4_PFIPC_FAULT_IP),
+               seL4_GetMR(SEL4_PFIPC_FAULT_ADDR),
+               COLOR_NORMAL);
+        break;
 
-        case SEL4_EXCEPT_IPC_LABEL:
-            assert(seL4_MessageInfo_get_length(tag) == SEL4_EXCEPT_IPC_LENGTH);
-            printf("%sBad syscall from [%s]: scno "DFMT" at PC: 0x"XFMT"%s\n",
-                   COLOR_ERROR,
-                   thread_name,
-                   seL4_GetMR(EXCEPT_IPC_SYS_MR_SYSCALL),
-                   seL4_GetMR(EXCEPT_IPC_SYS_MR_IP),
-                   COLOR_NORMAL
-                  );
+    case SEL4_EXCEPT_IPC_LABEL:
+        assert(seL4_MessageInfo_get_length(tag) == SEL4_EXCEPT_IPC_LENGTH);
+        printf("%sBad syscall from [%s]: scno "DFMT" at PC: 0x"XFMT"%s\n",
+               COLOR_ERROR,
+               thread_name,
+               seL4_GetMR(EXCEPT_IPC_SYS_MR_SYSCALL),
+               seL4_GetMR(EXCEPT_IPC_SYS_MR_IP),
+               COLOR_NORMAL
+              );
 
-            break;
+        break;
 
-        case SEL4_USER_EXCEPTION_LABEL:
-            assert(seL4_MessageInfo_get_length(tag) == SEL4_USER_EXCEPTION_LENGTH);
-            printf("%sInvalid instruction from [%s] at PC: 0x"XFMT"%s\n",
-                   COLOR_ERROR,
-                   thread_name,
-                   seL4_GetMR(0),
-                   COLOR_NORMAL);
-            break;
+    case SEL4_USER_EXCEPTION_LABEL:
+        assert(seL4_MessageInfo_get_length(tag) == SEL4_USER_EXCEPTION_LENGTH);
+        printf("%sInvalid instruction from [%s] at PC: 0x"XFMT"%s\n",
+               COLOR_ERROR,
+               thread_name,
+               seL4_GetMR(0),
+               COLOR_NORMAL);
+        break;
 
-        default:
-            /* What? Why are we here? What just happened? */
-            printf("Unknown fault from [%s]: "DFMT" (length = "DFMT")\n", thread_name, seL4_MessageInfo_get_label(tag), seL4_MessageInfo_get_length(tag));
-            break;
-        }
+    default:
+        /* What? Why are we here? What just happened? */
+        printf("Unknown fault from [%s]: "DFMT" (length = "DFMT")\n", thread_name, seL4_MessageInfo_get_label(tag), seL4_MessageInfo_get_length(tag));
+        break;
+    }
 }
 
 
-static int 
-fault_handler(char *name, seL4_CPtr endpoint) {
+static int
+fault_handler(char *name, seL4_CPtr endpoint)
+{
     seL4_Word badge;
     seL4_MessageInfo_t info = seL4_Wait(endpoint, &badge);
-    
+
     sel4utils_print_fault_message(info, name);
-    
+
     /* go back to sleep so other things can run */
     seL4_Wait(endpoint, &badge);
 
@@ -251,12 +253,12 @@ fault_handler(char *name, seL4_CPtr endpoint) {
 }
 
 int
-sel4utils_start_fault_handler(seL4_CPtr fault_endpoint, vka_t *vka, vspace_t *vspace, 
-        uint8_t prio, seL4_CPtr cspace, seL4_CapData_t cap_data, char *name, 
-        sel4utils_thread_t *res)
+sel4utils_start_fault_handler(seL4_CPtr fault_endpoint, vka_t *vka, vspace_t *vspace,
+                              uint8_t prio, seL4_CPtr cspace, seL4_CapData_t cap_data, char *name,
+                              sel4utils_thread_t *res)
 {
     int error = sel4utils_configure_thread(vka, vspace, vspace, 0, prio, cspace,
-            cap_data, res);
+                                           cap_data, res);
 
     if (error) {
         LOG_ERROR("Failed to configure fault handling thread\n");
@@ -264,7 +266,7 @@ sel4utils_start_fault_handler(seL4_CPtr fault_endpoint, vka_t *vka, vspace_t *vs
     }
 
     return sel4utils_start_thread(res, fault_handler, (void *) name,
-            (void *) fault_endpoint, 1);
+                                  (void *) fault_endpoint, 1);
 }
 
 #endif /* CONFIG_LIB_SEL4_VSPACE */

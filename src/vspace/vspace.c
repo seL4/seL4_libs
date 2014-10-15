@@ -39,8 +39,8 @@ create_level(vspace_t *vspace, void* vaddr)
 
     /* Otherwise we allocate our level out of the bootstrapper vspace -
      * which is where bookkeeping is mapped */
-    bottom_level_t *bottom_level = vspace_new_pages(data->bootstrap, seL4_AllRights, 
-            PAGES_FOR_BOTTOM_LEVEL, seL4_PageBits);
+    bottom_level_t *bottom_level = vspace_new_pages(data->bootstrap, seL4_AllRights,
+                                                    PAGES_FOR_BOTTOM_LEVEL, seL4_PageBits);
     if (bottom_level == NULL) {
         return -1;
     }
@@ -263,7 +263,7 @@ sel4utils_map_page_ept(vspace_t *vspace, seL4_CPtr cap, void *vaddr, seL4_CapRig
 #ifdef CONFIG_IOMMU
 int
 sel4utils_map_page_iommu(vspace_t *vspace, seL4_CPtr cap, void *vaddr, seL4_CapRights rights,
-                       int cacheable, size_t size_bits)
+                         int cacheable, size_t size_bits)
 {
     struct sel4utils_alloc_data *data = get_alloc_data(vspace);
     int num_pts = 0;
@@ -271,7 +271,7 @@ sel4utils_map_page_iommu(vspace_t *vspace, seL4_CPtr cap, void *vaddr, seL4_CapR
     vka_object_t pts[7];
 
     int error = sel4utils_map_iospace_page(data->vka, data->page_directory, cap,
-                                       (seL4_Word) vaddr, rights, cacheable, size_bits, pts, &num_pts);
+                                           (seL4_Word) vaddr, rights, cacheable, size_bits, pts, &num_pts);
     if (error) {
         LOG_ERROR("Error mapping pages, bailing");
         return -1;
@@ -654,14 +654,14 @@ sel4utils_move_resize_reservation(vspace_t *vspace, reservation_t reservation, v
     if (new_start < res->start) {
         size_t prepending_region_size = (char*) res->start - (char*) new_start;
         if (!check_empty_range(data->top_level, new_start,
-                    BYTES_TO_4K_PAGES(prepending_region_size), seL4_PageBits)) {
+                               BYTES_TO_4K_PAGES(prepending_region_size), seL4_PageBits)) {
             return -1;
         }
     }
     if (new_end > res->end) {
         size_t appending_region_size = (char*) new_end - (char*) res->end;
         if (!check_empty_range(data->top_level, res->end,
-                    BYTES_TO_4K_PAGES(appending_region_size), seL4_PageBits)) {
+                               BYTES_TO_4K_PAGES(appending_region_size), seL4_PageBits)) {
             return -2;
         }
     }

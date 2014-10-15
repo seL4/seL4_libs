@@ -78,7 +78,8 @@ typedef struct sel4utils_alloc_data {
 } sel4utils_alloc_data_t;
 
 static inline sel4utils_res_t *
-reservation_to_res(reservation_t res) {
+reservation_to_res(reservation_t res)
+{
     return (sel4utils_res_t *) res.res;
 }
 
@@ -102,8 +103,8 @@ reservation_to_res(reservation_t res) {
  */
 int
 sel4utils_get_vspace_with_map(vspace_t *loader, vspace_t *new_vspace, sel4utils_alloc_data_t *data,
-        vka_t *vka, seL4_CPtr page_directory,
-        vspace_allocated_object_fn allocated_object_fn, void *allocated_object_cookie, sel4utils_map_page_fn map_page);
+                              vka_t *vka, seL4_CPtr page_directory,
+                              vspace_allocated_object_fn allocated_object_fn, void *allocated_object_cookie, sel4utils_map_page_fn map_page);
 
 /**
  * Initialise a vspace allocator for a new address space (not the current one).
@@ -121,8 +122,8 @@ sel4utils_get_vspace_with_map(vspace_t *loader, vspace_t *new_vspace, sel4utils_
  * @return 0 on success.
  */
 int sel4utils_get_vspace(vspace_t *loader, vspace_t *new_vspace, sel4utils_alloc_data_t *data,
-        vka_t *vka, seL4_CPtr page_directory, vspace_allocated_object_fn allocated_object_fn,
-        void *allocated_object_cookie);
+                         vka_t *vka, seL4_CPtr page_directory, vspace_allocated_object_fn allocated_object_fn,
+                         void *allocated_object_cookie);
 
 #ifdef CONFIG_VTX
 /**
@@ -140,7 +141,7 @@ int sel4utils_get_vspace(vspace_t *loader, vspace_t *new_vspace, sel4utils_alloc
  * @return 0 on success.
  */
 int sel4utils_get_vspace_ept(vspace_t *loader, vspace_t *new_vspace, vka_t *vka,
-        seL4_CPtr ept, vspace_allocated_object_fn allocated_object_fn, void *allocated_object_cookie);
+                             seL4_CPtr ept, vspace_allocated_object_fn allocated_object_fn, void *allocated_object_cookie);
 #endif /* CONFIG_VTX */
 
 /**
@@ -163,9 +164,9 @@ int sel4utils_get_vspace_ept(vspace_t *loader, vspace_t *new_vspace, vka_t *vka,
  *
  */
 int sel4utils_bootstrap_vspace(vspace_t *vspace, sel4utils_alloc_data_t *data,
-        seL4_CPtr page_directory, vka_t *vka,
-        vspace_allocated_object_fn allocated_object_fn, void *allocated_object_cookie,
-        void *existing_frames[]);
+                               seL4_CPtr page_directory, vka_t *vka,
+                               vspace_allocated_object_fn allocated_object_fn, void *allocated_object_cookie,
+                               void *existing_frames[]);
 
 /**
  * Initialise a vspace allocator for the current address space (this is intended
@@ -184,41 +185,41 @@ int sel4utils_bootstrap_vspace(vspace_t *vspace, sel4utils_alloc_data_t *data,
  *
  */
 int sel4utils_bootstrap_vspace_with_bootinfo(vspace_t *vspace, sel4utils_alloc_data_t *data,
-        seL4_CPtr page_directory,
-        vka_t *vka, seL4_BootInfo *info, vspace_allocated_object_fn allocated_object_fn,
-        void *allocated_object_cookie);
+                                             seL4_CPtr page_directory,
+                                             vka_t *vka, seL4_BootInfo *info, vspace_allocated_object_fn allocated_object_fn,
+                                             void *allocated_object_cookie);
 
 /* Wrapper function that configures a vspaceator such that all allocated objects are not
  * tracked.
  */
 static inline int
 sel4utils_get_vspace_leaky(vspace_t *loader, vspace_t *new_vspace, sel4utils_alloc_data_t *data,
-        vka_t *vka, seL4_CPtr page_directory)
+                           vka_t *vka, seL4_CPtr page_directory)
 {
     return sel4utils_get_vspace(loader, new_vspace, data, vka, page_directory,
-            (vspace_allocated_object_fn) NULL, NULL);
+                                (vspace_allocated_object_fn) NULL, NULL);
 }
 
 #ifdef CONFIG_VTX
 static inline int
 sel4utils_get_vspace_ept_leaky(vspace_t *loader, vspace_t *new_vspace,
-        vka_t *vka, seL4_CPtr page_directory)
+                               vka_t *vka, seL4_CPtr page_directory)
 {
     return sel4utils_get_vspace_ept(loader, new_vspace, vka, page_directory,
-            (vspace_allocated_object_fn) NULL, NULL);
+                                    (vspace_allocated_object_fn) NULL, NULL);
 }
 #endif /* CONFIG_VTX */
 
 static inline int
 sel4utils_bootstrap_vspace_with_bootinfo_leaky(vspace_t *vspace, sel4utils_alloc_data_t *data, seL4_CPtr page_directory,
-        vka_t *vka, seL4_BootInfo *info)
+                                               vka_t *vka, seL4_BootInfo *info)
 {
     return sel4utils_bootstrap_vspace_with_bootinfo(vspace, data, page_directory, vka, info, NULL, NULL);
 }
 
 static inline int
 sel4utils_bootstrap_vspace_leaky(vspace_t *vspace, sel4utils_alloc_data_t *data, seL4_CPtr page_directory, vka_t *vka,
-        void *existing_frames[])
+                                 void *existing_frames[])
 {
     return sel4utils_bootstrap_vspace(vspace, data, page_directory, vka, NULL, NULL, existing_frames);
 }
@@ -239,7 +240,7 @@ sel4utils_bootstrap_vspace_leaky(vspace_t *vspace, sel4utils_alloc_data_t *data,
  * @return 0 on success
  */
 int sel4utils_reserve_range_no_alloc(vspace_t *vspace, sel4utils_res_t *reservation, size_t size,
-        seL4_CapRights rights, int cacheable, void **result);
+                                     seL4_CapRights rights, int cacheable, void **result);
 
 /**
  * Attempts to create a new vspace reservation. Function behaves similarly to vspace_reserve_range_at
@@ -257,7 +258,7 @@ int sel4utils_reserve_range_no_alloc(vspace_t *vspace, sel4utils_res_t *reservat
  * @return 0 on success
  */
 int sel4utils_reserve_range_at_no_alloc(vspace_t *vspace, sel4utils_res_t *reservation, void *vaddr,
-        size_t size, seL4_CapRights rights, int cacheable);
+                                        size_t size, seL4_CapRights rights, int cacheable);
 
 /**
  * Frees a reservation. Function behaves similarly to vspace_free_reservation, except
@@ -279,12 +280,12 @@ void sel4utils_free_reservation_no_alloc(vspace_t *vspace, sel4utils_res_t *rese
  * @return 0 on success, -1 if region start could not be moved, -2 if end could not be moved.
  */
 int sel4utils_move_resize_reservation(vspace_t *vspace, reservation_t reservation, void *vaddr,
-        size_t bytes);
+                                      size_t bytes);
 
 /*
  * Copy the code and data segment (the image effectively) from current vspace
  * into clone vspace. The clone vspace should be initialised.
- * 
+ *
  * @param current the vspace to copy from.
  * @param clone the vspace to copy to.
  * @param reservation the previously established reservation in clone to copy.

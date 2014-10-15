@@ -92,11 +92,11 @@ static int UNUSED sel4_supported_page_sizes[] = {12, 22};
 * @return error sel4 error code or -1 if allocation failed.
 */
 int sel4utils_map_page(vka_t *vka, seL4_CPtr pd, seL4_CPtr frame, void *vaddr,
-        seL4_CapRights rights, int cacheable, vka_object_t *pagetable);
+                       seL4_CapRights rights, int cacheable, vka_object_t *pagetable);
 
 /** convenient wrapper this if you don't want to track allocated page tables */
 static inline int sel4utils_map_page_leaky(vka_t *vka, seL4_CPtr pd, seL4_CPtr frame, void *vaddr,
-        seL4_CapRights rights, int cacheable)
+                                           seL4_CapRights rights, int cacheable)
 {
     vka_object_t pagetable;
     return sel4utils_map_page(vka, pd, frame, vaddr, rights, cacheable, &pagetable);
@@ -136,13 +136,13 @@ void sel4utils_unmap_dup(vka_t *vka, vspace_t *vspace, void *mapping, size_t siz
 
 #ifdef CONFIG_IOMMU
 int sel4utils_map_iospace_page(vka_t *vka, seL4_CPtr iospace, seL4_CPtr frame, seL4_Word vaddr,
-                         seL4_CapRights rights, int cacheable, seL4_Word size_bits,
-                         vka_object_t *pts, int *num_pts);
+                               seL4_CapRights rights, int cacheable, seL4_Word size_bits,
+                               vka_object_t *pts, int *num_pts);
 #endif
 
 #ifdef CONFIG_VTX
 int sel4utils_map_ept_page(vka_t *vka, seL4_CPtr pd, seL4_CPtr frame, seL4_Word vaddr,
-                   seL4_CapRights rights, int cacheable, seL4_Word size_bits, vka_object_t *pagetable, vka_object_t *pagedir);
+                           seL4_CapRights rights, int cacheable, seL4_Word size_bits, vka_object_t *pagetable, vka_object_t *pagedir);
 
 #endif /* CONFIG_VTX */
 #endif /* CONFIG_ARCH_IA32 */

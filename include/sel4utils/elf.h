@@ -53,7 +53,7 @@ typedef struct sel4utils_elf_region {
  */
 void *
 sel4utils_elf_load_record_regions(vspace_t *loadee, vspace_t *loader, vka_t *loadee_vka,
-        vka_t *loader_vka, char *image_name, sel4utils_elf_region_t *regions, int mapanywhere);
+                                  vka_t *loader_vka, char *image_name, sel4utils_elf_region_t *regions, int mapanywhere);
 
 /**
  * Wrapper for sel4utils_elf_load_record_regions. Does not record/perform resevations and

@@ -17,7 +17,7 @@
 #define EXCEPT_IPC_SYS_MR_IP EXCEPT_IPC_SYS_MR_PC
 
 static inline int
-sel4utils_is_read_fault(void) 
+sel4utils_is_read_fault(void)
 {
     seL4_Word fsr = seL4_GetMR(SEL4_PFIPC_FSR);
 #if defined(ARM_HYP)
@@ -28,14 +28,14 @@ sel4utils_is_read_fault(void)
 }
 
 
-static inline void 
-sel4utils_set_instruction_pointer(seL4_UserContext *regs, seL4_Word value) 
+static inline void
+sel4utils_set_instruction_pointer(seL4_UserContext *regs, seL4_Word value)
 {
     regs->pc = value;
 }
 
 static inline seL4_Word
-sel4utils_get_instruction_pointer(seL4_UserContext regs) 
+sel4utils_get_instruction_pointer(seL4_UserContext regs)
 {
     return regs.pc;
 }

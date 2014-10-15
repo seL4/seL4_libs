@@ -93,7 +93,7 @@ load_segment(vspace_t *loadee_vspace, vspace_t *loader_vspace,
         cspacepath_t loadee_frame_cap;
 
         vka_cspace_make_path(loadee_vka, vspace_get_cap(loadee_vspace, loadee_vaddr),
-                &loadee_frame_cap);
+                             &loadee_frame_cap);
         error = vka_cnode_copy(&loader_frame_cap, &loadee_frame_cap, seL4_AllRights);
         if (error != seL4_NoError) {
             LOG_ERROR("ERROR: failed to copy frame cap into loader cspace: %d", error);
@@ -102,7 +102,7 @@ load_segment(vspace_t *loadee_vspace, vspace_t *loader_vspace,
 
         /* map the frame into the loader address space */
         loader_vaddr = vspace_map_pages(loader_vspace, &loader_frame_cap.capPtr, NULL, seL4_AllRights,
-                       1, seL4_PageBits, 1);
+                                        1, seL4_PageBits, 1);
         if (loader_vaddr == NULL) {
             LOG_ERROR("failed to map frame into loader vspace.");
             error = -1;
@@ -118,8 +118,8 @@ load_segment(vspace_t *loadee_vspace, vspace_t *loader_vspace,
 
 #ifdef CONFIG_ARCH_ARM
         /* Flush the caches */
-        seL4_ARM_Page_Unify_Instruction(loader_frame_cap.capPtr,0, PAGE_SIZE_4K);
-        seL4_ARM_Page_Unify_Instruction(loadee_frame_cap.capPtr,0, PAGE_SIZE_4K);
+        seL4_ARM_Page_Unify_Instruction(loader_frame_cap.capPtr, 0, PAGE_SIZE_4K);
+        seL4_ARM_Page_Unify_Instruction(loadee_frame_cap.capPtr, 0, PAGE_SIZE_4K);
 #endif /* CONFIG_ARCH_ARM */
 
         /* now unmap the page in the loader address space */
@@ -162,25 +162,25 @@ sel4utils_elf_num_regions(char *image_name)
     return loadable_headers;
 }
 
-static int 
+static int
 make_region(vspace_t *loadee, unsigned long flags, unsigned long segment_size,
-        unsigned long vaddr, sel4utils_elf_region_t *region, int anywhere)
+            unsigned long vaddr, sel4utils_elf_region_t *region, int anywhere)
 {
     region->cacheable = 1;
     region->rights = rights_from_elf(flags);
     region->elf_vstart = (void*)PAGE_ALIGN_4K(vaddr);
     region->size = PAGE_ALIGN_4K(vaddr + segment_size - 1) + PAGE_SIZE_4K - (uint32_t)((seL4_Word)region->elf_vstart);
-    
+
     if (loadee) {
         if (anywhere) {
             region->reservation = vspace_reserve_range(loadee, region->size, region->rights, 1, (void**)&region->reservation_vstart);
         } else {
             region->reservation_vstart = region->elf_vstart;
             region->reservation = vspace_reserve_range_at(loadee,
-                region->elf_vstart,
-                region->size,
-                region->rights,
-                1);
+                                                          region->elf_vstart,
+                                                          region->size,
+                                                          region->rights,
+                                                          1);
         }
         return !region->reservation.res;
     }
@@ -275,7 +275,7 @@ sel4utils_elf_load_record_regions(vspace_t *loadee, vspace_t *loader, vka_t *loa
             /* Copy it across to the vspace */
             LOG_INFO(" * Loading segment %08x-->%08x", (int)vaddr, (int)(vaddr + segment_size));
             error = load_segment(loadee, loader, loadee_vka, loader_vka, source_addr,
-                    segment_size, file_size, offset + (uint32_t)((seL4_Word)region.reservation_vstart), region.reservation);
+                                 segment_size, file_size, offset + (uint32_t)((seL4_Word)region.reservation_vstart), region.reservation);
             if (error) {
                 LOG_ERROR("Failed to load segment");
                 break;

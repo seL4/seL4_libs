@@ -53,12 +53,12 @@ sel4utils_map_page(vka_t *vka, seL4_CPtr pd, seL4_CPtr frame, void *vaddr,
 #ifdef CONFIG_X86_64
 
 page_map_retry:
-    
+
     if (error == seL4_FailedLookupPDPT) {
         error = vka_alloc_page_directory_pointer_table(vka, pagetable);
         if (!error) {
             error = seL4_ARCH_PageDirectoryPointerTable_Map(pagetable->cptr, pd, (seL4_Word)vaddr,
-                    seL4_ARCH_Default_VMAttributes);
+                                                            seL4_ARCH_Default_VMAttributes);
         } else {
             LOG_ERROR("Page directory pointer table allocation failed %d", error);
         }
@@ -72,12 +72,12 @@ page_map_retry:
             LOG_ERROR("Page directory pointer table mapping failed %d\n", error);
         }
     }
-    
+
     if (error == seL4_FailedLookupPD) {
         error = vka_alloc_page_directory(vka, pagetable);
         if (!error) {
-            error = seL4_ARCH_PageDirectory_Map(pagetable->cptr, pd, (seL4_Word)vaddr, 
-                    seL4_ARCH_Default_VMAttributes);
+            error = seL4_ARCH_PageDirectory_Map(pagetable->cptr, pd, (seL4_Word)vaddr,
+                                                seL4_ARCH_Default_VMAttributes);
         } else {
             LOG_ERROR("Page direcotry allocation failed %d\n", error);
         }
@@ -87,7 +87,7 @@ page_map_retry:
             if (error != seL4_NoError) {
                 goto page_map_retry;
             }
-        
+
         } else {
             LOG_ERROR("Page directory mapping failed %d\n", error);
         }
@@ -102,7 +102,7 @@ page_map_retry:
         /* map in the page table */
         if (!error) {
             error = seL4_ARCH_PageTable_Map(pagetable->cptr, pd, (seL4_Word) vaddr,
-                    seL4_ARCH_Default_VMAttributes);
+                                            seL4_ARCH_Default_VMAttributes);
         } else {
             LOG_ERROR("Page table allocation failed, %d", error);
         }
@@ -115,7 +115,9 @@ page_map_retry:
                 * same location we are wanting one. If this has happened then we can just
                 * delete this page table and try the frame mapping again */
                 vka_free_object(vka, pagetable);
-                *pagetable = (vka_object_t){0};
+                *pagetable = (vka_object_t) {
+                    0
+                };
             }
 
             error = seL4_ARCH_Page_Map(frame, pd, (seL4_Word) vaddr, rights, attr);

@@ -68,7 +68,7 @@ typedef struct {
     char *image_name;
     /* Do you want the elf image preloaded? */
     bool do_elf_load;
-    
+
     /* otherwise what is the entry point and sysinfo? */
     void *entry_point;
     uintptr_t sysinfo;
@@ -77,9 +77,9 @@ typedef struct {
     bool create_cspace;
     /* if so how big ? */
     int one_level_cspace_size_bits;
-    
+
     /* otherwise what is the root cnode ?*/
-    /* Note if you use a custom cspace then 
+    /* Note if you use a custom cspace then
      * sel4utils_copy_cap_to_process etc will not work */
     vka_object_t cnode;
 
@@ -93,7 +93,7 @@ typedef struct {
     sel4utils_elf_region_t *reservations;
     int num_reservations;
 
-    /* do you want a fault endpoint created? */ 
+    /* do you want a fault endpoint created? */
     bool create_fault_endpoint;
     /* otherwise what is it */
     vka_object_t fault_endpoint;
@@ -132,7 +132,7 @@ typedef struct {
  *
  */
 int sel4utils_spawn_process(sel4utils_process_t *process, vka_t *vka, vspace_t *vspace,
-        int argc, char *argv[], int resume);
+                            int argc, char *argv[], int resume);
 
 /**
  * Start a process, and copy arguments into the processes address space.
@@ -155,7 +155,7 @@ int sel4utils_spawn_process(sel4utils_process_t *process, vka_t *vka, vspace_t *
  *
  */
 int sel4utils_spawn_process_v(sel4utils_process_t *process, vka_t *vka, vspace_t *vspace,
-        int argc, char *argv[], int resume);
+                              int argc, char *argv[], int resume);
 
 /**
  * This is the function to use if you just want to set up a process as fast as possible.
@@ -173,7 +173,7 @@ int sel4utils_spawn_process_v(sel4utils_process_t *process, vka_t *vka, vspace_t
  *
  * WARNING: when launching processes on ia32 please ensure your calling convention
  * matches that documented in sel4utils_start_thread. Otherwise your arguments
- * won't come through correctly. 
+ * won't come through correctly.
  *
  * @param process      uninitialised process struct.
  * @param vka          allocator to use to allocate objects.
@@ -184,7 +184,7 @@ int sel4utils_spawn_process_v(sel4utils_process_t *process, vka_t *vka, vspace_t
  * @return 0 on success, -1 on error.
  */
 int sel4utils_configure_process(sel4utils_process_t *process, vka_t *vka, vspace_t *vspace,
-        uint8_t priority, char *image_name);
+                                uint8_t priority, char *image_name);
 
 /**
  * Configure a process with more customisations (Create your own vspace, customise cspace size).
@@ -192,12 +192,12 @@ int sel4utils_configure_process(sel4utils_process_t *process, vka_t *vka, vspace
  * @param process               uninitliased process struct
  * @param vka                   allocator to use to allocate objects.
  * @param spawner_vspace        vspace to use to allocate virtual memory in the current address space.
- * @param config process config. 
+ * @param config process config.
  *
  * @return 0 on success, -1 on error.
  */
 int sel4utils_configure_process_custom(sel4utils_process_t *process, vka_t *target_vka,
-        vspace_t *spawner_vspace, sel4utils_process_config_t config);
+                                       vspace_t *spawner_vspace, sel4utils_process_config_t config);
 
 /**
  * Copy a cap into a process' cspace.
@@ -233,9 +233,9 @@ seL4_CPtr sel4utils_mint_cap_to_process(sel4utils_process_t *process, cspacepath
 void sel4utils_destroy_process(sel4utils_process_t *process, vka_t *vka);
 
 
-/* 
+/*
  * sel4utils default allocated object function for vspaces.
- * 
+ *
  * Stores a list of allocated objects in the process struct and frees them
  * when sel4utils_destroy_process is called.
  */

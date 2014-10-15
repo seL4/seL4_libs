@@ -64,8 +64,8 @@ void *sel4utils_cs_vspace_translate(vspace_t *vspace, void *addr);
  * @return Result of callback if non zero occured, internal error code if mapping not found, zero otherwise
  */
 int sel4utils_cs_vspace_for_each(vspace_t *vspace, void *addr, uint32_t len,
-        int (*proc)(void* addr, uint32_t len, void *cookie),
-        void *cookie);
+                                 int (*proc)(void* addr, uint32_t len, void *cookie),
+                                 void *cookie);
 
 #endif /* CONFIG_LIB_SEL4_VSPACE && CONFIG_LIB_SEL4_VKA */
 #endif /* _UTILS_CLIENT_SERVER_VSPACE_H */

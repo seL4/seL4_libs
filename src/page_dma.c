@@ -27,12 +27,14 @@ typedef struct dma_man {
 } dma_man_t;
 
 
-static void dma_free(void *cookie, void *addr, size_t size) {
+static void dma_free(void *cookie, void *addr, size_t size)
+{
     dma_man_t *dma = (dma_man_t*)cookie;
     vspace_unmap_pages(&dma->vspace, addr, 1, PAGE_BITS_4K, &dma->vka);
 }
 
-static uintptr_t dma_pin(void *cookie, void *addr, size_t size) {
+static uintptr_t dma_pin(void *cookie, void *addr, size_t size)
+{
     dma_man_t *dma = (dma_man_t*)cookie;
     uint32_t page_cookie;
     page_cookie = vspace_get_cookie(&dma->vspace, addr);
@@ -47,7 +49,8 @@ static uintptr_t dma_pin(void *cookie, void *addr, size_t size) {
     return (uintptr_t)paddr;
 }
 
-static void* dma_alloc(void *cookie, size_t size, int align, int cached, ps_mem_flags_t flags) {
+static void* dma_alloc(void *cookie, size_t size, int align, int cached, ps_mem_flags_t flags)
+{
     dma_man_t *dma = (dma_man_t*)cookie;
     /* Maximum of anything we handle is 1 4K page */
     if (size > PAGE_SIZE_4K || align > PAGE_SIZE_4K) {
@@ -80,15 +83,17 @@ static void* dma_alloc(void *cookie, size_t size, int align, int cached, ps_mem_
     return base;
 }
 
-static void dma_unpin(void *cookie, void *addr, size_t size) {
+static void dma_unpin(void *cookie, void *addr, size_t size)
+{
 }
 
-static void dma_cache_op(void *cookie, void *addr, size_t size, dma_cache_op_t op) {
+static void dma_cache_op(void *cookie, void *addr, size_t size, dma_cache_op_t op)
+{
     dma_man_t *dma = (dma_man_t*)cookie;
     seL4_CPtr root = vspace_get_root(&dma->vspace);
     /* Since we know we do not allocate across page boundaries we know that a single
      * cache op will always be sufficient */
-    switch(op) {
+    switch (op) {
     case DMA_CACHE_OP_CLEAN:
         seL4_ARCH_PageDirectory_Clean_Data(root, (seL4_Word)addr, (seL4_Word)addr + size);
         break;
@@ -101,7 +106,8 @@ static void dma_cache_op(void *cookie, void *addr, size_t size, dma_cache_op_t o
     }
 }
 
-int sel4utils_new_page_dma_alloc(vka_t *vka, vspace_t *vspace, ps_dma_man_t *dma_man) {
+int sel4utils_new_page_dma_alloc(vka_t *vka, vspace_t *vspace, ps_dma_man_t *dma_man)
+{
     dma_man_t *dma = (dma_man_t*)malloc(sizeof(*dma));
     if (!dma) {
         return -1;

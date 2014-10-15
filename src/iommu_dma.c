@@ -27,7 +27,8 @@ typedef struct dma_man {
     sel4utils_alloc_data_t *iospace_data;
 } dma_man_t;
 
-static void unmap_range(dma_man_t *dma, uintptr_t addr, size_t size) {
+static void unmap_range(dma_man_t *dma, uintptr_t addr, size_t size)
+{
     uintptr_t start = ROUND_DOWN(addr, PAGE_SIZE_4K);
     uintptr_t end = addr + size;
     for (uintptr_t addr = start; addr < end; addr += PAGE_SIZE_4K) {
@@ -49,7 +50,8 @@ static void unmap_range(dma_man_t *dma, uintptr_t addr, size_t size) {
     }
 }
 
-static void* dma_alloc(void *cookie, size_t size, int align, int cached, ps_mem_flags_t flags) {
+static void* dma_alloc(void *cookie, size_t size, int align, int cached, ps_mem_flags_t flags)
+{
     dma_man_t *dma = (dma_man_t*)cookie;
     int error;
     if (cached || flags != PS_MEM_NORMAL) {
@@ -150,20 +152,24 @@ static void* dma_alloc(void *cookie, size_t size, int align, int cached, ps_mem_
     }
 }
 
-static void dma_free(void *cookie, void *addr, size_t size) {
+static void dma_free(void *cookie, void *addr, size_t size)
+{
     dma_man_t *dma = (dma_man_t*)cookie;
     unmap_range(dma, (uintptr_t)addr, size);
     free(addr);
 }
 
-static uintptr_t dma_pin(void *cookie, void *addr, size_t size) {
+static uintptr_t dma_pin(void *cookie, void *addr, size_t size)
+{
     return (uintptr_t)addr;
 }
 
-static void dma_unpin(void *cookie, void *addr, size_t size) {
+static void dma_unpin(void *cookie, void *addr, size_t size)
+{
 }
 
-static void dma_cache_op(void *cookie, void *addr, size_t size, dma_cache_op_t op) {
+static void dma_cache_op(void *cookie, void *addr, size_t size, dma_cache_op_t op)
+{
     /* I have no way of knowing what this function should do on an architecture
      * that is both non cache coherent with respect to DMA, and has an IOMMU.
      * When there is a working implementation of an arm IOMMU this function
@@ -173,7 +179,8 @@ static void dma_cache_op(void *cookie, void *addr, size_t size, dma_cache_op_t o
 #endif
 }
 
-int sel4utils_make_iommu_dma_alloc(vka_t *vka, vspace_t *vspace, ps_dma_man_t *dma_man, unsigned int num_iospaces, seL4_CPtr *iospaces) {
+int sel4utils_make_iommu_dma_alloc(vka_t *vka, vspace_t *vspace, ps_dma_man_t *dma_man, unsigned int num_iospaces, seL4_CPtr *iospaces)
+{
     int err;
     dma_man_t *dma = (dma_man_t*)malloc(sizeof(*dma));
     if (!dma) {

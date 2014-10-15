@@ -25,14 +25,14 @@ sel4utils_is_read_fault(void)
 }
 
 
-static inline void 
-sel4utils_set_instruction_pointer(seL4_UserContext *regs, seL4_Word value) 
+static inline void
+sel4utils_set_instruction_pointer(seL4_UserContext *regs, seL4_Word value)
 {
     regs->eip = value;
 }
 
 static inline seL4_Word
-sel4utils_get_instruction_pointer(seL4_UserContext regs) 
+sel4utils_get_instruction_pointer(seL4_UserContext regs)
 {
     return regs.eip;
 }
@@ -56,7 +56,8 @@ sel4utils_set_arg0(seL4_UserContext *regs, seL4_Word value)
  * number of message registers, or WriteRegisters invocation will need
  * to be manually reflected here. This is all neccessary as we need
  * to tread very carefully over our registers and stack to make this work */
-static inline int sel4utils_ia32_tcb_set_tls_base(seL4_CPtr tcb_cap, seL4_Word tls_base) {
+static inline int sel4utils_ia32_tcb_set_tls_base(seL4_CPtr tcb_cap, seL4_Word tls_base)
+{
     /* Declared as variables since input operands cannot overlap with clobbers */
     uint32_t edi = 1; /* first message argument. 1 means 'resume_target' everything else is 0 */
     uint32_t ecx = sizeof(seL4_UserContext) / sizeof(seL4_Word); /* second message argument. number of registers of thread to modify */
@@ -93,19 +94,19 @@ static inline int sel4utils_ia32_tcb_set_tls_base(seL4_CPtr tcb_cap, seL4_Word t
         "movl %%ebp, %%ecx \n"
         "popl %%ebp \n"
         : "=S" (tag),
-          "=D" (edi),
-          "=c" (ecx),
-          "=b" (tcb_cap)
+        "=D" (edi),
+        "=c" (ecx),
+        "=b" (tcb_cap)
         : "a" (tls_base),
-          [syscall] "i" (seL4_SysCall),
-          [tls] "i" (TLS_GDT_SELECTOR),
-          "b" (tcb_cap),
-          "S" (tag.words[0]),
-          "D" (edi),
-          "c" (ecx)
+        [syscall] "i" (seL4_SysCall),
+        [tls] "i" (TLS_GDT_SELECTOR),
+        "b" (tcb_cap),
+        "S" (tag.words[0]),
+        "D" (edi),
+        "c" (ecx)
         : "cc", /* we possibly clobber the eflags register */
-          "%edx", /* edx gets clobbered due to sysexit convention */
-          "memory"
+        "%edx", /* edx gets clobbered due to sysexit convention */
+        "memory"
     );
     /* seL4 will not actually reload our tls_base until it switches to us.
      * we can force this to happen with a yield */

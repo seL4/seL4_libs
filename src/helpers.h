@@ -21,7 +21,7 @@
  * Other parameters see sel4utils_start_thread.
  */
 int sel4utils_internal_start_thread(sel4utils_thread_t *thread, void *entry_point, void *arg0,
-        void *arg1, int resume, void *local_stack_top, void *dest_stack_top);
+                                    void *arg1, int resume, void *local_stack_top, void *dest_stack_top);
 
 
 #endif /* SEL4UTILS_HELPERS_H */

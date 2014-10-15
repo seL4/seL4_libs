@@ -78,7 +78,7 @@ next_free_slot(sel4utils_process_t *process, cspacepath_t *dest)
     return 0;
 }
 
-static void 
+static void
 allocate_next_slot(sel4utils_process_t *process)
 {
     assert(process->cspace_next_free < (1 << process->cspace_size));
@@ -126,7 +126,7 @@ sel4utils_copy_cap_to_process(sel4utils_process_t *process, cspacepath_t src)
 
 static int
 sel4utils_stack_write(vspace_t *current_vspace, vspace_t *target_vspace,
-                    vka_t *vka, void *buf, size_t len, uintptr_t *stack_top)
+                      vka_t *vka, void *buf, size_t len, uintptr_t *stack_top)
 {
     size_t remaining = len;
     size_t written = 0;
@@ -159,14 +159,14 @@ sel4utils_stack_write(vspace_t *current_vspace, vspace_t *target_vspace,
 
 static int
 sel4utils_stack_write_constant(vspace_t *current_vspace, vspace_t *target_vspace,
-                    vka_t *vka, long value, uintptr_t *stack_top)
+                               vka_t *vka, long value, uintptr_t *stack_top)
 {
     return sel4utils_stack_write(current_vspace, target_vspace, vka, &value, sizeof(value), stack_top);
 }
 
 static int
 sel4utils_stack_copy_args(vspace_t *current_vspace, vspace_t *target_vspace,
-                    vka_t *vka, int argc, char *argv[], uintptr_t *dest_argv, uintptr_t *stack_top)
+                          vka_t *vka, int argc, char *argv[], uintptr_t *dest_argv, uintptr_t *stack_top)
 {
     int i;
     int error;
@@ -183,7 +183,7 @@ sel4utils_stack_copy_args(vspace_t *current_vspace, vspace_t *target_vspace,
 
 int
 sel4utils_spawn_process(sel4utils_process_t *process, vka_t *vka, vspace_t *vspace, int argc,
-        char *argv[], int resume)
+                        char *argv[], int resume)
 {
     uintptr_t stack_top = (uintptr_t)process->thread.stack_top - 4;
     uintptr_t new_process_argv = 0;
@@ -217,19 +217,19 @@ sel4utils_spawn_process(sel4utils_process_t *process, vka_t *vka, vspace_t *vspa
 #endif
 
     error = sel4utils_internal_start_thread(&process->thread, process->entry_point,
-                (void *) argc, (void *) new_process_argv, resume, NULL, (void*)stack_top);
+                                            (void *) argc, (void *) new_process_argv, resume, NULL, (void*)stack_top);
 
     return error;
 }
 
 int
 sel4utils_spawn_process_v(sel4utils_process_t *process, vka_t *vka, vspace_t *vspace, int argc,
-        char *argv[], int resume)
+                          char *argv[], int resume)
 {
     /* define an envp and auxp */
     int envc = 1;
     char ipc_buf_env[30];
-    sprintf(ipc_buf_env,"IPCBUFFER=0x%x", process->thread.ipc_buffer_addr);
+    sprintf(ipc_buf_env, "IPCBUFFER=0x%x", process->thread.ipc_buffer_addr);
     char *envp[] = {ipc_buf_env};
     int auxc = process->sysinfo ? 1 : 0;
 #if defined(CONFIG_ARCH_IA32) || defined(CONFIG_ARCH_ARM)
@@ -322,7 +322,7 @@ sel4utils_spawn_process_v(sel4utils_process_t *process, vka_t *vka, vspace_t *vs
 
 int
 sel4utils_configure_process(sel4utils_process_t *process, vka_t *vka,
-        vspace_t *vspace, uint8_t priority, char *image_name)
+                            vspace_t *vspace, uint8_t priority, char *image_name)
 {
     sel4utils_process_config_t config = {
         .is_elf = true,
@@ -335,19 +335,19 @@ sel4utils_configure_process(sel4utils_process_t *process, vka_t *vka,
         .priority = priority,
 #ifndef CONFIG_KERNEL_STABLE
         .asid_pool = seL4_CapInitThreadASIDPool,
-#endif 
+#endif
     };
 
     return sel4utils_configure_process_custom(process, vka, vspace, config);
 }
 
-static int 
+static int
 create_reservations(vspace_t *vspace, int num, sel4utils_elf_region_t regions[])
 {
     for (int i = 0; i < num; i++) {
         sel4utils_elf_region_t *region = &regions[i];
-        region->reservation = vspace_reserve_range_at(vspace, region->elf_vstart, 
-            region->size, region->rights, region->cacheable);
+        region->reservation = vspace_reserve_range_at(vspace, region->elf_vstart,
+                                                      region->size, region->rights, region->cacheable);
         if (region == NULL) {
             LOG_ERROR("Failed to create region\n");
             for (int j = i - 1; j >= 0; j--) {
@@ -361,8 +361,9 @@ create_reservations(vspace_t *vspace, int num, sel4utils_elf_region_t regions[])
 }
 
 #ifndef CONFIG_KERNEL_STABLE
-static int 
-assign_asid_pool(seL4_CPtr asid_pool, seL4_CPtr pd) {
+static int
+assign_asid_pool(seL4_CPtr asid_pool, seL4_CPtr pd)
+{
 
     int error;
 
@@ -371,7 +372,7 @@ assign_asid_pool(seL4_CPtr asid_pool, seL4_CPtr pd) {
         asid_pool = seL4_CapInitThreadASIDPool;
     }
 
-    error = seL4_ARCH_ASIDPool_Assign(asid_pool, pd);    
+    error = seL4_ARCH_ASIDPool_Assign(asid_pool, pd);
     if (error) {
         LOG_ERROR("Failed to assign asid pool\n");
     }
@@ -381,17 +382,18 @@ assign_asid_pool(seL4_CPtr asid_pool, seL4_CPtr pd) {
 #endif
 
 static int
-create_cspace(vka_t *vka, int size_bits, sel4utils_process_t *process, 
-        seL4_CapData_t cspace_root_data) {
+create_cspace(vka_t *vka, int size_bits, sel4utils_process_t *process,
+              seL4_CapData_t cspace_root_data)
+{
     int error;
-    
+
     /* create a cspace */
     error = vka_alloc_cnode_object(vka, size_bits, &process->cspace);
     if (error) {
         LOG_ERROR("Failed to create cspace: %d\n", error);
         return error;
     }
-    
+
     process->cspace_size = size_bits;
     /* first slot is always 1, never allocate 0 as a cslot */
     process->cspace_next_free = 1;
@@ -406,7 +408,7 @@ create_cspace(vka_t *vka, int size_bits, sel4utils_process_t *process,
 }
 
 static int
-create_fault_endpoint(vka_t *vka, sel4utils_process_t *process) 
+create_fault_endpoint(vka_t *vka, sel4utils_process_t *process)
 {
     /* create a fault endpoint and put it into the cspace */
     int error = vka_alloc_endpoint(vka, &process->fault_endpoint);
@@ -414,7 +416,7 @@ create_fault_endpoint(vka_t *vka, sel4utils_process_t *process)
         LOG_ERROR("Failed to allocate fault endpoint: %d\n", error);
         return error;
     }
-   
+
     cspacepath_t src;
     vka_cspace_make_path(vka, process->fault_endpoint.cptr, &src);
     error = sel4utils_copy_cap_to_process(process, src);
@@ -430,13 +432,13 @@ create_fault_endpoint(vka_t *vka, sel4utils_process_t *process)
 
 
 int sel4utils_configure_process_custom(sel4utils_process_t *process, vka_t *vka,
-        vspace_t *spawner_vspace, sel4utils_process_config_t config)
+                                       vspace_t *spawner_vspace, sel4utils_process_config_t config)
 {
     int error;
     sel4utils_alloc_data_t * data = NULL;
     memset(process, 0, sizeof(sel4utils_process_t));
-    seL4_CapData_t cspace_root_data = seL4_CapData_Guard_new(0, 
-            seL4_WordBits - config.one_level_cspace_size_bits);
+    seL4_CapData_t cspace_root_data = seL4_CapData_Guard_new(0,
+                                                             seL4_WordBits - config.one_level_cspace_size_bits);
 
     /* create a page directory */
     if (config.create_vspace) {
@@ -477,11 +479,11 @@ int sel4utils_configure_process_custom(sel4utils_process_t *process, vka_t *vka,
     /* create a vspace */
     if (config.create_vspace) {
         sel4utils_get_vspace(spawner_vspace, &process->vspace, &process->data, vka, process->pd.cptr,
-                sel4utils_allocated_object, (void *) process);
-      
+                             sel4utils_allocated_object, (void *) process);
+
         if (config.num_reservations > 0) {
-            if (create_reservations(&process->vspace, config.num_reservations, 
-                        config.reservations)) {
+            if (create_reservations(&process->vspace, config.num_reservations,
+                                    config.reservations)) {
                 goto error;
             }
         }
@@ -517,7 +519,7 @@ int sel4utils_configure_process_custom(sel4utils_process_t *process, vka_t *vka,
     /* create the thread, do this *after* elf-loading so that we don't clobber
      * the required virtual memory*/
     error = sel4utils_configure_thread(vka, spawner_vspace, &process->vspace, SEL4UTILS_ENDPOINT_SLOT,
-            config.priority, process->cspace.cptr, cspace_root_data, &process->thread);
+                                       config.priority, process->cspace.cptr, cspace_root_data, &process->thread);
 
     if (error) {
         LOG_ERROR("ERROR: failed to configure thread for new process %d\n", error);
@@ -571,7 +573,7 @@ sel4utils_destroy_process(sel4utils_process_t *process, vka_t *vka)
 
     /* destroy the cnode */
     vka_free_object(vka, &process->cspace);
-   
+
     /* tear down the vspace */
     vspace_tear_down(&process->vspace, VSPACE_FREE);
 

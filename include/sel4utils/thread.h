@@ -63,11 +63,11 @@ typedef struct sel4utils_thread_config {
  * @return 0 on success, -1 on failure. Use CONFIG_DEBUG to see error messages.
  */
 int sel4utils_configure_thread(vka_t *vka, vspace_t *parent, vspace_t *alloc, seL4_CPtr fault_endpoint,
-        uint8_t priority, seL4_CNode cspace, seL4_CapData_t cspace_root_data,
-        sel4utils_thread_t *res);
+                               uint8_t priority, seL4_CNode cspace, seL4_CapData_t cspace_root_data,
+                               sel4utils_thread_t *res);
 
 
-/** 
+/**
  * As per sel4utils_configure_thread, but using a config struct.
  */
 int sel4utils_configure_thread_config(vka_t *vka, vspace_t *parent, vspace_t *alloc,
@@ -80,9 +80,9 @@ int sel4utils_configure_thread_config(vka_t *vka, vspace_t *parent, vspace_t *al
  *
  * @param thread      thread data structure that has been initialised with sel4utils_configure_thread
  * @param entry_point the address that the thread will start at
- *                     
- *                    NOTE: In order for the on-stack argument passing to work for ia32, 
- *                    entry points must be functions. 
+ *
+ *                    NOTE: In order for the on-stack argument passing to work for ia32,
+ *                    entry points must be functions.
  *
  *                    ie. jumping to this start symbol will work:
  *
@@ -90,7 +90,7 @@ int sel4utils_configure_thread_config(vka_t *vka, vspace_t *parent, vspace_t *al
  *                        int ret = main(argc, argv);
  *                        exit(ret);
  *                    }
- * 
+ *
  *
  *                    However, jumping to a start symbol like this:
  *
@@ -118,7 +118,7 @@ int sel4utils_configure_thread_config(vka_t *vka, vspace_t *parent, vspace_t *al
  * @return 0 on success, -1 on failure.
  */
 int sel4utils_start_thread(sel4utils_thread_t *thread, void *entry_point, void *arg0, void *arg1,
-        int resume);
+                           int resume);
 
 /**
  * Release any resources used by this thread. The thread data structure will not be usable
@@ -145,15 +145,15 @@ void sel4utils_clean_up_thread(vka_t *vka, vspace_t *alloc, sel4utils_thread_t *
  *
  * @return 0 on success.
  */
-int sel4utils_start_fault_handler(seL4_CPtr fault_endpoint, vka_t *vka, vspace_t *vspace, 
-        uint8_t prio, seL4_CPtr cspace, seL4_CapData_t data, char *name, sel4utils_thread_t *res);
- 
+int sel4utils_start_fault_handler(seL4_CPtr fault_endpoint, vka_t *vka, vspace_t *vspace,
+                                  uint8_t prio, seL4_CPtr cspace, seL4_CapData_t data, char *name, sel4utils_thread_t *res);
+
 
 /**
  * Pretty print a fault messge.
  *
  * @param tag the message info tag delivered by the fault.
- * @param name thread name 
+ * @param name thread name
  */
 void sel4utils_print_fault_message(seL4_MessageInfo_t tag, char *name);
 

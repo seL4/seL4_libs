@@ -24,14 +24,14 @@ sel4utils_is_read_fault(void)
 }
 
 
-static inline void 
-sel4utils_set_instruction_pointer(seL4_UserContext *regs, seL4_Word value) 
+static inline void
+sel4utils_set_instruction_pointer(seL4_UserContext *regs, seL4_Word value)
 {
     regs->rip = value;
 }
 
 static inline seL4_Word
-sel4utils_get_instruction_pointer(seL4_UserContext regs) 
+sel4utils_get_instruction_pointer(seL4_UserContext regs)
 {
     return regs.rip;
 }

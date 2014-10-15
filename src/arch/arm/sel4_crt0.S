@@ -28,6 +28,9 @@ _sel4_start:
     /* Setup bootinfo. The pointer to the bootinfo struct starts in 'r0'. */
     bl      seL4_InitBootInfo
 
+    /* To ensure we end up with a correctly 8 byte aligned stack at the end we
+     * need to pad by one word here */
+    push    {r0}
     /* Setup stack frame ready for jumping to _start */
     /* null terminate auxv */
     mov     r0, #0

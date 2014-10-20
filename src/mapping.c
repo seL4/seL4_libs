@@ -12,19 +12,12 @@
 
 #ifdef CONFIG_LIB_SEL4_VKA
 
+#include <inttypes.h>
 #include <sel4/sel4.h>
 #include <vka/object.h>
 #include <vka/capops.h>
 #include <sel4utils/mapping.h>
 #include <sel4utils/util.h>
-
-#ifndef DFMT
-#ifdef CONFIG_X86_64
-#define DFMT    "%lld"
-#else
-#define DFMT    "%d"
-#endif
-#endif
 
 int
 sel4utils_map_page(vka_t *vka, seL4_CPtr pd, seL4_CPtr frame, void *vaddr,
@@ -127,7 +120,7 @@ page_map_retry:
     }
 
     if (error != seL4_NoError) {
-        LOG_ERROR("Failed to map page at address %p with cap "DFMT", error: %d", vaddr, frame, error);
+        LOG_ERROR("Failed to map page at address %p with cap %"PRIuPTR", error: %d", vaddr, frame, error);
     }
 
     return error;

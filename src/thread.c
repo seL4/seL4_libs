@@ -12,6 +12,7 @@
 
 #ifdef CONFIG_LIB_SEL4_VSPACE
 
+#include <inttypes.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -199,23 +200,23 @@ sel4utils_print_fault_message(seL4_MessageInfo_t tag, char *thread_name)
     switch (seL4_MessageInfo_get_label(tag)) {
     case SEL4_PFIPC_LABEL:
         assert(seL4_MessageInfo_get_length(tag) == SEL4_PFIPC_LENGTH);
-        printf("%sPagefault from [%s]: %s %s at PC: 0x"XFMT" vaddr: 0x"XFMT"%s\n",
+        printf("%sPagefault from [%s]: %s %s at PC: %p vaddr: %p%s\n",
                COLOR_ERROR,
                thread_name,
                sel4utils_is_read_fault() ? "read" : "write",
                seL4_GetMR(SEL4_PFIPC_PREFETCH_FAULT) ? "prefetch fault" : "fault",
-               seL4_GetMR(SEL4_PFIPC_FAULT_IP),
-               seL4_GetMR(SEL4_PFIPC_FAULT_ADDR),
+               (void*)seL4_GetMR(SEL4_PFIPC_FAULT_IP),
+               (void*)seL4_GetMR(SEL4_PFIPC_FAULT_ADDR),
                COLOR_NORMAL);
         break;
 
     case SEL4_EXCEPT_IPC_LABEL:
         assert(seL4_MessageInfo_get_length(tag) == SEL4_EXCEPT_IPC_LENGTH);
-        printf("%sBad syscall from [%s]: scno "DFMT" at PC: 0x"XFMT"%s\n",
+        printf("%sBad syscall from [%s]: scno %"PRIuPTR" at PC: %p%s\n",
                COLOR_ERROR,
                thread_name,
                seL4_GetMR(EXCEPT_IPC_SYS_MR_SYSCALL),
-               seL4_GetMR(EXCEPT_IPC_SYS_MR_IP),
+               (void*)seL4_GetMR(EXCEPT_IPC_SYS_MR_IP),
                COLOR_NORMAL
               );
 
@@ -223,16 +224,16 @@ sel4utils_print_fault_message(seL4_MessageInfo_t tag, char *thread_name)
 
     case SEL4_USER_EXCEPTION_LABEL:
         assert(seL4_MessageInfo_get_length(tag) == SEL4_USER_EXCEPTION_LENGTH);
-        printf("%sInvalid instruction from [%s] at PC: 0x"XFMT"%s\n",
+        printf("%sInvalid instruction from [%s] at PC: %p%s\n",
                COLOR_ERROR,
                thread_name,
-               seL4_GetMR(0),
+               (void*)seL4_GetMR(0),
                COLOR_NORMAL);
         break;
 
     default:
         /* What? Why are we here? What just happened? */
-        printf("Unknown fault from [%s]: "DFMT" (length = "DFMT")\n", thread_name, seL4_MessageInfo_get_label(tag), seL4_MessageInfo_get_length(tag));
+        printf("Unknown fault from [%s]: %"PRIuPTR" (length = %"PRIuPTR")\n", thread_name, seL4_MessageInfo_get_label(tag), seL4_MessageInfo_get_length(tag));
         break;
     }
 }

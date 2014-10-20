@@ -13,6 +13,7 @@
 
 #if defined CONFIG_LIB_SEL4_VKA && defined CONFIG_LIB_SEL4_VSPACE
 
+#include <inttypes.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -507,7 +508,7 @@ sel4utils_new_pages_at_vaddr(vspace_t *vspace, void *vaddr, size_t num_pages,
     sel4utils_res_t *res = reservation_to_res(reservation);
 
     if (!check_reservation(data->top_level, res, vaddr, num_pages, size_bits)) {
-        LOG_ERROR("Range for vaddr %p with "DFMT" 4k pages not reserved!", vaddr, num_pages);
+        LOG_ERROR("Range for vaddr %p with %"PRIuPTR" 4k pages not reserved!", vaddr, num_pages);
         return -1;
     }
 
@@ -581,7 +582,7 @@ int sel4utils_reserve_range_at_no_alloc(vspace_t *vspace, sel4utils_res_t *reser
     sel4utils_alloc_data_t *data = get_alloc_data(vspace);
     if (!check_empty_range(data->top_level, vaddr, BYTES_TO_4K_PAGES(size),
                            seL4_PageBits)) {
-        LOG_ERROR("Range not available at %p, size 0x"XFMT"", vaddr, size);
+        LOG_ERROR("Range not available at %p, size %p", vaddr, (void*)size);
         return -1;
     }
     perform_reservation(vspace, reservation, vaddr, size, rights, cacheable);

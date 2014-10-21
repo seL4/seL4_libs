@@ -73,6 +73,7 @@ static void* dma_alloc(void *cookie, size_t size, int align, int cached, ps_mem_
     reservation_t res = {NULL};
     dma_alloc_t *alloc = NULL;
     unsigned int num_frames = 0;
+    void *base = NULL;
     /* We align to the 4K boundary, but do not support more */
     if (align > PAGE_SIZE_4K) {
         return NULL;
@@ -122,13 +123,15 @@ static void* dma_alloc(void *cookie, size_t size, int align, int cached, ps_mem_
         }
     }
     /* Grab a reservation */
-    void *base;
     res = vspace_reserve_range(&dma->vspace, size, seL4_AllRights, cached, &base);
     if (!res.res) {
         LOG_ERROR("Failed to reserve");
         return NULL;
     }
     alloc = malloc(sizeof(*alloc));
+    if (alloc == NULL) {
+        goto handle_error;
+    }
     alloc->base = base;
     alloc->ut = ut;
     alloc->paddr = paddr;

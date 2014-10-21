@@ -14,6 +14,7 @@
 #include <sel4platsupport/plat/hpet.h>
 #include <sel4utils/util.h>
 #include <string.h>
+#include <utils/attribute.h>
 #include <vka/capops.h>
 #include "../../timer_common.h"
 
@@ -27,7 +28,7 @@ hpet_handle_irq_msi(seL4_timer_t *timer, uint32_t irq)
     seL4_IRQHandler_Ack(data->irq);
 }
 
-static void
+static void UNUSED
 hpet_handle_irq_ioapic(seL4_timer_t *timer, uint32_t irq)
 {
     timer_common_data_t *data = (timer_common_data_t *) timer->data;

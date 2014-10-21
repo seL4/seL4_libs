@@ -348,7 +348,7 @@ create_reservations(vspace_t *vspace, int num, sel4utils_elf_region_t regions[])
         sel4utils_elf_region_t *region = &regions[i];
         region->reservation = vspace_reserve_range_at(vspace, region->elf_vstart,
                                                       region->size, region->rights, region->cacheable);
-        if (region == NULL) {
+        if (region->reservation.res == NULL) {
             LOG_ERROR("Failed to create region\n");
             for (int j = i - 1; j >= 0; j--) {
                 vspace_free_reservation(vspace, regions[i].reservation);

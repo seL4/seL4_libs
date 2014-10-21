@@ -960,6 +960,9 @@ allocman_t *bootstrap_new_2level_simple(simple_t *simple, int l1size, int l2size
     int error;
 
     bootstrap_info_t *bootstrap = bootstrap_create_info(pool_size, pool);
+    if (bootstrap == NULL) {
+        return NULL;
+    }
     bootstrap->simple = simple;
 
     cspace_simple1level_create(&bootstrap->maybe_boot_cspace, (struct cspace_simple1level_config){

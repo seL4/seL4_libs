@@ -224,7 +224,7 @@ sys_open(va_list ap)
         file = cpio_get_file(_cpio_archive, pathname + 2, &size);
     }
 #else
-    LOG_ERROR("Warning: attempted to use fopen with no file system (CONFIG_LIB_SEL4_MUSLC_SYS_CPIO_FS no set\n");
+    LOG_ERROR("Warning: attempted to use fopen with no file system (CONFIG_LIB_SEL4_MUSLC_SYS_CPIO_FS not set)\n");
     return -ENOENT;
 #endif
     if (!file) {

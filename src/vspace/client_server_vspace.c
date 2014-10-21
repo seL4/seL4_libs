@@ -269,6 +269,10 @@ int sel4utils_get_cs_vspace(vspace_t *vspace, vka_t *vka, vspace_t *server, vspa
 {
     int error;
     client_server_vspace_t *cs_vspace = malloc(sizeof(*cs_vspace));
+    if (cs_vspace == NULL) {
+        LOG_ERROR("Failed to create translation vspace");
+        return -1;
+    }
     cs_vspace->server = server;
     cs_vspace->client = client;
     cs_vspace->vka = vka;

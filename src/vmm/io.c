@@ -130,6 +130,14 @@ int vmm_io_instruction_handler(vmm_t *vmm) {
 }
 
 static int add_io_port_range(vmm_io_port_list_t *io_list, ioport_range_t port) {
+    /* ensure this range does not overlap */
+    for (int i = 0; i < io_list->num_ioports; i++) {
+        if (io_list->ioports[i].port_end >= port.port_start && io_list->ioports[i].port_start <= port.port_end) {
+            LOG_ERROR("Requested ioport range 0x%x-0x%x for %s overlaps with existing range 0x%x-0x%x for %s",
+                port.port_start, port.port_end, port.desc ? port.desc : "Unknown IO Port", io_list->ioports[i].port_start, io_list->ioports[i].port_end, io_list->ioports[i].desc ? io_list->ioports[i].desc : "Unknown IO Port");
+            return -1;
+        }
+    }
     /* grow the array */
     io_list->ioports = realloc(io_list->ioports, sizeof(ioport_range_t) * (io_list->num_ioports + 1));
     assert(io_list->ioports);

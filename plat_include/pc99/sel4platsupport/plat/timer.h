@@ -10,7 +10,16 @@
 #ifndef _SEL4PLATSUPPORT_PLAT_TIMER_H
 #define _SEL4PLATSUPPORT_PLAT_TIMER_H
 
+#include <platsupport/arch/tsc.h>
 #include <sel4platsupport/plat/hpet.h>
 #include <sel4platsupport/plat/pit.h>
+
+/**
+ * Get a tsc backed seL4_timer_t;
+ *
+ * @param timeout_timer timer that implements timeouts to calculate the CPU frequency with.
+ * @return NULL on error.
+ */
+seL4_timer_t *sel4platsupport_get_tsc_timer(seL4_timer_t *timeout_timer);
 
 #endif /* _SEL4PLATSUPPORT_PLAT_TIMER_H */

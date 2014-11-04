@@ -29,3 +29,20 @@ seL4_timer_t *sel4platsupport_get_default_timer(vka_t *vka, UNUSED vspace_t *vsp
 
     return pit;
 }
+
+seL4_timer_t *
+sel4platsupport_get_tsc_timer(seL4_timer_t *timeout_timer)
+{
+
+    seL4_timer_t *timer = calloc(1, sizeof(seL4_timer_t));
+    if (timer == NULL) {
+        return NULL;
+    }
+
+    timer->timer = tsc_get_timer(timeout_timer->timer);
+
+    return timer;
+}
+
+
+

@@ -73,17 +73,21 @@ seL4_timer_t *sel4platsupport_get_hpet(vspace_t *vspace, simple_t *simple, acpi_
         goto error;
     }
 
-    /* find acpi details */
-    acpi_header_t *header = acpi_find_region(acpi, ACPI_HPET);
-    if (header == NULL) {
-        LOG_ERROR("Failed to find HPET acpi table\n");
-        goto error;
-    }
-
-    /* find the physical address of the timer */
-    /* hpet is in page sized blocks, so just map one page in as we use the first timer only */
-    acpi_hpet_t *hpet_header = (acpi_hpet_t *) header;
-    void *addr = (void*) (uint32_t) hpet_header->base_address.address;
+    /* if the use passed in no acpi, just try to get the hpet at the normal address 
+     * (acpi tables are unavailble on the mainline kernel) */
+    void *addr = (void *) DEFAULT_HPET_ADDR;
+    /* find acpi details if possible */
+    if (acpi != NULL) {
+        acpi_header_t *header = acpi_find_region(acpi, ACPI_HPET);
+        if (header == NULL) {
+            LOG_ERROR("Failed to find HPET acpi table\n");
+            goto error;
+        }
+        /* find the physical address of the timer */
+        /* hpet is in page sized blocks, so just map one page in as we use the first timer only */
+        acpi_hpet_t *hpet_header = (acpi_hpet_t *) header;
+        addr = (void*) (uint32_t) hpet_header->base_address.address;
+    } 
 
     hpet_data = timer_common_init(vspace, simple, vka, aep, irq_number, addr);
     if (hpet_data == NULL) {

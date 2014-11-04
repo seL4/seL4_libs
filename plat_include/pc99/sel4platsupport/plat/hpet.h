@@ -24,6 +24,8 @@
 #include <vka/object.h>
 #include <vspace/vspace.h>
 
+#define DEFAULT_HPET_ADDR 0xFED00000
+
 typedef timer_common_data_t hpet_data;
 
 /**

@@ -52,11 +52,12 @@
 
 #include <autoconf.h>
 
-#if (defined CONFIG_LIB_SEL4_VKA && defined CONFIG_LIB_SEL4_VSPACE)
+#if (defined CONFIG_LIB_SEL4_VKA && defined CONFIG_LIB_SEL4_VSPACE && defined CONFIG_LIB_SEL4_SIMPLE)
 
 #include <sel4/sel4.h>
 #include <vspace/vspace.h>
 #include <vka/vka.h>
+#include <simple/simple.h>
 
 
 typedef int irq_t;
@@ -112,13 +113,13 @@ irq_server_node_t irq_server_node_new(seL4_CPtr aep, seL4_Word badge_mask);
  * @param[in] token        A token to be passed, unmodified, to te callback function
  * @param[in] vka          An allocator for for kernel objects
  * @param[in] cspace       The current capability space
- * @param[in] irq_ctrl_cap A capability to allow for the creation of IRQ caps
+ * @param[in] simple       A simple interface for creating the irq handler
  * @return                 A handle to the irq structure that was created.
  */
 struct irq_data* irq_server_node_register_irq(irq_server_node_t n, irq_t irq,
                                               irq_handler_fn cb, void* token,
                                               vka_t* vka, seL4_CPtr cspace,
-                                              seL4_CPtr irq_ctrl_cap);
+                                              simple_t* simple);
 
 /****************************
  *** IRQ server functions ***
@@ -140,7 +141,7 @@ typedef struct irq_server* irq_server_t;
  *                         reaches a steady state.
  * @param[in] cspace       The cspace of the current thread
  * @param[in] priority     The priority of spawned threads.
- * @param[in] irq_ctrl_cap Control cap for spawning IRQ caps
+ * @param[in] simple       A simple interface for creating IRQ caps
  * @param[in] sync_ep      The synchronous endpoint to send IRQ's to
  * @param[in] label        A label to use when sending a synchronous IPC
  * @param[in] nirqs        The maximum number of irqs to support.
@@ -151,7 +152,7 @@ typedef struct irq_server* irq_server_t;
  * @return                 0 on success
  */
 int irq_server_new(vspace_t* vspace, vka_t* vka, seL4_CPtr cspace, seL4_Word priority,
-                   seL4_CPtr irq_ctrl_cap, seL4_CPtr sync_ep, seL4_Word label,
+                   simple_t *simple, seL4_CPtr sync_ep, seL4_Word label,
                    int nirqs, irq_server_t* irq_server);
 
 /**

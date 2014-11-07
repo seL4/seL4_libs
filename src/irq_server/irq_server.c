@@ -10,8 +10,9 @@
 
 #include <sel4utils/irq_server.h>
 
-#if (defined CONFIG_LIB_SEL4_VKA && defined CONFIG_LIB_SEL4_VSPACE)
+#if (defined CONFIG_LIB_SEL4_VKA && defined CONFIG_LIB_SEL4_VSPACE && defined CONFIG_LIB_SEL4_SIMPLE)
 
+#include <simple/simple.h>
 #include <sel4utils/thread.h>
 #include <vka/capops.h>
 #include <stdlib.h>
@@ -78,7 +79,7 @@ irq_server_node_handle_irq(struct irq_server_node *n, uint32_t badge)
 
 /* Binds and IRQ to an endpoint */
 static seL4_CPtr
-irq_bind(irq_t irq, seL4_CPtr aep_cap, int idx, vka_t* vka, seL4_CPtr irq_ctrl_cap)
+irq_bind(irq_t irq, seL4_CPtr aep_cap, int idx, vka_t* vka, simple_t *simple)
 {
     seL4_CPtr irq_cap, baep_cap;
     cspacepath_t irq_path, aep_path, baep_path;
@@ -92,8 +93,7 @@ irq_bind(irq_t irq, seL4_CPtr aep_cap, int idx, vka_t* vka, seL4_CPtr irq_ctrl_c
         return seL4_CapNull;
     }
     vka_cspace_make_path(vka, irq_cap, &irq_path);
-    err = seL4_IRQControl_Get(seL4_CapIRQControl, irq, irq_path.root,
-                              irq_path.capPtr, irq_path.capDepth);
+    err = simple_get_IRQ_control(simple, irq, irq_path);
     if (err != seL4_NoError) {
         LOG_ERROR("Failed to get cap to irq_number %u\n", irq);
         vka_cspace_free(vka, irq_cap);
@@ -136,7 +136,7 @@ irq_bind(irq_t irq, seL4_CPtr aep_cap, int idx, vka_t* vka, seL4_CPtr irq_ctrl_c
 struct irq_data*
 irq_server_node_register_irq(irq_server_node_t n, irq_t irq, irq_handler_fn cb,
                              void* token, vka_t* vka, seL4_CPtr cspace,
-                             seL4_CPtr irq_ctrl_cap) {
+                             simple_t *simple) {
     struct irq_data* irqs;
     int i;
     irqs = n->irqs;
@@ -144,7 +144,7 @@ irq_server_node_register_irq(irq_server_node_t n, irq_t irq, irq_handler_fn cb,
     for (i = 0; i < NIRQS_PER_NODE; i++) {
         /* If a cap has not been registered and the bit in the mask is not set */
         if (irqs[i].cap == seL4_CapNull && (n->badge_mask & BIT(i))) {
-            irqs[i].cap = irq_bind(irq, n->aep, i, vka, irq_ctrl_cap);
+            irqs[i].cap = irq_bind(irq, n->aep, i, vka, simple);
             if (irqs[i].cap == seL4_CapNull) {
                 DIRQSERVER("Failed to bind IRQ\n");
                 return NULL;
@@ -228,7 +228,7 @@ _irq_thread_entry(struct irq_server_thread* st)
 /* Creates a new thread for an IRQ server */
 struct irq_server_thread*
 irq_server_thread_new(vspace_t* vspace, vka_t* vka, seL4_CPtr cspace, seL4_Word priority,
-                      seL4_CPtr irq_ctrl, seL4_Word label, seL4_CPtr sep) {
+                      simple_t *simple, seL4_Word label, seL4_CPtr sep) {
     struct irq_server_thread* st;
     int err;
 
@@ -283,7 +283,7 @@ struct irq_server {
     seL4_CPtr cspace;
     vka_t* vka;
     seL4_Word thread_priority;
-    seL4_CPtr irq_ctrl_cap;
+    simple_t simple;
     struct irq_server_thread* server_threads;
 };
 
@@ -315,7 +315,7 @@ irq_server_register_irq(irq_server_t irq_server, irq_t irq,
     for (st = irq_server->server_threads; st != NULL; st = st->next) {
         irq_data = irq_server_node_register_irq(st->node, irq, cb, token,
                                                 irq_server->vka, irq_server->cspace,
-                                                irq_server->irq_ctrl_cap);
+                                                &irq_server->simple);
         if (irq_data) {
             return irq_data;
         }
@@ -325,7 +325,7 @@ irq_server_register_irq(irq_server_t irq_server, irq_t irq,
         /* Create the node */
         DIRQSERVER("Spawning new IRQ server thread\n");
         st = irq_server_thread_new(irq_server->vspace, irq_server->vka, irq_server->cspace,
-                                   irq_server->thread_priority, irq_server->irq_ctrl_cap,
+                                   irq_server->thread_priority, &irq_server->simple,
                                    irq_server->label, irq_server->delivery_ep);
         if (st == NULL) {
             LOG_ERROR("Failed to create server thread\n");
@@ -336,7 +336,7 @@ irq_server_register_irq(irq_server_t irq_server, irq_t irq,
         irq_server->server_threads = st;
         irq_data = irq_server_node_register_irq(st->node, irq, cb, token,
                                                 irq_server->vka, irq_server->cspace,
-                                                irq_server->irq_ctrl_cap);
+                                                &irq_server->simple);
         if (irq_data) {
             return irq_data;
         }
@@ -349,7 +349,7 @@ irq_server_register_irq(irq_server_t irq_server, irq_t irq,
 /* Create a new IRQ server */
 int
 irq_server_new(vspace_t* vspace, vka_t* vka, seL4_CPtr cspace, seL4_Word priority,
-               seL4_CPtr irq_ctrl, seL4_CPtr sync_ep, seL4_Word label,
+               simple_t *simple, seL4_CPtr sync_ep, seL4_Word label,
                int nirqs, irq_server_t *ret_irq_server)
 {
     struct irq_server* irq_server;
@@ -368,6 +368,7 @@ irq_server_new(vspace_t* vspace, vka_t* vka, seL4_CPtr cspace, seL4_Word priorit
     irq_server->vka = vka;
     irq_server->thread_priority = priority;
     irq_server->server_threads = NULL;
+    irq_server->simple = *simple;
 
     /* If a fixed number of IRQs are requested, create and start the server threads */
     if (nirqs > -1) {
@@ -378,7 +379,7 @@ irq_server_new(vspace_t* vspace, vka_t* vka, seL4_CPtr cspace, seL4_Word priorit
         n_nodes = (nirqs + NIRQS_PER_NODE - 1) / NIRQS_PER_NODE;
         for (i = 0; i < n_nodes; i++) {
             *server_thread = irq_server_thread_new(vspace, vka, cspace, priority,
-                                                   irq_ctrl, label, sync_ep);
+                                                   simple, label, sync_ep);
             server_thread = &(*server_thread)->next;
         }
     }

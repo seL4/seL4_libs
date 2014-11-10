@@ -20,7 +20,7 @@
 
 
 /**
- * Get the cap to the physcial frame of memory and put it at specified location
+ * Get the cap to the physical frame of memory and put it at specified location
  * 
  * @param data cookie for the underlying implementation
  * 
@@ -43,7 +43,7 @@ typedef seL4_Error (*simple_get_frame_cap_fn)(void *data, void *paddr, int size_
  *
  * @param size of the region in bits
  *
- * Returns the vritual address to which this physical address is mapped or NULL if frame is unmapped
+ * Returns the virtual address to which this physical address is mapped or NULL if frame is unmapped
  */
 
 typedef void *(*simple_get_frame_mapping_fn)(void *data, void *paddr, int size_bits);
@@ -92,7 +92,7 @@ typedef seL4_Error (*simple_get_IRQ_control_fn)(void *data, int irq, seL4_CNode 
 typedef seL4_CPtr (*simple_get_IOPort_cap_fn)(void *data, uint16_t start_port, uint16_t end_port);
 
 /**
- * Assign the vpsace to the current threads ASID pool
+ * Assign the vspace to the current threads ASID pool
  *
  * @param data cookie for the underlying implementation
  *
@@ -136,7 +136,7 @@ typedef seL4_CPtr (*simple_get_init_cap_fn)(void *data, seL4_CPtr cap);
 typedef uint8_t  (*simple_get_cnode_size_fn)(void *data);
 
 /**
- * Get the amount of untyped caps availible
+ * Get the amount of untyped caps available
  *
  * @param data for the underlying implementation
  *
@@ -159,7 +159,7 @@ typedef int (*simple_get_untyped_count_fn)(void *data);
 typedef seL4_CPtr (*simple_get_nth_untyped_fn)(void *data, int n, uint32_t *size_bits, uint32_t *paddr);
 
 /**
- * Get the amount of user image caps availible
+ * Get the amount of user image caps available
  *
  * @param data for the underlying implementation
  *
@@ -180,7 +180,7 @@ typedef seL4_CPtr (*simple_get_nth_userimage_fn)(void *data, int n);
 
 #ifdef CONFIG_IOMMU
 /**
- * Get the IO space capability for the specified pci device and domain ID
+ * Get the IO space capability for the specified PCI device and domain ID
  *
  * @param data cookie for the underlying implementation
  * @param domainID domain ID to request

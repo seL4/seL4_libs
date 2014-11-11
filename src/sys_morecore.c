@@ -276,7 +276,7 @@ sys_mremap_dynamic(va_list ap)
     size_t old_size = va_arg(ap, size_t);
     size_t new_size = va_arg(ap, size_t);
     int flags = va_arg(ap, int);
-    void *new_address_arg;
+    UNUSED void *new_address_arg;
 
     assert(flags == MREMAP_MAYMOVE);
     assert(IS_ALIGNED_4K(old_size));
@@ -288,7 +288,6 @@ sys_mremap_dynamic(va_list ap)
     if (flags & MREMAP_FIXED) {
         new_address_arg = va_arg(ap, void*);
     }
-    (void)new_address_arg;
 
     /* first find all the old caps */
     int num_pages = old_size >> seL4_PageBits;

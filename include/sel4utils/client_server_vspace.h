@@ -25,7 +25,19 @@
 #if defined CONFIG_LIB_SEL4_VSPACE && defined CONFIG_LIB_SEL4_VKA
 
 #include <vspace/vspace.h>
+#include <sel4utils/vspace.h>
 #include <vka/vka.h>
+
+typedef struct client_server_vspace {
+    /* vspace of the server. we also use this to request memory for metadata */
+    vspace_t *server;
+    /* vspace of the client we are proxying calls for */
+    vspace_t *client;
+    vka_t *vka;
+    /* a fake sel4utils vspace that acts as a translation layer */
+    sel4utils_alloc_data_t translation_data;
+    vspace_t translation;
+} client_server_vspace_t;
 
 /**
  * Initialize a new client server vspace

@@ -23,17 +23,6 @@
 #define OFFSET(x) ( ((uint32_t)((seL4_Word)(x))) & MASK(BOTTOM_LEVEL_BITS_OFFSET) )
 #define ADDR(start, page) ( (start) + (page) * PAGE_SIZE_4K )
 
-typedef struct client_server_vspace {
-    /* vspace of the server. we also use this to request memory for metadata */
-    vspace_t *server;
-    /* vspace of the client we are proxying calls for */
-    vspace_t *client;
-    vka_t *vka;
-    /* a fake sel4utils vspace that acts as a translation layer */
-    vspace_t translation;
-    sel4utils_alloc_data_t translation_data;
-} client_server_vspace_t;
-
 static void unmap(client_server_vspace_t *cs_vspace, void *caddr, size_t size_bits)
 {
     /* determine the virtual address of the start */
@@ -135,7 +124,7 @@ static reservation_t cs_reserve_range(vspace_t *vspace, size_t size, seL4_CapRig
 {
     client_server_vspace_t *cs_vspace = (client_server_vspace_t*)vspace->data;
     assert(cacheable);
-    get_alloc_data(cs_vspace->client)->page_directory = get_alloc_data(vspace)->page_directory;
+    get_alloc_data(cs_vspace->client)->page_directory = cs_vspace->translation_data.page_directory;
     /* we are not interested in client reservations, just proxy */
     return vspace_reserve_range(cs_vspace->client, size, rights, cacheable, result);
 }
@@ -145,7 +134,7 @@ static reservation_t cs_reserve_range_at(vspace_t *vspace, void *vaddr, size_t s
 {
     client_server_vspace_t *cs_vspace = (client_server_vspace_t*)vspace->data;
     assert(cacheable);
-    get_alloc_data(cs_vspace->client)->page_directory = get_alloc_data(vspace)->page_directory;
+    get_alloc_data(cs_vspace->client)->page_directory = cs_vspace->translation_data.page_directory;
     /* we are not interested in client reservations, just proxy */
     return vspace_reserve_range_at(cs_vspace->client, vaddr, size, rights, cacheable);
 }
@@ -153,7 +142,7 @@ static reservation_t cs_reserve_range_at(vspace_t *vspace, void *vaddr, size_t s
 static void cs_free_reservation(vspace_t *vspace, reservation_t reservation)
 {
     client_server_vspace_t *cs_vspace = (client_server_vspace_t*)vspace->data;
-    get_alloc_data(cs_vspace->client)->page_directory = get_alloc_data(vspace)->page_directory;
+    get_alloc_data(cs_vspace->client)->page_directory = cs_vspace->translation_data.page_directory;
     vspace_free_reservation(cs_vspace->client, reservation);
 }
 
@@ -161,7 +150,7 @@ static int cs_map_pages_at_vaddr(vspace_t *vspace, seL4_CPtr caps[], uint32_t co
                                  size_t num_pages, size_t size_bits, reservation_t reservation)
 {
     client_server_vspace_t *cs_vspace = (client_server_vspace_t*)vspace->data;
-    get_alloc_data(cs_vspace->client)->page_directory = get_alloc_data(vspace)->page_directory;
+    get_alloc_data(cs_vspace->client)->page_directory = cs_vspace->translation_data.page_directory;
     assert(size_bits >= 12);
     /* first map all the pages into the client */
     int result = vspace_map_pages_at_vaddr(cs_vspace->client, caps, cookies, vaddr, num_pages, size_bits, reservation);
@@ -184,16 +173,22 @@ static int cs_map_pages_at_vaddr(vspace_t *vspace, seL4_CPtr caps[], uint32_t co
 static seL4_CPtr cs_get_cap(vspace_t *vspace, void *vaddr)
 {
     client_server_vspace_t *cs_vspace = (client_server_vspace_t*)vspace->data;
-    get_alloc_data(cs_vspace->client)->page_directory = get_alloc_data(vspace)->page_directory;
+    get_alloc_data(cs_vspace->client)->page_directory = cs_vspace->translation_data.page_directory;
     /* return the client cap */
     return vspace_get_cap(cs_vspace->client, vaddr);
+}
+
+static seL4_CPtr cs_get_root(vspace_t *vspace)
+{
+    client_server_vspace_t *cs_vspace = (client_server_vspace_t*)vspace->data;
+    return cs_vspace->translation_data.page_directory;
 }
 
 static void *cs_map_pages(vspace_t *vspace, seL4_CPtr caps[], uint32_t cookies[], seL4_CapRights rights,
                           size_t num_pages, size_t size_bits, int cacheable)
 {
     client_server_vspace_t *cs_vspace = (client_server_vspace_t*)vspace->data;
-    get_alloc_data(cs_vspace->client)->page_directory = get_alloc_data(vspace)->page_directory;
+    get_alloc_data(cs_vspace->client)->page_directory = cs_vspace->translation_data.page_directory;
     assert(size_bits >= 12);
     assert(cacheable);
     /* first map all the pages into the client */
@@ -217,7 +212,7 @@ static void *cs_map_pages(vspace_t *vspace, seL4_CPtr caps[], uint32_t cookies[]
 static void cs_unmap_pages(vspace_t *vspace, void *vaddr, size_t num_pages, size_t size_bits, vka_t *vka)
 {
     client_server_vspace_t *cs_vspace = (client_server_vspace_t*)vspace->data;
-    get_alloc_data(cs_vspace->client)->page_directory = get_alloc_data(vspace)->page_directory;
+    get_alloc_data(cs_vspace->client)->page_directory = cs_vspace->translation_data.page_directory;
     /* remove our mappings */
     unmap_many(cs_vspace, vaddr, num_pages, size_bits);
     /* unmap from the client */
@@ -228,7 +223,7 @@ static int cs_new_pages_at_vaddr(vspace_t *vspace, void *vaddr, size_t num_pages
                                  size_t size_bits, reservation_t reservation)
 {
     client_server_vspace_t *cs_vspace = (client_server_vspace_t*)vspace->data;
-    get_alloc_data(cs_vspace->client)->page_directory = get_alloc_data(vspace)->page_directory;
+    get_alloc_data(cs_vspace->client)->page_directory = cs_vspace->translation_data.page_directory;
     assert(size_bits >= 12);
     /* create new pages in the client first */
     int result = vspace_new_pages_at_vaddr(cs_vspace->client, vaddr, num_pages, size_bits, reservation);
@@ -249,7 +244,7 @@ static void *cs_new_pages(vspace_t *vspace, seL4_CapRights rights, size_t num_pa
                           size_t size_bits)
 {
     client_server_vspace_t *cs_vspace = (client_server_vspace_t*)vspace->data;
-    get_alloc_data(cs_vspace->client)->page_directory = get_alloc_data(vspace)->page_directory;
+    get_alloc_data(cs_vspace->client)->page_directory = cs_vspace->translation_data.page_directory;
     assert(size_bits >= 12);
     void *vaddr = vspace_new_pages(cs_vspace->client, rights, num_pages, size_bits);
     if (!vaddr) {
@@ -299,6 +294,7 @@ int sel4utils_get_cs_vspace(vspace_t *vspace, vka_t *vka, vspace_t *server, vspa
     vspace->free_reservation = cs_free_reservation;
 
     vspace->get_cap = cs_get_cap;
+    vspace->get_root = cs_get_root;
 
     vspace->allocated_object = NULL;
     vspace->allocated_object_cookie = NULL;

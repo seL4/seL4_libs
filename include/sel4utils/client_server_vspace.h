@@ -25,19 +25,7 @@
 #if defined CONFIG_LIB_SEL4_VSPACE && defined CONFIG_LIB_SEL4_VKA
 
 #include <vspace/vspace.h>
-#include <sel4utils/vspace.h>
 #include <vka/vka.h>
-
-typedef struct client_server_vspace {
-    /* vspace of the server. we also use this to request memory for metadata */
-    vspace_t *server;
-    /* vspace of the client we are proxying calls for */
-    vspace_t *client;
-    vka_t *vka;
-    /* a fake sel4utils vspace that acts as a translation layer */
-    sel4utils_alloc_data_t translation_data;
-    vspace_t translation;
-} client_server_vspace_t;
 
 /**
  * Initialize a new client server vspace
@@ -78,6 +66,16 @@ void *sel4utils_cs_vspace_translate(vspace_t *vspace, void *addr);
 int sel4utils_cs_vspace_for_each(vspace_t *vspace, void *addr, uint32_t len,
                                  int (*proc)(void* addr, uint32_t len, void *cookie),
                                  void *cookie);
+
+/**
+ * Sets the page directory cap for the client server vspace. Previous mappings are not changed.
+ *
+ * @param vspace vspace to set root in
+ * @param page_directory cap pointer to page directory to set as root
+ *
+ * @return 0 on success
+ */
+int sel4utils_cs_vspace_set_root(vspace_t *vspace, seL4_CPtr page_directory);
 
 #endif /* CONFIG_LIB_SEL4_VSPACE && CONFIG_LIB_SEL4_VKA */
 #endif /* _UTILS_CLIENT_SERVER_VSPACE_H */

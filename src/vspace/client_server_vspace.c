@@ -23,6 +23,17 @@
 #define OFFSET(x) ( ((uint32_t)((seL4_Word)(x))) & MASK(BOTTOM_LEVEL_BITS_OFFSET) )
 #define ADDR(start, page) ( (start) + (page) * PAGE_SIZE_4K )
 
+typedef struct client_server_vspace {
+    /* vspace of the server. we also use this to request memory for metadata */
+    vspace_t *server;
+    /* vspace of the client we are proxying calls for */
+    vspace_t *client;
+    vka_t *vka;
+    /* a fake sel4utils vspace that acts as a translation layer */
+    sel4utils_alloc_data_t translation_data;
+    vspace_t translation;
+} client_server_vspace_t;
+
 static void unmap(client_server_vspace_t *cs_vspace, void *caddr, size_t size_bits)
 {
     /* determine the virtual address of the start */
@@ -333,6 +344,16 @@ int sel4utils_cs_vspace_for_each(vspace_t *vspace, void *addr, uint32_t len,
             return result;
         }
     }
+    return 0;
+}
+
+int sel4utils_cs_vspace_set_root(vspace_t *vspace, seL4_CPtr page_directory)
+{
+    assert(vspace);
+
+    client_server_vspace_t *cs_vspace = (client_server_vspace_t*)vspace->data;  
+    cs_vspace->translation_data.page_directory = page_directory;
+
     return 0;
 }
 

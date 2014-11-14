@@ -79,6 +79,7 @@ common_init(vspace_t *vspace, vka_t *vka, seL4_CPtr page_directory,
     sel4utils_alloc_data_t *data = get_alloc_data(vspace);
     data->vka = vka;
     data->last_allocated = (void *) 0x10000000;
+    data->reservation_head = NULL;
 
     data->page_directory = page_directory;
     vspace->allocated_object = allocated_object_fn;

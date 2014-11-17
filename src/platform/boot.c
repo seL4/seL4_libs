@@ -110,7 +110,7 @@ int vmm_init_guest(vmm_t *vmm, int priority) {
         return -1;
     }
     /* Initialize a vspace for the guest */
-    error = vmm_get_guest_vspace(&vmm->host_vspace, &vmm->guest_mem.vspace, &vmm->vka, vmm->guest_pd);
+    error = vmm_get_guest_vspace(&vmm->host_vspace, &vmm->host_vspace, &vmm->guest_mem.vspace, &vmm->vka, vmm->guest_pd);
     if (error) {
         return error;
     }

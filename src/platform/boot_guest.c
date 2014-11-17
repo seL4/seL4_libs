@@ -28,6 +28,7 @@
 #include "vmm/platform/guest_memory.h"
 #include "vmm/platform/e820.h"
 #include "vmm/platform/bootinfo.h"
+#include "vmm/platform/guest_vspace.h"
 
 #ifdef CONFIG_VMM_VESA_FRAMEBUFFER
 #include <sel4/arch/bootinfo.h>
@@ -42,13 +43,14 @@
 /* TODO: don't use cpio archives explicitly */
 extern char _cpio_archive[];
 
-static void vmm_plat_touch_guest_frame(vmm_t *vmm, uintptr_t addr, size_t size,
-                                       void (*touch_frame_ptr)(vmm_t *, void *, void*), void *);
+static int guest_elf_write_address(uintptr_t paddr, void *vaddr, size_t size, size_t offset, void *cookie) {
+    memcpy(vaddr, cookie + offset, size);
+    return 0;
+}
 
-static void vmm_plat_guest_elf_relocate_address(vmm_t *vmm, void *vaddr, void *cookie) {
-    assert(vmm && vaddr);
-    int offset = (int)cookie;
-    *((uint32_t*)vaddr) += offset;
+static int guest_elf_read_address(uintptr_t paddr, void *vaddr, size_t size, size_t offset, void *cookie) {
+    memcpy(cookie + offset, vaddr, size);
+    return 0;
 }
 
 void vmm_plat_guest_elf_relocate(vmm_t *vmm, const char *relocs_filename) {
@@ -109,8 +111,12 @@ void vmm_plat_guest_elf_relocate(vmm_t *vmm, const char *relocs_filename) {
 
         /* Perform the relocation. */
         DPRINTF(5, "   reloc vaddr 0x%x guest_addr 0x%x\n", (unsigned int)vaddr, (unsigned int)guest_paddr);
-        vmm_plat_touch_guest_frame(vmm, guest_paddr, sizeof(int),
-                vmm_plat_guest_elf_relocate_address, (void*)delta);
+        uint32_t addr;
+        vmm_guest_vspace_touch(&vmm->guest_mem.vspace, guest_paddr, sizeof(int),
+                guest_elf_read_address, &addr);
+        addr += delta;
+        vmm_guest_vspace_touch(&vmm->guest_mem.vspace, guest_paddr, sizeof(int),
+                guest_elf_write_address, &addr);
 
         if (i && i % 50000 == 0) {
             DPRINTF(2, "    %u relocs done.\n", i);
@@ -125,8 +131,9 @@ void vmm_plat_guest_elf_relocate(vmm_t *vmm, const char *relocs_filename) {
     }
 }
 
-static void vmm_guest_load_boot_module_continued(vmm_t *vmm, void *addr, void *cookie) {
-    memcpy(addr, cookie, vmm->guest_image.boot_module_size);
+static int vmm_guest_load_boot_module_continued(uintptr_t paddr, void *addr, size_t size, size_t offset, void *cookie) {
+    memcpy(addr, cookie + offset, size);
+    return 0;
 }
 
 int vmm_guest_load_boot_module(vmm_t *vmm, const char *name) {
@@ -145,7 +152,7 @@ int vmm_guest_load_boot_module(vmm_t *vmm, const char *name) {
     vmm->guest_image.boot_module_paddr = load_addr;
     vmm->guest_image.boot_module_size = initrd_size;
     guest_ram_mark_allocated(&vmm->guest_mem, load_addr, initrd_size);
-    vmm_plat_touch_guest_frame(vmm, load_addr, initrd_size, vmm_guest_load_boot_module_continued, initrd);
+    vmm_guest_vspace_touch(&vmm->guest_mem.vspace, load_addr, initrd_size, vmm_guest_load_boot_module_continued, initrd);
     printf("Guest memory after loading initrd:\n");
     print_guest_ram_regions(&vmm->guest_mem);
     return 0;
@@ -159,77 +166,16 @@ static inline uint32_t vmm_plat_vesa_fbuffer_size(seL4_IA32_BootInfo *bi) {
 }
 #endif
 
-/* Find the frame cap in guest-physical address space, map it into init thread address space, and
- * passes the virtual address to ven callback function touch_frame_ptr.
- * Used for guest OS threads with 4M pages only.
- *     @param: addr guest physical address
- */
-static void vmm_plat_touch_guest_frame(vmm_t *vmm, uintptr_t addr, size_t size,
-                                       void (*touch_frame_ptr)(vmm_t *, void *, void *), void *cookie) {
-    assert(touch_frame_ptr && size && vmm);
-    assert(addr != 0);
-    int num_frames;
-    int i;
-    int ret;
-    int page_size = vmm->page_size;
-
-    DPRINTF(5, "Trying to touch guest frame at 0x%x of size 0x%x\n", (unsigned int)addr, (unsigned int)size);
-
-    int start_frame = addr >> page_size;
-    int end_frame = (addr + size - 1) >> page_size;
-    num_frames = (end_frame - start_frame) + 1;
-
-    /* Create a reservation in our address space */
-    void *map_addr;
-    reservation_t reservation = vspace_reserve_range(&vmm->host_vspace, num_frames << page_size, seL4_AllRights, 1, &map_addr);
-    assert(reservation.res);
-    for (i = 0; i < num_frames; i++) {
-        /* Get the frame cap in the guest address space */
-        seL4_CPtr cap = vspace_get_cap(&vmm->guest_mem.vspace, (void*)(addr + (i << page_size)));
-        assert(cap);
-        cspacepath_t cap_path;
-        vka_cspace_make_path(&vmm->vka, cap, &cap_path);
-        /* Duplicate it */
-        cspacepath_t dup_path;
-        ret = vka_cspace_alloc_path(&vmm->vka, &dup_path);
-        assert(!ret);
-        ret = vka_cnode_copy(&dup_path, &cap_path, seL4_AllRights);
-        assert(ret == seL4_NoError);
-        /* Now map it into the reservation */
-        ret = vspace_map_pages_at_vaddr(&vmm->host_vspace, &dup_path.capPtr, NULL, map_addr + (i << page_size), 1, page_size, reservation);
-        assert(!ret);
-    }
-
-    /* Call the callback function ptr, giving it the virtual address pointer mapped. */
-    void* write_vaddr;
-    write_vaddr = map_addr;
-    write_vaddr += addr % (1 << page_size);
-    touch_frame_ptr(vmm, write_vaddr, cookie);
-
-    /* Go back through the host address space, get the frame caps back out
-     * and delete and unmap them */
-    for (i = 0; i < num_frames; i++) {
-        seL4_CPtr cap = vspace_get_cap(&vmm->host_vspace, map_addr + (i << page_size));
-        assert(cap);
-        cspacepath_t cap_path;
-        vka_cspace_make_path(&vmm->vka, cap, &cap_path);
-        vspace_unmap_pages(&vmm->host_vspace, map_addr + (i << page_size), 1, page_size, NULL);
-        ret = vka_cnode_delete(&cap_path);
-        assert(!ret);
-        vka_cspace_free(&vmm->vka, cap_path.capPtr);
-    }
-
-    /* Now free the reservation */
-    vspace_free_reservation(&vmm->host_vspace, reservation);
-}
-
-static void make_guest_page_dir_continued(vmm_t *vmm, void *vaddr, void *cookie) {
+static int make_guest_page_dir_continued(uintptr_t guest_phys, void *vaddr, size_t size, size_t offset, void *cookie) {
+    assert(offset == 0);
+    assert(size == BIT(seL4_PageBits));
     /* Write into this frame as the init page directory: 4M pages, 1 to 1 mapping. */
     uint32_t *pd = vaddr;
     for (int i = 0; i < 1024; i++) {
         /* Present, write, user, page size 4M */
         pd[i] = (i << seL4_4MBits) | 0x87;
     }
+    return 0;
 }
 
 static int make_guest_page_dir(vmm_t *vmm) {
@@ -242,13 +188,14 @@ static int make_guest_page_dir(vmm_t *vmm) {
     }
     printf("Guest page dir allocated at 0x%x. Creating 1-1 entries\n", (unsigned int)pd);
     vmm->guest_image.pd = pd;
-    vmm_plat_touch_guest_frame(vmm, pd, BIT(seL4_PageBits), make_guest_page_dir_continued, NULL);
-    return 0;
+    return vmm_guest_vspace_touch(&vmm->guest_mem.vspace, pd, BIT(seL4_PageBits), make_guest_page_dir_continued, NULL);
 }
 
-static void make_guest_cmd_line_continued(vmm_t *vmm, void *vaddr, void *cmdline) {
+static int make_guest_cmd_line_continued(uintptr_t phys, void *vaddr, size_t size, size_t offset, void *cookie) {
     /* Copy the string to this area. */
-    strcpy((char*)vaddr, (const char*)cmdline);
+    const char *cmdline = (const char*)cookie;
+    memcpy(vaddr, cmdline + offset, size);
+    return 0;
 }
 
 static int make_guest_cmd_line(vmm_t *vmm, const char *cmdline) {
@@ -262,8 +209,7 @@ static int make_guest_cmd_line(vmm_t *vmm, const char *cmdline) {
     printf("Constructing guest cmdline at 0x%x of size %d\n", (unsigned int)cmd_addr, len);
     vmm->guest_image.cmd_line = cmd_addr;
     vmm->guest_image.cmd_line_len = len;
-    vmm_plat_touch_guest_frame(vmm, cmd_addr, len + 1, make_guest_cmd_line_continued, (void*)cmdline);
-    return 0;
+    return vmm_guest_vspace_touch(&vmm->guest_mem.vspace, cmd_addr, len + 1, make_guest_cmd_line_continued, (void*)cmdline);
 }
 
 /* TODO: Broken on camkes */
@@ -341,46 +287,49 @@ static int make_guest_e820_map(struct e820entry *e820, guest_memory_t *guest_mem
     return entry + 1;
 }
 
-static void make_guest_boot_info_continued(vmm_t *vmm, void *vaddr, void *cookie) {
+static int make_guest_boot_info_continued(uintptr_t paddr, void *vaddr, size_t size, size_t offset, void *cookie) {
     DPRINTF(2, "plat: init guest boot info\n");
+    vmm_t *vmm = (vmm_t*)cookie;
 
     /* Map in BIOS boot info structure. */
-    struct boot_params *boot_info = vaddr;
-    memset(boot_info, 0, sizeof (struct boot_params));
+    struct boot_params boot_info;
+    memset(&boot_info, 0, sizeof (struct boot_params));
 
-    /* Initialise basic bootinfo structure. Src: Linux kernel Documentation/x86/boot.txt */    
-    boot_info->hdr.header = 0x53726448; /* Magic number 'HdrS' */
-    boot_info->hdr.boot_flag = 0xAA55; /* Magic number for Linux. */
-    boot_info->hdr.type_of_loader = 0xFF; /* Undefined loeader type. */
-    boot_info->hdr.code32_start = vmm->guest_image.load_paddr;
-    boot_info->hdr.kernel_alignment = vmm->guest_image.alignment;
-    boot_info->hdr.relocatable_kernel = true;
+    /* Initialise basic bootinfo structure. Src: Linux kernel Documentation/x86/boot.txt */
+    boot_info.hdr.header = 0x53726448; /* Magic number 'HdrS' */
+    boot_info.hdr.boot_flag = 0xAA55; /* Magic number for Linux. */
+    boot_info.hdr.type_of_loader = 0xFF; /* Undefined loeader type. */
+    boot_info.hdr.code32_start = vmm->guest_image.load_paddr;
+    boot_info.hdr.kernel_alignment = vmm->guest_image.alignment;
+    boot_info.hdr.relocatable_kernel = true;
 
     /* Set up screen information. */
     /* Tell Guest OS about VESA mode. */
-    make_guest_screen_info(vmm, &boot_info->screen_info);
+    make_guest_screen_info(vmm, &boot_info.screen_info);
 
     /* Create e820 memory map */
-    boot_info->e820_entries = make_guest_e820_map(boot_info->e820_map, &vmm->guest_mem);
+    boot_info.e820_entries = make_guest_e820_map(boot_info.e820_map, &vmm->guest_mem);
 
     /* Pass in the command line string. */
-    boot_info->hdr.cmd_line_ptr = vmm->guest_image.cmd_line;
-    boot_info->hdr.cmdline_size = vmm->guest_image.cmd_line_len;
+    boot_info.hdr.cmd_line_ptr = vmm->guest_image.cmd_line;
+    boot_info.hdr.cmdline_size = vmm->guest_image.cmd_line_len;
 
     /* These are not needed to be precise, because Linux uses these values
      * only to raise an error when the decompression code cannot find good
      * space. ref: GRUB2 source code loader/i386/linux.c */
-    boot_info->alt_mem_k = 0;//((32 * 0x100000) >> 10);
+    boot_info.alt_mem_k = 0;//((32 * 0x100000) >> 10);
 
     /* Pass in initramfs. */
     if (vmm->guest_image.boot_module_paddr) {
-        boot_info->hdr.ramdisk_image = (uint32_t) vmm->guest_image.boot_module_paddr;
-        boot_info->hdr.ramdisk_size = vmm->guest_image.boot_module_size;
-        boot_info->hdr.root_dev = 0x0100;
-        boot_info->hdr.version = 0x0204; /* Report version 2.04 in order to report ramdisk_image. */
+        boot_info.hdr.ramdisk_image = (uint32_t) vmm->guest_image.boot_module_paddr;
+        boot_info.hdr.ramdisk_size = vmm->guest_image.boot_module_size;
+        boot_info.hdr.root_dev = 0x0100;
+        boot_info.hdr.version = 0x0204; /* Report version 2.04 in order to report ramdisk_image. */
     } else {
-        boot_info->hdr.version = 0x0202;
+        boot_info.hdr.version = 0x0202;
     }
+    memcpy(vaddr, ((char*)(&boot_info)) + offset, size);
+    return 0;
 }
 
 static int make_guest_boot_info(vmm_t *vmm) {
@@ -392,8 +341,7 @@ static int make_guest_boot_info(vmm_t *vmm) {
     }
     printf("Guest boot info allocated at 0x%x. Populating...\n", (unsigned int)addr);
     vmm->guest_image.boot_info = addr;
-    vmm_plat_touch_guest_frame(vmm, addr, sizeof(struct boot_params), make_guest_boot_info_continued, NULL);
-    return 0;
+    return vmm_guest_vspace_touch(&vmm->guest_mem.vspace, addr, sizeof(struct boot_params), make_guest_boot_info_continued, vmm);
 }
 
 /* Init the guest page directory, cmd line args and boot info structures. */

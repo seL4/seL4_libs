@@ -92,7 +92,7 @@ extern "C" {
 #define PHY_1000BT_HD                     (0x0100u)
 #define PHY_1000BT_FD                     (0x0200u)
 
-/* 100 Base TX Full Duplex capablity */
+/* 100 Base TX Full Duplex capability */
 #define PHY_100BTX_HD                     (0x0000u)
 #define PHY_100BTX_FD                     (0x0100u)
 

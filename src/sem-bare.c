@@ -24,6 +24,7 @@ int sync_sem_bare_wait(seL4_CPtr ep, volatile int *value) {
     if (v < 0) {
         seL4_Wait(ep, NULL);
     }
+    __sync_synchronize();
     return 0;
 }
 
@@ -33,6 +34,7 @@ int sync_sem_bare_post(seL4_CPtr ep, volatile int *value) {
     assert(seL4_DebugCapIdentify(ep) == 4);
 #endif
     assert(value != NULL);
+    __sync_synchronize();
     int v = sync_atomic_increment(value);
     if (v <= 0) {
         seL4_Notify(ep, 0);

@@ -31,6 +31,7 @@ int sync_sem_wait(sync_sem_t *sem) {
     if (value < 0) {
         seL4_Wait(sem->ep, NULL);
     }
+    __sync_synchronize();
     return 0;
 }
 
@@ -41,6 +42,7 @@ int sync_sem_trywait(sync_sem_t *sem) {
         int oldval = sync_atomic_compare_and_swap(&sem->value, val, val - 1);
         if (oldval == val) {
             /* We got it! */
+            __sync_synchronize();
             return 0;
         }
         /* We didn't get it. */
@@ -52,6 +54,7 @@ int sync_sem_trywait(sync_sem_t *sem) {
 
 int sync_sem_post(sync_sem_t *sem) {
     assert(sem != NULL);
+    __sync_synchronize();
     int value = sync_atomic_increment(&sem->value);
     if (value <= 0) {
         seL4_Notify(sem->ep, 0);

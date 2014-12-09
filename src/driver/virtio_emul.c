@@ -85,7 +85,7 @@ static uintptr_t emul_allocate_rx_buf(void *iface, size_t buf_size, void **cooki
     }
     void *vaddr = ps_dma_alloc(&net->dma_man, BUF_SIZE, net->driver.dma_alignment, 1, PS_MEM_NORMAL);
     if (!vaddr) {
-        return NULL;
+        return 0;
     }
     uintptr_t phys = ps_dma_pin(&net->dma_man, vaddr, BUF_SIZE);
     *cookie = vaddr;

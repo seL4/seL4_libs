@@ -11,10 +11,11 @@
 #ifndef _LIB_VMM_VMEXIT_H_
 #define _LIB_VMM_VMEXIT_H_
 
+#include <vmm/interrupt.h>
+
 typedef int(*vmexit_handler_ptr)(struct vmm *vmm);
 
 /*vm exit handlers*/
-int vmm_pending_interrupt_handler(struct vmm *vmm);
 int vmm_cpuid_handler(struct vmm *vmm);
 int vmm_ept_violation_handler(struct vmm *vmm);
 int vmm_wrmsr_handler(struct vmm *vmm);

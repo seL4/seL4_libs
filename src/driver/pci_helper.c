@@ -399,7 +399,6 @@ vmm_pci_entry_t vmm_pci_no_msi_cap_emulation(vmm_pci_entry_t existing) {
     int num_ignore;
     uint8_t ignore_start[2];
     uint8_t ignore_end[2];
-    int offset = PCI_CAPABILITY_LIST;
     error = existing.ioread(existing.cookie, PCI_CAPABILITY_LIST, 1, &value);
     assert(!error);
     /* Mask off the bottom 2 bits, which are reserved */

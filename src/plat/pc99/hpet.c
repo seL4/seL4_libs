@@ -53,7 +53,7 @@ seL4_timer_t *sel4platsupport_get_hpet(vspace_t *vspace, simple_t *simple, acpi_
 
     /* check what range the IRQ is in */
 #ifdef CONFIG_IRQ_IOAPIC
-    if (irq_number >= 0 && irq_number < MSI_MIN) {
+    if (irq_number < MSI_MIN) {
         if (CONFIG_MAX_NUM_IOAPIC != 1) {
             LOG_ERROR("HPET does not support > 1 IOAPIC as we do not work out which IOAPIC we are connected to");
             goto error;

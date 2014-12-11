@@ -80,10 +80,6 @@ typedef struct vmm {
 
     /* platform callback functions */
     platform_callbacks_t plat_callbacks;
-    /* if we received an async notification that we could not handle
-     * immediately, we store it here until the pending event handler can run */
-    int pending_async;
-    seL4_Word pending_badge;
 
     /* Default page size to use */
     int page_size;

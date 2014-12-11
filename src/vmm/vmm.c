@@ -149,16 +149,6 @@ static void vmm_update_guest_state_from_fault(vmm_t *vmm, seL4_Word *msg) {
     MACHINE_STATE_READ(vmm->guest_state.machine.context, context);
 }
 
-static int vmm_async_event_handler(vmm_t *vmm) {
-    int ret = 0;
-    if (!vmm->pending_async || vmm->plat_callbacks.do_async(vmm->pending_badge) == 0) {
-         ret = vmm_pending_interrupt_handler(vmm);
-    }
-    vmm->pending_async = 0;
-    vmm->pending_badge = 0;
-    return ret;
-}
-
 void interrupt_pending_callback(vmm_t *vmm, seL4_Word badge)
 {
     /* TODO: there is a really annoying race between our need to stop the guest thread
@@ -175,22 +165,17 @@ void interrupt_pending_callback(vmm_t *vmm, seL4_Word badge)
      * starts to matter */
     if (vmm->guest_state.exit.in_exit) {
         /* in an exit, can call the regular injection method */
-        if (vmm->pending_async) {
-            badge |= vmm->pending_badge;
-            vmm->pending_async = 0;
-            vmm->pending_badge = 0;
-        }
         if (vmm->plat_callbacks.do_async(badge) == 0) {
             vmm_have_pending_interrupt(vmm);
+            vmm_sync_guest_state(vmm);
         }
-        vmm_sync_guest_state(vmm);
     } else {
-        /* Make the guest exit as soon as possible so that we handle this
-         * from a fault context */
-        vmm->pending_async = 1;
-        vmm->pending_badge |= badge;
-        wait_for_guest_ready(vmm);
-        vmm_guest_state_sync_control_ppc(&vmm->guest_state, vmm->guest_vcpu);
+        if (vmm->plat_callbacks.do_async(badge) == 0) {
+            /* Have some interrupts to inject, but we need to do this with
+             * the guest not running */
+            wait_for_guest_ready(vmm);
+            vmm_guest_state_sync_control_ppc(&vmm->guest_state, vmm->guest_vcpu);
+        }
     }
 #if 0
     int did_suspend = 0;
@@ -277,7 +262,7 @@ void vmm_run(vmm_t *vmm) {
 
 static void vmm_exit_init(vmm_t *vmm) {
     /* Connect VM exit handlers to correct function pointers */
-    vmm->vmexit_handlers[EXIT_REASON_PENDING_INTERRUPT] = vmm_async_event_handler;
+    vmm->vmexit_handlers[EXIT_REASON_PENDING_INTERRUPT] = vmm_pending_interrupt_handler;
 /*    vmm->vmexit_handlers[EXIT_REASON_EXCEPTION_NMI] = vmm_exception_handler;*/
     vmm->vmexit_handlers[EXIT_REASON_CPUID] = vmm_cpuid_handler;
     vmm->vmexit_handlers[EXIT_REASON_MSR_READ] = vmm_rdmsr_handler;

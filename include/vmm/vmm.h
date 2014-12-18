@@ -25,6 +25,7 @@
 #include "vmm/platform/guest_memory.h"
 #include "vmm/guest_state.h"
 #include "vmm/vmexit.h"
+#include "vmm/mmio.h"
 
 /* TODO: Use a badge and/or this constant should be defined in libsel4 */
 #define LIB_VMM_VM_EXIT_MSG_LEN    21
@@ -111,6 +112,9 @@ typedef struct vmm {
 
     /* IO port management */
     vmm_io_port_list_t io_port;
+
+	/* MMIO management */
+	vmm_mmio_list_t mmio_list;
 } vmm_t;
 
 /* Finalize the VM before running it */

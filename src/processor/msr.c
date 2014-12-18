@@ -37,6 +37,7 @@ int vmm_rdmsr_handler(vmm_t *vmm) {
         case MSR_IA32_LASTBRANCHTOIP:
         case MSR_IA32_LASTINTFROMIP:
         case MSR_IA32_LASTINTTOIP:
+		case MSR_IA32_APICBASE:
             data = 0;
             break;
 

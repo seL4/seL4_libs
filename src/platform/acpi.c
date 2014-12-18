@@ -44,7 +44,7 @@ static int make_guest_acpi_tables_continued(uintptr_t paddr, void *vaddr,
 int make_guest_acpi_tables(vmm_t *vmm) {
 	DPRINTF(2, "Making ACPI tables\n");
 
-	int cpus = 4; // TODO should come from vmm struct
+	int cpus = 1; // TODO should come from vmm struct
 
 	int err;
 
@@ -63,6 +63,7 @@ int make_guest_acpi_tables(vmm_t *vmm) {
 
 	char *madt_entry = (char *)madt + sizeof(acpi_madt_t);
 
+#if 0
 	acpi_madt_ioapic_t ioapic = { // MADT IOAPIC entry
 		.header = {
 			.type = MADT_IOAPIC,
@@ -74,6 +75,7 @@ int make_guest_acpi_tables(vmm_t *vmm) {
 	};
 	memcpy(madt_entry, &ioapic, sizeof(ioapic));
 	madt_entry += sizeof(ioapic);
+#endif
 
 	for (int i = 0; i < cpus; i++) { // MADT APIC entries
 		acpi_madt_apic_t apic = {

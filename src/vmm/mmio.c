@@ -1,0 +1,123 @@
+
+
+// Deals with ranges of memory mapped io
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#include <sel4/sel4.h>
+
+#include "vmm/debug.h"
+#include "vmm/vmm.h"
+#include "vmm/platform/vmcs.h"
+#include "vmm/platform/vmexit.h"
+#include "vmm/mmio.h"
+#include "vmm/processor/decode.h"
+
+#define EPT_VIOL_READ(qual) ((qual) & BIT(0))
+#define EPT_VIOL_WRITE(qual) ((qual) & BIT(1))
+#define EPT_VIOL_FETCH(qual) ((qual) & BIT(2))
+
+int vmm_mmio_init(vmm_mmio_list_t *list) {
+	list->num_ranges = 0;
+	list->ranges = malloc(0);
+	assert(list->ranges);
+
+	return 0;
+}
+
+// Returns 0 if the exit was handled
+int vmm_mmio_exit_handler(vmm_t *vmm, uintptr_t addr, unsigned int qualification) {
+	int read = EPT_VIOL_READ(qualification);
+	int write = EPT_VIOL_WRITE(qualification);
+	int fetch = EPT_VIOL_FETCH(qualification);
+	if (read && write) {
+		// Indicates a fault while walking EPT
+		return -1;
+	}
+	if (fetch) {
+		// This is not MMIO
+		return -1;
+	}
+
+	// Search the list
+	for (int i = 0; i < vmm->mmio_list.num_ranges; i++) {
+		vmm_mmio_range_t *range = &vmm->mmio_list.ranges[i];
+		
+		if (addr < range->start) {
+			return -1;
+		}
+
+		if (addr <= range->end) {
+			// Found a match
+			if (read && range->read_handler == NULL) {
+				return -1;
+			}
+			if (write && range->write_handler == NULL) {
+				return -1;
+			}
+
+			// Decode instruction
+			uint8_t ibuf[15];
+			int instr_len = vmm_guest_exit_get_int_len(&vmm->guest_state);
+			vmm_fetch_instruction(vmm,
+					vmm_read_user_context(&vmm->guest_state, USER_CONTEXT_EIP),
+					vmm_guest_state_get_cr3(&vmm->guest_state, vmm->guest_vcpu),
+					instr_len, ibuf);
+
+			int reg;
+			uint32_t imm;
+			int size;
+			vmm_decode_instruction(ibuf, instr_len, &reg, &imm, &size);
+assert(size == 4); // we don't support non-32 bit accesses. TODO fix this
+
+			// Call handler
+			if (read) {
+				uint32_t result;
+				range->read_handler(range->cookie, addr - range->start, size, &result);
+
+				// Inject into register
+				assert(reg >= 0 && reg < 8);
+				vmm_set_user_context(&vmm->guest_state,
+						vmm_decoder_reg_mapw[reg], result);
+			} else {
+				// Get value to pass in
+				uint32_t value = imm;
+				assert (reg >= 0);
+				value = vmm_read_user_context(&vmm->guest_state,
+						vmm_decoder_reg_mapw[reg]);
+
+				range->write_handler(range->cookie, addr - range->start, size, value);
+			}
+
+			return 0;
+		}
+	}
+
+	return -1;
+}
+
+static int range_cmp(const void *a, const void *b) {
+	return ((const vmm_mmio_range_t *)a)->start - ((const vmm_mmio_range_t *)b)->start;
+}
+
+int vmm_mmio_add_handler(vmm_mmio_list_t *list, uintptr_t start, uintptr_t end,
+		void *cookie, const char *name,
+		vmm_mmio_read_fn read_handler, vmm_mmio_write_fn write_handler) {
+	vmm_mmio_range_t *new = malloc(sizeof(*new));
+	new->start = start;
+	new->end = end;
+	new->cookie = cookie;
+	new->read_handler = read_handler;
+	new->write_handler = write_handler;
+	new->name = name;
+
+	list->ranges = realloc(list->ranges, sizeof(vmm_mmio_range_t) * (list->num_ranges + 1));
+	memcpy(&list->ranges[list->num_ranges++], new, sizeof(vmm_mmio_range_t));
+
+	qsort(list->ranges, list->num_ranges, sizeof(vmm_mmio_range_t), range_cmp);
+
+	return 0;
+}
+

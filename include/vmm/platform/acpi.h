@@ -1,7 +1,12 @@
 // Based on from kernel/src/plat/pc99/machine/acpi.c
 
-#define ACPI_START 0xE0000 // Start of ACPI tables; RSD PTR is right here
-#define MAX_ACPI_TABLES 2
+#define ACPI_START (0xE0000) // Start of ACPI tables; RSD PTR is right here
+#define MAX_ACPI_TABLES (2)
+
+// TODO move these somewhere else
+#define APIC_ADDR (0xFEE00000)
+#define IOAPIC_ADDR (0xFEC0000)
+#define APIC_FLAGS_ENABLED (1)
 
 /* Root System Descriptor Pointer */
 typedef struct acpi_rsdp {
@@ -27,9 +32,9 @@ typedef struct acpi_table_head {
 	uint8_t		checksum;
 	char		oem_id[6];
 	char		oem_table_id[8];
-	char		oem_rev[4];
+	uint32_t	oem_rev;
 	char		creator_id[4];
-	char		creator_rev[4];
+	uint32_t	creator_rev;
 } acpi_table_head_t;
 
 typedef struct acpi_xsdt {
@@ -76,4 +81,6 @@ typedef struct acpi_madt_iso {
     uint32_t           gsi;
     uint16_t           flags;
 } acpi_madt_iso_t;
+
+int make_guest_acpi_tables(vmm_t *vmm);
 

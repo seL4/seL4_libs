@@ -29,6 +29,7 @@
 #include "vmm/platform/e820.h"
 #include "vmm/platform/bootinfo.h"
 #include "vmm/platform/guest_vspace.h"
+#include "vmm/platform/acpi.h"
 
 #ifdef CONFIG_VMM_VESA_FRAMEBUFFER
 #include <sel4/arch/bootinfo.h>
@@ -356,6 +357,9 @@ void vmm_plat_init_guest_boot_structure(vmm_t *vmm, const char *cmdline) {
 
     err = make_guest_boot_info(vmm);
     assert(!err);
+
+	err = make_guest_acpi_tables(vmm);
+	assert(!err);
 }
 
 void vmm_init_guest_thread_state(vmm_t *vmm) {

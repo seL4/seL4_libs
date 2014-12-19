@@ -31,11 +31,13 @@ int sync_bin_sem_wait(sync_bin_sem_t *sem) {
     if (value < 0) {
         seL4_Wait(sem->aep, NULL);
     }
+    __sync_synchronize();
     return 0;
 }
 
 int sync_bin_sem_post(sync_bin_sem_t *sem) {
     assert(sem != NULL);
+    __sync_synchronize();
     int value = sync_atomic_increment(&sem->value);
     assert(sem->value <= 1);
     if (value <= 0) {

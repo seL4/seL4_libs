@@ -30,6 +30,8 @@ typedef struct vmm_vcpu vmm_vcpu_t;
 #include "vmm/vmexit.h"
 #include "vmm/mmio.h"
 #include "vmm/processor/lapic.h"
+#include "vmm/vmcall.h"
+#include "vmm/vmm_manager.h"
 
 /* TODO: Use a badge and/or this constant should be defined in libsel4 */
 #define LIB_VMM_VM_FAULT_EXIT_MSG_LEN    17
@@ -132,6 +134,9 @@ typedef struct vmm {
 
     unsigned int num_vcpus;
     vmm_vcpu_t *vcpus;
+
+    vmcall_handler_t *vmcall_handlers;
+    unsigned int vmcall_num_handlers;
 
     /*TODO add
         map of vcpu affinities

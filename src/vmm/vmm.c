@@ -230,6 +230,7 @@ static void vmm_exit_init(vmm_t *vmm) {
 /*    vmm->vmexit_handlers[EXIT_REASON_RDTSC] = vmm_rdtsc_instruction_handler;*/
     vmm->vmexit_handlers[EXIT_REASON_HLT] = vmm_hlt_handler;
     vmm->vmexit_handlers[EXIT_REASON_VMX_TIMER] = vmm_vmx_timer_handler;
+    vmm->vmexit_handlers[EXIT_REASON_VMCALL] = vmm_vmcall_handler;
 }
 
 int vmm_finalize(vmm_t *vmm) {

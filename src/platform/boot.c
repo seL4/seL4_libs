@@ -48,6 +48,10 @@ int vmm_init(vmm_t *vmm, simple_t simple, vka_t vka, vspace_t vspace, platform_c
     if (err) {
         return err;
     }
+
+    vmm->vmcall_handlers = NULL;
+    vmm->vmcall_num_handlers = 0;
+
     return 0;
 }
 
@@ -114,7 +118,7 @@ int vmm_init_guest_multi(vmm_t *vmm, int priority, int num_vcpus) {
         vmm_init_vcpu(vmm, i, priority);
     }
 
-    /* Init guest memory information. 
+    /* Init guest memory information.
      * TODO: should probably done elsewhere */
     vmm->guest_mem.num_ram_regions = 0;
     vmm->guest_mem.ram_regions = malloc(0);

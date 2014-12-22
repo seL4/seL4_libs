@@ -11,6 +11,7 @@
 #ifndef _CSPACEPATH_T_H_
 #define _CSPACEPATH_T_H_
 
+#include <inttypes.h>
 #include <sel4/sel4.h>
 
 /* --- Debug --- */
@@ -93,24 +94,14 @@ typedef struct _cspacepath_t {
 /// --------------------------- Debug --------------------------------
 inline static void cspacepath_t_print(const cspacepath_t* src)
 {
-#ifndef FMT
-#ifdef CONFIG_X86_64
-#define FMT "%llx"
-#else
-#define FMT "%x"
-#endif
-#endif
     (void)(src);
-    CSPACEPATHPRINT("capPtr:     0x"FMT"\n", src->capPtr);
-    CSPACEPATHPRINT("capDepth:   0x"FMT"\n", src->capDepth);
-    CSPACEPATHPRINT("root:       0x"FMT"\n", src->root);
-    CSPACEPATHPRINT("dest:       0x"FMT"\n", src->dest);
-    CSPACEPATHPRINT("destDepth:  0x"FMT"\n", src->destDepth);
-    CSPACEPATHPRINT("offset:     0x"FMT"\n", src->offset);
-    CSPACEPATHPRINT("window:     0x"FMT"\n", src->window);
-#ifdef FMT
-#undef FMT
-#endif
+    CSPACEPATHPRINT("capPtr:     0x%"PRIxPTR"\n", src->capPtr);
+    CSPACEPATHPRINT("capDepth:   0x%"PRIxPTR"\n", src->capDepth);
+    CSPACEPATHPRINT("root:       0x%"PRIxPTR"\n", src->root);
+    CSPACEPATHPRINT("dest:       0x%"PRIxPTR"\n", src->dest);
+    CSPACEPATHPRINT("destDepth:  0x%"PRIxPTR"\n", src->destDepth);
+    CSPACEPATHPRINT("offset:     0x%"PRIxPTR"\n", src->offset);
+    CSPACEPATHPRINT("window:     0x%"PRIxPTR"\n", src->window);
 }
 
 #endif /* _CSPACEPATH_T_H_ */

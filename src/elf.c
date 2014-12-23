@@ -21,12 +21,6 @@
 #include <sel4utils/mapping.h>
 #include <sel4utils/elf.h>
 
-#ifdef CONFIG_X86_64
-#define SZFMT   "%ld"
-#else
-#define SZFMT   "%u"
-#endif
-
 /* This library works with our cpio set up in the build system */
 extern char _cpio_archive[];
 
@@ -61,7 +55,7 @@ load_segment(vspace_t *loadee_vspace, vspace_t *loader_vspace,
     int error = seL4_NoError;
 
     if (file_size > segment_size) {
-        LOG_ERROR("Error, file_size "SZFMT" > segment_size "SZFMT, file_size, segment_size);
+        LOG_ERROR("Error, file_size %zu > segment_size %zu", file_size, segment_size);
         return seL4_InvalidArgument;
     }
 

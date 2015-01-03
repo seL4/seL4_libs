@@ -130,8 +130,8 @@ static int vmm_init_vcpu(vmm_t *vmm, unsigned int num, int priority) {
 	vcpu->vmm = vmm;
 	vcpu->vcpu_id = num;
 
-	/* lapic is started enabled on aps */
-	//vmm_create_lapic(vcpu, num != BOOT_VCPU);
+	/* lapic is started enabled on aps  TODO is this correct? or should they all be disabled on startup?*/
+	vmm_create_lapic(vcpu, num != BOOT_VCPU);
 
 	return 0;
 }
@@ -172,9 +172,9 @@ int vmm_init_guest_multi(vmm_t *vmm, int priority, int num_vcpus) {
     vmm->guest_mem.num_ram_regions = 0;
     vmm->guest_mem.ram_regions = malloc(0);
 
-	/*vmm_mmio_add_handler(&vmm->mmio_list, APIC_DEFAULT_PHYS_BASE,
+	vmm_mmio_add_handler(&vmm->mmio_list, APIC_DEFAULT_PHYS_BASE,
 			APIC_DEFAULT_PHYS_BASE + sizeof(struct local_apic_regs) - 1,
-			NULL, "Local APIC", vmm_apic_mmio_read, vmm_apic_mmio_write);*/
+			NULL, "Local APIC", vmm_apic_mmio_read, vmm_apic_mmio_write);
 
     vmm->done_guest_init = 1;
 	return 0;

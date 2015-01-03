@@ -94,3 +94,19 @@ int vmm_pending_interrupt_handler(vmm_vcpu_t *vcpu) {
     }
     return 0;
 }
+
+/* Start an AP vcpu after a sipi with the requested vector */
+void vmm_start_ap_vcpu(vmm_vcpu_t *vcpu, unsigned int sipi_vector)
+{
+	/* See /arch/x86/kvm/x86.c:7027 Linux 3.18 */
+    vmm_vmcs_write(vcpu->guest_vcpu, VMX_GUEST_CS_SELECTOR, sipi_vector << 8);
+    vmm_vmcs_write(vcpu->guest_vcpu, VMX_GUEST_CS_BASE, sipi_vector << 12);
+    vmm_vmcs_write(vcpu->guest_vcpu, VMX_GUEST_SYSENTER_EIP, 0);
+	seL4_TCB_Resume(vcpu->guest_tcb);
+}
+
+void vmm_vcpu_accept_interrupt(vmm_vcpu_t *vcpu)
+{
+	//TODO make this work
+	(void)vcpu;
+}

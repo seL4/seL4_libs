@@ -89,9 +89,6 @@ typedef struct vmm_vcpu {
 
 	/* parent vmm */
 	vmm_t *vmm;
-	/* TODO 
-		rename things and get rid of guest_ for per vcpu stuff
-	*/
 
 	vmm_lapic_t *lapic;
 	int vcpu_id;

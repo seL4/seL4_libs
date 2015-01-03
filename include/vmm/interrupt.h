@@ -22,4 +22,10 @@ int vmm_pending_interrupt_handler(vmm_vcpu_t *vcpu);
  * interrupts */
 void wait_for_guest_ready(vmm_vcpu_t *vcpu);
 
+/* Start an AP vcpu after a sipi with the requested vector */
+void vmm_start_ap_vcpu(vmm_vcpu_t *vcpu, unsigned int sipi_vector);
+
+/* inject an interrupt from the lapic on the vcpu, whether or not it is in an exit */
+void vmm_vcpu_accept_interrupt(vmm_vcpu_t *vcpu);
+
 #endif

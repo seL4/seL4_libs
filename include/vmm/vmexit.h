@@ -12,17 +12,18 @@
 #define _LIB_VMM_VMEXIT_H_
 
 #include <vmm/interrupt.h>
+#include <vmm/vmm.h>
 
-typedef int(*vmexit_handler_ptr)(struct vmm *vmm);
+typedef int(*vmexit_handler_ptr)(vmm_vcpu_t *vcpu);
 
 /*vm exit handlers*/
-int vmm_cpuid_handler(struct vmm *vmm);
-int vmm_ept_violation_handler(struct vmm *vmm);
-int vmm_wrmsr_handler(struct vmm *vmm);
-int vmm_rdmsr_handler(struct vmm *vmm);
-int vmm_io_instruction_handler(struct vmm *vmm);
-int vmm_hlt_handler(struct vmm *vmm);
-int vmm_vmx_timer_handler(struct vmm *vmm);
-int vmm_cr_access_handler(struct vmm *vmm);
+int vmm_cpuid_handler(vmm_vcpu_t *vcpu);
+int vmm_ept_violation_handler(vmm_vcpu_t *vcpu);
+int vmm_wrmsr_handler(vmm_vcpu_t *vcpu);
+int vmm_rdmsr_handler(vmm_vcpu_t *vcpu);
+int vmm_io_instruction_handler(vmm_vcpu_t *vcpu);
+int vmm_hlt_handler(vmm_vcpu_t *vcpu);
+int vmm_vmx_timer_handler(vmm_vcpu_t *vcpu);
+int vmm_cr_access_handler(vmm_vcpu_t *vcpu);
 
 #endif

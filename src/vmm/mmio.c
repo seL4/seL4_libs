@@ -28,7 +28,7 @@ int vmm_mmio_init(vmm_mmio_list_t *list) {
 }
 
 // Returns 0 if the exit was handled
-int vmm_mmio_exit_handler(vmm_t *vmm, uintptr_t addr, unsigned int qualification) {
+int vmm_mmio_exit_handler(vmm_vcpu_t *vcpu, uintptr_t addr, unsigned int qualification) {
 	int read = EPT_VIOL_READ(qualification);
 	int write = EPT_VIOL_WRITE(qualification);
 	int fetch = EPT_VIOL_FETCH(qualification);
@@ -42,8 +42,8 @@ int vmm_mmio_exit_handler(vmm_t *vmm, uintptr_t addr, unsigned int qualification
 	}
 
 	// Search the list
-	for (int i = 0; i < vmm->mmio_list.num_ranges; i++) {
-		vmm_mmio_range_t *range = &vmm->mmio_list.ranges[i];
+	for (int i = 0; i < vcpu->vmm->mmio_list.num_ranges; i++) {
+		vmm_mmio_range_t *range = &vcpu->vmm->mmio_list.ranges[i];
 		
 		if (addr < range->start) {
 			return -1;
@@ -60,10 +60,10 @@ int vmm_mmio_exit_handler(vmm_t *vmm, uintptr_t addr, unsigned int qualification
 
 			// Decode instruction
 			uint8_t ibuf[15];
-			int instr_len = vmm_guest_exit_get_int_len(&vmm->guest_state);
-			vmm_fetch_instruction(vmm,
-					vmm_read_user_context(&vmm->guest_state, USER_CONTEXT_EIP),
-					vmm_guest_state_get_cr3(&vmm->guest_state, vmm->guest_vcpu),
+			int instr_len = vmm_guest_exit_get_int_len(&vcpu->guest_state);
+			vmm_fetch_instruction(vcpu,
+					vmm_read_user_context(&vcpu->guest_state, USER_CONTEXT_EIP),
+					vmm_guest_state_get_cr3(&vcpu->guest_state, vcpu->guest_vcpu),
 					instr_len, ibuf);
 
 			int reg;
@@ -75,20 +75,20 @@ assert(size == 4); // we don't support non-32 bit accesses. TODO fix this
 			// Call handler
 			if (read) {
 				uint32_t result;
-				range->read_handler(range->cookie, addr - range->start, size, &result);
+				range->read_handler(vcpu, range->cookie, addr - range->start, size, &result);
 
 				// Inject into register
 				assert(reg >= 0 && reg < 8);
-				vmm_set_user_context(&vmm->guest_state,
+				vmm_set_user_context(&vcpu->guest_state,
 						vmm_decoder_reg_mapw[reg], result);
 			} else {
 				// Get value to pass in
 				uint32_t value = imm;
 				assert (reg >= 0);
-				value = vmm_read_user_context(&vmm->guest_state,
+				value = vmm_read_user_context(&vcpu->guest_state,
 						vmm_decoder_reg_mapw[reg]);
 
-				range->write_handler(range->cookie, addr - range->start, size, value);
+				range->write_handler(vcpu, range->cookie, addr - range->start, size, value);
 			}
 
 			return 0;

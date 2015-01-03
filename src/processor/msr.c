@@ -20,10 +20,10 @@
 #include "vmm/processor/msr.h"
 
 
-int vmm_rdmsr_handler(vmm_t *vmm) {
+int vmm_rdmsr_handler(vmm_vcpu_t *vcpu) {
 
     int ret = 0;
-    unsigned int msr_no = vmm_read_user_context(&vmm->guest_state, USER_CONTEXT_ECX);
+    unsigned int msr_no = vmm_read_user_context(&vcpu->guest_state, USER_CONTEXT_ECX);
     uint64_t data = 0;
 
     DPRINTF(4, "rdmsr ecx 0x%x\n", msr_no);
@@ -69,22 +69,22 @@ int vmm_rdmsr_handler(vmm_t *vmm) {
    }
 
     if (!ret) {
-        vmm_set_user_context(&vmm->guest_state, USER_CONTEXT_EAX, (uint32_t)(data & 0xffffffff));
-        vmm_set_user_context(&vmm->guest_state, USER_CONTEXT_EDX, (uint32_t)(data >> 32));
-        vmm_guest_exit_next_instruction(&vmm->guest_state);
+        vmm_set_user_context(&vcpu->guest_state, USER_CONTEXT_EAX, (uint32_t)(data & 0xffffffff));
+        vmm_set_user_context(&vcpu->guest_state, USER_CONTEXT_EDX, (uint32_t)(data >> 32));
+        vmm_guest_exit_next_instruction(&vcpu->guest_state);
     }
 
     return ret;
 }
 
 
-int vmm_wrmsr_handler(vmm_t *vmm) {
+int vmm_wrmsr_handler(vmm_vcpu_t *vcpu) {
 
     int ret = 0;
 
-    unsigned int msr_no = vmm_read_user_context(&vmm->guest_state, USER_CONTEXT_ECX);
-    unsigned int val_high = vmm_read_user_context(&vmm->guest_state, USER_CONTEXT_EDX);
-    unsigned int val_low = vmm_read_user_context(&vmm->guest_state, USER_CONTEXT_EAX);
+    unsigned int msr_no = vmm_read_user_context(&vcpu->guest_state, USER_CONTEXT_ECX);
+    unsigned int val_high = vmm_read_user_context(&vcpu->guest_state, USER_CONTEXT_EDX);
+    unsigned int val_low = vmm_read_user_context(&vcpu->guest_state, USER_CONTEXT_EAX);
     
     DPRINTF(4, "wrmsr ecx 0x%x   value: 0x%x  0x%x\n", msr_no, val_high, val_low);
 
@@ -108,7 +108,7 @@ int vmm_wrmsr_handler(vmm_t *vmm) {
     }
 
     if (!ret)
-        vmm_guest_exit_next_instruction(&vmm->guest_state);
+        vmm_guest_exit_next_instruction(&vcpu->guest_state);
 
     return ret;
 }

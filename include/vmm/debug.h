@@ -59,7 +59,7 @@
         }while(0)
 #endif
 
-void vmm_print_guest_context(int, vmm_t*);
+void vmm_print_guest_context(int, vmm_vcpu_t*);
 
 #endif /* _LIB_VMM_DEBUG_H_ */
 

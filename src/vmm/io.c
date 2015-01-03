@@ -50,9 +50,9 @@ static const char* vmm_debug_io_portno_desc(vmm_io_port_list_t *io_port, int por
 }
 
 /* IO instruction execution handler. */
-int vmm_io_instruction_handler(vmm_t *vmm) {
+int vmm_io_instruction_handler(vmm_vcpu_t *vcpu) {
 
-    unsigned int exit_qualification = vmm_guest_exit_get_qualification(&vmm->guest_state);
+    unsigned int exit_qualification = vmm_guest_exit_get_qualification(&vcpu->guest_state);
     unsigned int string, rep;
     int ret;
     unsigned int port_no;
@@ -67,35 +67,35 @@ int vmm_io_instruction_handler(vmm_t *vmm) {
     rep = (exit_qualification & 0x20) >> 5;
 
     DPRINTF(4, "vm exit io request: string %d  in %d rep %d  port no 0x%x (%s) size %d\n", string,
-            is_in, rep, port_no, vmm_debug_io_portno_desc(&vmm->io_port, port_no), size);
+            is_in, rep, port_no, vmm_debug_io_portno_desc(&vcpu->vmm->io_port, port_no), size);
 
     /*FIXME: does not support string and rep instructions*/
     if (string || rep) {
         DPRINTF(0, "vm exit io request: FIXME: does not support string and rep instructions");
         DPRINTF(0, "vm exit io ERROR: string %d  in %d rep %d  port no 0x%x (%s) size %d\n", 0,
-                is_in, 0, port_no, vmm_debug_io_portno_desc(&vmm->io_port, port_no), size);
+                is_in, 0, port_no, vmm_debug_io_portno_desc(&vcpu->vmm->io_port, port_no), size);
         return -1;
     }
 
-    ioport_range_t *port = search_port(&vmm->io_port, port_no);
+    ioport_range_t *port = search_port(&vcpu->vmm->io_port, port_no);
     if (!port) {
         static int last_port = -1;
         if (last_port != port_no) {
             LOG_INFO("vm exit io request: WARNING - ignoring unsupported ioport 0x%x (%s)", port_no,
-                    vmm_debug_io_portno_desc(&vmm->io_port, port_no));
+                    vmm_debug_io_portno_desc(&vcpu->vmm->io_port, port_no));
             last_port = port_no;
         }
         if (is_in) {
             uint32_t eax;
             if ( size < 4) {
-                eax = vmm_read_user_context(&vmm->guest_state, USER_CONTEXT_EAX);
+                eax = vmm_read_user_context(&vcpu->guest_state, USER_CONTEXT_EAX);
                 eax |= MASK(size * 8);
             } else {
                 eax = -1;
             }
-            vmm_set_user_context(&vmm->guest_state, USER_CONTEXT_EAX, eax);
+            vmm_set_user_context(&vcpu->guest_state, USER_CONTEXT_EAX, eax);
         }
-        vmm_guest_exit_next_instruction(&vmm->guest_state);
+        vmm_guest_exit_next_instruction(&vcpu->guest_state);
         return 0;
     }
 
@@ -103,15 +103,15 @@ int vmm_io_instruction_handler(vmm_t *vmm) {
         uint32_t eax;
         ret = port->port_in(port->cookie, port_no, size, &value);
         if (size < 4) {
-            eax = vmm_read_user_context(&vmm->guest_state, USER_CONTEXT_EAX);
+            eax = vmm_read_user_context(&vcpu->guest_state, USER_CONTEXT_EAX);
             eax &= ~MASK(size * 8);
             eax |= value;
         } else {
             eax = value;
         }
-        vmm_set_user_context(&vmm->guest_state, USER_CONTEXT_EAX, eax);
+        vmm_set_user_context(&vcpu->guest_state, USER_CONTEXT_EAX, eax);
     } else {
-        value = vmm_read_user_context(&vmm->guest_state, USER_CONTEXT_EAX);
+        value = vmm_read_user_context(&vcpu->guest_state, USER_CONTEXT_EAX);
         if (size < 4)
             value &= MASK(size * 8);
         ret = port->port_out(port->cookie, port_no, size, value);
@@ -120,11 +120,11 @@ int vmm_io_instruction_handler(vmm_t *vmm) {
     if (ret) {
         LOG_ERROR("vm exit io request: handler returned error.");
         LOG_ERROR("vm exit io ERROR: string %d  in %d rep %d  port no 0x%x (%s) size %d", 0,
-                is_in, 0, port_no, vmm_debug_io_portno_desc(&vmm->io_port, port_no), size);
+                is_in, 0, port_no, vmm_debug_io_portno_desc(&vcpu->vmm->io_port, port_no), size);
         return -1;
     }
 
-    vmm_guest_exit_next_instruction(&vmm->guest_state);
+    vmm_guest_exit_next_instruction(&vcpu->guest_state);
 
     return 0;
 }

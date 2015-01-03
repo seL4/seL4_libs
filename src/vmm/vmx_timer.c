@@ -19,11 +19,11 @@
 #include "vmm/vmm.h"
 #include "vmm/platform/vmcs.h"
 
-int vmm_vmx_timer_handler(vmm_t *vmm) {
+int vmm_vmx_timer_handler(vmm_vcpu_t *vcpu) {
 #ifdef CONFIG_LIB_VMM_VMX_TIMER_DEBUG
-    vmm_print_guest_context(0, vmm);
+    vmm_print_guest_context(0, vcpu);
 //    vmm_vmcs_write(vmm->guest_vcpu, VMX_CONTROL_PIN_EXECUTION_CONTROLS, vmm_vmcs_read(vmm->guest_vcpu, VMX_CONTROL_PIN_EXECUTION_CONTROLS) | BIT(6));
-    vmm_vmcs_write(vmm->guest_vcpu, VMX_GUEST_VMX_PREEMPTION_TIMER_VALUE, CONFIG_LIB_VMM_VMX_TIMER_TIMEOUT);
+    vmm_vmcs_write(vcpu->guest_vcpu, VMX_GUEST_VMX_PREEMPTION_TIMER_VALUE, CONFIG_LIB_VMM_VMX_TIMER_TIMEOUT);
     return 0;
 #else
     return -1;

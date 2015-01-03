@@ -11,13 +11,15 @@
 #ifndef _LIB_VMM_INTERRUPT_H_
 #define _LIB_VMM_INTERRUPT_H_
 
+typedef struct vmm_vcpu vmm_vcpu_t;
+
 /* Handler for a guest exit that is triggered when the guest is
  * ready to receive interrupts */
 
-int vmm_pending_interrupt_handler(struct vmm *vmm);
+int vmm_pending_interrupt_handler(vmm_vcpu_t *vcpu);
 
 /* Request that the guest exist as soon as it is ready to receive
  * interrupts */
-void wait_for_guest_ready(struct vmm *vmm);
+void wait_for_guest_ready(vmm_vcpu_t *vcpu);
 
 #endif

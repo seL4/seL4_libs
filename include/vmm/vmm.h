@@ -19,6 +19,9 @@
 #include <simple/simple.h>
 #include <vspace/vspace.h>
 
+typedef struct vmm vmm_t;
+typedef struct vmm_vcpu vmm_vcpu_t;
+
 #include "vmm/platform/vmexit.h"
 #include "vmm/driver/pci.h"
 #include "vmm/io.h"
@@ -26,12 +29,13 @@
 #include "vmm/guest_state.h"
 #include "vmm/vmexit.h"
 #include "vmm/mmio.h"
+#include "vmm/processor/lapic.h"
 
 /* TODO: Use a badge and/or this constant should be defined in libsel4 */
 #define LIB_VMM_VM_EXIT_MSG_LEN    21
 
-/* The badge used for the fault endpoint */
-#define LIB_VMM_GUEST_OS_FAULT_EP_BADGE   42
+/* ID of the boot vcpu in a vmm */
+#define BOOT_VCPU 0
 
 /* System callbacks passed from the user to the library. These need to
  * be passed in as their definitions are invisible to this library */
@@ -70,6 +74,30 @@ typedef struct guest_image {
     size_t boot_module_size;
 } guest_image_t;
 
+/* Represents a libsel4vmm vcpu */
+typedef struct vmm_vcpu {
+    /* Reply slot for guest messages */
+    cspacepath_t reply_slot;
+
+    /* kernel objects */
+    seL4_CPtr guest_tcb;
+    seL4_CPtr guest_cnode;
+    seL4_CPtr guest_vcpu;
+
+    /* context */
+    guest_state_t guest_state;
+
+	/* parent vmm */
+	vmm_t *vmm;
+	/* TODO 
+		rename things and get rid of guest_ for per vcpu stuff
+	*/
+
+	vmm_lapic_t *lapic;
+	int vcpu_id;
+} vmm_vcpu_t;
+
+/* Represents a vmm instance that runs a single guest with one or more vcpus */
 typedef struct vmm {
     /* Debugging state for sanity */
     int done_host_init;
@@ -78,6 +106,10 @@ typedef struct vmm {
     vka_t vka;
     simple_t host_simple;
     vspace_t host_vspace;
+    
+	/* Endpoint that will be given to guest TCB for fault handling
+	 * TODO have a different EP for each vcpu, so vmm can have a thread per vcpu*/
+    seL4_CPtr guest_fault_ep;
 
     /* platform callback functions */
     platform_callbacks_t plat_callbacks;
@@ -85,36 +117,29 @@ typedef struct vmm {
     /* Default page size to use */
     int page_size;
 
-    /* Endpoint that will be given to guest TCB for fault handling */
-    seL4_CPtr guest_fault_ep;
-
-    /* Reply slot for guest messages */
-    cspacepath_t reply_slot;
-
-    /* Guest objects */
-    seL4_CPtr guest_tcb;
-    seL4_CPtr guest_cnode;
-    seL4_CPtr guest_pd;
-    seL4_CPtr guest_vcpu;
-
-    /* Guest memory information and management */
-    guest_memory_t guest_mem;
+	/* Memory related */
     guest_image_t guest_image;
+    seL4_CPtr guest_pd;
+    guest_memory_t guest_mem;
 
     /* Exit handling table */
     vmexit_handler_ptr vmexit_handlers[VMM_EXIT_REASON_NUM];
-
-    /* Guest emulation state */
-    guest_state_t guest_state;
-
     /* PCI emulation state */
     vmm_pci_space_t pci;
 
     /* IO port management */
     vmm_io_port_list_t io_port;
 
-	/* MMIO management */
+	/* MMIO management. Should probably be per-vcpu, e.g. we can't handle the
+	 * guest trying to remap a local APIC */
 	vmm_mmio_list_t mmio_list;
+
+	unsigned int num_vcpus;
+	vmm_vcpu_t *vcpus;
+
+	/*TODO add
+		map of vcpu affinities
+	*/
 } vmm_t;
 
 /* Finalize the VM before running it */
@@ -123,7 +148,7 @@ int vmm_finalize(vmm_t *vmm);
 /*running vmm moudle*/
 void vmm_run(vmm_t *vmm);
 
-/* TODO: Move to somewhere fucking sensible */
-void vmm_have_pending_interrupt(vmm_t *vmm);
+/* TODO wtf is this here? lets refactor everything  */
+void vmm_sync_guest_state(vmm_vcpu_t *vcpu);
 
 #endif

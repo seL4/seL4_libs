@@ -19,5 +19,6 @@
 int vmm_init(vmm_t *vmm, simple_t simple, vka_t vka, vspace_t vspace, platform_callbacks_t callbacks);
 int vmm_init_host(vmm_t *vmm);
 int vmm_init_guest(vmm_t *vmm, int priority);
+int vmm_init_guest_multi(vmm_t *vmm, int priority, int num_vcpus);
 
 #endif /* _LIB_VMM_PLATFORM_BOOT_H_ */

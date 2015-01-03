@@ -36,7 +36,7 @@ inline static uint32_t guest_get_phys_word(vmm_t *vmm, uintptr_t addr) {
 }
 
 // Fetch a guest's instruction
-int vmm_fetch_instruction(vmm_t *vmm, uint32_t eip, uintptr_t cr3, int len, uint8_t *buf) {
+int vmm_fetch_instruction(vmm_vcpu_t *vcpu, uint32_t eip, uintptr_t cr3, int len, uint8_t *buf) {
 	if (len < 1 || len > 15) {
 		len = 15;
 	}
@@ -47,7 +47,7 @@ int vmm_fetch_instruction(vmm_t *vmm, uint32_t eip, uintptr_t cr3, int len, uint
 	uint32_t pdi = eip >> 22;
 	uint32_t pti = (eip >> 12) & 0x3FF;
 
-	uint32_t pde = guest_get_phys_word(vmm, cr3 + pdi * 4);
+	uint32_t pde = guest_get_phys_word(vcpu->vmm, cr3 + pdi * 4);
 
 	assert(IA32_PDE_PRESENT(pde)); // WTF?
 
@@ -56,7 +56,7 @@ int vmm_fetch_instruction(vmm_t *vmm, uint32_t eip, uintptr_t cr3, int len, uint
 		instr_phys = (uintptr_t)IA32_PSE_ADDR(pde) + (eip & 0x3FFFFF);
 	} else {
 		// 4k pages
-		uint32_t pte = guest_get_phys_word(vmm,
+		uint32_t pte = guest_get_phys_word(vcpu->vmm,
 				(uintptr_t)IA32_PTE_ADDR(pde) + pti * 4);
 
 		assert(IA32_PDE_PRESENT(pte));
@@ -65,7 +65,7 @@ int vmm_fetch_instruction(vmm_t *vmm, uint32_t eip, uintptr_t cr3, int len, uint
 	}
 
 	// Fetch instruction
-	vmm_guest_vspace_touch(&vmm->guest_mem.vspace, instr_phys, len,
+	vmm_guest_vspace_touch(&vcpu->vmm->guest_mem.vspace, instr_phys, len,
 			guest_get_phys_data_help, buf);
 
 	return 0;

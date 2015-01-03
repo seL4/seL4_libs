@@ -345,14 +345,14 @@ static int vmm_cpuid_virt(unsigned int function, unsigned int index, struct cpui
 #endif
 
 /* VM exit handler: for the CPUID instruction. */
-int vmm_cpuid_handler(vmm_t *vmm) {
+int vmm_cpuid_handler(vmm_vcpu_t *vcpu) {
 
     int ret;
     struct cpuid_val val;
 
     /* Read parameter information. */
-    unsigned int function = vmm_read_user_context(&vmm->guest_state, USER_CONTEXT_EAX);
-    unsigned int index = vmm_read_user_context(&vmm->guest_state, USER_CONTEXT_ECX);
+    unsigned int function = vmm_read_user_context(&vcpu->guest_state, USER_CONTEXT_EAX);
+    unsigned int index = vmm_read_user_context(&vcpu->guest_state, USER_CONTEXT_ECX);
 
     /* Virtualise the CPUID instruction. */
     ret = vmm_cpuid_virt(function, index, &val);
@@ -360,12 +360,12 @@ int vmm_cpuid_handler(vmm_t *vmm) {
         return ret;
 
     /* Set the return values in guest context. */
-    vmm_set_user_context(&vmm->guest_state, USER_CONTEXT_EAX, val.eax);
-    vmm_set_user_context(&vmm->guest_state, USER_CONTEXT_EBX, val.ebx);
-    vmm_set_user_context(&vmm->guest_state, USER_CONTEXT_ECX, val.ecx);
-    vmm_set_user_context(&vmm->guest_state, USER_CONTEXT_EDX, val.edx);
+    vmm_set_user_context(&vcpu->guest_state, USER_CONTEXT_EAX, val.eax);
+    vmm_set_user_context(&vcpu->guest_state, USER_CONTEXT_EBX, val.ebx);
+    vmm_set_user_context(&vcpu->guest_state, USER_CONTEXT_ECX, val.ecx);
+    vmm_set_user_context(&vcpu->guest_state, USER_CONTEXT_EDX, val.edx);
 
-    vmm_guest_exit_next_instruction(&vmm->guest_state);
+    vmm_guest_exit_next_instruction(&vcpu->guest_state);
 
     /* Return success. */
     return 0;

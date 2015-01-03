@@ -44,7 +44,7 @@ static int make_guest_acpi_tables_continued(uintptr_t paddr, void *vaddr,
 int make_guest_acpi_tables(vmm_t *vmm) {
 	DPRINTF(2, "Making ACPI tables\n");
 
-	int cpus = 1; // TODO should come from vmm struct
+	int cpus = vmm->num_vcpus;
 
 	int err;
 

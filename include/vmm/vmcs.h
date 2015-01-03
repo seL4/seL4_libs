@@ -13,8 +13,10 @@
 
 #include <sel4/sel4.h>
 
+#include <vmm/vmm.h>
+
 int vmm_vmcs_read(seL4_CPtr vcpu, unsigned int field);
 void vmm_vmcs_write(seL4_CPtr vcpu, unsigned int field, unsigned int value); 
-void vmm_vmcs_init_guest(struct vmm *vmm);
+void vmm_vmcs_init_guest(vmm_vcpu_t *vcpu);
 
 #endif /* _LIB_VMM_VMCS_H_ */

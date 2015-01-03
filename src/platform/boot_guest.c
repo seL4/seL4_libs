@@ -362,35 +362,35 @@ void vmm_plat_init_guest_boot_structure(vmm_t *vmm, const char *cmdline) {
 	assert(!err);
 }
 
-void vmm_init_guest_thread_state(vmm_t *vmm) {
-    vmm_set_user_context(&vmm->guest_state, USER_CONTEXT_EAX, 0);
-    vmm_set_user_context(&vmm->guest_state, USER_CONTEXT_EBX, 0);
-    vmm_set_user_context(&vmm->guest_state, USER_CONTEXT_ECX, 0);
-    vmm_set_user_context(&vmm->guest_state, USER_CONTEXT_EDX, 0);
+void vmm_init_guest_thread_state(vmm_vcpu_t *vcpu) {
+    vmm_set_user_context(&vcpu->guest_state, USER_CONTEXT_EAX, 0);
+    vmm_set_user_context(&vcpu->guest_state, USER_CONTEXT_EBX, 0);
+    vmm_set_user_context(&vcpu->guest_state, USER_CONTEXT_ECX, 0);
+    vmm_set_user_context(&vcpu->guest_state, USER_CONTEXT_EDX, 0);
 
     /* Entry point. */
-    printf("Initializing guest to start running at 0x%x\n", (unsigned int)vmm->guest_image.entry);
-    vmm_set_user_context(&vmm->guest_state, USER_CONTEXT_EIP, vmm->guest_image.entry);
+    printf("Initializing guest to start running at 0x%x\n", (unsigned int)vcpu->vmm->guest_image.entry);
+    vmm_set_user_context(&vcpu->guest_state, USER_CONTEXT_EIP, vcpu->vmm->guest_image.entry);
     /* Top of stack. */
     LOG_INFO("Not giving Linux a real stack, this may be a problem");
-    vmm_set_user_context(&vmm->guest_state, USER_CONTEXT_ESP, 0x420);
+    vmm_set_user_context(&vcpu->guest_state, USER_CONTEXT_ESP, 0x420);
     /* The boot_param structure. */
-    vmm_set_user_context(&vmm->guest_state, USER_CONTEXT_ESI, vmm->guest_image.boot_info);
+    vmm_set_user_context(&vcpu->guest_state, USER_CONTEXT_ESI, vcpu->vmm->guest_image.boot_info);
 
     /* Set the initial CR state */
-    vmm->guest_state.virt.cr.cr0_mask = VMM_VMCS_CR0_MASK;
-    vmm->guest_state.virt.cr.cr0_shadow = VMM_VMCS_CR0_SHADOW;
+    vcpu->guest_state.virt.cr.cr0_mask = VMM_VMCS_CR0_MASK;
+    vcpu->guest_state.virt.cr.cr0_shadow = VMM_VMCS_CR0_SHADOW;
 
-    vmm->guest_state.virt.cr.cr4_mask = VMM_VMCS_CR4_MASK;
-    vmm->guest_state.virt.cr.cr4_shadow = VMM_VMCS_CR4_SHADOW;
+    vcpu->guest_state.virt.cr.cr4_mask = VMM_VMCS_CR4_MASK;
+    vcpu->guest_state.virt.cr.cr4_shadow = VMM_VMCS_CR4_SHADOW;
 
     /* Set the initial CR states */
-    vmm_guest_state_set_cr0(&vmm->guest_state, VMM_VMCS_CR0_SHADOW);
-    vmm_guest_state_set_cr3(&vmm->guest_state, vmm->guest_image.pd);
-    vmm_guest_state_set_cr4(&vmm->guest_state, VMM_VMCS_CR4_SHADOW);
+    vmm_guest_state_set_cr0(&vcpu->guest_state, VMM_VMCS_CR0_SHADOW);
+    vmm_guest_state_set_cr3(&vcpu->guest_state, vcpu->vmm->guest_image.pd);
+    vmm_guest_state_set_cr4(&vcpu->guest_state, VMM_VMCS_CR4_SHADOW);
 
     /* Init guest OS vcpu state. */
-    vmm_vmcs_init_guest(vmm);
+    vmm_vmcs_init_guest(vcpu);
 }
 
 /* TODO: Refactor and stop rewriting fucking elf loading code */

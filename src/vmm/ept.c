@@ -29,7 +29,7 @@ int vmm_ept_violation_handler(vmm_vcpu_t *vcpu) {
 	int e = vmm_mmio_exit_handler(vcpu, guest_phys, qualification);
 
 	if (e == 0) {
-		DPRINTF(0, "EPT violation handled by mmio\n");
+		DPRINTF(5, "EPT violation handled by mmio\n");
 	} else {
 		/* Read linear address that guest is trying to access. */
 		unsigned int linear_address = vmm_vmcs_read(vcpu->guest_vcpu, VMX_DATA_GUEST_LINEAR_ADDRESS);

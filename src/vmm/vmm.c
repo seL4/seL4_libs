@@ -151,53 +151,29 @@ static void vmm_update_guest_state_from_fault(vmm_vcpu_t *vcpu, seL4_Word *msg) 
 
 void interrupt_pending_callback(vmm_t *vmm, seL4_Word badge)
 {
-    /* TODO: there is a really annoying race between our need to stop the guest thread
-     * so that we can inspect its state and potentially inject an interrupt (this
-     * is done in vmm_have_pending_interrupt). Unfortunatley if we just stop it
-     * and it has decided to fault, we will lose the fault message. One option
-     * is a 'SuspendIf' style syscall, however this requires kernel changes
-     * that are maybe disagreeable. The other option is to ask the kernel to atomically
-     * inspect the state, inject if possible, and the ntell you waht happened. THis
-     * is the approach we will eventually use, but it requires 'locking' the interrupt
-     * controller such that you can poll the current interrupt, and then still have
-     * that be the current pending interrupt after calling the kernel and then
-     * knowing if it was actually injected or not. Do this once interrupt overhead
-     * starts to matter */
-	vmm_vcpu_t *vcpu = &vmm->vcpus[0];
-    if (vcpu->guest_state.exit.in_exit) {
-        /* in an exit, can call the regular injection method */
-        if (vmm->plat_callbacks.do_async(badge) == 0) {
-            vmm_have_pending_interrupt(vcpu);
-            vmm_sync_guest_state(vcpu);
-        }
-    } else {
-        if (vmm->plat_callbacks.do_async(badge) == 0) {
-            /* Have some interrupts to inject, but we need to do this with
-             * the guest not running */
-            wait_for_guest_ready(vcpu);
-            vmm_guest_state_sync_control_ppc(&vcpu->guest_state, vcpu->guest_vcpu);
-        }
-    }
-#if 0
-    int did_suspend = 0;
-    /* Pause the guest so we can sensibly inspect its state, unless it is
-     * already blocked */
-    if (!vcpu->guest_state.exit.in_exit) {
-        int state = seL4_TCB_SuspendIf(vmm->guest_tcb);
-        if (!state) {
-            did_suspend = 1;
-            /* All state is invalid as the guest was running */
-            vmm_guest_state_invalidate_all(&vcpu->guest_state);
-        }
-    }
-    vmm_have_pending_interrupt(vmm);
-    vmm_sync_guest_state(vmm);
-    if (did_suspend) {
-        seL4_TCB_Resume(vmm->guest_tcb);
-        /* Guest is running, everything invalid again */
-        vmm_guest_state_invalidate_all(&vcpu->guest_state);
-    }
-#endif
+	if (vmm->plat_callbacks.do_async(badge) == 0) {
+		/* Got interrupt(s) from PIC, propagate to vcpus */
+
+		/* TODO if all lapics are enabled, store which lapic
+		   (only one allowed) receives extints, and short circuit this */
+		if (vmm->plat_callbacks.has_interrupt() != -1) {
+	//printf("11111\n");
+			for (int i = 0; i < vmm->num_vcpus; i++) {
+				vmm_vcpu_t *vcpu = &vmm->vcpus[i];
+
+				if (!vmm_apic_enabled(vcpu->lapic)) {
+	//printf("22222\n");
+					/* LAPIC is disabled on this vcpu; bypass it */
+					vmm_vcpu_accept_interrupt(vcpu);
+				} else if (vmm_apic_accept_pic_intr(vcpu)) {
+	//printf("33333\n");
+					/* LAPIC is enabled on this vcpu, and accepting
+					   local extints from the pic */
+					assert(vmm_apic_local_deliver(vcpu, 0));
+				} 
+			}
+		}
+	}
 }
 
 /* Entry point of of VMM main host module. */
@@ -297,3 +273,4 @@ int vmm_finalize(vmm_t *vmm) {
     }
     return 0;
 }
+

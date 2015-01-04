@@ -37,7 +37,6 @@ int vmm_rdmsr_handler(vmm_vcpu_t *vcpu) {
         case MSR_IA32_LASTBRANCHTOIP:
         case MSR_IA32_LASTINTFROMIP:
         case MSR_IA32_LASTINTTOIP:
-		case MSR_IA32_APICBASE:
             data = 0;
             break;
 
@@ -60,6 +59,10 @@ int vmm_rdmsr_handler(vmm_vcpu_t *vcpu) {
         case MSR_EBC_FREQUENCY_ID:
             data = 1 << 24;
             break;
+
+		case MSR_IA32_APICBASE:
+			data = vmm_lapic_get_base_msr(vcpu);
+			break;
 
         default:
             DPRINTF(1, "rdmsr WARNING unsupported msr_no 0x%x\n", msr_no);
@@ -100,6 +103,10 @@ int vmm_wrmsr_handler(vmm_vcpu_t *vcpu) {
         case MSR_P6_EVNTSEL1:
             /* performance counters not supported. */
             break;
+		
+		case MSR_IA32_APICBASE:
+			vmm_lapic_set_base_msr(vcpu, val_low);
+			break;
 
         default:
             DPRINTF(1, "wrmsr WARNING unsupported msr_no 0x%x\n", msr_no);

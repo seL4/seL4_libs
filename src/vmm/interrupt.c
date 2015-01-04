@@ -53,10 +53,31 @@ int can_inject(vmm_vcpu_t *vcpu) {
     return 0;
 }
 
+/* XXX These should be cleaned up when 8259 is moved into here */
+int get_interrupt(vmm_vcpu_t *vcpu)
+{
+	if (vmm_apic_enabled(vcpu->lapic)) {
+		return vmm_apic_get_interrupt(vcpu);
+	} else {
+		// Use PIC if LAPIC is disabled
+		return vcpu->vmm->plat_callbacks.has_interrupt();
+	}
+}
+
+int has_interrupt(vmm_vcpu_t *vcpu)
+{
+	if (vmm_apic_enabled(vcpu->lapic)) {
+		return vmm_apic_has_interrupt(vcpu);
+	} else {
+		// Use PIC if LAPIC is disabled
+		return vcpu->vmm->plat_callbacks.has_interrupt();
+	}
+}
+
 void vmm_have_pending_interrupt(vmm_vcpu_t *vcpu) {
     /* This function is called when a new interrupt has occured. */
     if (can_inject(vcpu)) {
-        int irq = vcpu->vmm->plat_callbacks.get_interrupt();
+        int irq = get_interrupt(vcpu);
         if (irq != -1) {
             /* there is actually an interrupt to inject */
             if (vcpu->guest_state.virt.interrupt_halt) {
@@ -67,7 +88,7 @@ void vmm_have_pending_interrupt(vmm_vcpu_t *vcpu) {
             } else {
                 inject_irq(vcpu, irq);
                 /* see if there are more */
-                if (vcpu->vmm->plat_callbacks.has_interrupt()) {
+                if (has_interrupt(vcpu)) {
                     wait_for_guest_ready(vcpu);
                 }
             }
@@ -107,6 +128,47 @@ void vmm_start_ap_vcpu(vmm_vcpu_t *vcpu, unsigned int sipi_vector)
 
 void vmm_vcpu_accept_interrupt(vmm_vcpu_t *vcpu)
 {
-	//TODO make this work
-	(void)vcpu;
+    /* TODO: there is a really annoying race between our need to stop the guest thread
+     * so that we can inspect its state and potentially inject an interrupt (this
+     * is done in vmm_have_pending_interrupt). Unfortunatley if we just stop it
+     * and it has decided to fault, we will lose the fault message. One option
+     * is a 'SuspendIf' style syscall, however this requires kernel changes
+     * that are maybe disagreeable. The other option is to ask the kernel to atomically
+     * inspect the state, inject if possible, and the ntell you waht happened. THis
+     * is the approach we will eventually use, but it requires 'locking' the interrupt
+     * controller such that you can poll the current interrupt, and then still have
+     * that be the current pending interrupt after calling the kernel and then
+     * knowing if it was actually injected or not. Do this once interrupt overhead
+     * starts to matter */
+	if (vcpu->guest_state.exit.in_exit) {
+		/* in an exit, can call the regular injection method */
+		vmm_have_pending_interrupt(vcpu);
+		vmm_sync_guest_state(vcpu);
+	} else {
+		/* Have some interrupts to inject, but we need to do this with
+		 * the guest not running */
+		wait_for_guest_ready(vcpu);
+		vmm_guest_state_sync_control_ppc(&vcpu->guest_state, vcpu->guest_vcpu);
+	}
+#if 0
+    int did_suspend = 0;
+    /* Pause the guest so we can sensibly inspect its state, unless it is
+     * already blocked */
+    if (!vcpu->guest_state.exit.in_exit) {
+        int state = seL4_TCB_SuspendIf(vmm->guest_tcb);
+        if (!state) {
+            did_suspend = 1;
+            /* All state is invalid as the guest was running */
+            vmm_guest_state_invalidate_all(&vcpu->guest_state);
+        }
+    }
+    vmm_have_pending_interrupt(vmm);
+    vmm_sync_guest_state(vmm);
+    if (did_suspend) {
+        seL4_TCB_Resume(vmm->guest_tcb);
+        /* Guest is running, everything invalid again */
+        vmm_guest_state_invalidate_all(&vcpu->guest_state);
+    }
+#endif
 }
+

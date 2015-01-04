@@ -1339,15 +1339,11 @@ int vmm_apic_has_interrupt(vmm_vcpu_t *vcpu)
 // Return 1 if this vcpu should accept a PIC interrupt
 int vmm_apic_accept_pic_intr(vmm_vcpu_t *vcpu)
 {
-	uint32_t lvt0 = vmm_apic_get_reg(vcpu->lapic, APIC_LVT0);
-	int r = 0;
+	vmm_lapic_t *apic = vcpu->lapic;
+	uint32_t lvt0 = vmm_apic_get_reg(apic, APIC_LVT0);
 
-	if (!vmm_apic_hw_enabled(vcpu->lapic))
-		r = 1;
-	if ((lvt0 & APIC_LVT_MASKED) == 0 &&
-	    GET_APIC_DELIVERY_MODE(lvt0) == APIC_MODE_EXTINT)
-		r = 1;
-	return r;
+	return ((lvt0 & APIC_LVT_MASKED) == 0 &&
+	    GET_APIC_DELIVERY_MODE(lvt0) == APIC_MODE_EXTINT);
 }
 
 #if 0

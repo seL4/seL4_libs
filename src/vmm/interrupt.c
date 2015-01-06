@@ -53,28 +53,28 @@ int can_inject(vmm_t *vmm) {
     return 0;
 }
 
+/* This function is called when a new interrupt has occured. */
 void vmm_have_pending_interrupt(vmm_t *vmm) {
-    /* This function is called when a new interrupt has occured. */
-    if (can_inject(vmm)) {
-        int irq = vmm->plat_callbacks.get_interrupt();
-        if (irq != -1) {
-            /* there is actually an interrupt to inject */
+    if (vmm->plat_callbacks.has_interrupt()) {
+        /* there is actually an interrupt to inject */
+        if (can_inject(vmm)) {
             if (vmm->guest_state.virt.interrupt_halt) {
                 /* currently halted. need to put the guest
                  * in a state where it can inject again */
                 wait_for_guest_ready(vmm);
                 vmm->guest_state.virt.interrupt_halt = 0;
             } else {
+                int irq = vmm->plat_callbacks.get_interrupt();
                 inject_irq(vmm, irq);
                 /* see if there are more */
                 if (vmm->plat_callbacks.has_interrupt()) {
                     wait_for_guest_ready(vmm);
                 }
             }
+        } else {
+            wait_for_guest_ready(vmm);
+            vmm->guest_state.virt.interrupt_halt = 0;
         }
-    } else {
-        wait_for_guest_ready(vmm);
-        vmm->guest_state.virt.interrupt_halt = 0;
     }
 }
 

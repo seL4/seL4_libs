@@ -115,6 +115,11 @@ static void vmm_handle_vm_exit(vmm_t *vmm) {
         return;
     }
 
+    /* Check for any interrupts.
+       TODO: do this more sensibly once the interrupt controller
+       emulation is part of the vmm */
+    vmm_have_pending_interrupt(vmm);
+
     /* Reply to the VM exit exception to resume guest. */
     vmm_sync_guest_state(vmm);
 }

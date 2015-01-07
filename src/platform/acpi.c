@@ -20,20 +20,24 @@ Author: W.A. */
 #include "vmm/platform/guest_vspace.h"
 #include "vmm/processor/apicdef.h"
 
+#include "platsupport/plat/acpi/acpi.h"
+
 #define APIC_FLAGS_ENABLED (1)
 
-static uint8_t acpi_checksum(void *table, int length) {
+
+uint8_t acpi_calc_checksum(const char* table, int length)
+{
     uint32_t sum = 0;
-    uint8_t *ctable = table;
 
     for (int i = 0; i < length; i++) {
-        sum += *ctable++;
+        sum += *table++;
     }
 
     return 0x100 - (sum & 0xFF);
 }
 
-static void acpi_fill_table_head(acpi_table_head_t *head, const char *signature, uint8_t rev) {
+
+static void acpi_fill_table_head(acpi_header_t *head, const char *signature, uint8_t rev) {
     const char *oem = "NICTA ";
     const char *padd = "    ";
     memcpy(head->signature, signature, sizeof(head->signature));
@@ -45,8 +49,8 @@ static void acpi_fill_table_head(acpi_table_head_t *head, const char *signature,
     head->revision = rev;
     head->checksum = 0;
     head->length = sizeof(*head);
-    head->oem_rev = rev;
-    head->creator_rev = 1;
+    head->oem_revision = rev;
+    head->creator_revision = 1;
 }
 
 static int make_guest_acpi_tables_continued(uintptr_t paddr, void *vaddr,
@@ -72,10 +76,10 @@ int make_guest_acpi_tables(vmm_t *vmm) {
     // MADT
     int madt_size = sizeof(acpi_madt_t)
         /* + sizeof(acpi_madt_ioapic_t)*/
-        + sizeof(acpi_madt_apic_t) * cpus;
+        + sizeof(acpi_madt_local_apic_t) * cpus;
     acpi_madt_t *madt = malloc(madt_size);
-    acpi_fill_table_head(&madt->head, "APIC", 3);
-    madt->apic_addr = APIC_DEFAULT_PHYS_BASE;
+    acpi_fill_table_head(&madt->header, "APIC", 3);
+    madt->local_int_crt_address = APIC_DEFAULT_PHYS_BASE;
     madt->flags = 1;
 
     char *madt_entry = (char *)madt + sizeof(acpi_madt_t);
@@ -83,24 +87,24 @@ int make_guest_acpi_tables(vmm_t *vmm) {
 #if 0
     acpi_madt_ioapic_t ioapic = { // MADT IOAPIC entry
         .header = {
-            .type = MADT_IOAPIC,
+            .type = ACPI_APIC_IOAPIC,
             .length = sizeof(acpi_madt_ioapic_t)
         },
         .ioapic_id = 0,
-        .ioapic_addr = IOAPIC_DEFAULT_PHYS_BASE,
-        .gsib = 0 // TODO set this up?
+        .address = IOAPIC_DEFAULT_PHYS_BASE,
+        .gs_interrupt_base = 0 // TODO set this up?
     };
     memcpy(madt_entry, &ioapic, sizeof(ioapic));
     madt_entry += sizeof(ioapic);
 #endif
 
     for (int i = 0; i < cpus; i++) { // MADT APIC entries
-        acpi_madt_apic_t apic = {
+        acpi_madt_local_apic_t apic = {
             .header = {
-                .type = MADT_APIC,
-                .length = sizeof(acpi_madt_apic_t)
+                .type = ACPI_APIC_LOCAL,
+                .length = sizeof(acpi_madt_local_apic_t)
             },
-            .cpu_id = i + 1,
+            .processor_id = i + 1,
             .apic_id = i,
             .flags = APIC_FLAGS_ENABLED
         };
@@ -108,8 +112,8 @@ int make_guest_acpi_tables(vmm_t *vmm) {
         madt_entry += sizeof(apic);
     }
 
-    madt->head.length = madt_size;
-    madt->head.checksum = acpi_checksum(madt, madt_size);
+    madt->header.length = madt_size;
+    madt->header.checksum = acpi_calc_checksum((char *)madt, madt_size);
 
     tables[num_tables] = madt;
     table_sizes[num_tables] = madt_size;
@@ -130,7 +134,7 @@ int make_guest_acpi_tables(vmm_t *vmm) {
     uintptr_t xsdt_addr = 0xe1000; // TODO actually allocate frames, can be anywhere
 
     acpi_xsdt_t *xsdt = malloc(xsdt_size);
-    acpi_fill_table_head(&xsdt->head, "XSDT", 1);
+    acpi_fill_table_head(&xsdt->header, "XSDT", 1);
     
     // Add previous tables to XSDT pointer list
     uintptr_t table_paddr = xsdt_addr + xsdt_size;
@@ -140,8 +144,8 @@ int make_guest_acpi_tables(vmm_t *vmm) {
         table_paddr += table_sizes[i];
     }
     
-    xsdt->head.length = xsdt_size;
-    xsdt->head.checksum = acpi_checksum(xsdt, xsdt_size);
+    xsdt->header.length = xsdt_size;
+    xsdt->header.checksum = acpi_calc_checksum((char *)xsdt, xsdt_size);
     
     tables[0] = xsdt;
     table_sizes[0] = xsdt_size;
@@ -166,24 +170,22 @@ int make_guest_acpi_tables(vmm_t *vmm) {
         return err;
     }
     
-    acpi_rsdx_t rsdp = {
-        .rsdp = {
-            .signature = "RSD PTR ",
-            .oem_id = "NICTA ",
-            .revision = 2, /* ACPI v3*/
-            .checksum = 0,
-            .rsdt_address = xsdt_addr
-            /* rsdt_addrss will not be inspected as the xsdt is present.
-               This is not ACPI 1 compliant */
-        },
+    acpi_rsdp_t rsdp = {
+        .signature = "RSD PTR ",
+        .oem_id = "NICTA ",
+        .revision = 2, /* ACPI v3*/
+        .checksum = 0,
+        .rsdt_address = xsdt_addr,
+        /* rsdt_addrss will not be inspected as the xsdt is present.
+           This is not ACPI 1 compliant */
         .length = sizeof(acpi_rsdp_t),
         .xsdt_address = xsdt_addr,
         .extended_checksum = 0,
         .reserved = {0}
     };
 
-    rsdp.rsdp.checksum = acpi_checksum(&rsdp.rsdp, sizeof(rsdp.rsdp));  
-    rsdp.extended_checksum = acpi_checksum(&rsdp, sizeof(rsdp));
+    rsdp.checksum = acpi_calc_checksum((char *)&rsdp, 20);  
+    rsdp.extended_checksum = acpi_calc_checksum((char *)&rsdp, sizeof(rsdp));
 
     DPRINTF(2, "ACPI RSDP addr = %08x\n", rsdp_addr);
 

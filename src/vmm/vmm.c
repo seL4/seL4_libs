@@ -88,6 +88,11 @@ void vmm_sync_guest_state(vmm_vcpu_t *vcpu) {
     vmm_guest_state_sync_cr0(&vcpu->guest_state, vcpu->guest_vcpu);
     vmm_guest_state_sync_cr3(&vcpu->guest_state, vcpu->guest_vcpu);
     vmm_guest_state_sync_cr4(&vcpu->guest_state, vcpu->guest_vcpu);
+    vmm_guest_state_sync_idt_base(&vcpu->guest_state, vcpu->guest_vcpu);
+    vmm_guest_state_sync_idt_limit(&vcpu->guest_state, vcpu->guest_vcpu);
+    vmm_guest_state_sync_gdt_base(&vcpu->guest_state, vcpu->guest_vcpu);
+    vmm_guest_state_sync_gdt_limit(&vcpu->guest_state, vcpu->guest_vcpu);
+    vmm_guest_state_sync_cs_selector(&vcpu->guest_state, vcpu->guest_vcpu);
 
     if (vcpu->guest_state.exit.in_exit && !vcpu->guest_state.virt.interrupt_halt) {
         /* Guest is blocked, but we are no longer halted. Reply to it */
@@ -246,23 +251,10 @@ void vmm_run(vmm_t *vmm) {
 
 }
 
-int vmm_exception_handler(vmm_vcpu_t *vcpu) 
-{
-    /* TODO this is here to ignore exceptions when linux tries to set
-       segment selectors during smp bootup of ap vcpus. fix this properly! */
-    if (vcpu->vcpu_id > 0) {
-        printf("noticed exception on vcpu %d\n", vcpu->vcpu_id);
-        //vmm_print_guest_context(0, vcpu);
-        //vmm_set_user_context(&vcpu->guest_state, USER_CONTEXT_EAX, 0x10);
-    }
-    vmm_guest_exit_next_instruction(&vcpu->guest_state);
-    return 0;
-}
-
 static void vmm_exit_init(vmm_t *vmm) {
     /* Connect VM exit handlers to correct function pointers */
     vmm->vmexit_handlers[EXIT_REASON_PENDING_INTERRUPT] = vmm_pending_interrupt_handler;
-    vmm->vmexit_handlers[EXIT_REASON_EXCEPTION_NMI] = vmm_exception_handler;
+    //vmm->vmexit_handlers[EXIT_REASON_EXCEPTION_NMI] = vmm_exception_handler;
     vmm->vmexit_handlers[EXIT_REASON_CPUID] = vmm_cpuid_handler;
     vmm->vmexit_handlers[EXIT_REASON_MSR_READ] = vmm_rdmsr_handler;
     vmm->vmexit_handlers[EXIT_REASON_MSR_WRITE] = vmm_wrmsr_handler;

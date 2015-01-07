@@ -144,24 +144,10 @@ void vmm_start_ap_vcpu(vmm_vcpu_t *vcpu, unsigned int sipi_vector)
     eip = vmm_emulate_realmode(&vcpu->vmm->guest_mem, instr, &segment, eip,
             TRAMPOLINE_LENGTH, gs);
 
-    vmm_vmcs_write(vcpu->guest_vcpu, VMX_GUEST_CS_SELECTOR, (unsigned int)segment);
-
-#if 0
-    vmm_fetch_instruction(vcpu, 0x10622e80, vmm_guest_state_get_cr3(gs, vcpu->guest_vcpu), 100, instr);
-    for (int i = 0; i < 100; i++) {
-        printf("%02x ", instr[i]);
-    }
-    printf("\n\n");
-#endif
-
     vmm_set_user_context(&vcpu->guest_state, USER_CONTEXT_EIP, eip);
 
-    vmm_vmcs_write(vcpu->guest_vcpu, VMX_GUEST_IDTR_BASE, gs->virt.dt.idt_base);
-    vmm_vmcs_write(vcpu->guest_vcpu, VMX_GUEST_IDTR_BASE, gs->virt.dt.idt_limit);
-    vmm_vmcs_write(vcpu->guest_vcpu, VMX_GUEST_IDTR_BASE, gs->virt.dt.gdt_base);
-    vmm_vmcs_write(vcpu->guest_vcpu, VMX_GUEST_IDTR_BASE, gs->virt.dt.gdt_limit);
-    
     vmm_sync_guest_context(vcpu);
+    vmm_sync_guest_state(vcpu);
 
     seL4_TCB_Resume(vcpu->guest_tcb);
 }

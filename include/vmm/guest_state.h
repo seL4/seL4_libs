@@ -25,13 +25,6 @@ typedef struct guest_cr_virt_state {
     unsigned int cr4_shadow;
 } guest_cr_virt_state_t;
 
-typedef struct guest_dt_virt_state {
-    unsigned int idt_base;
-    unsigned int idt_limit;
-    unsigned int gdt_base;
-    unsigned int gdt_limit;
-} guest_dt_virt_state_t;
-
 typedef struct  guest_exit_information {
     bool in_exit;
     unsigned int reason;
@@ -72,6 +65,11 @@ typedef struct guest_machine_state {
     MACHINE_STATE(unsigned int, guest_interruptibility);
     MACHINE_STATE(unsigned int, control_entry);
     MACHINE_STATE(unsigned int, control_ppc); // primary processor controls
+    MACHINE_STATE(unsigned int, idt_base);
+    MACHINE_STATE(unsigned int, idt_limit);
+    MACHINE_STATE(unsigned int, gdt_base);
+    MACHINE_STATE(unsigned int, gdt_limit);
+    MACHINE_STATE(unsigned int, cs_selector);
 } guest_machine_state_t;
 
 /* Define the seL4_UserContext layout so we can treat it as an array */
@@ -91,7 +89,6 @@ typedef struct guest_machine_state {
 
 typedef struct guest_virt_state {
     guest_cr_virt_state_t cr;
-    guest_dt_virt_state_t dt;
     /* are we hlt'ed waiting for an interrupted */
     int interrupt_halt;
 } guest_virt_state_t;
@@ -108,16 +105,6 @@ typedef struct guest_state {
     guest_exit_information_t exit;
 } guest_state_t;
 
-static inline uint32_t vmm_read_user_context(guest_state_t *gs, int reg) {
-    assert(!IS_MACHINE_STATE_UNKNOWN(gs->machine.context));
-    return (&gs->machine.context.eip)[reg];
-}
-
-static inline void vmm_set_user_context(guest_state_t *gs, int reg, uint32_t val) {
-    MACHINE_STATE_DIRTY(gs->machine.context);
-    (&gs->machine.context.eip)[reg] = val;
-}
-
 static inline bool vmm_guest_state_no_modified(guest_state_t *gs) {
     return !(
         IS_MACHINE_STATE_MODIFIED(gs->machine.context) ||
@@ -127,7 +114,12 @@ static inline bool vmm_guest_state_no_modified(guest_state_t *gs) {
         IS_MACHINE_STATE_MODIFIED(gs->machine.rflags) ||
         IS_MACHINE_STATE_MODIFIED(gs->machine.guest_interruptibility) ||
         IS_MACHINE_STATE_MODIFIED(gs->machine.control_entry) ||
-        IS_MACHINE_STATE_MODIFIED(gs->machine.control_ppc)
+        IS_MACHINE_STATE_MODIFIED(gs->machine.control_ppc) ||
+        IS_MACHINE_STATE_MODIFIED(gs->machine.idt_base) ||
+        IS_MACHINE_STATE_MODIFIED(gs->machine.idt_limit) ||
+        IS_MACHINE_STATE_MODIFIED(gs->machine.gdt_base) ||
+        IS_MACHINE_STATE_MODIFIED(gs->machine.gdt_limit) ||
+        IS_MACHINE_STATE_MODIFIED(gs->machine.cs_selector)
     );
 }
 
@@ -140,6 +132,17 @@ static inline void vmm_guest_state_invalidate_all(guest_state_t *gs) {
     MACHINE_STATE_INVAL(gs->machine.guest_interruptibility);
     MACHINE_STATE_INVAL(gs->machine.control_entry);
     MACHINE_STATE_INVAL(gs->machine.control_ppc);
+    MACHINE_STATE_INVAL(gs->machine.idt_base);
+    MACHINE_STATE_INVAL(gs->machine.idt_limit);
+    MACHINE_STATE_INVAL(gs->machine.gdt_base);
+    MACHINE_STATE_INVAL(gs->machine.gdt_limit);
+    MACHINE_STATE_INVAL(gs->machine.cs_selector);
+}
+
+/* get */
+static inline uint32_t vmm_read_user_context(guest_state_t *gs, int reg) {
+    assert(!IS_MACHINE_STATE_UNKNOWN(gs->machine.context));
+    return (&gs->machine.context.eip)[reg];
 }
 
 static inline unsigned int vmm_guest_state_get_cr0(guest_state_t *gs, seL4_CPtr vcpu) {
@@ -163,6 +166,76 @@ static inline unsigned int vmm_guest_state_get_cr4(guest_state_t *gs, seL4_CPtr 
     return gs->machine.cr4;
 }
 
+static inline unsigned int vmm_guest_state_get_rflags(guest_state_t *gs, seL4_CPtr vcpu) {
+    if (IS_MACHINE_STATE_UNKNOWN(gs->machine.rflags)) {
+        MACHINE_STATE_READ(gs->machine.rflags, vmm_vmcs_read(vcpu, VMX_GUEST_RFLAGS));
+    }
+    return gs->machine.rflags;
+}
+
+static inline unsigned int vmm_guest_state_get_interruptibility(guest_state_t *gs, seL4_CPtr vcpu) {
+    if (IS_MACHINE_STATE_UNKNOWN(gs->machine.guest_interruptibility)) {
+        MACHINE_STATE_READ(gs->machine.guest_interruptibility, vmm_vmcs_read(vcpu, VMX_GUEST_INTERRUPTABILITY));
+    }
+    return gs->machine.guest_interruptibility;
+}
+
+static inline unsigned int vmm_guest_state_get_control_entry(guest_state_t *gs, seL4_CPtr vcpu) {
+    if (IS_MACHINE_STATE_UNKNOWN(gs->machine.control_entry)) {
+        MACHINE_STATE_READ(gs->machine.control_entry, vmm_vmcs_read(vcpu, VMX_CONTROL_ENTRY_INTERRUPTION_INFO));
+    }
+    return gs->machine.control_entry;
+}
+
+static inline unsigned int vmm_guest_state_get_control_ppc(guest_state_t *gs, seL4_CPtr vcpu) {
+    if (IS_MACHINE_STATE_UNKNOWN(gs->machine.control_ppc)) {
+        MACHINE_STATE_READ(gs->machine.control_ppc, vmm_vmcs_read(vcpu, VMX_CONTROL_PRIMARY_PROCESSOR_CONTROLS));
+    }
+    return gs->machine.control_ppc;
+}
+
+static inline unsigned int vmm_guest_state_get_idt_base(guest_state_t *gs, seL4_CPtr vcpu) {
+    if (IS_MACHINE_STATE_UNKNOWN(gs->machine.idt_base)) {
+        MACHINE_STATE_READ(gs->machine.idt_base, vmm_vmcs_read(vcpu, VMX_GUEST_IDTR_BASE));
+    }
+    return gs->machine.idt_base;
+}
+
+static inline unsigned int vmm_guest_state_get_idt_limit(guest_state_t *gs, seL4_CPtr vcpu) {
+    if (IS_MACHINE_STATE_UNKNOWN(gs->machine.idt_limit)) {
+        MACHINE_STATE_READ(gs->machine.idt_limit, vmm_vmcs_read(vcpu, VMX_GUEST_IDTR_LIMIT));
+    }
+    return gs->machine.idt_limit;
+}
+
+static inline unsigned int vmm_guest_state_get_gdt_base(guest_state_t *gs, seL4_CPtr vcpu) {
+    if (IS_MACHINE_STATE_UNKNOWN(gs->machine.gdt_base)) {
+        MACHINE_STATE_READ(gs->machine.gdt_base, vmm_vmcs_read(vcpu, VMX_GUEST_GDTR_BASE));
+    }
+    return gs->machine.gdt_base;
+}
+
+static inline unsigned int vmm_guest_state_get_gdt_limit(guest_state_t *gs, seL4_CPtr vcpu) {
+    if (IS_MACHINE_STATE_UNKNOWN(gs->machine.gdt_limit)) {
+        MACHINE_STATE_READ(gs->machine.gdt_limit, vmm_vmcs_read(vcpu, VMX_GUEST_GDTR_LIMIT));
+    }
+    return gs->machine.gdt_limit;
+}
+
+static inline unsigned int vmm_guest_state_get_cs_selector(guest_state_t *gs, seL4_CPtr vcpu) {
+    if (IS_MACHINE_STATE_UNKNOWN(gs->machine.cs_selector)) {
+        MACHINE_STATE_READ(gs->machine.cs_selector, vmm_vmcs_read(vcpu, VMX_GUEST_CS_SELECTOR));
+    }
+    return gs->machine.gdt_limit;
+}
+
+
+/* set */
+static inline void vmm_set_user_context(guest_state_t *gs, int reg, uint32_t val) {
+    MACHINE_STATE_DIRTY(gs->machine.context);
+    (&gs->machine.context.eip)[reg] = val;
+}
+
 static inline void vmm_guest_state_set_cr0(guest_state_t *gs, unsigned int val) {
     MACHINE_STATE_DIRTY(gs->machine.cr0);
     gs->machine.cr0 = val;
@@ -178,34 +251,6 @@ static inline void vmm_guest_state_set_cr4(guest_state_t *gs, unsigned int val) 
     gs->machine.cr4 = val;
 }
 
-static inline unsigned int vmm_guest_state_get_rflags(guest_state_t *gs, seL4_CPtr vcpu) {
-    if (IS_MACHINE_STATE_UNKNOWN(gs->machine.rflags)) {
-        MACHINE_STATE_READ(gs->machine.rflags, vmm_vmcs_read(vcpu, VMX_GUEST_RFLAGS));
-    }
-    return gs->machine.rflags;
-}
-
-static inline unsigned int vmm_guest_state_get_control_entry(guest_state_t *gs, seL4_CPtr vcpu) {
-    if (IS_MACHINE_STATE_UNKNOWN(gs->machine.control_entry)) {
-        MACHINE_STATE_READ(gs->machine.control_entry, vmm_vmcs_read(vcpu, VMX_CONTROL_ENTRY_INTERRUPTION_INFO));
-    }
-    return gs->machine.control_entry;
-}
-
-static inline unsigned int vmm_guest_state_get_interruptibility(guest_state_t *gs, seL4_CPtr vcpu) {
-    if (IS_MACHINE_STATE_UNKNOWN(gs->machine.guest_interruptibility)) {
-        MACHINE_STATE_READ(gs->machine.guest_interruptibility, vmm_vmcs_read(vcpu, VMX_GUEST_INTERRUPTABILITY));
-    }
-    return gs->machine.guest_interruptibility;
-}
-
-static inline unsigned int vmm_guest_state_get_control_ppc(guest_state_t *gs, seL4_CPtr vcpu) {
-    if (IS_MACHINE_STATE_UNKNOWN(gs->machine.control_ppc)) {
-        MACHINE_STATE_READ(gs->machine.control_ppc, vmm_vmcs_read(vcpu, VMX_CONTROL_PRIMARY_PROCESSOR_CONTROLS));
-    }
-    return gs->machine.control_ppc;
-}
-
 static inline void vmm_guest_state_set_control_entry(guest_state_t *gs, unsigned int val) {
     MACHINE_STATE_DIRTY(gs->machine.control_entry);
     gs->machine.control_entry = val;
@@ -216,6 +261,33 @@ static inline void vmm_guest_state_set_control_ppc(guest_state_t *gs, unsigned i
     gs->machine.control_ppc = val;
 }
 
+static inline void vmm_guest_state_set_idt_base(guest_state_t *gs, unsigned int val) {
+    MACHINE_STATE_DIRTY(gs->machine.idt_base);
+    gs->machine.idt_base = val;
+}
+
+static inline void vmm_guest_state_set_idt_limit(guest_state_t *gs, unsigned int val) {
+    MACHINE_STATE_DIRTY(gs->machine.idt_limit);
+    gs->machine.idt_limit = val;
+}
+
+static inline void vmm_guest_state_set_gdt_base(guest_state_t *gs, unsigned int val) {
+    MACHINE_STATE_DIRTY(gs->machine.gdt_base);
+    gs->machine.gdt_base = val;
+}
+
+static inline void vmm_guest_state_set_gdt_limit(guest_state_t *gs, unsigned int val) {
+    MACHINE_STATE_DIRTY(gs->machine.gdt_limit);
+    gs->machine.gdt_limit = val;
+}
+
+static inline void vmm_guest_state_set_cs_selector(guest_state_t *gs, unsigned int val) {
+    MACHINE_STATE_DIRTY(gs->machine.cs_selector);
+    gs->machine.cs_selector = val;
+}
+
+
+/* sync */
 static inline void vmm_guest_state_sync_cr0(guest_state_t *gs, seL4_CPtr vcpu) {
     if(IS_MACHINE_STATE_MODIFIED(gs->machine.cr0)) {
         vmm_vmcs_write(vcpu, VMX_GUEST_CR0, gs->machine.cr0);
@@ -251,6 +323,43 @@ static inline void vmm_guest_state_sync_control_ppc(guest_state_t *gs, seL4_CPtr
     }
 }
 
+static inline void vmm_guest_state_sync_idt_base(guest_state_t *gs, seL4_CPtr vcpu) {
+    if(IS_MACHINE_STATE_MODIFIED(gs->machine.idt_base)) {
+        vmm_vmcs_write(vcpu, VMX_GUEST_IDTR_BASE, gs->machine.idt_base);
+        MACHINE_STATE_SYNC(gs->machine.idt_base);
+    }
+}
+
+static inline void vmm_guest_state_sync_idt_limit(guest_state_t *gs, seL4_CPtr vcpu) {
+    if(IS_MACHINE_STATE_MODIFIED(gs->machine.idt_limit)) {
+        vmm_vmcs_write(vcpu, VMX_GUEST_IDTR_LIMIT, gs->machine.idt_limit);
+        MACHINE_STATE_SYNC(gs->machine.idt_limit);
+    }
+}
+
+static inline void vmm_guest_state_sync_gdt_base(guest_state_t *gs, seL4_CPtr vcpu) {
+    if(IS_MACHINE_STATE_MODIFIED(gs->machine.gdt_base)) {
+        vmm_vmcs_write(vcpu, VMX_GUEST_GDTR_BASE, gs->machine.gdt_base);
+        MACHINE_STATE_SYNC(gs->machine.gdt_base);
+    }
+}
+
+static inline void vmm_guest_state_sync_gdt_limit(guest_state_t *gs, seL4_CPtr vcpu) {
+    if(IS_MACHINE_STATE_MODIFIED(gs->machine.gdt_limit)) {
+        vmm_vmcs_write(vcpu, VMX_GUEST_GDTR_LIMIT, gs->machine.gdt_limit);
+        MACHINE_STATE_SYNC(gs->machine.gdt_limit);
+    }
+}
+
+static inline void vmm_guest_state_sync_cs_selector(guest_state_t *gs, seL4_CPtr vcpu) {
+    if(IS_MACHINE_STATE_MODIFIED(gs->machine.cs_selector)) {
+        vmm_vmcs_write(vcpu, VMX_GUEST_CS_SELECTOR, gs->machine.cs_selector);
+        MACHINE_STATE_SYNC(gs->machine.cs_selector);
+    }
+}
+
+
+/* Exit */
 static inline unsigned int vmm_guest_exit_get_reason(guest_state_t *gs) {
     assert(gs->exit.in_exit);
     return gs->exit.reason;

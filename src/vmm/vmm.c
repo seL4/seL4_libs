@@ -25,7 +25,7 @@
 #include "vmm/vmm.h"
 #include "vmm/platform/boot_guest.h"
 
-static void vmm_sync_guest_context(vmm_vcpu_t *vcpu) {
+void vmm_sync_guest_context(vmm_vcpu_t *vcpu) {
     if (IS_MACHINE_STATE_MODIFIED(vcpu->guest_state.machine.context)) {
         seL4_UserContext context;
         context.eip = vmm_read_user_context(&vcpu->guest_state, USER_CONTEXT_EIP);
@@ -157,16 +157,13 @@ void interrupt_pending_callback(vmm_t *vmm, seL4_Word badge)
 		/* TODO if all lapics are enabled, store which lapic
 		   (only one allowed) receives extints, and short circuit this */
 		if (vmm->plat_callbacks.has_interrupt() != -1) {
-	//printf("11111\n");
 			for (int i = 0; i < vmm->num_vcpus; i++) {
 				vmm_vcpu_t *vcpu = &vmm->vcpus[i];
 
 				if (!vmm_apic_enabled(vcpu->lapic)) {
-	//printf("22222\n");
 					/* LAPIC is disabled on this vcpu; bypass it */
 					vmm_vcpu_accept_interrupt(vcpu);
 				} else if (vmm_apic_accept_pic_intr(vcpu)) {
-	//printf("33333\n");
 					/* LAPIC is enabled on this vcpu, and accepting
 					   local extints from the pic */
 					assert(vmm_apic_local_deliver(vcpu, 0));
@@ -243,10 +240,23 @@ void vmm_run(vmm_t *vmm) {
 
 }
 
+int vmm_exception_handler(vmm_vcpu_t *vcpu) 
+{
+	/* TODO this is here to ignore exceptions when linux tries to set
+	   segment selectors during smp bootup of ap vcpus. fix this properly! */
+	if (vcpu->vcpu_id > 0) {
+		printf("noticed exception on vcpu %d\n", vcpu->vcpu_id);
+		//vmm_print_guest_context(0, vcpu);
+		//vmm_set_user_context(&vcpu->guest_state, USER_CONTEXT_EAX, 0x10);
+	}
+	vmm_guest_exit_next_instruction(&vcpu->guest_state);
+	return 0;
+}
+
 static void vmm_exit_init(vmm_t *vmm) {
     /* Connect VM exit handlers to correct function pointers */
     vmm->vmexit_handlers[EXIT_REASON_PENDING_INTERRUPT] = vmm_pending_interrupt_handler;
-/*    vmm->vmexit_handlers[EXIT_REASON_EXCEPTION_NMI] = vmm_exception_handler;*/
+    vmm->vmexit_handlers[EXIT_REASON_EXCEPTION_NMI] = vmm_exception_handler;
     vmm->vmexit_handlers[EXIT_REASON_CPUID] = vmm_cpuid_handler;
     vmm->vmexit_handlers[EXIT_REASON_MSR_READ] = vmm_rdmsr_handler;
     vmm->vmexit_handlers[EXIT_REASON_MSR_WRITE] = vmm_wrmsr_handler;

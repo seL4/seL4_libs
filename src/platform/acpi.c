@@ -1,3 +1,6 @@
+/* Routines for generating guest ACPI tables.
+Author: W.A. */
+
 #include <stdlib.h>
 #include <string.h>
 
@@ -54,7 +57,8 @@ int make_guest_acpi_tables(vmm_t *vmm) {
 	int num_tables = 1;
 
 	// MADT
-	int madt_size = sizeof(acpi_madt_t) + sizeof(acpi_madt_ioapic_t)
+	int madt_size = sizeof(acpi_madt_t)
+		/* + sizeof(acpi_madt_ioapic_t)*/
 		+ sizeof(acpi_madt_apic_t) * cpus;
 	acpi_madt_t *madt = malloc(madt_size);
 	acpi_fill_table_head(&madt->head, "APIC", 3);
@@ -110,7 +114,7 @@ int make_guest_acpi_tables(vmm_t *vmm) {
 	}
 
 	// Allocate some frames for this
-	uintptr_t xsdt_addr = 0xe1000; // TODO actually allocate frames
+	uintptr_t xsdt_addr = 0xe1000; // TODO actually allocate frames, can be anywhere
 
 	acpi_xsdt_t *xsdt = malloc(xsdt_size);
 	acpi_fill_table_head(&xsdt->head, "XSDT", 1);

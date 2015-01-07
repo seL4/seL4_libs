@@ -86,6 +86,10 @@ void vmm_vmcs_init_guest(vmm_vcpu_t *vcpu) {
     vmm_vmcs_write(vcpu->guest_vcpu, VMX_GUEST_SYSENTER_ESP, 0);
     vmm_vmcs_write(vcpu->guest_vcpu, VMX_GUEST_SYSENTER_EIP, 0);
     vmm_vmcs_write(vcpu->guest_vcpu, VMX_CONTROL_PRIMARY_PROCESSOR_CONTROLS, BIT(7));
+    
+	if (vcpu->vcpu_id > 0) {
+		vmm_vmcs_write(vcpu->guest_vcpu, VMX_CONTROL_EXCEPTION_BITMAP, BIT(13));
+	}
 
 #ifdef CONFIG_LIB_VMM_VMX_TIMER_DEBUG
     /* Enable pre-emption timer */

@@ -25,6 +25,13 @@ typedef struct guest_cr_virt_state {
     unsigned int cr4_shadow;
 } guest_cr_virt_state_t;
 
+typedef struct guest_dt_virt_state {
+	unsigned int idt_base;
+	unsigned int idt_limit;
+	unsigned int gdt_base;
+	unsigned int gdt_limit;
+} guest_dt_virt_state_t;
+
 typedef struct  guest_exit_information {
     bool in_exit;
     unsigned int reason;
@@ -84,6 +91,7 @@ typedef struct guest_machine_state {
 
 typedef struct guest_virt_state {
     guest_cr_virt_state_t cr;
+	guest_dt_virt_state_t dt;
     /* are we hlt'ed waiting for an interrupted */
     int interrupt_halt;
 } guest_virt_state_t;

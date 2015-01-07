@@ -1,3 +1,6 @@
+/* TODO work out licensing  W.A. is responsible for this version */
+
+/* XXX This code is a work in progress, there are many bugs and todos */
 
 /*
  * Local APIC virtualization
@@ -31,8 +34,10 @@
 
 #define APIC_BUS_CYCLE_NS 1
 
-#define apic_debug(fmt,arg...) printf(fmt,##arg)
-//#define apic_debug(fmt, arg...)
+/* We use our own APIC debug print because debugging this is painful and we want
+   high verbosity here */
+#define APIC_DEBUG 1
+#define apic_debug(lvl,...) do{ if(lvl < APIC_DEBUG){printf(__VA_ARGS__);fflush(stdout);}}while (0)
 
 #define APIC_LVT_NUM			6
 /* 14 is the version for Xeon and Pentium 8.4.8*/
@@ -445,7 +450,7 @@ static void apic_update_ppr(vmm_lapic_t *apic)
 	else
 		ppr = isrv & 0xf0;
 
-	apic_debug("vlapic %p, ppr 0x%x, isr 0x%x, isrv 0x%x",
+	apic_debug(6, "vlapic %p, ppr 0x%x, isr 0x%x, isrv 0x%x",
 		   apic, ppr, isr, isrv);
 
 	if (old_ppr != ppr) {
@@ -486,7 +491,7 @@ int vmm_apic_match_logical_addr(vmm_lapic_t *apic, uint8_t mda)
 			result = 1;
 		break;
 	default:
-		apic_debug("Bad DFR: %08x\n", vmm_apic_get_reg(apic, APIC_DFR));
+		apic_debug(1, "Bad DFR: %08x\n", vmm_apic_get_reg(apic, APIC_DFR));
 		break;
 	}
 
@@ -498,10 +503,6 @@ int vmm_apic_match_dest(vmm_vcpu_t *vcpu, vmm_lapic_t *source,
 {
 	int result = 0;
 	vmm_lapic_t *target = vcpu->lapic;
-
-	apic_debug("target %p, source %p, dest 0x%x, "
-		   "dest_mode 0x%x, short_hand 0x%x\n",
-		   target, source, dest, dest_mode, short_hand);
 
 	assert(target);
 	switch (short_hand) {
@@ -523,9 +524,18 @@ int vmm_apic_match_dest(vmm_vcpu_t *vcpu, vmm_lapic_t *source,
 		result = (target != source);
 		break;
 	default:
-		apic_debug("kvm: apic: Bad dest shorthand value %x\n",
+		apic_debug(2, "apic: Bad dest shorthand value %x\n",
 			   short_hand);
 		break;
+	}
+
+	apic_debug(4, "target %p, source %p, dest 0x%x, "
+		   "dest_mode 0x%x, short_hand 0x%x",
+		   target, source, dest, dest_mode, short_hand);
+	if (result) {
+		apic_debug(4, " MATCH\n");
+	} else {
+		apic_debug(4, "\n");
 	}
 
 	return result;
@@ -545,16 +555,17 @@ int vmm_irq_delivery_to_apic(vmm_vcpu_t *src_vcpu, struct vmm_lapic_irq *irq, un
 	
 	for (i = 0; i < vmm->num_vcpus; i++) {
 		vmm_vcpu_t *dest_vcpu = &vmm->vcpus[i];
+		//printf("dest=%d\n", dest_vcpu->vcpu_id);
 
 	    if (!vmm_apic_hw_enabled(dest_vcpu->lapic)) {
-	        continue;
+	        //continue;
 		}
 	
-	    if (!vmm_apic_match_dest(src_vcpu, src, irq->shorthand,
+	    if (!vmm_apic_match_dest(dest_vcpu, src, irq->shorthand,
 	                    irq->dest_id, irq->dest_mode)) {
 	        continue;
 		}
-	 
+
 	    if (!vmm_is_dm_lowest_prio(irq)) {
 			// Normal delivery
 			if (r < 0) {
@@ -609,35 +620,37 @@ static int __apic_accept_irq(vmm_vcpu_t *vcpu, int delivery_mode,
 		break;
 
 	case APIC_DM_SMI:
-		apic_debug("Ignoring guest SMI\n");
+		apic_debug(2, "Ignoring guest SMI\n");
 		break;
 
 	case APIC_DM_INIT:
+		apic_debug(2, "Got init ipi on vcpu %d\n", vcpu->vcpu_id);
 		if (!trig_mode || level) {
 			result = 1;
 			vmm_lapic_reset(vcpu);
 			apic->arb_prio = vmm_apic_id(apic);
 			apic->state = LAPIC_STATE_WAITSIPI;
 		} else {
-			apic_debug("Ignoring de-assert INIT to vcpu %d\n",
+			apic_debug(2, "Ignoring de-assert INIT to vcpu %d\n",
 				   vcpu->vcpu_id);
 		}
 		break;
 
 	case APIC_DM_STARTUP:
 		if (apic->state != LAPIC_STATE_WAITSIPI) {
-			apic_debug("Received SIPI while processor was not in wait for SIPI state\n");
-		}
-		apic_debug("SIPI to vcpu %d vector 0x%02x\n",
-			   vcpu->vcpu_id, vector);
-		result = 1;
-		apic->sipi_vector = vector;
-		apic->state = LAPIC_STATE_RUN;
+			apic_debug(1, "Received SIPI while processor was not in wait for SIPI state\n");
+		} else {
+			apic_debug(2, "SIPI to vcpu %d vector 0x%02x\n",
+				   vcpu->vcpu_id, vector);
+			result = 1;
+			apic->sipi_vector = vector;
+			apic->state = LAPIC_STATE_RUN;
 
-		/* Start the VCPU thread. XXX this probably doesn't work if
-		   the guest os tries to reset a processor by sending another
-		   init + sipi, but this probably doesn't happen */
-		vmm_start_ap_vcpu(vcpu, vector);
+			/* Start the VCPU thread. XXX this probably doesn't work if
+			   the guest os tries to reset a processor by sending another
+			   init + sipi, but this probably doesn't happen */
+			vmm_start_ap_vcpu(vcpu, vector);
+		}
 		break;
 
 	case APIC_DM_EXTINT:
@@ -707,7 +720,7 @@ static void apic_send_ipi(vmm_vcpu_t *vcpu)
 	irq.shorthand = icr_low & APIC_SHORT_MASK;
 	irq.dest_id = GET_APIC_DEST_FIELD(icr_high);
 
-	apic_debug("icr_high 0x%x, icr_low 0x%x, "
+	apic_debug(3, "icr_high 0x%x, icr_low 0x%x, "
 		   "short_hand 0x%x, dest 0x%x, trig_mode 0x%x, level 0x%x, "
 		   "dest_mode 0x%x, delivery_mode 0x%x, vector 0x%x\n",
 		   icr_high, icr_low, irq.shorthand, irq.dest_id,
@@ -754,7 +767,7 @@ static uint32_t __apic_read(vmm_lapic_t *apic, unsigned int offset)
 		val = vmm_apic_id(apic) << 24;
 		break;
 	case APIC_ARBPRI:
-		apic_debug("Access APIC ARBPRI register which is for P6\n");
+		apic_debug(2, "Access APIC ARBPRI register which is for P6\n");
 		break;
 
 	case APIC_TMCCT:	/* Timer CCR */
@@ -786,7 +799,7 @@ static void update_divide_count(vmm_lapic_t *apic)
 	tmp2 = ((tmp1 & 0x3) | ((tmp1 & 0x8) >> 1)) + 1;
 	apic->divide_count = 0x1 << (tmp2 & 0x7);
 
-	apic_debug("timer divide count is 0x%x\n",
+	apic_debug(6, "timer divide count is 0x%x\n",
 				   apic->divide_count);
 }
 
@@ -868,7 +881,7 @@ static void apic_manage_nmi_watchdog(vmm_lapic_t *apic, uint32_t lvt0_val)
 
 	if (apic_lvt_nmi_mode(lvt0_val)) {
 		if (!nmi_wd_enabled) {
-			apic_debug("Receive NMI setting on APIC_LVT0 \n");
+			apic_debug(4, "Receive NMI setting on APIC_LVT0 \n");
 		//	apic->vcpu->kvm->arch.vapics_in_nmi_mode++;
 		}
 	} else if (nmi_wd_enabled) {
@@ -971,7 +984,7 @@ static int apic_reg_write(vmm_vcpu_t *vcpu, uint32_t reg, uint32_t val)
 
 	case APIC_TDCR:
 		if (val & 4)
-			apic_debug("KVM_WRITE:TDCR %x\n", val);
+			apic_debug(4, "lapic: TDCR %x\n", val);
 		apic_set_reg(apic, APIC_TDCR, val);
 		update_divide_count(apic);
 		break;
@@ -981,7 +994,7 @@ static int apic_reg_write(vmm_vcpu_t *vcpu, uint32_t reg, uint32_t val)
 		break;
 	}
 	if (ret)
-		apic_debug("Local APIC Write to read-only register %x\n", reg);
+		apic_debug(2, "Local APIC Write to read-only register %x\n", reg);
 	return ret;
 }
 
@@ -996,13 +1009,13 @@ void vmm_apic_mmio_write(vmm_vcpu_t *vcpu, void *cookie, uint32_t offset,
 	 * Refer SDM 8.4.1
 	 */
 	if (len != 4 || (offset & 0xf)) {
-		apic_debug("apic write: bad size=%d %x\n", len, offset);
+		apic_debug(1, "apic write: bad size=%d %x\n", len, offset);
 		return;
 	}
 
 	/* too common printing */
 	if (offset != APIC_EOI)
-		apic_debug("lapic write at %s: offset 0x%x with length 0x%x, and value is "
+		apic_debug(6, "lapic write at %s: offset 0x%x with length 0x%x, and value is "
 			   "0x%x\n", __func__, offset, len, data);
 
 	apic_reg_write(vcpu, offset & 0xff0, data);
@@ -1017,13 +1030,13 @@ static int apic_reg_read(vmm_lapic_t *apic, uint32_t offset, int len,
 	static const uint64_t rmask = 0x43ff01ffffffe70cULL;
 
 	if ((alignment + len) > 4) {
-		apic_debug("KVM_APIC_READ: alignment error %x %d\n",
+		apic_debug(2, "APIC READ: alignment error %x %d\n",
 			   offset, len);
 		return 1;
 	}
 
 	if (offset > 0x3f0 || !(rmask & (1ULL << (offset >> 4)))) {
-		apic_debug("KVM_APIC_READ: read reserved register %x\n",
+		apic_debug(2, "APIC_READ: read reserved register %x\n",
 			   offset);
 		return 1;
 	}
@@ -1037,7 +1050,7 @@ static int apic_reg_read(vmm_lapic_t *apic, uint32_t offset, int len,
 		memcpy(data, (char *)&result + alignment, len);
 		break;
 	default:
-		printf("Local APIC read with len = %x, "
+		apic_debug(2, "Local APIC read with len = %x, "
 		       "should be 1,2, or 4 instead\n", len);
 		break;
 	}
@@ -1051,7 +1064,6 @@ void vmm_apic_mmio_read(vmm_vcpu_t *vcpu, void *cookie, uint32_t offset,
 	(void)cookie;
 
 	apic_reg_read(apic, offset, len, data);
-printf("read from lapic offset %x, data %08x\n", offset, *data);
 
 	return;
 }
@@ -1156,7 +1168,7 @@ void vmm_lapic_reset(vmm_vcpu_t *vcpu)
 	vmm_lapic_t *apic;
 	int i;
 
-	apic_debug("%s\n", __func__);
+	apic_debug(4, "%s\n", __func__);
 
 	assert(vcpu);
 	apic = vcpu->lapic;
@@ -1197,7 +1209,7 @@ void vmm_lapic_reset(vmm_vcpu_t *vcpu)
 	vcpu->lapic->arb_prio = 0;
 	//vcpu->lapic_attention = 0; // XXX what is this for?
 
-	apic_debug("%s: vcpu=%p, id=%d, base_msr="
+	apic_debug(4, "%s: vcpu=%p, id=%d, base_msr="
 		   "0x%016x\n", __func__,
 		   vcpu, vmm_apic_id(apic),
 		   apic->apic_base);
@@ -1291,7 +1303,7 @@ int vmm_create_lapic(vmm_vcpu_t *vcpu, int enabled)
 	vmm_lapic_t *apic;
 
 	assert(vcpu != NULL);
-	apic_debug("apic_init %d\n", vcpu->vcpu_id);
+	apic_debug(2, "apic_init %d\n", vcpu->vcpu_id);
 
 	apic = malloc(sizeof(*apic));
 	if (!apic)
@@ -1367,6 +1379,7 @@ void vmm_inject_apic_timer_irqs(vmm_vcpu_t *vcpu)
 int vmm_apic_get_interrupt(vmm_vcpu_t *vcpu)
 {
 	int vector = vmm_apic_has_interrupt(vcpu);
+	printf("get_interrupt vector=0x%x, vcpu %d\n", vector, vcpu->vcpu_id);
 	vmm_lapic_t *apic = vcpu->lapic;
 
 	if (vector == -1)

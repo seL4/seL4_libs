@@ -8,8 +8,13 @@ int vmm_fetch_instruction(vmm_vcpu_t *vcpu, uint32_t eip, uintptr_t cr3, int len
 
 int vmm_decode_instruction(uint8_t *instr, int instr_len, int *reg, uint32_t *imm, int *op_len);
 
+/* Interpret just enough virtual 8086 instructions to run trampoline code.
+   Returns the final jump address */
+uintptr_t rmpiggie(guest_memory_t *gm, uint8_t *instr_buf, uint16_t *segment,
+		uintptr_t eip, uint32_t len, guest_state_t *gs);
+
 // TODO don't have these in a header, make them inline functions
-const int vmm_decoder_reg_mapw[] = {
+const static int vmm_decoder_reg_mapw[] = {
 	USER_CONTEXT_EAX,
 	USER_CONTEXT_ECX,
 	USER_CONTEXT_EDX,
@@ -20,7 +25,7 @@ const int vmm_decoder_reg_mapw[] = {
 	USER_CONTEXT_EDI
 };
 
-const int vmm_decoder_reg_mapb[] = {
+const static int vmm_decoder_reg_mapb[] = {
 	USER_CONTEXT_EAX,
 	USER_CONTEXT_ECX,
 	USER_CONTEXT_EDX,

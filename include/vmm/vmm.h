@@ -145,7 +145,8 @@ int vmm_finalize(vmm_t *vmm);
 /*running vmm moudle*/
 void vmm_run(vmm_t *vmm);
 
-/* TODO wtf is this here? lets refactor everything  */
+/* TODO htf did these get here? lets refactor everything  */
 void vmm_sync_guest_state(vmm_vcpu_t *vcpu);
+void vmm_sync_guest_context(vmm_vcpu_t *vcpu);
 
 #endif

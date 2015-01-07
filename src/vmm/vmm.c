@@ -23,6 +23,7 @@
 
 #include "vmm/debug.h"
 #include "vmm/vmm.h"
+#include "vmm/interrupt.h"
 #include "vmm/platform/boot_guest.h"
 
 void vmm_sync_guest_context(vmm_vcpu_t *vcpu) {
@@ -114,6 +115,11 @@ static void vmm_handle_vm_exit(vmm_vcpu_t *vcpu) {
         vmm_print_guest_context(0, vcpu);
         return;
     }
+
+    /* Check for any interrupts.
+       TODO: do this more sensibly once the interrupt controller
+       emulation is part of the vmm */
+    vmm_have_pending_interrupt(vcpu);
 
     /* Reply to the VM exit exception to resume guest. */
     vmm_sync_guest_state(vcpu);

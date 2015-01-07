@@ -85,28 +85,28 @@ int has_interrupt(vmm_vcpu_t *vcpu)
     }
 }
 
+/* This function is called when a new interrupt has occured. */
 void vmm_have_pending_interrupt(vmm_vcpu_t *vcpu) {
-    /* This function is called when a new interrupt has occured. */
-    if (can_inject(vcpu)) {
-        int irq = get_interrupt(vcpu);
-        if (irq != -1) {
-            /* there is actually an interrupt to inject */
+    if (has_interrupt(vcpu)) {
+        /* there is actually an interrupt to inject */
+        if (can_inject(vcpu)) {
             if (vcpu->guest_state.virt.interrupt_halt) {
                 /* currently halted. need to put the guest
                  * in a state where it can inject again */
                 wait_for_guest_ready(vcpu);
                 vcpu->guest_state.virt.interrupt_halt = 0;
             } else {
+                int irq = get_interrupt(vcpu);
                 inject_irq(vcpu, irq);
                 /* see if there are more */
                 if (has_interrupt(vcpu)) {
                     wait_for_guest_ready(vcpu);
                 }
             }
+        } else {
+            wait_for_guest_ready(vcpu);
+            vcpu->guest_state.virt.interrupt_halt = 0;
         }
-    } else {
-        wait_for_guest_ready(vcpu);
-        vcpu->guest_state.virt.interrupt_halt = 0;
     }
 }
 

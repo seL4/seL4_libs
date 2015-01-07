@@ -175,9 +175,23 @@ static void emul_rx_complete(void *iface, unsigned int num_bufs, void **cookies,
     }
 }
 
+static void emul_tx_complete(void *iface, void *cookie) {
+    ethif_virtio_emul_t *emul = (ethif_virtio_emul_t*)iface;
+    ethif_virtio_emul_internal_t *net = emul->internal;
+    emul_tx_cookie_t *tx_cookie = (emul_tx_cookie_t*)cookie;
+    /* free the dma memory */
+    ps_dma_unpin(&net->dma_man, tx_cookie->vaddr, BUF_SIZE);
+    ps_dma_free(&net->dma_man, tx_cookie->vaddr, BUF_SIZE);
+    /* put the descriptor chain into the used list */
+    struct vring_used_elem used_elem = {tx_cookie->desc_head, 0};
+    ring_used_add(emul, &net->vring[TX_QUEUE], used_elem);
+    free(tx_cookie);
+    /* notify the guest that we have completed some of its buffers */
+    net->driver.i_fn.raw_handleIRQ(&net->driver, 0);
+}
+
 static void emul_notify_tx(ethif_virtio_emul_t *emul) {
     ethif_virtio_emul_internal_t *net = emul->internal;
-    int err;
     struct vring *vring = &net->vring[TX_QUEUE];
     /* read the index */
     uint16_t guest_idx = ring_avail_idx(emul, vring);
@@ -225,12 +239,15 @@ static void emul_notify_tx(ethif_virtio_emul_t *emul) {
         assert(cookie);
         cookie->desc_head = desc_head;
         cookie->vaddr = vaddr;
-        err = net->driver.i_fn.raw_tx(&net->driver, 1, &phys, &len, cookie);
-        if (err) {
+        int result = net->driver.i_fn.raw_tx(&net->driver, 1, &phys, &len, cookie);
+        switch (result) {
+        case ETHIF_TX_COMPLETE:
+            emul_tx_complete(emul, cookie);
+            break;
+        case ETHIF_TX_FAILED:
             ps_dma_unpin(&net->dma_man, vaddr, BUF_SIZE);
             ps_dma_free(&net->dma_man, vaddr, BUF_SIZE);
             free(cookie);
-            /* we will try it again later */
             break;
         }
         /* next */
@@ -240,25 +257,14 @@ static void emul_notify_tx(ethif_virtio_emul_t *emul) {
     net->last_idx[TX_QUEUE] = idx;
 }
 
-static void emul_tx_complete(void *iface, void *cookie) {
-    ethif_virtio_emul_t *emul = (ethif_virtio_emul_t*)iface;
-    ethif_virtio_emul_internal_t *net = emul->internal;
-    emul_tx_cookie_t *tx_cookie = (emul_tx_cookie_t*)cookie;
-    /* free the dma memory */
-    ps_dma_unpin(&net->dma_man, tx_cookie->vaddr, BUF_SIZE);
-    ps_dma_free(&net->dma_man, tx_cookie->vaddr, BUF_SIZE);
-    /* put the descriptor chain into the used list */
-    struct vring_used_elem used_elem = {tx_cookie->desc_head, 0};
-    ring_used_add(emul, &net->vring[TX_QUEUE], used_elem);
-    free(tx_cookie);
-    /* notify the guest that we have completed some of its buffers */
-    net->driver.i_fn.raw_handleIRQ(&net->driver, 0);
+static void emul_tx_complete_external(void *iface, void *cookie) {
+    emul_tx_complete(iface, cookie);
     /* space may have cleared for additional transmits */
-    emul_notify_tx(emul);
+    emul_notify_tx(iface);
 }
 
 static struct raw_iface_callbacks emul_callbacks = {
-    .tx_complete = emul_tx_complete,
+    .tx_complete = emul_tx_complete_external,
     .rx_complete = emul_rx_complete,
     .allocate_rx_buf = emul_allocate_rx_buf
 };

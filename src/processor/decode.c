@@ -1,3 +1,13 @@
+/*
+ * Copyright 2014, NICTA
+ *
+ * This software may be distributed and modified according to the terms of
+ * the GNU General Public License version 2. Note that NO WARRANTY is provided.
+ * See "LICENSE_GPLv2.txt" for details.
+ *
+ * @TAG(NICTA_GPL)
+ */
+
 /* x86 fetch/decode/emulate code
 
 Author: W.A.
@@ -182,10 +192,9 @@ int vmm_decode_instruction(uint8_t *instr, int instr_len, int *reg, uint32_t *im
 
 /* Interpret just enough virtual 8086 instructions to run trampoline code.
    Returns the final jump address */
-uintptr_t rmpiggie(guest_memory_t *gm, uint8_t *instr_buf, uint16_t *segment,
-        uintptr_t eip, uint32_t len, guest_state_t *gs)
+uintptr_t vmm_emulate_realmode(guest_memory_t *gm, uint8_t *instr_buf,
+        uint16_t *segment, uintptr_t eip, uint32_t len, guest_state_t *gs)
 {
-    /* rmpiggie forages through the real mode bytes */
     /* We only track one segment, and assume that code and data are in the same
        segment, which is valid for most trampoline and bootloader code */
     uint8_t *instr = instr_buf;
@@ -267,7 +276,6 @@ uintptr_t rmpiggie(guest_memory_t *gm, uint8_t *instr_buf, uint16_t *segment,
             instr += 2;
             DPRINTF(4, "absolute jmpf $0x%08x, cs now %04x\n", jmp_addr, *segment);
             if (((int64_t)jmp_addr - (int64_t)(len + eip)) >= 0) {
-                DPRINTF(4, "rmpiggie found a truffle at 0x%08x!\n", jmp_addr);
                 return jmp_addr;
             } else {
                 instr = jmp_addr - eip + instr_buf;
@@ -324,10 +332,9 @@ uintptr_t rmpiggie(guest_memory_t *gm, uint8_t *instr_buf, uint16_t *segment,
             }
         }
 
-        DPRINTF(4, "read %d bytes\n", instr - instr_buf);
+        DPRINTF(6, "read %d bytes\n", instr - instr_buf);
     }
 
-    DPRINTF(4, "rmpiggie found no truffles\n");
     return 0;
 }
 

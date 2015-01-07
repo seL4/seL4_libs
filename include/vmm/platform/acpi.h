@@ -1,12 +1,17 @@
+/*
+ * Copyright 2014, NICTA
+ *
+ * This software may be distributed and modified according to the terms of
+ * the GNU General Public License version 2. Note that NO WARRANTY is provided.
+ * See "LICENSE_GPLv2.txt" for details.
+ *
+ * @TAG(NICTA_GPL)
+ */
+
 // Based on from kernel/src/plat/pc99/machine/acpi.c
 
 #define ACPI_START (0xE0000) // Start of ACPI tables; RSD PTR is right here
 #define MAX_ACPI_TABLES (2)
-
-// TODO move these somewhere else
-#define APIC_ADDR (0xFEE00000)
-#define IOAPIC_ADDR (0xFEC0000)
-#define APIC_FLAGS_ENABLED (1)
 
 /* Root System Descriptor Pointer */
 typedef struct acpi_rsdp {

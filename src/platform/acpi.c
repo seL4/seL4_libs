@@ -1,3 +1,13 @@
+/*
+ * Copyright 2014, NICTA
+ *
+ * This software may be distributed and modified according to the terms of
+ * the GNU General Public License version 2. Note that NO WARRANTY is provided.
+ * See "LICENSE_GPLv2.txt" for details.
+ *
+ * @TAG(NICTA_GPL)
+ */
+
 /* Routines for generating guest ACPI tables.
 Author: W.A. */
 
@@ -8,6 +18,9 @@ Author: W.A. */
 #include "vmm/platform/acpi.h"
 #include "vmm/platform/guest_memory.h"
 #include "vmm/platform/guest_vspace.h"
+#include "vmm/processor/apicdef.h"
+
+#define APIC_FLAGS_ENABLED (1)
 
 static uint8_t acpi_checksum(void *table, int length) {
     uint32_t sum = 0;
@@ -62,7 +75,7 @@ int make_guest_acpi_tables(vmm_t *vmm) {
         + sizeof(acpi_madt_apic_t) * cpus;
     acpi_madt_t *madt = malloc(madt_size);
     acpi_fill_table_head(&madt->head, "APIC", 3);
-    madt->apic_addr = APIC_ADDR;
+    madt->apic_addr = APIC_DEFAULT_PHYS_BASE;
     madt->flags = 1;
 
     char *madt_entry = (char *)madt + sizeof(acpi_madt_t);
@@ -74,7 +87,7 @@ int make_guest_acpi_tables(vmm_t *vmm) {
             .length = sizeof(acpi_madt_ioapic_t)
         },
         .ioapic_id = 0,
-        .ioapic_addr = IOAPIC_ADDR,
+        .ioapic_addr = IOAPIC_DEFAULT_PHYS_BASE,
         .gsib = 0 // TODO set this up?
     };
     memcpy(madt_entry, &ioapic, sizeof(ioapic));

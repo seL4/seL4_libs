@@ -15,7 +15,6 @@ typedef struct vmm_vcpu vmm_vcpu_t;
 
 /* Handler for a guest exit that is triggered when the guest is
  * ready to receive interrupts */
-
 int vmm_pending_interrupt_handler(vmm_vcpu_t *vcpu);
 
 /* Request that the guest exist as soon as it is ready to receive
@@ -27,5 +26,8 @@ void vmm_start_ap_vcpu(vmm_vcpu_t *vcpu, unsigned int sipi_vector);
 
 /* inject an interrupt from the lapic on the vcpu, whether or not it is in an exit */
 void vmm_vcpu_accept_interrupt(vmm_vcpu_t *vcpu);
+
+/* This function is called when a new interrupt has occured. */
+void vmm_have_pending_interrupt(vmm_vcpu_t *vcpu);
 
 #endif

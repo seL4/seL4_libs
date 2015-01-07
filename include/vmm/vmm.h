@@ -87,11 +87,11 @@ typedef struct vmm_vcpu {
     /* context */
     guest_state_t guest_state;
 
-	/* parent vmm */
-	vmm_t *vmm;
+    /* parent vmm */
+    vmm_t *vmm;
 
-	vmm_lapic_t *lapic;
-	int vcpu_id;
+    vmm_lapic_t *lapic;
+    int vcpu_id;
 } vmm_vcpu_t;
 
 /* Represents a vmm instance that runs a single guest with one or more vcpus */
@@ -104,8 +104,8 @@ typedef struct vmm {
     simple_t host_simple;
     vspace_t host_vspace;
     
-	/* Endpoint that will be given to guest TCB for fault handling
-	 * TODO have a different EP for each vcpu, so vmm can have a thread per vcpu*/
+    /* Endpoint that will be given to guest TCB for fault handling
+     * TODO have a different EP for each vcpu, so vmm can have a thread per vcpu*/
     seL4_CPtr guest_fault_ep;
 
     /* platform callback functions */
@@ -114,7 +114,7 @@ typedef struct vmm {
     /* Default page size to use */
     int page_size;
 
-	/* Memory related */
+    /* Memory related */
     guest_image_t guest_image;
     seL4_CPtr guest_pd;
     guest_memory_t guest_mem;
@@ -127,16 +127,16 @@ typedef struct vmm {
     /* IO port management */
     vmm_io_port_list_t io_port;
 
-	/* MMIO management. Should probably be per-vcpu, e.g. we can't handle the
-	 * guest trying to remap a local APIC */
-	vmm_mmio_list_t mmio_list;
+    /* MMIO management. Should probably be per-vcpu, e.g. we can't handle the
+     * guest trying to remap a local APIC */
+    vmm_mmio_list_t mmio_list;
 
-	unsigned int num_vcpus;
-	vmm_vcpu_t *vcpus;
+    unsigned int num_vcpus;
+    vmm_vcpu_t *vcpus;
 
-	/*TODO add
-		map of vcpu affinities
-	*/
+    /*TODO add
+        map of vcpu affinities
+    */
 } vmm_t;
 
 /* Finalize the VM before running it */

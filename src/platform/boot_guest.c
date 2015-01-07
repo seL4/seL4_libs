@@ -358,8 +358,8 @@ void vmm_plat_init_guest_boot_structure(vmm_t *vmm, const char *cmdline) {
     err = make_guest_boot_info(vmm);
     assert(!err);
 
-	err = make_guest_acpi_tables(vmm);
-	assert(!err);
+    err = make_guest_acpi_tables(vmm);
+    assert(!err);
 }
 
 void vmm_init_guest_thread_state(vmm_vcpu_t *vcpu) {

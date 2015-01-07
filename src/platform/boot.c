@@ -50,10 +50,10 @@ int vmm_init(vmm_t *vmm, simple_t simple, vka_t vka, vspace_t vspace, platform_c
     if (err) {
         return err;
     }
-	err = vmm_mmio_init(&vmm->mmio_list);
-	if (err) {
-		return err;
-	}
+    err = vmm_mmio_init(&vmm->mmio_list);
+    if (err) {
+        return err;
+    }
     return 0;
 }
 
@@ -87,16 +87,16 @@ static void install_guest_fault_ep(vmm_t *vmm, unsigned int num) {
     guest_fault_path.capDepth = GUEST_CNODE_SIZE;
 
     error = vka_cnode_mint(&guest_fault_path, &host_fault_path, seL4_AllRights,
-			seL4_CapData_Badge_new(num));
+            seL4_CapData_Badge_new(num));
     assert(error == seL4_NoError);
 }
 
 static int vmm_init_vcpu(vmm_t *vmm, unsigned int num, int priority) {
     int error;
-	assert(num < vmm->num_vcpus);
-	vmm_vcpu_t *vcpu = &vmm->vcpus[num];
+    assert(num < vmm->num_vcpus);
+    vmm_vcpu_t *vcpu = &vmm->vcpus[num];
     
-	error = vka_cspace_alloc_path(&vmm->vka, &vcpu->reply_slot);
+    error = vka_cspace_alloc_path(&vmm->vka, &vcpu->reply_slot);
     if (error) {
         return error;
     }
@@ -118,7 +118,7 @@ static int vmm_init_vcpu(vmm_t *vmm, unsigned int num, int priority) {
     /* Set the guest TCB information */
     install_guest_fault_ep(vmm, num);
     error = seL4_TCB_SetSpace(vcpu->guest_tcb, LIB_VMM_GUEST_OS_FAULT_EP_CAP,
-			vcpu->guest_cnode,
+            vcpu->guest_cnode,
             seL4_CapData_Guard_new(0, 32 - GUEST_CNODE_SIZE),
             vmm->guest_pd, seL4_NilData);
     assert(error == seL4_NoError);
@@ -126,14 +126,14 @@ static int vmm_init_vcpu(vmm_t *vmm, unsigned int num, int priority) {
     assert(error == seL4_NoError);
     error = seL4_IA32_VCPU_SetTCB(vcpu->guest_vcpu, vcpu->guest_tcb);
     assert(error == seL4_NoError);
-	
-	vcpu->vmm = vmm;
-	vcpu->vcpu_id = num;
+    
+    vcpu->vmm = vmm;
+    vcpu->vcpu_id = num;
 
-	/* lapic is started enabled on aps  TODO is this correct? or should they all be disabled on startup?*/
-	vmm_create_lapic(vcpu, num != BOOT_VCPU);
+    /* lapic is started enabled on aps  TODO is this correct? or should they all be disabled on startup?*/
+    vmm_create_lapic(vcpu, num != BOOT_VCPU);
 
-	return 0;
+    return 0;
 }
 
 int vmm_init_guest(vmm_t *vmm, int priority) {
@@ -141,42 +141,42 @@ int vmm_init_guest(vmm_t *vmm, int priority) {
 }
 
 int vmm_init_guest_multi(vmm_t *vmm, int priority, int num_vcpus) {
-	int error;
+    int error;
 
-	assert(vmm->done_host_init);
+    assert(vmm->done_host_init);
 
-	vmm->num_vcpus = num_vcpus;
-	vmm->vcpus = malloc(num_vcpus * sizeof(vmm_vcpu_t));
-	if (!vmm->vcpus) {
-		return -1;
-	}
+    vmm->num_vcpus = num_vcpus;
+    vmm->vcpus = malloc(num_vcpus * sizeof(vmm_vcpu_t));
+    if (!vmm->vcpus) {
+        return -1;
+    }
 
-	/* Create an EPT which is the pd for all the vcpu tcbs */
+    /* Create an EPT which is the pd for all the vcpu tcbs */
     vmm->guest_pd = vka_alloc_ept_page_directory_pointer_table_leaky(&vmm->vka);
     if (vmm->guest_pd == 0) {
         return -1;
     }
     /* Initialize a vspace for the guest */
     error = vmm_get_guest_vspace(&vmm->host_vspace, &vmm->host_vspace,
-			&vmm->guest_mem.vspace, &vmm->vka, vmm->guest_pd);
+            &vmm->guest_mem.vspace, &vmm->vka, vmm->guest_pd);
     if (error) {
         return error;
     }
 
-	for (int i = 0; i < num_vcpus; i++) {
-		vmm_init_vcpu(vmm, i, priority);
-	}
+    for (int i = 0; i < num_vcpus; i++) {
+        vmm_init_vcpu(vmm, i, priority);
+    }
 
     /* Init guest memory information. 
      * TODO: should probably done elsewhere */
     vmm->guest_mem.num_ram_regions = 0;
     vmm->guest_mem.ram_regions = malloc(0);
 
-	vmm_mmio_add_handler(&vmm->mmio_list, APIC_DEFAULT_PHYS_BASE,
-			APIC_DEFAULT_PHYS_BASE + sizeof(struct local_apic_regs) - 1,
-			NULL, "Local APIC", vmm_apic_mmio_read, vmm_apic_mmio_write);
+    vmm_mmio_add_handler(&vmm->mmio_list, APIC_DEFAULT_PHYS_BASE,
+            APIC_DEFAULT_PHYS_BASE + sizeof(struct local_apic_regs) - 1,
+            NULL, "Local APIC", vmm_apic_mmio_read, vmm_apic_mmio_write);
 
     vmm->done_guest_init = 1;
-	return 0;
+    return 0;
 }
 

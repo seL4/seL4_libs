@@ -151,45 +151,45 @@ static void vmm_update_guest_state_from_fault(vmm_vcpu_t *vcpu, seL4_Word *msg) 
 
 void interrupt_pending_callback(vmm_t *vmm, seL4_Word badge)
 {
-	if (vmm->plat_callbacks.do_async(badge) == 0) {
-		/* Got interrupt(s) from PIC, propagate to vcpus */
+    if (vmm->plat_callbacks.do_async(badge) == 0) {
+        /* Got interrupt(s) from PIC, propagate to vcpus */
 
-		/* TODO if all lapics are enabled, store which lapic
-		   (only one allowed) receives extints, and short circuit this */
-		if (vmm->plat_callbacks.has_interrupt() != -1) {
-			for (int i = 0; i < vmm->num_vcpus; i++) {
-				vmm_vcpu_t *vcpu = &vmm->vcpus[i];
+        /* TODO if all lapics are enabled, store which lapic
+           (only one allowed) receives extints, and short circuit this */
+        if (vmm->plat_callbacks.has_interrupt() != -1) {
+            for (int i = 0; i < vmm->num_vcpus; i++) {
+                vmm_vcpu_t *vcpu = &vmm->vcpus[i];
 
-				if (!vmm_apic_enabled(vcpu->lapic)) {
-					/* LAPIC is disabled on this vcpu; bypass it */
-					vmm_vcpu_accept_interrupt(vcpu);
-				} else if (vmm_apic_accept_pic_intr(vcpu)) {
-					/* LAPIC is enabled on this vcpu, and accepting
-					   local extints from the pic */
-					assert(vmm_apic_local_deliver(vcpu, 0));
-				} 
-			}
-		}
-	}
+                if (!vmm_apic_enabled(vcpu->lapic)) {
+                    /* LAPIC is disabled on this vcpu; bypass it */
+                    vmm_vcpu_accept_interrupt(vcpu);
+                } else if (vmm_apic_accept_pic_intr(vcpu)) {
+                    /* LAPIC is enabled on this vcpu, and accepting
+                       local extints from the pic */
+                    assert(vmm_apic_local_deliver(vcpu, 0));
+                } 
+            }
+        }
+    }
 }
 
 /* Entry point of of VMM main host module. */
 void vmm_run(vmm_t *vmm) {
     DPRINTF(2, "VMM MAIN HOST MODULE STARTED\n");
 
-	for (int i = 0; i < vmm->num_vcpus; i++) {
-		vmm_vcpu_t *vcpu = &vmm->vcpus[i];
+    for (int i = 0; i < vmm->num_vcpus; i++) {
+        vmm_vcpu_t *vcpu = &vmm->vcpus[i];
 
-		vcpu->guest_state.virt.interrupt_halt = 0;
-		vcpu->guest_state.exit.in_exit = 0;
+        vcpu->guest_state.virt.interrupt_halt = 0;
+        vcpu->guest_state.exit.in_exit = 0;
 
-		/* sync the existing guest state */
-		vmm_sync_guest_state(vcpu);
-		vmm_sync_guest_context(vcpu);
-		/* now invalidate everything */
-		assert(vmm_guest_state_no_modified(&vcpu->guest_state));
-		vmm_guest_state_invalidate_all(&vcpu->guest_state);
-	}
+        /* sync the existing guest state */
+        vmm_sync_guest_state(vcpu);
+        vmm_sync_guest_context(vcpu);
+        /* now invalidate everything */
+        assert(vmm_guest_state_no_modified(&vcpu->guest_state));
+        vmm_guest_state_invalidate_all(&vcpu->guest_state);
+    }
 
     /* Start the boot vcpu guest thread running */
     seL4_TCB_Resume(vmm->vcpus[BOOT_VCPU].guest_tcb);
@@ -219,7 +219,7 @@ void vmm_run(vmm_t *vmm) {
             fault_message[i] = seL4_GetMR(i);
         }
 
-		vmm_vcpu_t *vcpu = &vmm->vcpus[badge];
+        vmm_vcpu_t *vcpu = &vmm->vcpus[badge];
 
         vka_cnode_saveCaller(&vcpu->reply_slot);
 
@@ -242,15 +242,15 @@ void vmm_run(vmm_t *vmm) {
 
 int vmm_exception_handler(vmm_vcpu_t *vcpu) 
 {
-	/* TODO this is here to ignore exceptions when linux tries to set
-	   segment selectors during smp bootup of ap vcpus. fix this properly! */
-	if (vcpu->vcpu_id > 0) {
-		printf("noticed exception on vcpu %d\n", vcpu->vcpu_id);
-		//vmm_print_guest_context(0, vcpu);
-		//vmm_set_user_context(&vcpu->guest_state, USER_CONTEXT_EAX, 0x10);
-	}
-	vmm_guest_exit_next_instruction(&vcpu->guest_state);
-	return 0;
+    /* TODO this is here to ignore exceptions when linux tries to set
+       segment selectors during smp bootup of ap vcpus. fix this properly! */
+    if (vcpu->vcpu_id > 0) {
+        printf("noticed exception on vcpu %d\n", vcpu->vcpu_id);
+        //vmm_print_guest_context(0, vcpu);
+        //vmm_set_user_context(&vcpu->guest_state, USER_CONTEXT_EAX, 0x10);
+    }
+    vmm_guest_exit_next_instruction(&vcpu->guest_state);
+    return 0;
 }
 
 static void vmm_exit_init(vmm_t *vmm) {
@@ -272,14 +272,14 @@ int vmm_finalize(vmm_t *vmm) {
     int err;
     vmm_exit_init(vmm);
 
-	for (int i = 0; i < vmm->num_vcpus; i++) {
-		vmm_vcpu_t *vcpu = &vmm->vcpus[i];
+    for (int i = 0; i < vmm->num_vcpus; i++) {
+        vmm_vcpu_t *vcpu = &vmm->vcpus[i];
 
-	    vmm_init_guest_thread_state(vcpu);
-		err = vmm_io_port_init_guest(&vmm->io_port, &vmm->host_simple, vcpu->guest_vcpu);
-		if (err) {
-			return err;
-		}
+        vmm_init_guest_thread_state(vcpu);
+        err = vmm_io_port_init_guest(&vmm->io_port, &vmm->host_simple, vcpu->guest_vcpu);
+        if (err) {
+            return err;
+        }
     }
     return 0;
 }

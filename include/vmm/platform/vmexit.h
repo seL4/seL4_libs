@@ -59,40 +59,40 @@
 #define VMM_EXIT_REASON_NUM             59
 
 #define VMX_EXIT_REASONS \
-	{ EXIT_REASON_EXCEPTION_NMI,         "EXCEPTION_NMI" }, \
-	{ EXIT_REASON_EXTERNAL_INTERRUPT,    "EXTERNAL_INTERRUPT" }, \
-	{ EXIT_REASON_TRIPLE_FAULT,          "TRIPLE_FAULT" }, \
-	{ EXIT_REASON_PENDING_INTERRUPT,     "PENDING_INTERRUPT" }, \
-	{ EXIT_REASON_NMI_WINDOW,            "NMI_WINDOW" }, \
-	{ EXIT_REASON_TASK_SWITCH,           "TASK_SWITCH" }, \
-	{ EXIT_REASON_CPUID,                 "CPUID" }, \
-	{ EXIT_REASON_HLT,                   "HLT" }, \
-	{ EXIT_REASON_INVLPG,                "INVLPG" }, \
-	{ EXIT_REASON_RDPMC,                 "RDPMC" }, \
-	{ EXIT_REASON_RDTSC,                 "RDTSC" }, \
-	{ EXIT_REASON_VMCALL,                "VMCALL" }, \
-	{ EXIT_REASON_VMCLEAR,               "VMCLEAR" }, \
-	{ EXIT_REASON_VMLAUNCH,              "VMLAUNCH" }, \
-	{ EXIT_REASON_VMPTRLD,               "VMPTRLD" }, \
-	{ EXIT_REASON_VMPTRST,               "VMPTRST" }, \
-	{ EXIT_REASON_VMREAD,                "VMREAD" }, \
-	{ EXIT_REASON_VMRESUME,              "VMRESUME" }, \
-	{ EXIT_REASON_VMWRITE,               "VMWRITE" }, \
-	{ EXIT_REASON_VMOFF,                 "VMOFF" }, \
-	{ EXIT_REASON_VMON,                  "VMON" }, \
-	{ EXIT_REASON_CR_ACCESS,             "CR_ACCESS" }, \
-	{ EXIT_REASON_DR_ACCESS,             "DR_ACCESS" }, \
-	{ EXIT_REASON_IO_INSTRUCTION,        "IO_INSTRUCTION" }, \
-	{ EXIT_REASON_MSR_READ,              "MSR_READ" }, \
-	{ EXIT_REASON_MSR_WRITE,             "MSR_WRITE" }, \
-	{ EXIT_REASON_MWAIT_INSTRUCTION,     "MWAIT_INSTRUCTION" }, \
-	{ EXIT_REASON_MONITOR_INSTRUCTION,   "MONITOR_INSTRUCTION" }, \
-	{ EXIT_REASON_PAUSE_INSTRUCTION,     "PAUSE_INSTRUCTION" }, \
-	{ EXIT_REASON_MCE_DURING_VMENTRY,    "MCE_DURING_VMENTRY" }, \
-	{ EXIT_REASON_TPR_BELOW_THRESHOLD,   "TPR_BELOW_THRESHOLD" }, \
-	{ EXIT_REASON_APIC_ACCESS,           "APIC_ACCESS" }, \
-	{ EXIT_REASON_EPT_VIOLATION,         "EPT_VIOLATION" }, \
-	{ EXIT_REASON_EPT_MISCONFIG,         "EPT_MISCONFIG" }, \
-	{ EXIT_REASON_WBINVD,                "WBINVD" }
+    { EXIT_REASON_EXCEPTION_NMI,         "EXCEPTION_NMI" }, \
+    { EXIT_REASON_EXTERNAL_INTERRUPT,    "EXTERNAL_INTERRUPT" }, \
+    { EXIT_REASON_TRIPLE_FAULT,          "TRIPLE_FAULT" }, \
+    { EXIT_REASON_PENDING_INTERRUPT,     "PENDING_INTERRUPT" }, \
+    { EXIT_REASON_NMI_WINDOW,            "NMI_WINDOW" }, \
+    { EXIT_REASON_TASK_SWITCH,           "TASK_SWITCH" }, \
+    { EXIT_REASON_CPUID,                 "CPUID" }, \
+    { EXIT_REASON_HLT,                   "HLT" }, \
+    { EXIT_REASON_INVLPG,                "INVLPG" }, \
+    { EXIT_REASON_RDPMC,                 "RDPMC" }, \
+    { EXIT_REASON_RDTSC,                 "RDTSC" }, \
+    { EXIT_REASON_VMCALL,                "VMCALL" }, \
+    { EXIT_REASON_VMCLEAR,               "VMCLEAR" }, \
+    { EXIT_REASON_VMLAUNCH,              "VMLAUNCH" }, \
+    { EXIT_REASON_VMPTRLD,               "VMPTRLD" }, \
+    { EXIT_REASON_VMPTRST,               "VMPTRST" }, \
+    { EXIT_REASON_VMREAD,                "VMREAD" }, \
+    { EXIT_REASON_VMRESUME,              "VMRESUME" }, \
+    { EXIT_REASON_VMWRITE,               "VMWRITE" }, \
+    { EXIT_REASON_VMOFF,                 "VMOFF" }, \
+    { EXIT_REASON_VMON,                  "VMON" }, \
+    { EXIT_REASON_CR_ACCESS,             "CR_ACCESS" }, \
+    { EXIT_REASON_DR_ACCESS,             "DR_ACCESS" }, \
+    { EXIT_REASON_IO_INSTRUCTION,        "IO_INSTRUCTION" }, \
+    { EXIT_REASON_MSR_READ,              "MSR_READ" }, \
+    { EXIT_REASON_MSR_WRITE,             "MSR_WRITE" }, \
+    { EXIT_REASON_MWAIT_INSTRUCTION,     "MWAIT_INSTRUCTION" }, \
+    { EXIT_REASON_MONITOR_INSTRUCTION,   "MONITOR_INSTRUCTION" }, \
+    { EXIT_REASON_PAUSE_INSTRUCTION,     "PAUSE_INSTRUCTION" }, \
+    { EXIT_REASON_MCE_DURING_VMENTRY,    "MCE_DURING_VMENTRY" }, \
+    { EXIT_REASON_TPR_BELOW_THRESHOLD,   "TPR_BELOW_THRESHOLD" }, \
+    { EXIT_REASON_APIC_ACCESS,           "APIC_ACCESS" }, \
+    { EXIT_REASON_EPT_VIOLATION,         "EPT_VIOLATION" }, \
+    { EXIT_REASON_EPT_MISCONFIG,         "EPT_MISCONFIG" }, \
+    { EXIT_REASON_WBINVD,                "WBINVD" }
 
 #endif

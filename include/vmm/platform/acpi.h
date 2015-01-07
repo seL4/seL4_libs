@@ -18,7 +18,7 @@ typedef struct acpi_rsdp {
 } acpi_rsdp_t;
 
 typedef struct acpi_rsdx {
-	acpi_rsdp_t  rsdp;
+    acpi_rsdp_t  rsdp;
     uint32_t     length;
     uint64_t     xsdt_address; // Only a 32 bit value
     uint8_t      extended_checksum;
@@ -26,26 +26,26 @@ typedef struct acpi_rsdx {
 } acpi_rsdx_t;
 
 typedef struct acpi_table_head {
-	char		signature[4];
-	uint32_t	length;
-	uint8_t		revision;
-	uint8_t		checksum;
-	char		oem_id[6];
-	char		oem_table_id[8];
-	uint32_t	oem_rev;
-	char		creator_id[4];
-	uint32_t	creator_rev;
+    char        signature[4];
+    uint32_t    length;
+    uint8_t     revision;
+    uint8_t     checksum;
+    char        oem_id[6];
+    char        oem_table_id[8];
+    uint32_t    oem_rev;
+    char        creator_id[4];
+    uint32_t    creator_rev;
 } acpi_table_head_t;
 
 typedef struct acpi_xsdt {
-	acpi_table_head_t	head;
+    acpi_table_head_t   head;
 } acpi_xsdt_t;
 
 /* Multiple APIC Description Table (MADT) */
 typedef struct acpi_madt {
-    acpi_table_head_t	head;
-    uint32_t			apic_addr;
-    uint32_t			flags;
+    acpi_table_head_t   head;
+    uint32_t            apic_addr;
+    uint32_t            flags;
 } acpi_madt_t;
 
 typedef struct acpi_madt_header {

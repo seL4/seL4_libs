@@ -11,29 +11,29 @@ int vmm_decode_instruction(uint8_t *instr, int instr_len, int *reg, uint32_t *im
 /* Interpret just enough virtual 8086 instructions to run trampoline code.
    Returns the final jump address */
 uintptr_t rmpiggie(guest_memory_t *gm, uint8_t *instr_buf, uint16_t *segment,
-		uintptr_t eip, uint32_t len, guest_state_t *gs);
+        uintptr_t eip, uint32_t len, guest_state_t *gs);
 
 // TODO don't have these in a header, make them inline functions
 const static int vmm_decoder_reg_mapw[] = {
-	USER_CONTEXT_EAX,
-	USER_CONTEXT_ECX,
-	USER_CONTEXT_EDX,
-	USER_CONTEXT_EBX,
-	USER_CONTEXT_ESP,
-	USER_CONTEXT_EBP,
-	USER_CONTEXT_ESI,
-	USER_CONTEXT_EDI
+    USER_CONTEXT_EAX,
+    USER_CONTEXT_ECX,
+    USER_CONTEXT_EDX,
+    USER_CONTEXT_EBX,
+    USER_CONTEXT_ESP,
+    USER_CONTEXT_EBP,
+    USER_CONTEXT_ESI,
+    USER_CONTEXT_EDI
 };
 
 const static int vmm_decoder_reg_mapb[] = {
-	USER_CONTEXT_EAX,
-	USER_CONTEXT_ECX,
-	USER_CONTEXT_EDX,
-	USER_CONTEXT_EBX,
-	USER_CONTEXT_EAX,
-	USER_CONTEXT_ECX,
-	USER_CONTEXT_EDX,
-	USER_CONTEXT_EBX
+    USER_CONTEXT_EAX,
+    USER_CONTEXT_ECX,
+    USER_CONTEXT_EDX,
+    USER_CONTEXT_EBX,
+    USER_CONTEXT_EAX,
+    USER_CONTEXT_ECX,
+    USER_CONTEXT_EDX,
+    USER_CONTEXT_EBX
 };
 
 #endif

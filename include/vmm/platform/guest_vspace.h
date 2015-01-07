@@ -20,6 +20,13 @@
  * and several IO spaces as well as translation to mappings in the VMM vspace */
 int vmm_get_guest_vspace(vspace_t *loader, vspace_t *vmm_vspace, vspace_t *new_vspace, vka_t *vka, seL4_CPtr page_directory);
 
+/* Helpers for use with touch below */
+int vmm_guest_get_phys_data_help(uintptr_t addr, void *vaddr, size_t size,
+        size_t offset, void *cookie);
+
+int vmm_guest_set_phys_data_help(uintptr_t addr, void *vaddr, size_t size,
+        size_t offset, void *cookie);
+
 /* callback used for each portion of vmm_guest_vspace_touch.
  * if the return value is non zero this signals the parent
  * loop to stop and return the given value */

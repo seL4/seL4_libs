@@ -11,6 +11,7 @@
 #include <autoconf.h>
 
 #include <stdlib.h>
+#include <string.h>
 
 #include <vspace/vspace.h>
 #include <sel4utils/vspace.h>
@@ -139,6 +140,21 @@ int vmm_get_guest_vspace(vspace_t *loader, vspace_t *vmm, vspace_t *new_vspace, 
         LOG_ERROR("Failed to create guest vspace");
         return error;
     }
+    return 0;
+}
+
+/* Helpers for use with touch below */
+int vmm_guest_get_phys_data_help(uintptr_t addr, void *vaddr, size_t size,
+        size_t offset, void *cookie) {
+    memcpy(cookie, vaddr, size);
+
+    return 0;
+}
+
+int vmm_guest_set_phys_data_help(uintptr_t addr, void *vaddr, size_t size,
+        size_t offset, void *cookie) {
+    memcpy(vaddr, cookie, size);
+
     return 0;
 }
 

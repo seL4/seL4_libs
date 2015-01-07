@@ -75,26 +75,26 @@ int vmm_init_host(vmm_t *vmm) {
     return 0;
 }
 
-static void install_guest_fault_ep(vmm_t *vmm, unsigned int num) {
+static void install_guest_fault_ep(vmm_t *vmm, unsigned int vcpu_num) {
     cspacepath_t host_fault_path;
     cspacepath_t guest_fault_path;
     int error;
 
     vka_cspace_make_path(&vmm->vka, vmm->guest_fault_ep, &host_fault_path);
 
-    guest_fault_path.root = vmm->vcpus[num].guest_cnode;
+    guest_fault_path.root = vmm->vcpus[vcpu_num].guest_cnode;
     guest_fault_path.capPtr = LIB_VMM_GUEST_OS_FAULT_EP_CAP;
     guest_fault_path.capDepth = GUEST_CNODE_SIZE;
 
     error = vka_cnode_mint(&guest_fault_path, &host_fault_path, seL4_AllRights,
-            seL4_CapData_Badge_new(num));
+            seL4_CapData_Badge_new(vcpu_num));
     assert(error == seL4_NoError);
 }
 
-static int vmm_init_vcpu(vmm_t *vmm, unsigned int num, int priority) {
+static int vmm_init_vcpu(vmm_t *vmm, unsigned int vcpu_num, int priority) {
     int error;
-    assert(num < vmm->num_vcpus);
-    vmm_vcpu_t *vcpu = &vmm->vcpus[num];
+    assert(vcpu_num < vmm->num_vcpus);
+    vmm_vcpu_t *vcpu = &vmm->vcpus[vcpu_num];
     
     error = vka_cspace_alloc_path(&vmm->vka, &vcpu->reply_slot);
     if (error) {
@@ -116,7 +116,7 @@ static int vmm_init_vcpu(vmm_t *vmm, unsigned int num, int priority) {
     }
 
     /* Set the guest TCB information */
-    install_guest_fault_ep(vmm, num);
+    install_guest_fault_ep(vmm, vcpu_num);
     error = seL4_TCB_SetSpace(vcpu->guest_tcb, LIB_VMM_GUEST_OS_FAULT_EP_CAP,
             vcpu->guest_cnode,
             seL4_CapData_Guard_new(0, 32 - GUEST_CNODE_SIZE),
@@ -128,10 +128,10 @@ static int vmm_init_vcpu(vmm_t *vmm, unsigned int num, int priority) {
     assert(error == seL4_NoError);
     
     vcpu->vmm = vmm;
-    vcpu->vcpu_id = num;
+    vcpu->vcpu_id = vcpu_num;
 
-    /* lapic is started enabled on aps  TODO is this correct? or should they all be disabled on startup?*/
-    vmm_create_lapic(vcpu, num != BOOT_VCPU);
+    /* All LAPICs are created enabled, in virtual wire mode */
+    vmm_create_lapic(vcpu, 1);
 
     return 0;
 }

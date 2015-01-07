@@ -37,26 +37,12 @@ Author: W.A.
 
 #define SEG_MULT (0x10)
 
-static int guest_get_phys_data_help(uintptr_t addr, void *vaddr, size_t size,
-        size_t offset, void *cookie) {
-    memcpy(cookie, vaddr, size);
-
-    return 0;
-}
-
-static int guest_set_phys_data_help(uintptr_t addr, void *vaddr, size_t size,
-        size_t offset, void *cookie) {
-    memcpy(vaddr, cookie, size);
-
-    return 0;
-}
-
 /* Get a word from a guest physical address */
 inline static uint32_t guest_get_phys_word(vmm_t *vmm, uintptr_t addr) {
     uint32_t val;
 
     vmm_guest_vspace_touch(&vmm->guest_mem.vspace, addr, sizeof(uint32_t),
-            guest_get_phys_data_help, &val);
+            vmm_guest_get_phys_data_help, &val);
 
     return val;
 }
@@ -66,6 +52,9 @@ int vmm_fetch_instruction(vmm_vcpu_t *vcpu, uint32_t eip, uintptr_t cr3,
         int len, uint8_t *buf) {
     /* Walk page tables to get physical address of instruction */
     uintptr_t instr_phys = 0;
+
+    // TODO implement page-boundary crossing properly
+    assert((eip >> 12) == ((eip + len) >> 12));
 
     uint32_t pdi = eip >> 22;
     uint32_t pti = (eip >> 12) & 0x3FF;
@@ -89,7 +78,7 @@ int vmm_fetch_instruction(vmm_vcpu_t *vcpu, uint32_t eip, uintptr_t cr3,
 
     /* Fetch instruction */
     vmm_guest_vspace_touch(&vcpu->vmm->guest_mem.vspace, instr_phys, len,
-            guest_get_phys_data_help, buf);
+            vmm_guest_get_phys_data_help, buf);
 
     return 0;
 }
@@ -205,6 +194,9 @@ uintptr_t vmm_emulate_realmode(guest_memory_t *gm, uint8_t *instr_buf,
         uint32_t lit = 0;
         int m66 = 0;
 
+        uint32_t base = 0;
+        uint32_t limit = 0;
+
         if (*instr == 0x66) {
             m66 = 1;
             instr++;
@@ -220,29 +212,33 @@ uintptr_t vmm_emulate_realmode(guest_memory_t *gm, uint8_t *instr_buf,
                     memcpy(&mem, instr, 2);
                     mem += *segment * SEG_MULT;
                     instr += 2;
+
                     /* Limit is first 2 bytes, base is next 4 bytes */
-                    gs->virt.dt.idt_limit = 0;
-                    gs->virt.dt.idt_base = 0;
                     vmm_guest_vspace_touch(&gm->vspace, mem,
-                            2, guest_get_phys_data_help, &gs->virt.dt.idt_limit);
+                            2, vmm_guest_get_phys_data_help, &limit);
                     vmm_guest_vspace_touch(&gm->vspace, mem + 2,
-                            4, guest_get_phys_data_help, &gs->virt.dt.idt_base);
+                            4, vmm_guest_get_phys_data_help, &base);
                     DPRINTF(4, "lidtl 0x%x\n", mem);
+
+                    vmm_guest_state_set_idt_base(gs, base);
+                    vmm_guest_state_set_idt_limit(gs, limit);
                 } else if (*instr == 0x16) {
                     // lgdtl
                     instr++;
                     memcpy(&mem, instr, 2);
                     mem += *segment * SEG_MULT;
                     instr += 2;
+
                     /* Limit is first 2 bytes, base is next 4 bytes */
-                    gs->virt.dt.gdt_limit = 0;
-                    gs->virt.dt.gdt_base = 0;
                     vmm_guest_vspace_touch(&gm->vspace, mem,
-                            2, guest_get_phys_data_help, &gs->virt.dt.gdt_limit);
+                            2, vmm_guest_get_phys_data_help, &limit);
                     vmm_guest_vspace_touch(&gm->vspace, mem + 2,
-                            4, guest_get_phys_data_help, &gs->virt.dt.gdt_base);
+                            4, vmm_guest_get_phys_data_help, &base);
                     DPRINTF(4, "lgdtl 0x%x; base = %x, limit = %x\n", mem,
-                            gs->virt.dt.gdt_base, gs->virt.dt.gdt_limit);
+                            base, limit);
+
+                    vmm_guest_state_set_gdt_base(gs, base);
+                    vmm_guest_state_set_gdt_limit(gs, limit);
                 } else {
                     //ignore
                     instr++;
@@ -276,6 +272,7 @@ uintptr_t vmm_emulate_realmode(guest_memory_t *gm, uint8_t *instr_buf,
             instr += 2;
             DPRINTF(4, "absolute jmpf $0x%08x, cs now %04x\n", jmp_addr, *segment);
             if (((int64_t)jmp_addr - (int64_t)(len + eip)) >= 0) {
+                vmm_guest_state_set_cs_selector(gs, *segment);
                 return jmp_addr;
             } else {
                 instr = jmp_addr - eip + instr_buf;
@@ -291,7 +288,7 @@ uintptr_t vmm_emulate_realmode(guest_memory_t *gm, uint8_t *instr_buf,
                     DPRINTF(4, "mov 0x%x, eax\n", mem);
                     uint32_t eax;
                     vmm_guest_vspace_touch(&gm->vspace, mem,
-                            4, guest_get_phys_data_help, &eax);
+                            4, vmm_guest_get_phys_data_help, &eax);
                     vmm_set_user_context(gs, USER_CONTEXT_EAX, eax);
                     break;
                 case 0xc7:
@@ -313,7 +310,7 @@ uintptr_t vmm_emulate_realmode(guest_memory_t *gm, uint8_t *instr_buf,
                         instr += size;
                         DPRINTF(4, "mov $0x%x, 0x%x\n", lit, mem);
                         vmm_guest_vspace_touch(&gm->vspace, mem,
-                                size, guest_set_phys_data_help, &lit);
+                                size, vmm_guest_set_phys_data_help, &lit);
                     }
                     break;
                 case 0xba:

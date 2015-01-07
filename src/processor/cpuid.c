@@ -52,11 +52,7 @@ static int vmm_cpuid_virt(unsigned int function, unsigned int index, struct cpui
     const unsigned int kvm_supported_word0_x86_features =
         F(FPU) | 0 /*F(VME)*/ | 0 /*F(DE)*/ | 0/*F(PSE)*/ |
         F(TSC) | 0/*F(MSR)*/ | 0 /*F(PAE)*/ | 0/*F(MCE)*/ |
-        0 /*F(CX8)*/ | F(APIC) |
-        /* For backwards compatibility in this lib, local apic is not
-           enabled when there is 1 vcpu */
-        /*(vcpu->vmm->num_vcpus > 1) ? F(APIC) : 0 | */
-        0 /* Reserved */ | F(SEP) |
+        0 /*F(CX8)*/ | F(APIC) | 0 /* Reserved */ | F(SEP) |
         /*F(MTRR)*/ 0 | F(PGE) | 0/*F(MCA)*/ | F(CMOV) |
         0 /*F(PAT)*/ | 0 /* F(PSE36)*/ | 0 /* PSN */ | 0/*F(CLFLSH)*/ |
         0 /* Reserved, DS, ACPI */ | F(MMX) |

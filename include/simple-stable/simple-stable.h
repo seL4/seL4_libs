@@ -27,5 +27,6 @@ void simple_stable_init_bootinfo(simple_t *simple, seL4_BootInfo *bi);
  * bootinfo is declared as a void pointer, this is to match how the function
  * is used internally */
 seL4_Error simple_stable_get_frame_cap(void *bootinfo, void *paddr, int size_bits, cspacepath_t *path);
+void *simple_stable_get_frame_info(void *data, void *paddr, int size_bits, seL4_CPtr *frame_cap, seL4_Word *ut_offset);
 
 #endif /* _SIMPLE_STABLE_H_ */

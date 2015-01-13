@@ -36,8 +36,8 @@ typedef int (*test_fn)(env_t, void *);
 
 /* Represents a single testcase. */
 typedef struct testcase {
-    char *name;
-    char *description;
+    const char *name;
+    const char *description;
     test_fn function;
     void *args;
 } testcase_t;  

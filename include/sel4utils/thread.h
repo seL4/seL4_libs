@@ -155,7 +155,7 @@ int sel4utils_start_fault_handler(seL4_CPtr fault_endpoint, vka_t *vka, vspace_t
  * @param tag the message info tag delivered by the fault.
  * @param name thread name
  */
-void sel4utils_print_fault_message(seL4_MessageInfo_t tag, char *name);
+void sel4utils_print_fault_message(seL4_MessageInfo_t tag, const char *name);
 
 static inline seL4_TCB
 sel4utils_get_tcb(sel4utils_thread_t *thread)

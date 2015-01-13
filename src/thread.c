@@ -195,7 +195,7 @@ sel4utils_clean_up_thread(vka_t *vka, vspace_t *alloc, sel4utils_thread_t *threa
 }
 
 void
-sel4utils_print_fault_message(seL4_MessageInfo_t tag, char *thread_name)
+sel4utils_print_fault_message(seL4_MessageInfo_t tag, const char *thread_name)
 {
     switch (seL4_MessageInfo_get_label(tag)) {
     case SEL4_PFIPC_LABEL:

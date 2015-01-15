@@ -24,6 +24,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <utils/util.h>
 
 #include "vmm/debug.h"
 
@@ -290,7 +291,7 @@ static int find_highest_vector(void *bitmap)
     return -1;
 }
 
-static uint8_t count_vectors(void *bitmap)
+static uint8_t UNUSED count_vectors(void *bitmap)
 {
     int vec;
     uint32_t *reg;
@@ -730,7 +731,7 @@ static void apic_send_ipi(vmm_vcpu_t *vcpu)
     vmm_irq_delivery_to_apic(vcpu, &irq, NULL); // TODO maybe make use of dest_map
 }
 
-static uint32_t apic_get_tmcct(vmm_lapic_t *apic)
+static uint32_t UNUSED apic_get_tmcct(vmm_lapic_t *apic)
 {
 #if 0
     ktime_t remaining;
@@ -1221,7 +1222,7 @@ void vmm_lapic_reset(vmm_vcpu_t *vcpu)
  *--------------------------------------------------------------------
  */
 
-static bool lapic_is_periodic(vmm_lapic_t *apic)
+static bool UNUSED lapic_is_periodic(vmm_lapic_t *apic)
 {
     //return apic_lvtt_period(apic);
     return false;

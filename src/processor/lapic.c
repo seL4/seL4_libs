@@ -36,7 +36,7 @@
 
 /* We use our own APIC debug print because debugging this is painful and we want
    high verbosity here */
-#define APIC_DEBUG 1
+#define APIC_DEBUG 0
 #define apic_debug(lvl,...) do{ if(lvl < APIC_DEBUG){printf(__VA_ARGS__);fflush(stdout);}}while (0)
 
 #define APIC_LVT_NUM            6
@@ -50,9 +50,6 @@
 #define MAX_APIC_VECTOR         256
 #define APIC_VECTORS_PER_REG        32
 
-#define VEC_POS(v) ((v) & (32 - 1))
-#define REG_POS(v) (((v) >> 5) << 4)
-
 struct vmm_lapic_irq {
     uint32_t vector;
     uint32_t delivery_mode;
@@ -63,7 +60,7 @@ struct vmm_lapic_irq {
     uint32_t dest_id;
 };
 
-/* Generic bit operaations; TODO move these elsewhere */
+/* Generic bit operations; TODO move these elsewhere */
 static inline int fls(int x)
 {
     int r = 32;
@@ -226,8 +223,7 @@ static inline int apic_lvt_vector(vmm_lapic_t *apic, int lvt_type)
 
 static inline int vmm_vcpu_is_bsp(vmm_vcpu_t *vcpu)
 {
-    // vcpu 0 is always the BSP. TODO define this centrally somewhere
-    return vcpu->vcpu_id == 0;
+    return vcpu->vcpu_id == BOOT_VCPU;
 }
 
 #if 0
@@ -275,16 +271,31 @@ int vmm_apic_compare_prio(vmm_vcpu_t *vcpu1, vmm_vcpu_t *vcpu2)
     return vcpu1->lapic->arb_prio - vcpu2->lapic->arb_prio;
 }
 
+static void dump_vector(const char *name, void *bitmap)
+{
+    int vec;
+    uint32_t *reg = bitmap;
+    
+    printf("%s = 0x", name);
+
+    for (vec = MAX_APIC_VECTOR - APIC_VECTORS_PER_REG;
+            vec >= 0; vec -= APIC_VECTORS_PER_REG) {
+        printf("%08x", reg[vec >> 5]);
+    }
+
+    printf("\n");
+}
+
+
 static int find_highest_vector(void *bitmap)
 {
     int vec;
-    uint32_t *reg;
+    uint32_t *reg = bitmap;
 
     for (vec = MAX_APIC_VECTOR - APIC_VECTORS_PER_REG;
          vec >= 0; vec -= APIC_VECTORS_PER_REG) {
-        reg = bitmap + REG_POS(vec);
-        if (*reg)
-            return fls(*reg) - 1 + vec;
+        if (reg[vec >> 5])
+            return fls(reg[vec >> 5]) - 1 + vec;
     }
 
     return -1;
@@ -293,17 +304,18 @@ static int find_highest_vector(void *bitmap)
 static uint8_t count_vectors(void *bitmap)
 {
     int vec;
-    uint32_t *reg;
+    uint32_t *reg = bitmap;
     uint8_t count = 0;
 
     for (vec = 0; vec < MAX_APIC_VECTOR; vec += APIC_VECTORS_PER_REG) {
-        reg = bitmap + REG_POS(vec);
-        count += hweight32(*reg);
+        count += hweight32(reg[vec >> 5]);
     }
 
     return count;
 }
 
+//TODO what is this used for? what is pir? is it to do with apicv? can we delete this?
+#if 0
 void vmm_apic_update_irr(vmm_vcpu_t *vcpu, uint32_t *pir)
 {
     uint32_t i, pir_val;
@@ -319,12 +331,7 @@ void vmm_apic_update_irr(vmm_vcpu_t *vcpu, uint32_t *pir)
         }
     }
 }
-
-static inline void apic_set_irr(int vec, vmm_lapic_t *apic)
-{
-    apic->irr_pending = true;
-    apic_set_vector(vec, apic->regs + APIC_IRR);
-}
+#endif
 
 static inline int apic_search_irr(vmm_lapic_t *apic)
 {
@@ -344,6 +351,16 @@ static inline int apic_find_highest_irr(vmm_lapic_t *apic)
     return result;
 }
 
+static inline void apic_set_irr(int vec, vmm_lapic_t *apic)
+{
+    if (vec != 0x30) {
+        apic_debug(5, "!settting irr 0x%x\n", vec);
+    }
+
+    apic->irr_pending = true;
+    apic_set_vector(vec, apic->regs + APIC_IRR);
+}
+
 static inline void apic_clear_irr(int vec, vmm_lapic_t *apic)
 {
     apic_clear_vector(vec, apic->regs + APIC_IRR);
@@ -354,14 +371,12 @@ static inline void apic_clear_irr(int vec, vmm_lapic_t *apic)
 
 static inline void apic_set_isr(int vec, vmm_lapic_t *apic)
 {
-    /*
-    if (__apic_test_and_set_vector(vec, apic->regs + APIC_ISR))
+    if (apic_test_vector(vec, apic->regs + APIC_ISR)) {
         return;
-        */
+    }
     apic_set_vector(vec, apic->regs + APIC_ISR);
 
     ++apic->isr_count;
-    assert(apic->isr_count > MAX_APIC_VECTOR);
     /*
      * ISR (in service register) bit is set when injecting an interrupt.
      * The highest vector is injected. Thus the latest bit set matches
@@ -390,13 +405,13 @@ static inline int apic_find_highest_isr(vmm_lapic_t *apic)
 
 static inline void apic_clear_isr(int vec, vmm_lapic_t *apic)
 {
-    /*if (!__apic_test_and_clear_vector(vec, apic->regs + APIC_ISR))
-        return;*/
-    /* See: /arch/x86/include/asm/bitops.h:267, Linux 3.18 */
+    if (!apic_test_vector(vec, apic->regs + APIC_ISR)) {
+        return;
+    }
     apic_clear_vector(vec, apic->regs + APIC_ISR);
 
     --apic->isr_count;
-    assert(apic->isr_count < 0);
+    //assert(apic->isr_count > 0);
     apic->highest_isr_cache = -1;
 }
 
@@ -450,7 +465,7 @@ static void apic_update_ppr(vmm_lapic_t *apic)
     else
         ppr = isrv & 0xf0;
 
-    apic_debug(6, "vlapic %p, ppr 0x%x, isr 0x%x, isrv 0x%x",
+    apic_debug(6, "vlapic %p, ppr 0x%x, isr 0x%x, isrv 0x%x\n",
            apic, ppr, isr, isrv);
 
     if (old_ppr != ppr) {
@@ -558,7 +573,7 @@ int vmm_irq_delivery_to_apic(vmm_vcpu_t *src_vcpu, struct vmm_lapic_irq *irq, un
         //printf("dest=%d\n", dest_vcpu->vcpu_id);
 
         if (!vmm_apic_hw_enabled(dest_vcpu->lapic)) {
-            //continue;
+            continue;
         }
     
         if (!vmm_apic_match_dest(dest_vcpu, src, irq->shorthand,
@@ -605,8 +620,10 @@ static int __apic_accept_irq(vmm_vcpu_t *vcpu, int delivery_mode,
         apic->arb_prio++;
     case APIC_DM_FIXED:
         /* FIXME add logic for vcpu on reset */
-        if (!vmm_apic_enabled(apic))
-            break;
+        if (!vmm_apic_enabled(apic)) {
+            //break;
+        }
+        apic_debug(4, "####fixed ipi 0x%x to vcpu %d\n", vector, vcpu->vcpu_id);
 
         result = 1;
         apic_set_irr(vector, apic);
@@ -652,15 +669,13 @@ static int __apic_accept_irq(vmm_vcpu_t *vcpu, int delivery_mode,
             vmm_start_ap_vcpu(vcpu, vector);
         }
         break;
-
+    
     case APIC_DM_EXTINT:
-        /*
-         * Should only be called by vmm_apic_local_deliver() with LVT0,
-         * before NMI watchdog was enabled. Already handled by
-         * vmm_apic_accept_pic_intr().
-         */
+        /* extints are handled by vmm_apic_consume_extints */
+        printf("extint should not come to this function. vcpu %d\n", vcpu->vcpu_id);
+        assert(0);
         break;
-
+    
     default:
         printf("TODO: unsupported lapic ipi delivery mode %x", delivery_mode);
         assert(0);
@@ -701,7 +716,7 @@ static int apic_set_eoi(vmm_lapic_t *apic)
 
 //  vmm_ioapic_send_eoi(apic, vector);
 //  vmm_make_request(KVM_REQ_EVENT, apic->vcpu);
-    //TODO what do we need to do here? I think the guest acks the pic
+    //TODO what do we need to do here?
     return vector;
 }
 
@@ -1015,7 +1030,7 @@ void vmm_apic_mmio_write(vmm_vcpu_t *vcpu, void *cookie, uint32_t offset,
 
     /* too common printing */
     if (offset != APIC_EOI)
-        apic_debug(6, "lapic write at %s: offset 0x%x with length 0x%x, and value is "
+        apic_debug(6, "lapic mmio write at %s: offset 0x%x with length 0x%x, and value is "
                "0x%x\n", __func__, offset, len, data);
 
     apic_reg_write(vcpu, offset & 0xff0, data);
@@ -1064,6 +1079,8 @@ void vmm_apic_mmio_read(vmm_vcpu_t *vcpu, void *cookie, uint32_t offset,
     (void)cookie;
 
     apic_reg_read(apic, offset, len, data);
+
+    apic_debug(6, "lapic mmio read on vcpu %d, reg %08x = %08x\n", vcpu->vcpu_id, offset, *data);
 
     return;
 }
@@ -1147,6 +1164,13 @@ uint64_t vmm_lapic_get_cr8(vmm_vcpu_t *vcpu)
 
 void vmm_lapic_set_base_msr(vmm_vcpu_t *vcpu, uint32_t value)
 {
+    apic_debug(2, "IA32_APIC_BASE MSR set to %08x on vcpu %d\n", value, vcpu->vcpu_id);
+
+    if (!(value & MSR_IA32_APICBASE_ENABLE)) {
+        printf("Warning! Local apic has been disabled by MSR on vcpu %d. "
+               "This will probably not work!\n", vcpu->vcpu_id);
+    }
+
     vcpu->lapic->apic_base = value;
 }
 
@@ -1159,6 +1183,8 @@ uint32_t vmm_lapic_get_base_msr(vmm_vcpu_t *vcpu)
     } else {
         value &= ~MSR_IA32_APICBASE_BSP;
     }
+
+    apic_debug(2, "Read from IA32_APIC_BASE MSR returns %08x on vcpu %d\n", value, vcpu->vcpu_id);
 
     return value;   
 }
@@ -1182,8 +1208,6 @@ void vmm_lapic_reset(vmm_vcpu_t *vcpu)
 
     for (i = 0; i < APIC_LVT_NUM; i++)
         apic_set_reg(apic, APIC_LVTT + 0x10 * i, APIC_LVT_MASKED);
-    apic_set_reg(apic, APIC_LVT0,
-             SET_APIC_DELIVERY_MODE(0, APIC_MODE_EXTINT));
 
     apic_set_reg(apic, APIC_DFR, 0xffffffffU);
     apic_set_spiv(apic, 0xff);
@@ -1207,12 +1231,22 @@ void vmm_lapic_reset(vmm_vcpu_t *vcpu)
     apic_update_ppr(apic);
 
     vcpu->lapic->arb_prio = 0;
-    //vcpu->lapic_attention = 0; // XXX what is this for?
 
     apic_debug(4, "%s: vcpu=%p, id=%d, base_msr="
            "0x%016x\n", __func__,
            vcpu, vmm_apic_id(apic),
            apic->apic_base);
+
+    if (vcpu->vcpu_id == BOOT_VCPU) {
+        /* Bootstrap boot vcpu lapic in virtual wire mode */
+        apic_set_reg(apic, APIC_LVT0,
+             SET_APIC_DELIVERY_MODE(0, APIC_MODE_EXTINT));
+        apic_set_reg(apic, APIC_SPIV, APIC_SPIV_APIC_ENABLED);
+
+        assert(vmm_apic_sw_enabled(apic));
+    } else {
+        apic_set_reg(apic, APIC_SPIV, 0);
+    }
 }
 
 /*
@@ -1239,33 +1273,14 @@ int apic_has_pending_timer(vmm_vcpu_t *vcpu)
     return 0;
 }*/
 
-int vmm_apic_local_deliver(vmm_vcpu_t *vcpu, int lvt_type)
-{
-    vmm_lapic_t *apic = vcpu->lapic;
-    uint32_t reg = vmm_apic_get_reg(apic, lvt_type);
-    int vector, mode, trig_mode;
-
-    if (!vmm_apic_enabled(apic)) {
-        vmm_vcpu_accept_interrupt(vcpu);
-            printf("pic\n");
-        return -1; // pic's get/has_interrupt will be called
-    }
-
-    if (!(reg & APIC_LVT_MASKED)) {
-        vector = reg & APIC_VECTOR_MASK;
-        mode = reg & APIC_MODE_MASK;
-        trig_mode = reg & APIC_LVT_LEVEL_TRIGGER;
-        return __apic_accept_irq(vcpu, mode, vector, 1, trig_mode, NULL); // TODO maybe use dest_map
-    }
-    return 0;
-}
-
 // XXX what's this for?
+#if 0
 void vmm_apic_nmi_wd_deliver(vmm_vcpu_t *vcpu)
 {
     if (vcpu)
         vmm_apic_local_deliver(vcpu, APIC_LVT0);
 }
+#endif
 
 #if 0
 static enum hrtimer_restart apic_timer_fn(struct hrtimer *data)
@@ -1334,29 +1349,100 @@ nomem:
     return -1;
 }
 
+// Choose interrupt to service
+int vmm_apic_get_interrupt(vmm_vcpu_t *vcpu)
+{
+    int vector = vmm_apic_has_interrupt(vcpu);
+    //printf("get_interrupt vector=0x%x, vcpu %d\n", vector, vcpu->vcpu_id); //debug TODO remove
+    vmm_lapic_t *apic = vcpu->lapic;
+
+    if (vector == -1)
+        return -1;
+
+    apic_set_isr(vector, apic);
+    apic_update_ppr(apic);
+    apic_clear_irr(vector, apic);
+    return vector;
+}
+
 // Return which vector is next up for servicing
 int vmm_apic_has_interrupt(vmm_vcpu_t *vcpu)
 {
     vmm_lapic_t *apic = vcpu->lapic;
     int highest_irr;
 
+    //dump_vector("irr", apic->regs + APIC_IRR);
+
     apic_update_ppr(apic);
     highest_irr = apic_find_highest_irr(apic);
-    if ((highest_irr == -1) ||
-        ((highest_irr & 0xF0) <= vmm_apic_get_reg(apic, APIC_PROCPRI)))
+    //printf("highest irr = 0x%x, ppr = 0x%x\n", highest_irr, vmm_apic_get_reg(apic, APIC_PROCPRI));
+    if ((highest_irr == -1) /*||
+        ((highest_irr & 0xF0) <= vmm_apic_get_reg(apic, APIC_PROCPRI))*/) {
+        //printf("lapic doesn't have interrupt\n");
         return -1;
+    }
+    //printf("lapic has interrupt!\n");
     return highest_irr;
 }
 
-// Return 1 if this vcpu should accept a PIC interrupt
+/* Return 1 if this vcpu should accept a PIC interrupt */
 int vmm_apic_accept_pic_intr(vmm_vcpu_t *vcpu)
 {
     vmm_lapic_t *apic = vcpu->lapic;
     uint32_t lvt0 = vmm_apic_get_reg(apic, APIC_LVT0);
+//    printf("vcpu %d lapic lvt0=%08x, sw_enabled=%d\n", vcpu->vcpu_id, lvt0, vmm_apic_sw_enabled(vcpu->lapic));
 
     return ((lvt0 & APIC_LVT_MASKED) == 0 &&
-        GET_APIC_DELIVERY_MODE(lvt0) == APIC_MODE_EXTINT);
+        GET_APIC_DELIVERY_MODE(lvt0) == APIC_MODE_EXTINT &&
+        vmm_apic_sw_enabled(vcpu->lapic));
 }
+
+/* If we are accepting interrupts from an external controller (i.e. 8259), 
+   pull them all out of that controller, then inject them into our guest */
+void vmm_apic_consume_extints(vmm_vcpu_t *vcpu, int (*get)(void))
+{
+    assert(get);
+    assert(vmm_apic_accept_pic_intr(vcpu));
+
+    int irq = -1;
+
+    /* Load all the external interrupts pending into the irr */
+    while (1) {
+        irq = get();
+        //printf("pic gave us irq 0x%x\n", irq);
+
+        if (irq < 0) {
+            break;
+        }
+
+        if (irq < 16) {
+            continue;
+        }
+        
+        assert(irq == (irq & 0xff));
+
+        apic_set_irr(irq, vcpu->lapic);
+    }
+
+    vmm_vcpu_accept_interrupt(vcpu);
+}
+
+#if 0
+int vmm_apic_local_deliver(vmm_vcpu_t *vcpu, int lvt_type)
+{
+    vmm_lapic_t *apic = vcpu->lapic;
+    uint32_t reg = vmm_apic_get_reg(apic, lvt_type);
+    int vector, mode, trig_mode;
+
+    if (!(reg & APIC_LVT_MASKED)) {
+        vector = reg & APIC_VECTOR_MASK;
+        mode = reg & APIC_MODE_MASK;
+        trig_mode = reg & APIC_LVT_LEVEL_TRIGGER;
+        return __apic_accept_irq(vcpu, mode, vector, 1, trig_mode, NULL);
+    }
+    return 0;
+}
+#endif
 
 #if 0
 void vmm_inject_apic_timer_irqs(vmm_vcpu_t *vcpu)
@@ -1374,22 +1460,6 @@ void vmm_inject_apic_timer_irqs(vmm_vcpu_t *vcpu)
     }
 }
 #endif
-
-// Choose interrupt to service
-int vmm_apic_get_interrupt(vmm_vcpu_t *vcpu)
-{
-    int vector = vmm_apic_has_interrupt(vcpu);
-    printf("get_interrupt vector=0x%x, vcpu %d\n", vector, vcpu->vcpu_id);
-    vmm_lapic_t *apic = vcpu->lapic;
-
-    if (vector == -1)
-        return -1;
-
-    apic_set_isr(vector, apic);
-    apic_update_ppr(apic);
-    apic_clear_irr(vector, apic);
-    return vector;
-}
 
 #if 0
 void vmm_apic_post_state_restore(vmm_vcpu_t *vcpu,

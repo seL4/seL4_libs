@@ -29,14 +29,8 @@ static void resume_guest(vmm_vcpu_t *vcpu) {
 }
 
 static void inject_irq(vmm_vcpu_t *vcpu, int irq) {
-    /* Inject an IRQ into the guest's execution state. */
-#if 0
-    if (vcpu->vcpu_id > 0) {
-        printf("injecting irq 0x%x on vcpu %d\n", irq, vcpu->vcpu_id);
-    }
-#endif
-    assert((irq & 0xff) == irq);
-    irq &= 0xff;
+    /* Inject a vectored exception into the guest */
+    //printf("injecting vecotr 0x%x on vcpu %d\n", irq, vcpu->vcpu_id);
     vmm_guest_state_set_control_entry(&vcpu->guest_state, BIT(31) | irq);
 }
 
@@ -62,32 +56,9 @@ int can_inject(vmm_vcpu_t *vcpu) {
     return 0;
 }
 
-/* XXX These should be cleaned up when 8259 is moved into here */
-/* There is an issue with delivery of fixed LAPIC interrupts, TODO fix this. In
-   the mean time, interrupt injection works very little on a multi-vcpu system */
-int get_interrupt(vmm_vcpu_t *vcpu)
-{
-    if (vmm_apic_enabled(vcpu->lapic)) {
-        return vmm_apic_get_interrupt(vcpu);
-    } else {
-        /* Use PIC if LAPIC is disabled */
-        return vcpu->vmm->plat_callbacks.get_interrupt();
-    }
-}
-
-int has_interrupt(vmm_vcpu_t *vcpu)
-{
-    if (vmm_apic_enabled(vcpu->lapic)) {
-        return vmm_apic_has_interrupt(vcpu);
-    } else {
-        /* Use PIC if LAPIC is disabled */
-        return vcpu->vmm->plat_callbacks.has_interrupt();
-    }
-}
-
-/* This function is called when a new interrupt has occured. */
+/* This function is called by the local apic when a new interrupt has occured. */
 void vmm_have_pending_interrupt(vmm_vcpu_t *vcpu) {
-    if (has_interrupt(vcpu)) {
+    if (vmm_apic_has_interrupt(vcpu) >= 0) {
         /* there is actually an interrupt to inject */
         if (can_inject(vcpu)) {
             if (vcpu->guest_state.virt.interrupt_halt) {
@@ -96,14 +67,15 @@ void vmm_have_pending_interrupt(vmm_vcpu_t *vcpu) {
                 wait_for_guest_ready(vcpu);
                 vcpu->guest_state.virt.interrupt_halt = 0;
             } else {
-                int irq = get_interrupt(vcpu);
+                int irq = vmm_apic_get_interrupt(vcpu);
                 inject_irq(vcpu, irq);
                 /* see if there are more */
-                if (has_interrupt(vcpu)) {
+                if (vmm_apic_has_interrupt(vcpu) >= 0) {
                     wait_for_guest_ready(vcpu);
                 }
             }
         } else {
+            //printf("but can't inject, so...\n");
             wait_for_guest_ready(vcpu);
             vcpu->guest_state.virt.interrupt_halt = 0;
         }
@@ -111,15 +83,17 @@ void vmm_have_pending_interrupt(vmm_vcpu_t *vcpu) {
 }
 
 int vmm_pending_interrupt_handler(vmm_vcpu_t *vcpu) {
+    //printf("pending interrupt handler \n");
     /* see if there is actually a pending interrupt */
     assert(can_inject(vcpu));
-    int irq = get_interrupt(vcpu);
+    int irq = vmm_apic_get_interrupt(vcpu);
     if (irq == -1) {
+        printf("apic doesn't report having an itnerrupt\n");
         resume_guest(vcpu);
     } else {
         /* inject the interrupt */
         inject_irq(vcpu, irq);
-        if (!has_interrupt(vcpu)) {
+        if (!vmm_apic_has_interrupt(vcpu) >= 0) {
             resume_guest(vcpu);
         }
         vcpu->guest_state.virt.interrupt_halt = 0;
@@ -152,6 +126,23 @@ void vmm_start_ap_vcpu(vmm_vcpu_t *vcpu, unsigned int sipi_vector)
     seL4_TCB_Resume(vcpu->guest_tcb);
 }
 
+/* Got interrupt(s) from PIC, propagate to relevant vcpu lapic */
+void vmm_check_external_interrupt(vmm_t *vmm)
+{
+    /* TODO if all lapics are enabled, store which lapic
+       (only one allowed) receives extints, and short circuit this */
+    if (vmm->plat_callbacks.has_interrupt() != -1) {
+        for (int i = 0; i < vmm->num_vcpus; i++) {
+            vmm_vcpu_t *vcpu = &vmm->vcpus[i];
+            if (vmm_apic_accept_pic_intr(vcpu)) {
+                vmm_apic_consume_extints(vcpu, vmm->plat_callbacks.get_interrupt);
+            } 
+
+            break; /* Only one VCPU can take a PIC interrupt */
+        }
+    }
+}
+
 void vmm_vcpu_accept_interrupt(vmm_vcpu_t *vcpu)
 {
     /* TODO: there is a really annoying race between our need to stop the guest thread
@@ -168,6 +159,7 @@ void vmm_vcpu_accept_interrupt(vmm_vcpu_t *vcpu)
      * starts to matter */
     if (vcpu->guest_state.exit.in_exit) {
         /* in an exit, can call the regular injection method */
+        //printf("interrupt during exit reason %d\n", vmm_guest_exit_get_reason(&vcpu->guest_state));
         vmm_have_pending_interrupt(vcpu);
         vmm_sync_guest_state(vcpu);
     } else {

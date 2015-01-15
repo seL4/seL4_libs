@@ -58,6 +58,8 @@ void vmm_free_lapic(vmm_vcpu_t *vcpu);
 int vmm_apic_has_interrupt(vmm_vcpu_t *vcpu);
 int vmm_apic_get_interrupt(vmm_vcpu_t *vcpu);
 
+void vmm_apic_consume_extints(vmm_vcpu_t *vcpu, int (*get)(void));
+
 /* MSR functions */
 void vmm_lapic_set_base_msr(vmm_vcpu_t *vcpu, uint32_t value);
 uint32_t vmm_lapic_get_base_msr(vmm_vcpu_t *vcpu);

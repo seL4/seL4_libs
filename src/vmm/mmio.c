@@ -97,6 +97,11 @@ assert(size == 4); // we don't support non-32 bit accesses. TODO fix this
                         vmm_decoder_reg_mapw[reg]);
 
                 range->write_handler(vcpu, range->cookie, addr - range->start, size, value);
+
+                //debug TODO remove
+                if (!vcpu->guest_state.exit.in_exit) {
+                    printf("mmio write of %08x (size %d) to %08x has fucked something up\n", value, size, addr);
+                }
             }
 
             return 0;

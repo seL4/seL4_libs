@@ -25,11 +25,19 @@ int vmm_ept_violation_handler(vmm_vcpu_t *vcpu) {
 
     uintptr_t guest_phys = vmm_guest_exit_get_physical(&vcpu->guest_state);
     unsigned int qualification = vmm_guest_exit_get_qualification(&vcpu->guest_state);
+    
+    if (!vcpu->guest_state.exit.in_exit) {
+        printf("1exit handler called when we're not in an exit!!!\n");
+    }
 
     int e = vmm_mmio_exit_handler(vcpu, guest_phys, qualification);
 
     if (e == 0) {
         DPRINTF(5, "EPT violation handled by mmio\n");
+    if (!vcpu->guest_state.exit.in_exit) {
+        printf("2exit handler called when we're not in an exit!!!\n");
+    }
+
     } else {
         /* Read linear address that guest is trying to access. */
         unsigned int linear_address = vmm_vmcs_read(vcpu->guest_vcpu, VMX_DATA_GUEST_LINEAR_ADDRESS);
@@ -39,6 +47,10 @@ int vmm_ept_violation_handler(vmm_vcpu_t *vcpu) {
         printf("        Guest-Physical address 0x%x.\n", vmm_guest_exit_get_physical(&vcpu->guest_state));
         printf("        Instruction pointer 0x%x.\n", vmm_read_user_context(&vcpu->guest_state, USER_CONTEXT_EIP));
         printf("    This is most likely due to a bug or misconfiguration.\n" COLOUR_RESET);
+    }
+
+    if (!vcpu->guest_state.exit.in_exit) {
+        printf("3exit handler called when we're not in an exit!!!\n");
     }
 
 #ifndef CONFIG_VMM_IGNORE_EPT_VIOLATION

@@ -73,6 +73,9 @@ static void vmm_reply_vm_exit(vmm_vcpu_t *vcpu) {
 
     seL4_MessageInfo_t msg = seL4_MessageInfo_new(0, 0, 0, msg_len);
 
+    // TODO double check, but I don't think this will ever occur
+    //vmm_check_external_interrupt(vcpu->vmm);
+
     /* Before we resume the guest, ensure there is no dirty state around */
     assert(vmm_guest_state_no_modified(&vcpu->guest_state));
     vmm_guest_state_invalidate_all(&vcpu->guest_state);
@@ -93,11 +96,6 @@ void vmm_sync_guest_state(vmm_vcpu_t *vcpu) {
     vmm_guest_state_sync_gdt_base(&vcpu->guest_state, vcpu->guest_vcpu);
     vmm_guest_state_sync_gdt_limit(&vcpu->guest_state, vcpu->guest_vcpu);
     vmm_guest_state_sync_cs_selector(&vcpu->guest_state, vcpu->guest_vcpu);
-
-    if (vcpu->guest_state.exit.in_exit && !vcpu->guest_state.virt.interrupt_halt) {
-        /* Guest is blocked, but we are no longer halted. Reply to it */
-        vmm_reply_vm_exit(vcpu);
-    }
 }
 
 
@@ -121,13 +119,12 @@ static void vmm_handle_vm_exit(vmm_vcpu_t *vcpu) {
         return;
     }
 
-    /* Check for any interrupts.
-       TODO: do this more sensibly once the interrupt controller
-       emulation is part of the vmm */
-    vmm_have_pending_interrupt(vcpu);
-
     /* Reply to the VM exit exception to resume guest. */
     vmm_sync_guest_state(vcpu);
+    if (vcpu->guest_state.exit.in_exit && !vcpu->guest_state.virt.interrupt_halt) {
+        /* Guest is blocked, but we are no longer halted. Reply to it */
+        vmm_reply_vm_exit(vcpu);
+    }
 }
 
 static void vmm_update_guest_state_from_fault(vmm_vcpu_t *vcpu, seL4_Word *msg) {
@@ -158,30 +155,6 @@ static void vmm_update_guest_state_from_fault(vmm_vcpu_t *vcpu, seL4_Word *msg) 
     context.fs = msg[19];
     context.gs = msg[20];
     MACHINE_STATE_READ(vcpu->guest_state.machine.context, context);
-}
-
-void interrupt_pending_callback(vmm_t *vmm, seL4_Word badge)
-{
-    if (vmm->plat_callbacks.do_async(badge) == 0) {
-        /* Got interrupt(s) from PIC, propagate to vcpus */
-
-        /* TODO if all lapics are enabled, store which lapic
-           (only one allowed) receives extints, and short circuit this */
-        if (vmm->plat_callbacks.has_interrupt() != -1) {
-            for (int i = 0; i < vmm->num_vcpus; i++) {
-                vmm_vcpu_t *vcpu = &vmm->vcpus[i];
-
-                if (!vmm_apic_enabled(vcpu->lapic)) {
-                    /* LAPIC is disabled on this vcpu; bypass it */
-                    vmm_vcpu_accept_interrupt(vcpu);
-                } else if (vmm_apic_accept_pic_intr(vcpu)) {
-                    /* LAPIC is enabled on this vcpu, and accepting
-                       local extints from the pic */
-                    assert(vmm_apic_local_deliver(vcpu, 0));
-                } 
-            }
-        }
-    }
 }
 
 /* Entry point of of VMM main host module. */
@@ -218,7 +191,13 @@ void vmm_run(vmm_t *vmm) {
 
         if (badge >= vmm->num_vcpus) {
             /* assume interrupt */
-            interrupt_pending_callback(vmm, badge);
+            int raise = vmm->plat_callbacks.do_async(badge);
+            //printf("async - r%d, b%08x\n", raise, badge);
+            if (raise == 0) {
+                /* Check if this caused PIC to generate interrupt */
+                vmm_check_external_interrupt(vmm);
+            }
+
             continue;
         }
 

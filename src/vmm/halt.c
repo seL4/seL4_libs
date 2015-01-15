@@ -20,9 +20,9 @@
 /* Handling EPT violation VMExit Events. */
 int vmm_hlt_handler(vmm_vcpu_t *vcpu) {
     if (!(vmm_guest_state_get_rflags(&vcpu->guest_state, vcpu->guest_vcpu) & BIT(9))) {
-        printf("Halted forever :(\n");
+        printf("vcpu %d is halted forever :(\n", vcpu->vcpu_id);
     }
-    if (!vcpu->vmm->plat_callbacks.has_interrupt()) {
+    if (!vmm_apic_has_interrupt(vcpu)) {
         vcpu->guest_state.virt.interrupt_halt = 1;
     }
     vmm_guest_exit_next_instruction(&vcpu->guest_state);

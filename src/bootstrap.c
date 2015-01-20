@@ -85,6 +85,7 @@ allocman_t *bootstrap_create_allocman(uint32_t pool_size, char *pool) {
     mspace = (mspace_dual_pool_t*)pool;
     pool += sizeof(*mspace);
     if (pool >= pool_top) {
+        LOG_ERROR("Initial memory pool too small");
         return NULL;
     }
     /* create the allocator */
@@ -126,6 +127,7 @@ static bootstrap_info_t *_create_info(allocman_t *alloc) {
     int error;
     bootstrap_info_t *bs = allocman_mspace_alloc(alloc, sizeof(bootstrap_info_t), &error);
     if (error) {
+        LOG_ERROR("Failed to allocate bootstrap_info");
         return NULL;
     }
     memset(bs, 0, sizeof(bootstrap_info_t));
@@ -142,14 +144,17 @@ static int _add_ut(bootstrap_info_t *bs, cspacepath_t slot, uint32_t size_bits, 
     int error;
     new_uts = allocman_mspace_alloc(bs->alloc, sizeof(cspacepath_t) * (bs->num_uts + 1), &error);
     if (error) {
+        LOG_ERROR("Failed to allocate space for untypeds (new_uts)");
         return error;
     }
     new_size_bits = allocman_mspace_alloc(bs->alloc, sizeof(uint32_t) * (bs->num_uts + 1), &error);
     if (error) {
+        LOG_ERROR("Failed to allocate space for untypeds (new_size_bits)");
         return error;
     }
     new_paddr = allocman_mspace_alloc(bs->alloc, sizeof(uint32_t) * (bs->num_uts + 1), &error);
     if (error) {
+        LOG_ERROR("Failed to allocate space for untypeds (new_paddr)");
         return error;
     }
     if (bs->uts) {
@@ -274,11 +279,13 @@ static int _split_ut(bootstrap_info_t *bs, cspacepath_t ut, cspacepath_t p1, csp
     int error;
     error = seL4_Untyped_RetypeAtOffset(ut.capPtr, seL4_UntypedObject, 0, size, p1.root, p1.dest, p1.destDepth, p1.offset, 1);
     if (error != seL4_NoError) {
+        LOG_ERROR("Failed to split untyped");
         return 1;
     }
     error = seL4_Untyped_RetypeAtOffset(ut.capPtr, seL4_UntypedObject, BIT(size), size, 
                                         p2.root, p2.dest, p2.destDepth, p2.offset, 1);
     if (error != seL4_NoError) {
+        LOG_ERROR("Failed to allocate second half of split untyped");
         return 1;
     }
     return 0;
@@ -289,6 +296,7 @@ static int _retype_cnode(bootstrap_info_t *bs, cspacepath_t ut, cspacepath_t cno
     error = seL4_Untyped_RetypeAtOffset(ut.capPtr, seL4_CapTableObject, 0, sel4_size, 
                                         cnode.root, cnode.dest, cnode.destDepth, cnode.offset, 1);
     if (error != seL4_NoError) {
+        LOG_ERROR("Failed to retype a cnode");
         return 1;
     }
     return 0;
@@ -401,6 +409,7 @@ static int bootstrap_use_current_1level_cspace(bootstrap_info_t *bs, seL4_CPtr c
     int error;
     cspace = allocman_mspace_alloc(bs->alloc, sizeof(*cspace), &error);
     if (error) {
+        LOG_ERROR("Initial memory pool too small to allocate cspace allocator");
         return error;
     }
     error = cspace_single_level_create(bs->alloc, cspace, (struct cspace_single_level_config){
@@ -411,9 +420,13 @@ static int bootstrap_use_current_1level_cspace(bootstrap_info_t *bs, seL4_CPtr c
         .end_slot = end_free_index
     });
     if (error) {
+        LOG_ERROR("Failed to initialize cspace allocator");
         return error;
     }
     error = bootstrap_use_current_cspace(bs, cspace_single_level_make_interface(cspace));
+    if (error) {
+        LOG_ERROR("Failed to bootstrap current cspace");
+    }
     return error;
 }
 
@@ -647,6 +660,7 @@ static int bootstrap_create_utspace(bootstrap_info_t *bs) {
     UTMAN_TYPE *utspace;
     utspace = allocman_mspace_alloc(bs->alloc, sizeof(*utspace), &error);
     if (error) {
+        LOG_ERROR("Initial memory pool too small to allocate untyped allocator");
         return error;
     }
     UTMAN_CREATE(utspace);
@@ -659,6 +673,7 @@ static int bootstrap_create_utspace(bootstrap_info_t *bs) {
     if (bs->num_uts > 0) {
         error = UTMAN_ADD_UTS(bs->alloc, utspace, bs->num_uts, bs->uts, bs->ut_size_bits, bs->ut_paddr);
         if (error) {
+            LOG_ERROR("Failed to add untypeds to untyped allocator");
             return error;
         }
     }
@@ -716,11 +731,13 @@ allocman_t *bootstrap_use_current_1level(seL4_CPtr root_cnode, int cnode_size, s
     /* create the bootstrapping info */
     info = bootstrap_create_info(pool_size, pool);
     if (!info) {
+        LOG_ERROR("Failed to create bootstrap info");
         return NULL;
     }
     /* we will use the current cspace */
     error = bootstrap_use_current_1level_cspace(info, root_cnode, cnode_size, start_slot, end_slot);
     if (error) {
+        LOG_ERROR("Failed to boostrap in the current cspace");
         return NULL;
     }
     /* set the pd and tcb */
@@ -728,12 +745,14 @@ allocman_t *bootstrap_use_current_1level(seL4_CPtr root_cnode, int cnode_size, s
     /* can now create untyped allocator */
     error = bootstrap_create_utspace(info);
     if (error) {
+        LOG_ERROR("Failed to create the untyped allocator");
         return NULL;
     }
     /* add normal slot reservations as well as reservations for memory system. No cnode
      * reservations since using current cnode */
     error = _slot_memory_reservations(info->alloc);
     if (error) {
+        LOG_ERROR("Failed to add slot and memory reservations");
         return NULL;
     }
     /* all done */
@@ -944,6 +963,7 @@ allocman_t *bootstrap_use_current_simple(simple_t *simple, uint32_t pool_size, c
     /* Initialize inside the current 1 level cspace as defined by simple */
     allocman = bootstrap_use_current_1level(simple_get_cnode(simple), simple_get_cnode_size_bits(simple), simple_last_valid_cap(simple) + 1, BIT(simple_get_cnode_size_bits(simple)), pool_size, pool);
     if (!allocman) {
+        LOG_ERROR("Failed to initialize an allocman");
         return allocman;
     }
     error = allocman_add_simple_untypeds(allocman, simple);

@@ -444,6 +444,7 @@ int allocman_fill_reserves(allocman_t *alloc) {
     assert(root); \
     if (alloc->have_##space) { \
         /* an untyped allocator has already been attached, bail */ \
+        LOG_ERROR("Alocate of type " #space " is already attached"); \
         return 1; \
     } \
     alloc->space = interface; \

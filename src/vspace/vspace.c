@@ -212,21 +212,21 @@ int
 sel4utils_map_page_pd(vspace_t *vspace, seL4_CPtr cap, void *vaddr, seL4_CapRights rights,
                       int cacheable, size_t size_bits)
 {
-    vka_object_t pagetable = {0};
+    vka_object_t objects[3];
+    int num = 3;
     sel4utils_alloc_data_t *data = get_alloc_data(vspace);
 
     int error = sel4utils_map_page(data->vka, data->page_directory, cap, vaddr,
-                                   rights, cacheable, &pagetable);
+                                   rights, cacheable, objects, &num);
     if (error) {
         /* everything has gone to hell. Do no clean up. */
         LOG_ERROR("Error mapping pages, bailing: %d", error);
         return -1;
     }
 
-    if (pagetable.cptr != 0) {
-        vspace_maybe_call_allocated_object(vspace, pagetable);
+    for (int i = 0; i < num; i++) {
+        vspace_maybe_call_allocated_object(vspace, objects[i]);
     }
-    pagetable.cptr = 0;
 
     return seL4_NoError;
 }

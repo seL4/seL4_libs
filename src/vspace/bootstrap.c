@@ -196,10 +196,11 @@ alloc_and_map_bootstrap_frame(vspace_t *vspace, vka_object_t *frame, void *vaddr
         return error;
     }
 
-    vka_object_t pagetable = {0};
+    vka_object_t objects[3];
+    int num = 3;
 
     error = sel4utils_map_page(data->vka, data->page_directory, frame->cptr, vaddr,
-                               seL4_AllRights, 1, &pagetable);
+                               seL4_AllRights, 1, objects, &num);
 
     if (error) {
         LOG_ERROR("Failed to map bootstrap frame at %p, error: %d", vaddr, error);
@@ -209,8 +210,8 @@ alloc_and_map_bootstrap_frame(vspace_t *vspace, vka_object_t *frame, void *vaddr
     /* Zero the memory */
     memset(vaddr, 0, PAGE_SIZE_4K);
 
-    if (pagetable.cptr != 0) {
-        vspace_maybe_call_allocated_object(vspace, pagetable);
+    for (int i = 0; i < num; i++) {
+        vspace_maybe_call_allocated_object(vspace, objects[i]);
     }
 
     return seL4_NoError;

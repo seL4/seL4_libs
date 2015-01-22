@@ -21,16 +21,17 @@
 
 int
 sel4utils_map_page(vka_t *vka, seL4_CPtr pd, seL4_CPtr frame, void *vaddr,
-                   seL4_CapRights rights, int cacheable, vka_object_t *pagetable)
+                   seL4_CapRights rights, int cacheable, vka_object_t *objects, int *num_objects)
 {
     assert(vka != NULL);
     assert(pd != 0);
     assert(frame != 0);
     assert(vaddr != 0);
     assert(rights != 0);
-    assert(pagetable != NULL);
+    assert(num_objects);
 
     seL4_ARCH_VMAttributes attr = 0;
+    int num = 0;
 
 #ifdef CONFIG_ARCH_IA32
     if (!cacheable) {
@@ -90,12 +91,15 @@ page_map_retry:
 
     if (error == seL4_FailedLookup) {
         /* need a page table, allocate one */
-        error = vka_alloc_page_table(vka, pagetable);
+        assert(objects != NULL);
+        assert(*num_objects > 0);
+        error = vka_alloc_page_table(vka, &objects[0]);
 
         /* map in the page table */
         if (!error) {
-            error = seL4_ARCH_PageTable_Map(pagetable->cptr, pd, (seL4_Word) vaddr,
+            error = seL4_ARCH_PageTable_Map(objects[0].cptr, pd, (seL4_Word) vaddr,
                                             seL4_ARCH_Default_VMAttributes);
+            num = 1;
         } else {
             LOG_ERROR("Page table allocation failed, %d", error);
         }
@@ -107,10 +111,8 @@ page_map_retry:
                 * in some memory, which caused a page table to get mapped in at the
                 * same location we are wanting one. If this has happened then we can just
                 * delete this page table and try the frame mapping again */
-                vka_free_object(vka, pagetable);
-                *pagetable = (vka_object_t) {
-                    0
-                };
+                vka_free_object(vka, objects[0].cptr);
+                num = 0;
             }
 
             error = seL4_ARCH_Page_Map(frame, pd, (seL4_Word) vaddr, rights, attr);
@@ -122,6 +124,7 @@ page_map_retry:
     if (error != seL4_NoError) {
         LOG_ERROR("Failed to map page at address %p with cap %"PRIuPTR", error: %d", vaddr, frame, error);
     }
+    *num_objects = num;
 
     return error;
 }

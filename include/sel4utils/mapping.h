@@ -102,20 +102,23 @@ static int UNUSED sel4_supported_page_sizes[] = {12, 22};
 * @param vaddr unmapped virutal address to map the page into
 * @param rights permissions to map the page with
 * @param cacheable 1 if the page should be cached (0 if it is for DMA)
-* @param pagetable empty vka_object_t structure to be populated with page table
-*                  info if one is allocated
+* @param objects array of vka_object_t structure to be populated with paging structures
+*                info any one are allocated
+* @param num_objects Pointer to both the size of the objects array, and the number of
+*                    objects that get allocated
 *
 * @return error sel4 error code or -1 if allocation failed.
 */
 int sel4utils_map_page(vka_t *vka, seL4_CPtr pd, seL4_CPtr frame, void *vaddr,
-                       seL4_CapRights rights, int cacheable, vka_object_t *pagetable);
+                       seL4_CapRights rights, int cacheable, vka_object_t *objects, int *num_objects);
 
 /** convenient wrapper this if you don't want to track allocated page tables */
 static inline int sel4utils_map_page_leaky(vka_t *vka, seL4_CPtr pd, seL4_CPtr frame, void *vaddr,
                                            seL4_CapRights rights, int cacheable)
 {
-    vka_object_t pagetable;
-    return sel4utils_map_page(vka, pd, frame, vaddr, rights, cacheable, &pagetable);
+    vka_object_t objects[3];
+    int num = 3;
+    return sel4utils_map_page(vka, pd, frame, vaddr, rights, cacheable, objects, &num);
 }
 
 #ifdef CONFIG_LIB_SEL4_VSPACE

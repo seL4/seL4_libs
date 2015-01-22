@@ -29,6 +29,8 @@ static int UNUSED sel4_supported_page_sizes[] = {12, 16, 20, 24};
 
 #define seL4_ARCH_Page_Map             seL4_ARM_Page_Map
 #define seL4_ARCH_Page_Unmap           seL4_ARM_Page_Unmap
+#define seL4_ARCH_Page_GetAddress      seL4_ARM_Page_GetAddress
+#define seL4_ARCH_Page_GetAddress_t    seL4_ARM_Page_GetAddress_t
 #define seL4_ARCH_PageTable_Map        seL4_ARM_PageTable_Map
 #define seL4_ARCH_ASIDPool_Assign      seL4_ARM_ASIDPool_Assign
 #define seL4_ARCH_PageTableObject      seL4_ARM_PageTableObject
@@ -46,6 +48,8 @@ static int UNUSED sel4_supported_page_sizes[] = {12, 21};
 
 #define seL4_ARCH_Page_Unmap                    seL4_X64_Page_Unmap
 #define seL4_ARCH_Page_Map                      seL4_X64_Page_Map
+#define seL4_ARCH_Page_GetAddress               seL4_X64_Page_GetAddress
+#define seL4_ARCH_Page_GetAddress_t             seL4_X64_Page_GetAddress_t
 #define seL4_ARCH_PageTable_Map                 seL4_X64_PageTable_Map
 #define seL4_ARCH_PageDirectory_Map             seL4_X64_PageDirectory_Map
 #define seL4_ARCH_PageDirectoryPointerTable_Map seL4_X64_PageDirectoryPointerTable_Map
@@ -61,6 +65,8 @@ static int UNUSED sel4_supported_page_sizes[] = {12, 22};
 
 #define seL4_ARCH_Page_Map             seL4_IA32_Page_Map
 #define seL4_ARCH_Page_Unmap           seL4_IA32_Page_Unmap
+#define seL4_ARCH_Page_GetAddress      seL4_IA32_Page_GetAddress
+#define seL4_ARCH_Page_GetAddress_t    seL4_IA32_Page_GetAddress_t
 #define seL4_ARCH_PageTable_Map        seL4_IA32_PageTable_Map
 #define seL4_ARCH_ASIDPool_Assign      seL4_IA32_ASIDPool_Assign
 #define seL4_ARCH_PageTableObject      seL4_IA32_PageTableObject

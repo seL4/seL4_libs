@@ -447,7 +447,7 @@ int sel4utils_configure_process_custom(sel4utils_process_t *process, vka_t *vka,
 
     /* create a page directory */
     if (config.create_vspace) {
-        error = vka_alloc_page_directory(vka, &process->pd);
+        error = vka_alloc_vspace_root(vka, &process->pd);
         if (error) {
             LOG_ERROR("Failed to allocate page directory for new process: %d\n", error);
             goto error;

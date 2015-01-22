@@ -61,7 +61,7 @@
 #define INITIAL_BOTTOM_LEVEL_TABLES (INITIAL_BOTTOM_LEVEL_PAGES / PAGES_FOR_BOTTOM_LEVEL)
 
 /* sanity checks - check our constants above are what we say they are */
-#ifndef CONFIG_X86_64
+#if !defined(CONFIG_X86_64) && !defined(CONFIG_PAE_PAGING)
 compile_time_assert(sel4utils_vspace_1, TOP_LEVEL_INDEX(TOP_LEVEL_PAGE_TABLE_VADDR) == 893);
 compile_time_assert(sel4utils_vspace_2, BOTTOM_LEVEL_INDEX(TOP_LEVEL_PAGE_TABLE_VADDR) == 1023);
 compile_time_assert(sel4utils_vspace_3, TOP_LEVEL_INDEX(FIRST_BOTTOM_LEVEL_PAGE_TABLE_VADDR) == 894);

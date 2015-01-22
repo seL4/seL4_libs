@@ -11,6 +11,7 @@
 #ifndef __SEL4UILS_VSPACE_PRIVATE_H
 #define __SEL4UILS_VSPACE_PRIVATE_H
 
+#include <autoconf.h>
 #include <vka/vka.h>
 #include <vspace/vspace.h>
 
@@ -18,7 +19,11 @@
 #include <sel4utils/mapping.h>
 #include <sel4utils/vspace.h>
 
+#ifdef CONFIG_PAE_PAGING
+#define KERNEL_RESERVED_START 0xC0000000
+#else
 #define KERNEL_RESERVED_START 0xE0000000
+#endif
 #define KERNEL_RESERVED_END   0xFFFFF000
 
 #define RESERVED 0xFFFFFFFF

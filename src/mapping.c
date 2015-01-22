@@ -99,22 +99,47 @@ page_map_retry:
         if (!error) {
             error = seL4_ARCH_PageTable_Map(objects[0].cptr, pd, (seL4_Word) vaddr,
                                             seL4_ARCH_Default_VMAttributes);
-            num = 1;
         } else {
             LOG_ERROR("Page table allocation failed, %d", error);
         }
 
-        /* now map in the frame again, if pagetable allocation was successful */
-        if (!error || error == seL4_DeleteFirst) {
-            if (error == seL4_DeleteFirst) {
-                /* It's possible that in allocated the page table, we needed to allocate/map
-                * in some memory, which caused a page table to get mapped in at the
-                * same location we are wanting one. If this has happened then we can just
-                * delete this page table and try the frame mapping again */
-                vka_free_object(vka, objects[0].cptr);
-                num = 0;
+        if (error == seL4_DeleteFirst) {
+            /* It's possible that in allocated the page table, we needed to allocate/map
+             * in some memory, which caused a page table to get mapped in at the
+             * same location we are wanting one. If this has happened then we can just
+             * delete this page table and try the frame mapping again */
+            vka_free_object(vka, &objects[0]);
+            error = seL4_NoError;
+        } else {
+            num = 1;
+        }
+#ifdef CONFIG_PAE_PAGING
+        if (error == seL4_FailedLookup) {
+            /* need a page directory, allocate one */
+            assert(*num_objects > 1);
+            error = vka_alloc_page_directory(vka, &objects[1]);
+            if (!error) {
+                error = seL4_IA32_PageDirectory_Map(objects[1].cptr, pd, (seL4_Word) vaddr,
+                                                    seL4_ARCH_Default_VMAttributes);
+            } else {
+                LOG_ERROR("Page directory allocation failed, %d", error);
             }
-
+            if (error == seL4_DeleteFirst) {
+                vka_free_object(vka, &objects[1]);
+                error = seL4_NoError;
+            } else {
+                num = 2;
+            }
+            if (!error) {
+                error = seL4_ARCH_PageTable_Map(objects[0].cptr, pd, (seL4_Word) vaddr,
+                                                seL4_ARCH_Default_VMAttributes);
+            } else {
+                LOG_ERROR("Page directory mapping failed, %d", error);
+            }
+        }
+#endif
+        /* now try mapping the frame in again if nothing else went wrong */
+        if (!error) {
             error = seL4_ARCH_Page_Map(frame, pd, (seL4_Word) vaddr, rights, attr);
         } else {
             LOG_ERROR("Page table mapping failed, %d", error);
@@ -204,8 +229,8 @@ sel4utils_map_ept_page(vka_t *vka, seL4_CPtr pd, seL4_CPtr frame, seL4_Word vadd
         return ret;
     }
 
-    if (size_bits == seL4_4MBits) {
-        /* Allocate a directory table for a 4M entry. */
+    if (size_bits != seL4_PageBits) {
+        /* Allocate a directory table for a large page entry. */
         ret = vka_alloc_ept_page_directory(vka, pagedir);
         if (ret != seL4_NoError) {
             LOG_ERROR("Allocation of EPT page directory failed, error: %d", ret);

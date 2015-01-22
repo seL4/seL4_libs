@@ -166,11 +166,29 @@ static inline int vka_alloc_page_directory(vka_t *vka, vka_object_t *result)
     return vka_alloc_object(vka, kobject_get_type(KOBJECT_PAGE_DIRECTORY, 0), seL4_PageDirBits, result);
 }
 
+#ifdef CONFIG_PAE_PAGING
+static inline int vka_alloc_pdpt(vka_t *vka, vka_object_t *result)
+{
+    return vka_alloc_object(vka, seL4_IA32_PDPTObject, seL4_PDPTBits, result);
+}
+#endif
+
 static inline int vka_alloc_page_table(vka_t *vka, vka_object_t *result)
 {
     return vka_alloc_object(vka, kobject_get_type(KOBJECT_PAGE_TABLE, 0), seL4_PageTableBits, result);
 }
 
+/* The name of the object that defines a vspace root can vary, this provides
+ * an abstraction for code that doesn't want to care about the type and
+ * just wants whatever object fills this role */
+static inline int vka_alloc_vspace_root(vka_t *vka, vka_object_t *result)
+{
+#ifdef CONFIG_PAE_PAGING
+    return vka_alloc_pdpt(vka, result);
+#else
+    return vka_alloc_page_directory(vka, result);
+#endif
+}
 
 #ifdef CONFIG_CACHE_COLORING 
 
@@ -208,6 +226,9 @@ LEAKY(endpoint)
 LEAKY(async_endpoint)
 LEAKY(page_directory)
 LEAKY(page_table)
+#ifdef CONFIG_PAE_PAGING
+LEAKY(pdpt)
+#endif
 #ifdef CONFIG_X86_64
 LEAKY(page_map_level4)
 LEAKY(page_directory_pointer_table)
@@ -312,12 +333,24 @@ vka_get_object_size(seL4_Word objectType, seL4_Word objectSize)
         /* IA32specific objects. */
     case seL4_IA32_4K:
         return seL4_PageBits;
+    /* Use an #ifdef here to support any old kernels that might
+     * not have seL4_LargePageBits defined. This should be able
+     * to be dropped eventually */
+#ifdef CONFIG_PAE_PAGING
+    case seL4_IA32_LargePage:
+        return seL4_LargePageBits;
+#else
     case seL4_IA32_4M:
         return seL4_4MBits;
+#endif
     case seL4_IA32_PageTableObject:
         return seL4_PageTableBits;
     case seL4_IA32_PageDirectoryObject:
         return seL4_PageDirBits;
+#ifdef CONFIG_PAE_PAGING
+    case seL4_IA32_PDPTObject:
+        return seL4_PDPTBits;
+#endif
 
 #ifdef CONFIG_VTX
     case seL4_IA32_VCPUObject:

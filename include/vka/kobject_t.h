@@ -190,8 +190,16 @@ kobject_get_type(kobject_t type, seL4_Word objectSize)
         switch (objectSize) {
         case seL4_PageBits:
             return seL4_IA32_4K;
+        /* Use an #ifdef here to support any old kernels that might
+         * not have seL4_LargePageBits defined. This should be able
+         * to be dropped eventually */
+#ifdef CONFIG_PAE_PAGING
+        case seL4_LargePageBits:
+            return seL4_IA32_LargePage;
+#else
         case 22:
             return seL4_IA32_4M;
+#endif
         default:
             return -1;
         }

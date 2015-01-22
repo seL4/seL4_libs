@@ -136,9 +136,10 @@ void vmm_check_external_interrupt(vmm_t *vmm)
             vmm_vcpu_t *vcpu = &vmm->vcpus[i];
             if (vmm_apic_accept_pic_intr(vcpu)) {
                 vmm_apic_consume_extints(vcpu, vmm->plat_callbacks.get_interrupt);
+                //vmm_vcpu_accept_interrupt(vcpu);
+                
+                break; /* Only one VCPU can take a PIC interrupt */
             } 
-
-            break; /* Only one VCPU can take a PIC interrupt */
         }
     }
 }

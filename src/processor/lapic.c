@@ -50,6 +50,16 @@
 #define MAX_APIC_VECTOR         256
 #define APIC_VECTORS_PER_REG        32
 
+inline static int pic_get_interrupt(vmm_t *vmm)
+{
+    return vmm->plat_callbacks.get_interrupt();
+}
+
+inline static int pic_has_interrupt(vmm_t *vmm)
+{
+    return vmm->plat_callbacks.has_interrupt();
+}
+
 struct vmm_lapic_irq {
     uint32_t vector;
     uint32_t delivery_mode;
@@ -450,10 +460,18 @@ void vmm_apic_update_tmr(vmm_vcpu_t *vcpu, uint32_t *tmr)
         apic_set_reg(apic, APIC_TMR + 0x10 * i, tmr[i]);
 }
 
-static void apic_update_ppr(vmm_lapic_t *apic)
+static void inject_if_necessary(vmm_vcpu_t *vcpu)
+{
+    if (vmm_apic_has_interrupt(vcpu)) {
+        vmm_vcpu_accept_interrupt(vcpu);
+    }
+}
+
+static void apic_update_ppr(vmm_vcpu_t *vcpu)
 {
     uint32_t tpr, isrv, ppr, old_ppr;
     int isr;
+    vmm_lapic_t *apic = vcpu->lapic;
 
     old_ppr = vmm_apic_get_reg(apic, APIC_PROCPRI);
     tpr = vmm_apic_get_reg(apic, APIC_TASKPRI);
@@ -471,16 +489,16 @@ static void apic_update_ppr(vmm_lapic_t *apic)
     if (old_ppr != ppr) {
         apic_set_reg(apic, APIC_PROCPRI, ppr);
         if (ppr < old_ppr) {
-            //TODO do something here
-            //vmm_make_request(KVM_REQ_EVENT, apic->vcpu);
+            /* Might have unmasked some pending interrupts */
+            inject_if_necessary(vcpu);
         }
     }
 }
 
-static void apic_set_tpr(vmm_lapic_t *apic, uint32_t tpr)
+static void apic_set_tpr(vmm_vcpu_t *vcpu, uint32_t tpr)
 {
-    apic_set_reg(apic, APIC_TASKPRI, tpr);
-    apic_update_ppr(apic);
+    apic_set_reg(vcpu->lapic, APIC_TASKPRI, tpr);
+    apic_update_ppr(vcpu);
 }
 
 int vmm_apic_match_physical_addr(vmm_lapic_t *apic, uint16_t dest)
@@ -700,8 +718,9 @@ static void vmm_ioapic_send_eoi(vmm_lapic_t *apic, int vector)
 }
 #endif
 
-static int apic_set_eoi(vmm_lapic_t *apic)
+static int apic_set_eoi(vmm_vcpu_t *vcpu)
 {
+    vmm_lapic_t *apic = vcpu->lapic;
     int vector = apic_find_highest_isr(apic);
 
     /*
@@ -712,7 +731,7 @@ static int apic_set_eoi(vmm_lapic_t *apic)
         return vector;
 
     apic_clear_isr(vector, apic);
-    apic_update_ppr(apic);
+    apic_update_ppr(vcpu);
 
 //  vmm_ioapic_send_eoi(apic, vector);
 //  vmm_make_request(KVM_REQ_EVENT, apic->vcpu);
@@ -792,7 +811,6 @@ static uint32_t __apic_read(vmm_lapic_t *apic, unsigned int offset)
         val = apic_get_tmcct(apic);*/
         break;
     case APIC_PROCPRI:
-        apic_update_ppr(apic);
         val = vmm_apic_get_reg(apic, offset);
         break;
     case APIC_TASKPRI:
@@ -915,11 +933,11 @@ static int apic_reg_write(vmm_vcpu_t *vcpu, uint32_t reg, uint32_t val)
         break;
 
     case APIC_TASKPRI:
-        apic_set_tpr(apic, val & 0xff);
+        apic_set_tpr(vcpu, val & 0xff);
         break;
 
     case APIC_EOI:
-        apic_set_eoi(apic);
+        apic_set_eoi(vcpu);
         break;
 
     case APIC_LDR:
@@ -1147,21 +1165,6 @@ void vmm_set_lapic_tscdeadline_msr(vmm_vcpu_t *vcpu, uint64_t data)
 }
 #endif
 
-void vmm_lapic_set_tpr(vmm_vcpu_t *vcpu, unsigned long cr8)
-{
-    vmm_lapic_t *apic = vcpu->lapic;
-
-    apic_set_tpr(apic, ((cr8 & 0x0f) << 4)
-             | (vmm_apic_get_reg(apic, APIC_TASKPRI) & 4));
-}
-
-uint64_t vmm_lapic_get_cr8(vmm_vcpu_t *vcpu)
-{
-    uint64_t tpr = (uint64_t) vmm_apic_get_reg(vcpu->lapic, APIC_TASKPRI);
-
-    return (tpr & 0xf0) >> 4;
-}
-
 void vmm_lapic_set_base_msr(vmm_vcpu_t *vcpu, uint32_t value)
 {
     apic_debug(2, "IA32_APIC_BASE MSR set to %08x on vcpu %d\n", value, vcpu->vcpu_id);
@@ -1228,7 +1231,7 @@ void vmm_lapic_reset(vmm_vcpu_t *vcpu)
     apic->highest_isr_cache = -1;
 //  update_divide_count(apic);
 //  atomic_set(&apic->lapic_timer.pending, 0);
-    apic_update_ppr(apic);
+    apic_update_ppr(vcpu);
 
     vcpu->lapic->arb_prio = 0;
 
@@ -1349,42 +1352,6 @@ nomem:
     return -1;
 }
 
-// Choose interrupt to service
-int vmm_apic_get_interrupt(vmm_vcpu_t *vcpu)
-{
-    int vector = vmm_apic_has_interrupt(vcpu);
-    //printf("get_interrupt vector=0x%x, vcpu %d\n", vector, vcpu->vcpu_id); //debug TODO remove
-    vmm_lapic_t *apic = vcpu->lapic;
-
-    if (vector == -1)
-        return -1;
-
-    apic_set_isr(vector, apic);
-    apic_update_ppr(apic);
-    apic_clear_irr(vector, apic);
-    return vector;
-}
-
-// Return which vector is next up for servicing
-int vmm_apic_has_interrupt(vmm_vcpu_t *vcpu)
-{
-    vmm_lapic_t *apic = vcpu->lapic;
-    int highest_irr;
-
-    //dump_vector("irr", apic->regs + APIC_IRR);
-
-    apic_update_ppr(apic);
-    highest_irr = apic_find_highest_irr(apic);
-    //printf("highest irr = 0x%x, ppr = 0x%x\n", highest_irr, vmm_apic_get_reg(apic, APIC_PROCPRI));
-    if ((highest_irr == -1) /*||
-        ((highest_irr & 0xF0) <= vmm_apic_get_reg(apic, APIC_PROCPRI))*/) {
-        //printf("lapic doesn't have interrupt\n");
-        return -1;
-    }
-    //printf("lapic has interrupt!\n");
-    return highest_irr;
-}
-
 /* Return 1 if this vcpu should accept a PIC interrupt */
 int vmm_apic_accept_pic_intr(vmm_vcpu_t *vcpu)
 {
@@ -1395,6 +1362,45 @@ int vmm_apic_accept_pic_intr(vmm_vcpu_t *vcpu)
     return ((lvt0 & APIC_LVT_MASKED) == 0 &&
         GET_APIC_DELIVERY_MODE(lvt0) == APIC_MODE_EXTINT &&
         vmm_apic_sw_enabled(vcpu->lapic));
+}
+
+/* Service an interrupt */
+int vmm_apic_get_interrupt(vmm_vcpu_t *vcpu)
+{
+    vmm_lapic_t *apic = vcpu->lapic;
+    int vector = vmm_apic_has_interrupt(vcpu);
+    
+    if (vector == 1) {
+        return pic_get_interrupt(vcpu->vmm);
+    } else if (vector == -1) {
+        return -1;
+    }
+
+    apic_set_isr(vector, apic);
+    apic_update_ppr(vcpu);
+    apic_clear_irr(vector, apic);
+    return vector;
+}
+
+/* Return which vector is next up for servicing */
+int vmm_apic_has_interrupt(vmm_vcpu_t *vcpu)
+{
+    vmm_lapic_t *apic = vcpu->lapic;
+    int highest_irr;
+
+    if (vmm_apic_accept_pic_intr(vcpu) && pic_has_interrupt(vcpu->vmm)) {
+        return 1;
+    }
+
+    highest_irr = apic_find_highest_irr(apic);
+    //printf("highest irr = 0x%x, ppr = 0x%x\n", highest_irr, vmm_apic_get_reg(apic, APIC_PROCPRI));
+    if ((highest_irr == -1) /*||
+        ((highest_irr & 0xF0) <= vmm_apic_get_reg(apic, APIC_PROCPRI))*/) {
+        //printf("lapic doesn't have interrupt\n");
+        return -1;
+    }
+
+    return highest_irr;
 }
 
 /* If we are accepting interrupts from an external controller (i.e. 8259), 

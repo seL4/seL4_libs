@@ -36,6 +36,8 @@ static int UNUSED sel4_supported_page_sizes[] = {12, 16, 20, 24};
 #define seL4_ARCH_Default_VMAttributes seL4_ARM_Default_VMAttributes
 #define seL4_ARCH_VMAttributes         seL4_ARM_VMAttributes
 #define seL4_ARCH_4KPage               seL4_ARM_SmallPageObject
+/* Remap does not exist on all kernels */
+#define seL4_ARCH_Page_Remap           seL4_ARM_Page_Remap
 
 #elif defined(CONFIG_X86_64)
 
@@ -67,6 +69,8 @@ static int UNUSED sel4_supported_page_sizes[] = {12, 22};
 #define seL4_ARCH_VMAttributes         seL4_IA32_VMAttributes
 #define seL4_ARCH_4KPage               seL4_IA32_4K
 #define seL4_ARCH_Uncached_VMAttributes 0
+/* Remap does not exist on all kernels */
+#define seL4_ARCH_Page_Remap           seL4_IA32_Page_Remap
 
 #endif /* CONFIG_ARCH_IA32 */
 

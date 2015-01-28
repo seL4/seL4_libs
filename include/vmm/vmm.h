@@ -92,6 +92,8 @@ typedef struct vmm_vcpu {
 
     vmm_lapic_t *lapic;
     int vcpu_id;
+
+    int halted;
 } vmm_vcpu_t;
 
 /* Represents a vmm instance that runs a single guest with one or more vcpus */

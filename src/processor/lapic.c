@@ -1414,7 +1414,7 @@ void vmm_apic_consume_extints(vmm_vcpu_t *vcpu, int (*get)(void))
     int irq = -1;
 
     /* Load all the external interrupts pending into the irr */
-    while (1) {
+    /*while (1) {
         //irq = get();
         //printf("pic gave us irq 0x%x\n", irq);
 
@@ -1429,7 +1429,7 @@ void vmm_apic_consume_extints(vmm_vcpu_t *vcpu, int (*get)(void))
         assert(irq == (irq & 0xff));
 
         //apic_set_irr(irq, vcpu->lapic);
-    }
+    }*/
 
     vmm_vcpu_accept_interrupt(vcpu);
 }

@@ -461,13 +461,6 @@ void vmm_apic_update_tmr(vmm_vcpu_t *vcpu, uint32_t *tmr)
         apic_set_reg(apic, APIC_TMR + 0x10 * i, tmr[i]);
 }
 
-static void inject_if_necessary(vmm_vcpu_t *vcpu)
-{
-    if (vmm_apic_has_interrupt(vcpu)) {
-        vmm_vcpu_accept_interrupt(vcpu);
-    }
-}
-
 static void apic_update_ppr(vmm_vcpu_t *vcpu)
 {
     uint32_t tpr, isrv, ppr, old_ppr;
@@ -491,7 +484,7 @@ static void apic_update_ppr(vmm_vcpu_t *vcpu)
         apic_set_reg(apic, APIC_PROCPRI, ppr);
         if (ppr < old_ppr) {
             /* Might have unmasked some pending interrupts */
-            inject_if_necessary(vcpu);
+            vmm_vcpu_accept_interrupt(vcpu);
         }
     }
 }
@@ -640,7 +633,7 @@ static int __apic_accept_irq(vmm_vcpu_t *vcpu, int delivery_mode,
     case APIC_DM_FIXED:
         /* FIXME add logic for vcpu on reset */
         if (!vmm_apic_enabled(apic)) {
-            //break;
+            //break; // TODO why is this commented out?
         }
         apic_debug(4, "####fixed ipi 0x%x to vcpu %d\n", vector, vcpu->vcpu_id);
 
@@ -1394,7 +1387,7 @@ int vmm_apic_has_interrupt(vmm_vcpu_t *vcpu)
     }
 
     highest_irr = apic_find_highest_irr(apic);
-    //printf("highest irr = 0x%x, ppr = 0x%x\n", highest_irr, vmm_apic_get_reg(apic, APIC_PROCPRI));
+    //printf("vcpu %d: highest irr = 0x%x, ppr = 0x%x\n", vcpu->vcpu_id, highest_irr, vmm_apic_get_reg(apic, APIC_PROCPRI));
     if ((highest_irr == -1) ||
         ((highest_irr & 0xF0) <= vmm_apic_get_reg(apic, APIC_PROCPRI))) {
         //printf("lapic doesn't have interrupt\n");
@@ -1414,8 +1407,8 @@ void vmm_apic_consume_extints(vmm_vcpu_t *vcpu, int (*get)(void))
     int irq = -1;
 
     /* Load all the external interrupts pending into the irr */
-    while (1) {
-        //irq = get();
+    /*while (1) {
+        irq = get();
         //printf("pic gave us irq 0x%x\n", irq);
 
         if (irq < 0) {
@@ -1428,8 +1421,8 @@ void vmm_apic_consume_extints(vmm_vcpu_t *vcpu, int (*get)(void))
         
         assert(irq == (irq & 0xff));
 
-        //apic_set_irr(irq, vcpu->lapic);
-    }
+        apic_set_irr(irq, vcpu->lapic);
+    }*/
 
     vmm_vcpu_accept_interrupt(vcpu);
 }

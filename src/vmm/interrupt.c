@@ -93,7 +93,7 @@ int vmm_pending_interrupt_handler(vmm_vcpu_t *vcpu) {
     } else {
         /* inject the interrupt */
         inject_irq(vcpu, irq);
-        if (!vmm_apic_has_interrupt(vcpu) >= 0) {
+        if (!(vmm_apic_has_interrupt(vcpu) >= 0)) {
             resume_guest(vcpu);
         }
         vcpu->guest_state.virt.interrupt_halt = 0;
@@ -158,6 +158,10 @@ void vmm_vcpu_accept_interrupt(vmm_vcpu_t *vcpu)
      * that be the current pending interrupt after calling the kernel and then
      * knowing if it was actually injected or not. Do this once interrupt overhead
      * starts to matter */
+    if (vmm_apic_has_interrupt(vcpu) == -1) {
+        return;
+    }
+
     if (vcpu->guest_state.exit.in_exit) {
         /* in an exit, can call the regular injection method */
         //printf("interrupt during exit reason %d\n", vmm_guest_exit_get_reason(&vcpu->guest_state));

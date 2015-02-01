@@ -284,6 +284,11 @@ sel4utils_spawn_process_v(sel4utils_process_t *process, vka_t *vka, vspace_t *vs
         return -1;
     }
     /* Null terminate arguments */
+    error = sel4utils_stack_write_constant(vspace, &process->vspace, vka, 0, &stack_top);
+    if (error) {
+        return -1;
+    }
+    /* write arguments */
     error = sel4utils_stack_write(vspace, &process->vspace, vka, dest_argv, sizeof(dest_argv), &stack_top);
     if (error) {
         return -1;

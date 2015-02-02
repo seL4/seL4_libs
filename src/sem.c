@@ -9,6 +9,7 @@
  */
 
 #include <sync/sem.h>
+#include <sync/sem-bare.h>
 #include <sync/atomic.h>
 #include <stddef.h>
 #include <assert.h>
@@ -27,39 +28,17 @@ int sync_sem_init(sync_sem_t *sem, seL4_CPtr ep, int value) {
 
 int sync_sem_wait(sync_sem_t *sem) {
     assert(sem != NULL);
-    int value = sync_atomic_decrement(&sem->value);
-    if (value < 0) {
-        seL4_Wait(sem->ep, NULL);
-    }
-    __sync_synchronize();
-    return 0;
+    return sync_sem_bare_wait(sem->ep, &sem->value);
 }
 
 int sync_sem_trywait(sync_sem_t *sem) {
     assert(sem != NULL);
-    int val = sem->value;
-    while (val > 0) {
-        int oldval = sync_atomic_compare_and_swap(&sem->value, val, val - 1);
-        if (oldval == val) {
-            /* We got it! */
-            __sync_synchronize();
-            return 0;
-        }
-        /* We didn't get it. */
-        val = oldval;
-    }
-    /* The semaphore is empty. */
-    return -1;
+    return sync_sem_bare_trywait(sem->ep, &sem->value);
 }
 
 int sync_sem_post(sync_sem_t *sem) {
     assert(sem != NULL);
-    __sync_synchronize();
-    int value = sync_atomic_increment(&sem->value);
-    if (value <= 0) {
-        seL4_Notify(sem->ep, 0);
-    }
-    return 0;
+    return sync_sem_bare_post(sem->ep, &sem->value);
 }
 
 int sync_sem_destroy(sync_sem_t *sem) {

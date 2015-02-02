@@ -20,6 +20,7 @@
 #include <sel4/sel4.h>
 
 int sync_sem_bare_wait(seL4_CPtr ep, volatile int *value);
+int sync_sem_bare_trywait(seL4_CPtr ep, volatile int *value);
 int sync_sem_bare_post(seL4_CPtr ep, volatile int *value);
 
 #endif

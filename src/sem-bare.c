@@ -13,6 +13,7 @@
 #include <sel4/sel4.h>
 #include <sync/sem-bare.h>
 #include <sync/atomic.h>
+#include <utils/util.h>
 
 int sync_sem_bare_wait(seL4_CPtr ep, volatile int *value) {
 #ifdef SEL4_DEBUG_KERNEL
@@ -26,6 +27,22 @@ int sync_sem_bare_wait(seL4_CPtr ep, volatile int *value) {
     }
     __sync_synchronize();
     return 0;
+}
+
+int sync_sem_bare_trywait(seL4_CPtr ep UNUSED, volatile int *value) {
+    int val = *value;
+    while (val > 0) {
+        int oldval = sync_atomic_compare_and_swap(value, val, val - 1);
+        if (oldval == val) {
+            /* We got it! */
+            __sync_synchronize();
+            return 0;
+        }
+        /* We didn't get it. */
+        val = oldval;
+    }
+    /* The semaphore is empty. */
+    return -1;
 }
 
 int sync_sem_bare_post(seL4_CPtr ep, volatile int *value) {

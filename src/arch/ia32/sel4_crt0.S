@@ -117,7 +117,7 @@ prog_name:
     .asciz "rootserver"
 
     .bss
-    .align  4
+    .align  8
 
 _stack_bottom:
     .space  16384

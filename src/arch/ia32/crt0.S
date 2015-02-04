@@ -80,7 +80,7 @@ _start:
 #endif
 
     .bss
-    .align  4
+    .align  8
 
 _stack_bottom:
     .space  16384

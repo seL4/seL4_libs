@@ -14,14 +14,14 @@
 #include <sel4utils/util.h>
 #include <utils/stack.h>
 
-int
-sel4utils_run_on_stack(vspace_t *vspace, int (*func)(void))
+void *
+sel4utils_run_on_stack(vspace_t *vspace, void *(*func)(void *arg), void *arg)
 {
     void *stack_top = vspace_new_stack(vspace);
     if (stack_top == NULL) {
         LOG_ERROR("Failed to allocate new stack\n");
-        return -1;
+        return (void*)-1;
     }
 
-    return utils_run_on_stack(stack_top, func);
+    return utils_run_on_stack(stack_top, func, arg);
 }

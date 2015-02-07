@@ -24,3 +24,37 @@ menuconfig LIB_SEL4_DEBUG
         instrumentation. This setting has no effect if you are not using the
         allocation instrumentation. Setting this value to 0 disables pointer
         tracking.
+
+    choice
+    prompt "Function instrumentation"
+    default LIBSEL4DEBUG_FUNCTION_INSTRUMENTATION_NONE
+    depends on LIB_SEL4_DEBUG
+    help
+        Instrumentation to apply to function calls. This setting will only have
+        an effect when your CFLAGS include -finstrument-functions, in which
+        case __cyg_profile_func_enter will be called on every function entry
+        and __cyg_profile_func_exit will be called on every function exit. The
+        value of this setting determines the implementation of
+        __cyg_profile_func_enter and __cyg_profile_func_exit supplied by this
+        library. Regardless of the option you select, you can always override
+        the implementation by providing your own in your application.
+
+    config LIBSEL4DEBUG_FUNCTION_INSTRUMENTATION_NONE
+    bool "none"
+    help
+        No implementation of __cyg_profile_func_enter and
+        __cyg_profile_func_exit are provided.
+
+    config LIBSEL4DEBUG_FUNCTION_INSTRUMENTATION_TRACE
+    bool "printf trace"
+    help
+        Print entry and exit of every function call. This option is useful for
+        a very coarse and noisy description of what your code is doing.
+
+    config LIBSEL4DEBUG_FUNCTION_INSTRUMENTATION_BACKTRACE
+    bool "backtrace"
+    help
+        Track function calls for the purposes of a backtrace. You will need to
+        enable this option if you want to retrieve programmatic backtraces.
+
+    endchoice

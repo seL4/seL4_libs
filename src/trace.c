@@ -8,7 +8,11 @@
  * @TAG(NICTA_BSD)
  */
 
+#include <autoconf.h>
 #include <sel4debug/debug.h>
+#include <sel4debug/instrumentation.h>
+
+#ifdef CONFIG_LIBSEL4DEBUG_FUNCTION_INSTRUMENTATION_TRACE
 
 /* Function entry and exit printing. Useful for low effort tracing of
  * execution.
@@ -22,15 +26,13 @@
  * registers for the following syscall.
  */
 void __cyg_profile_func_enter(void *func, void *caller)
-__attribute__((no_instrument_function));
-void __cyg_profile_func_enter(void *func, void *caller)
 {
     debug_safe_printf("ENTER: %p called from %p\n", func, caller);
 }
 
 void __cyg_profile_func_exit(void *func, void *caller)
-__attribute__((no_instrument_function));
-void __cyg_profile_func_exit(void *func, void *caller)
 {
     debug_safe_printf("EXIT: %p returning to %p\n", func, caller);
 }
+
+#endif

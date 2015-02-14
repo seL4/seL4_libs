@@ -140,14 +140,7 @@ static inline void vmm_guest_state_invalidate_all(guest_state_t *gs) {
 }
 
 /* get */
-//#define vmm_read_user_context(gs, reg) vmm_read_user_context_1(gs, reg, __LINE__, __FILE__)
-//static inline uint32_t vmm_read_user_context_1(guest_state_t *gs, int reg, int line, const char *fname) {
 static inline uint32_t vmm_read_user_context(guest_state_t *gs, int reg) {
-    /*if (IS_MACHINE_STATE_UNKNOWN(gs->machine.context)) {
-        printf("MACHINE STATE UNKNOWN, reg=%d, file=%s, line=%d\n", reg, fname, line);
-        assert(0);
-    }
-    */
     assert(!IS_MACHINE_STATE_UNKNOWN(gs->machine.context));
     return (&gs->machine.context.eip)[reg];
 }
@@ -233,7 +226,7 @@ static inline unsigned int vmm_guest_state_get_cs_selector(guest_state_t *gs, se
     if (IS_MACHINE_STATE_UNKNOWN(gs->machine.cs_selector)) {
         MACHINE_STATE_READ(gs->machine.cs_selector, vmm_vmcs_read(vcpu, VMX_GUEST_CS_SELECTOR));
     }
-    return gs->machine.gdt_limit;
+    return gs->machine.cs_selector;
 }
 
 
@@ -387,12 +380,7 @@ static inline unsigned int vmm_guest_exit_get_qualification(guest_state_t *gs) {
     return gs->exit.qualification;
 }
 
-#define vmm_guest_exit_next_instruction(gs) vmm_guest_exit_next_instruction_1(gs, __FILE__, __LINE__)
-static inline void vmm_guest_exit_next_instruction_1(guest_state_t *gs, const char *fname, int line) {
-//static inline void vmm_guest_exit_next_instruction(guest_state_t *gs) {
-    if (!gs->exit.in_exit) {
-        printf("EXIT NEXT INSTRUCTION IN EXIT NOT SET %s:%d\n", fname, line);
-    }
+static inline void vmm_guest_exit_next_instruction(guest_state_t *gs) {
     vmm_set_user_context(gs, USER_CONTEXT_EIP, vmm_read_user_context(gs, USER_CONTEXT_EIP) + vmm_guest_exit_get_int_len(gs));
 }
 

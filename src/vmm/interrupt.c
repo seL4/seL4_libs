@@ -30,7 +30,27 @@ static void resume_guest(vmm_vcpu_t *vcpu) {
 
 static void inject_irq(vmm_vcpu_t *vcpu, int irq) {
     /* Inject a vectored exception into the guest */
-    //printf("injecting vecotr 0x%x on vcpu %d\n", irq, vcpu->vcpu_id);
+#if 0
+    static uint32_t old_cs = 0;
+    uint32_t cs = vmm_guest_state_get_cs_selector(&vcpu->guest_state, vcpu->guest_vcpu);
+    uint32_t eip = vmm_read_user_context(&vcpu->guest_state, USER_CONTEXT_EIP);
+    if (cs == 0x60) {
+        assert(eip >= 0xc0000000);
+        if (vcpu->vcpu_id == 1) {
+        }
+    } else if (cs == 0x73) {
+        assert(eip < 0xc0000000);
+        if (vcpu->vcpu_id == 1) {
+            //printf("vcpu 1 inj irq in user mode eip 0x%08x\n", eip);
+        }
+    } else {
+        if (cs != old_cs) {
+            old_cs = cs;
+            printf("vcpu %d, cs 0x%x\n", vcpu->vcpu_id, cs);
+        }
+    }
+#endif
+    assert(irq >= 16);
     vmm_guest_state_set_control_entry(&vcpu->guest_state, BIT(31) | irq);
 }
 
@@ -66,6 +86,9 @@ void vmm_have_pending_interrupt(vmm_vcpu_t *vcpu) {
                  * in a state where it can inject again */
                 wait_for_guest_ready(vcpu);
                 vcpu->guest_state.virt.interrupt_halt = 0;
+                vmm_sync_guest_state(vcpu);
+                vmm_reply_vm_exit(vcpu); /* unblock the guest */
+                printf("THIS CODE PATH DOES OCCUR!\n");
             } else {
                 int irq = vmm_apic_get_interrupt(vcpu);
                 inject_irq(vcpu, irq);
@@ -75,20 +98,21 @@ void vmm_have_pending_interrupt(vmm_vcpu_t *vcpu) {
                 }
             }
         } else {
-            //printf("but can't inject, so...\n");
             wait_for_guest_ready(vcpu);
-            vcpu->guest_state.virt.interrupt_halt = 0;
+            if (vcpu->guest_state.virt.interrupt_halt) {
+                vcpu->guest_state.virt.interrupt_halt = 0;
+                vmm_sync_guest_state(vcpu);
+                vmm_reply_vm_exit(vcpu); /* unblock the guest */
+            }
         }
     }
 }
 
 int vmm_pending_interrupt_handler(vmm_vcpu_t *vcpu) {
-    //printf("pending interrupt handler \n");
     /* see if there is actually a pending interrupt */
     assert(can_inject(vcpu));
     int irq = vmm_apic_get_interrupt(vcpu);
     if (irq == -1) {
-        printf("apic doesn't report having an itnerrupt\n");
         resume_guest(vcpu);
     } else {
         /* inject the interrupt */
@@ -136,8 +160,6 @@ void vmm_check_external_interrupt(vmm_t *vmm)
             vmm_vcpu_t *vcpu = &vmm->vcpus[i];
             if (vmm_apic_accept_pic_intr(vcpu)) {
                 vmm_apic_consume_extints(vcpu, vmm->plat_callbacks.get_interrupt);
-                //vmm_vcpu_accept_interrupt(vcpu);
-                
                 break; /* Only one VCPU can take a PIC interrupt */
             } 
         }
@@ -164,7 +186,6 @@ void vmm_vcpu_accept_interrupt(vmm_vcpu_t *vcpu)
 
     if (vcpu->guest_state.exit.in_exit) {
         /* in an exit, can call the regular injection method */
-        //printf("interrupt during exit reason %d\n", vmm_guest_exit_get_reason(&vcpu->guest_state));
         vmm_have_pending_interrupt(vcpu);
         vmm_sync_guest_state(vcpu);
     } else {

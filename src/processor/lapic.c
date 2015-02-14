@@ -35,8 +35,6 @@
 
 #define APIC_BUS_CYCLE_NS 1
 
-/* We use our own APIC debug print because debugging this is painful and we want
-   high verbosity here */
 #define APIC_DEBUG 0
 #define apic_debug(lvl,...) do{ if(lvl < APIC_DEBUG){printf(__VA_ARGS__);fflush(stdout);}}while (0)
 
@@ -133,7 +131,6 @@ inline uint32_t vmm_apic_get_reg(vmm_lapic_t *apic, int reg_off)
 
 static inline int apic_test_vector(int vec, void *bitmap)
 {
-    //return test_bit(VEC_POS(vec), (bitmap) + REG_POS(vec));
     return ((1UL << (vec & 31)) & ((uint32_t *)bitmap)[vec >> 5]) != 0;
 }
 
@@ -147,28 +144,13 @@ bool vmm_apic_pending_eoi(vmm_vcpu_t *vcpu, int vector)
 
 static inline void apic_set_vector(int vec, void *bitmap)
 {
-    //set_bit(VEC_POS(vec), (bitmap) + REG_POS(vec));
     ((uint32_t *)bitmap)[vec >> 5] |= 1UL << (vec & 31);
 }
 
 static inline void apic_clear_vector(int vec, void *bitmap)
 {
-    //clear_bit(VEC_POS(vec), (bitmap) + REG_POS(vec));
     ((uint32_t *)bitmap)[vec >> 5] &= ~(1UL << (vec & 31));
 }
-
-/*
-static inline int __apic_test_and_set_vector(int vec, void *bitmap)
-{
-    return __test_and_set_bit(VEC_POS(vec), (bitmap) + REG_POS(vec));
-}
-
-static inline int __apic_test_and_clear_vector(int vec, void *bitmap)
-{
-    return __test_and_clear_bit(VEC_POS(vec), (bitmap) + REG_POS(vec));
-}
-*/
-    /* See: /arch/x86/include/asm/bitops.h:267, Linux 3.18 */
 
 inline int vmm_apic_sw_enabled(vmm_lapic_t *apic)
 {
@@ -199,27 +181,26 @@ static inline int vmm_apic_id(vmm_lapic_t *apic)
 
 static inline void apic_set_spiv(vmm_lapic_t *apic, uint32_t val)
 {
-    uint32_t prev = vmm_apic_get_reg(apic, APIC_SPIV);
-
     apic_set_reg(apic, APIC_SPIV, val);
-    if ((prev ^ val) & APIC_SPIV_APIC_ENABLED) {
-        if (val & APIC_SPIV_APIC_ENABLED) {
-            //recalculate_apic_map(apic->vcpu->kvm);
-        }
-    }
 }
+
+static const unsigned int apic_lvt_mask[APIC_LVT_NUM] = {
+    LVT_MASK ,      /* part LVTT mask, timer mode mask added at runtime */
+    LVT_MASK | APIC_MODE_MASK,  /* LVTTHMR */
+    LVT_MASK | APIC_MODE_MASK,  /* LVTPC */
+    LINT_MASK, LINT_MASK,   /* LVT0-1 */
+    LVT_MASK        /* LVTERR */
+};
 
 //TODO these shouldn't need to be separate functions
 static inline void vmm_apic_set_id(vmm_lapic_t *apic, uint8_t id)
 {
     apic_set_reg(apic, APIC_ID, id << 24);
-    //recalculate_apic_map(apic->vcpu->kvm);
 }
 
 static inline void vmm_apic_set_ldr(vmm_lapic_t *apic, uint32_t id)
 {
     apic_set_reg(apic, APIC_LDR, id);
-    //recalculate_apic_map(apic->vcpu->kvm);
 }
 
 static inline int apic_lvt_enabled(vmm_lapic_t *apic, int lvt_type)
@@ -237,27 +218,6 @@ static inline int vmm_vcpu_is_bsp(vmm_vcpu_t *vcpu)
     return vcpu->vcpu_id == BOOT_VCPU;
 }
 
-#if 0
-static inline int apic_lvtt_oneshot(vmm_lapic_t *apic)
-{
-    return ((vmm_apic_get_reg(apic, APIC_LVTT) &
-        apic->lapic_timer.timer_mode_mask) == APIC_LVT_TIMER_ONESHOT);
-}
-
-static inline int apic_lvtt_period(vmm_lapic_t *apic)
-{
-    return ((vmm_apic_get_reg(apic, APIC_LVTT) &
-        apic->lapic_timer.timer_mode_mask) == APIC_LVT_TIMER_PERIODIC);
-}
-
-static inline int apic_lvtt_tscdeadline(vmm_lapic_t *apic)
-{
-    return ((vmm_apic_get_reg(apic, APIC_LVTT) &
-        apic->lapic_timer.timer_mode_mask) ==
-            APIC_LVT_TIMER_TSCDEADLINE);
-}
-#endif
-
 static inline int apic_lvt_nmi_mode(uint32_t lvt_val)
 {
     return (lvt_val & (APIC_MODE_MASK | APIC_LVT_MASKED)) == APIC_DM_NMI;
@@ -268,14 +228,6 @@ void vmm_apic_set_version(vmm_vcpu_t *vcpu)
     vmm_lapic_t *apic = vcpu->lapic;
     apic_set_reg(apic, APIC_LVR, APIC_VERSION);
 }
-
-static const unsigned int apic_lvt_mask[APIC_LVT_NUM] = {
-    LVT_MASK ,      /* part LVTT mask, timer mode mask added at runtime */
-    LVT_MASK | APIC_MODE_MASK,  /* LVTTHMR */
-    LVT_MASK | APIC_MODE_MASK,  /* LVTPC */
-    LINT_MASK, LINT_MASK,   /* LVT0-1 */
-    LVT_MASK        /* LVTERR */
-};
 
 int vmm_apic_compare_prio(vmm_vcpu_t *vcpu1, vmm_vcpu_t *vcpu2)
 {
@@ -324,25 +276,6 @@ static uint8_t UNUSED count_vectors(void *bitmap)
 
     return count;
 }
-
-//TODO what is this used for? what is pir? is it to do with apicv? can we delete this?
-#if 0
-void vmm_apic_update_irr(vmm_vcpu_t *vcpu, uint32_t *pir)
-{
-    uint32_t i, pir_val;
-    vmm_lapic_t *apic = vcpu->lapic;
-
-    for (i = 0; i <= 7; i++) {
-        //pir_val = xchg(&pir[i], 0); //TODO check
-        pir_val = pir[i];
-        pir[i] = 0;
-
-        if (pir_val) {
-            *((uint32_t *)(apic->regs + APIC_IRR + i * 0x10)) |= pir_val;
-        }
-    }
-}
-#endif
 
 static inline int apic_search_irr(vmm_lapic_t *apic)
 {
@@ -422,7 +355,6 @@ static inline void apic_clear_isr(int vec, vmm_lapic_t *apic)
     apic_clear_vector(vec, apic->regs + APIC_ISR);
 
     --apic->isr_count;
-    //assert(apic->isr_count > 0);
     apic->highest_isr_cache = -1;
 }
 
@@ -499,6 +431,7 @@ static void apic_update_ppr(vmm_vcpu_t *vcpu)
 static void apic_set_tpr(vmm_vcpu_t *vcpu, uint32_t tpr)
 {
     apic_set_reg(vcpu->lapic, APIC_TASKPRI, tpr);
+    apic_debug(3, "vcpu %d lapic TPR set to %d\n", vcpu->vcpu_id, tpr);
     apic_update_ppr(vcpu);
 }
 
@@ -703,22 +636,6 @@ static int __apic_accept_irq(vmm_vcpu_t *vcpu, int delivery_mode,
     return result;
 }
 
-
-#if 0
-static void vmm_ioapic_send_eoi(vmm_lapic_t *apic, int vector)
-{
-    if (!(vmm_apic_get_reg(apic, APIC_SPIV) & APIC_SPIV_DIRECTED_EOI) &&
-        vmm_ioapic_handles_vector(apic->vcpu->kvm, vector)) {
-        int trigger_mode;
-        if (apic_test_vector(vector, apic->regs + APIC_TMR))
-            trigger_mode = IOAPIC_LEVEL_TRIG;
-        else
-            trigger_mode = IOAPIC_EDGE_TRIG;
-        vmm_ioapic_update_eoi(apic->vcpu, vector, trigger_mode);
-    }
-}
-#endif
-
 static int apic_set_eoi(vmm_vcpu_t *vcpu)
 {
     vmm_lapic_t *apic = vcpu->lapic;
@@ -734,9 +651,9 @@ static int apic_set_eoi(vmm_vcpu_t *vcpu)
     apic_clear_isr(vector, apic);
     apic_update_ppr(vcpu);
 
-//  vmm_ioapic_send_eoi(apic, vector);
-//  vmm_make_request(KVM_REQ_EVENT, apic->vcpu);
-    //TODO what do we need to do here?
+    /* If another interrupt is pending, raise it */
+    vmm_vcpu_accept_interrupt(vcpu);
+
     return vector;
 }
 
@@ -765,31 +682,6 @@ static void apic_send_ipi(vmm_vcpu_t *vcpu)
     vmm_irq_delivery_to_apic(vcpu, &irq, NULL); // TODO maybe make use of dest_map
 }
 
-static uint32_t UNUSED apic_get_tmcct(vmm_lapic_t *apic)
-{
-#if 0
-    ktime_t remaining;
-    int64_t ns;
-    uint32_t tmcct;
-    ASSERT(apic != NULL);
-
-    /* if initial count is 0, current count should also be 0 */
-    if (vmm_apic_get_reg(apic, APIC_TMICT) == 0 ||
-        apic->lapic_timer.period == 0)
-        return 0;
-
-    remaining = hrtimer_get_remaining(&apic->lapic_timer.timer);
-    if (ktime_to_ns(remaining) < 0)
-        remaining = ktime_set(0, 0);
-
-    ns = mod_64(ktime_to_ns(remaining), apic->lapic_timer.period);
-    tmcct = div64_uint64_t(ns,
-             (APIC_BUS_CYCLE_NS * apic->divide_count));
-    return tmcct;
-#endif
-    return 0;
-}
-
 static uint32_t __apic_read(vmm_lapic_t *apic, unsigned int offset)
 {
     uint32_t val = 0;
@@ -806,16 +698,10 @@ static uint32_t __apic_read(vmm_lapic_t *apic, unsigned int offset)
         break;
 
     case APIC_TMCCT:    /* Timer CCR */
-        /*if (apic_lvtt_tscdeadline(apic))
-            return 0;
-
-        val = apic_get_tmcct(apic);*/
         break;
     case APIC_PROCPRI:
         val = vmm_apic_get_reg(apic, offset);
         break;
-    case APIC_TASKPRI:
-        /* fall thru */
     default:
         val = vmm_apic_get_reg(apic, offset);
         break;
@@ -824,91 +710,6 @@ static uint32_t __apic_read(vmm_lapic_t *apic, unsigned int offset)
     return val;
 }
 
-static void update_divide_count(vmm_lapic_t *apic)
-{
-    uint32_t tmp1, tmp2, tdcr;
-
-    tdcr = vmm_apic_get_reg(apic, APIC_TDCR);
-    tmp1 = tdcr & 0xf;
-    tmp2 = ((tmp1 & 0x3) | ((tmp1 & 0x8) >> 1)) + 1;
-    apic->divide_count = 0x1 << (tmp2 & 0x7);
-
-    apic_debug(6, "timer divide count is 0x%x\n",
-                   apic->divide_count);
-}
-
-#if 0
-static void start_apic_timer(vmm_lapic_t *apic)
-{
-    ktime_t now;
-    atomic_set(&apic->lapic_timer.pending, 0);
-
-    if (apic_lvtt_period(apic) || apic_lvtt_oneshot(apic)) {
-        /* lapic timer in oneshot or periodic mode */
-        now = apic->lapic_timer.timer.base->get_time();
-        apic->lapic_timer.period = (uint64_t)vmm_apic_get_reg(apic, APIC_TMICT)
-                * APIC_BUS_CYCLE_NS * apic->divide_count;
-
-        if (!apic->lapic_timer.period)
-            return;
-        /*
-         * Do not allow the guest to program periodic timers with small
-         * interval, since the hrtimers are not throttled by the host
-         * scheduler.
-         */
-        if (apic_lvtt_period(apic)) {
-            int64_t min_period = min_timer_period_us * 1000LL;
-
-            if (apic->lapic_timer.period < min_period) {
-                pr_info_ratelimited(
-                    "kvm: vcpu %i: requested %lld ns "
-                    "lapic timer period limited to %lld ns\n",
-                    apic->vcpu->vcpu_id,
-                    apic->lapic_timer.period, min_period);
-                apic->lapic_timer.period = min_period;
-            }
-        }
-
-        hrtimer_start(&apic->lapic_timer.timer,
-                  ktime_add_ns(now, apic->lapic_timer.period),
-                  HRTIMER_MODE_ABS);
-
-        apic_debug("%s: bus cycle is %" PRId64 "ns, now 0x%016"
-               PRIx64 ", "
-               "timer initial count 0x%x, period %lldns, "
-               "expire @ 0x%016" PRIx64 ".\n", __func__,
-               APIC_BUS_CYCLE_NS, ktime_to_ns(now),
-               vmm_apic_get_reg(apic, APIC_TMICT),
-               apic->lapic_timer.period,
-               ktime_to_ns(ktime_add_ns(now,
-                    apic->lapic_timer.period)));
-    } else if (apic_lvtt_tscdeadline(apic)) {
-        /* lapic timer in tsc deadline mode */
-        uint64_t guest_tsc, tscdeadline = apic->lapic_timer.tscdeadline;
-        uint64_t ns = 0;
-        vmm_vcpu_t *vcpu = apic->vcpu;
-        unsigned long this_tsc_khz = vcpu->arch.virtual_tsc_khz;
-        unsigned long flags;
-
-        if (unlikely(!tscdeadline || !this_tsc_khz))
-            return;
-
-        local_irq_save(flags);
-
-        now = apic->lapic_timer.timer.base->get_time();
-        guest_tsc = vmm_x86_ops->read_l1_tsc(vcpu, native_read_tsc());
-        if (likely(tscdeadline > guest_tsc)) {
-            ns = (tscdeadline - guest_tsc) * 1000000ULL;
-            do_div(ns, this_tsc_khz);
-        }
-        hrtimer_start(&apic->lapic_timer.timer,
-            ktime_add_ns(now, ns), HRTIMER_MODE_ABS);
-
-        local_irq_restore(flags);
-    }
-}
-#endif
-
 static void apic_manage_nmi_watchdog(vmm_lapic_t *apic, uint32_t lvt0_val)
 {
     int nmi_wd_enabled = apic_lvt_nmi_mode(vmm_apic_get_reg(apic, APIC_LVT0));
@@ -916,10 +717,7 @@ static void apic_manage_nmi_watchdog(vmm_lapic_t *apic, uint32_t lvt0_val)
     if (apic_lvt_nmi_mode(lvt0_val)) {
         if (!nmi_wd_enabled) {
             apic_debug(4, "Receive NMI setting on APIC_LVT0 \n");
-        //  apic->vcpu->kvm->arch.vapics_in_nmi_mode++;
         }
-    } else if (nmi_wd_enabled) {
-        //apic->vcpu->kvm->arch.vapics_in_nmi_mode--;
     }
 }
 
@@ -950,7 +748,7 @@ static int apic_reg_write(vmm_vcpu_t *vcpu, uint32_t reg, uint32_t val)
         break;
 
     case APIC_SPIV: {
-        /*uint32_t mask = 0x3ff;
+        uint32_t mask = 0x3ff;
         if (vmm_apic_get_reg(apic, APIC_LVR) & APIC_LVR_DIRECTED_EOI)
             mask |= APIC_SPIV_DIRECTED_EOI;
         apic_set_spiv(apic, val & mask);
@@ -964,9 +762,9 @@ static int apic_reg_write(vmm_vcpu_t *vcpu, uint32_t reg, uint32_t val)
                 apic_set_reg(apic, APIC_LVTT + 0x10 * i,
                          lvt_val | APIC_LVT_MASKED);
             }
-            atomic_set(&apic->lapic_timer.pending, 0);
+        //    atomic_set(&apic->lapic_timer.pending, 0);
 
-        }*/
+        }
         break;
     }
     case APIC_ICR:
@@ -996,31 +794,15 @@ static int apic_reg_write(vmm_vcpu_t *vcpu, uint32_t reg, uint32_t val)
         break;
 
     case APIC_LVTT:
-        /*if ((vmm_apic_get_reg(apic, APIC_LVTT) &
-            apic->lapic_timer.timer_mode_mask) !=
-           (val & apic->lapic_timer.timer_mode_mask))
-            hrtimer_cancel(&apic->lapic_timer.timer);
-
-        if (!vmm_apic_sw_enabled(apic))
-            val |= APIC_LVT_MASKED;
-        val &= (apic_lvt_mask[0] | apic->lapic_timer.timer_mode_mask);*/
         apic_set_reg(apic, APIC_LVTT, val);
         break;
 
     case APIC_TMICT:
-        /*if (apic_lvtt_tscdeadline(apic))*/
-            break;
-
-        //hrtimer_cancel(&apic->lapic_timer.timer);
         apic_set_reg(apic, APIC_TMICT, val);
-//      start_apic_timer(apic);
         break;
 
     case APIC_TDCR:
-        if (val & 4)
-            apic_debug(4, "lapic: TDCR %x\n", val);
         apic_set_reg(apic, APIC_TDCR, val);
-        update_divide_count(apic);
         break;
     
     default:
@@ -1104,11 +886,6 @@ void vmm_apic_mmio_read(vmm_vcpu_t *vcpu, void *cookie, uint32_t offset,
     return;
 }
 
-void vmm_lapic_set_eoi(vmm_vcpu_t *vcpu)
-{
-    apic_reg_write(vcpu, APIC_EOI, 0);
-}
-
 void vmm_free_lapic(vmm_vcpu_t *vcpu)
 {
     vmm_lapic_t *apic = vcpu->lapic;
@@ -1116,55 +893,12 @@ void vmm_free_lapic(vmm_vcpu_t *vcpu)
     if (!apic)
         return;
 
-//  hrtimer_cancel(&apic->lapic_timer.timer);
-
-    /*if (!(apic->apic_base & MSR_IA32_APICBASE_ENABLE))
-        static_key_slow_dec_deferred(&apic_hw_disabled);
-
-    if (!(vmm_apic_get_reg(apic, APIC_SPIV) & APIC_SPIV_APIC_ENABLED))
-        static_key_slow_dec_deferred(&apic_sw_disabled);*/
-
     if (apic->regs) {
         free(apic->regs);
     }
 
     free(apic);
 }
-
-/*
- *--------------------------------------------------------------------
- * LAPIC interface
- *--------------------------------------------------------------------
- */
-
-#if 0
-uint64_t vmm_get_lapic_tscdeadline_msr(vmm_vcpu_t *vcpu)
-{
-    vmm_lapic_t *apic = vcpu->lapic;
-
-    if (!vmm_vcpu_has_lapic(vcpu) || apic_lvtt_oneshot(apic) ||
-            apic_lvtt_period(apic))
-        return 0;
-
-    return apic->lapic_timer.tscdeadline;
-}
-
-void vmm_set_lapic_tscdeadline_msr(vmm_vcpu_t *vcpu, uint64_t data)
-{
-    vmm_lapic_t *apic = vcpu->lapic;
-
-    if (!vmm_vcpu_has_lapic(vcpu) || apic_lvtt_oneshot(apic) ||
-            apic_lvtt_period(apic))
-        return;
-
-    hrtimer_cancel(&apic->lapic_timer.timer);
-    /* Inject here so clearing tscdeadline won't override new value */
-    if (apic_has_pending_timer(vcpu))
-        vmm_inject_apic_timer_irqs(vcpu);
-    apic->lapic_timer.tscdeadline = data;
-    start_apic_timer(apic);
-}
-#endif
 
 void vmm_lapic_set_base_msr(vmm_vcpu_t *vcpu, uint32_t value)
 {
@@ -1205,7 +939,6 @@ void vmm_lapic_reset(vmm_vcpu_t *vcpu)
     assert(apic != NULL);
 
     /* Stop the timer in case it's a reset to an active apic */
-//  hrtimer_cancel(&apic->lapic_timer.timer);
 
     vmm_apic_set_id(apic, vcpu->vcpu_id); // TODO is this right or should it be +1 to agree with acpi tables?
     vmm_apic_set_version(vcpu); // TODO is it necessary to pass in the vcpu?
@@ -1230,8 +963,6 @@ void vmm_lapic_reset(vmm_vcpu_t *vcpu)
     apic->irr_pending = 0;
     apic->isr_count = 0;
     apic->highest_isr_cache = -1;
-//  update_divide_count(apic);
-//  atomic_set(&apic->lapic_timer.pending, 0);
     apic_update_ppr(vcpu);
 
     vcpu->lapic->arb_prio = 0;
@@ -1253,29 +984,6 @@ void vmm_lapic_reset(vmm_vcpu_t *vcpu)
     }
 }
 
-/*
- *--------------------------------------------------------------------
- * timer interface
- *--------------------------------------------------------------------
- */
-
-static bool UNUSED lapic_is_periodic(vmm_lapic_t *apic)
-{
-    //return apic_lvtt_period(apic);
-    return false;
-}
-
-/*
-int apic_has_pending_timer(vmm_vcpu_t *vcpu)
-{
-    vmm_lapic_t *apic = vcpu->lapic;
-
-    if (vmm_vcpu_has_lapic(vcpu) && apic_enabled(apic) &&
-            apic_lvt_enabled(apic, APIC_LVTT))
-        return atomic_read(&apic->lapic_timer.pending);
-
-    return 0;
-}*/
 
 // XXX what's this for?
 #if 0
@@ -1283,37 +991,6 @@ void vmm_apic_nmi_wd_deliver(vmm_vcpu_t *vcpu)
 {
     if (vcpu)
         vmm_apic_local_deliver(vcpu, APIC_LVT0);
-}
-#endif
-
-#if 0
-static enum hrtimer_restart apic_timer_fn(struct hrtimer *data)
-{
-    struct vmm_timer *ktimer = container_of(data, struct vmm_timer, timer);
-    vmm_lapic_t *apic = container_of(ktimer, vmm_lapic_t, lapic_timer);
-    vmm_vcpu_t *vcpu = apic->vcpu;
-    wait_queue_head_t *q = &vcpu->wq;
-
-    /*
-     * There is a race window between reading and incrementing, but we do
-     * not care about potentially losing timer events in the !reinject
-     * case anyway. Note: KVM_REQ_PENDING_TIMER is implicitly checked
-     * in vcpu_enter_guest.
-     */
-    if (!atomic_read(&ktimer->pending)) {
-        atomic_inc(&ktimer->pending);
-        /* FIXME: this code should not know anything about vcpus */
-        vmm_make_request(KVM_REQ_PENDING_TIMER, vcpu);
-    }
-
-    if (waitqueue_active(q))
-        wake_up_interruptible(q);
-
-    if (lapic_is_periodic(apic)) {
-        hrtimer_add_expires_ns(&ktimer->timer, ktimer->period);
-        return HRTIMER_RESTART;
-    } else
-        return HRTIMER_NORESTART;
 }
 #endif
 
@@ -1449,50 +1126,5 @@ int vmm_apic_local_deliver(vmm_vcpu_t *vcpu, int lvt_type)
     }
     return 0;
 }
-#endif
-
-#if 0
-void vmm_inject_apic_timer_irqs(vmm_vcpu_t *vcpu)
-{
-    vmm_lapic_t *apic = vcpu->lapic;
-
-    if (!vmm_vcpu_has_lapic(vcpu))
-        return;
-
-    if (atomic_read(&apic->lapic_timer.pending) > 0) {
-        vmm_apic_local_deliver(apic, APIC_LVTT);
-        if (apic_lvtt_tscdeadline(apic))
-            apic->lapic_timer.tscdeadline = 0;
-        atomic_set(&apic->lapic_timer.pending, 0);
-    }
-}
-#endif
-
-#if 0
-void vmm_apic_post_state_restore(vmm_vcpu_t *vcpu,
-        vmm_lapic_t_state *s)
-{
-    vmm_lapic_t *apic = vcpu->lapic;
-
-    vmm_lapic_set_base(vcpu, vcpu->lapic_base);
-    /* set SPIV separately to get count of SW disabled APICs right */
-    apic_set_spiv(apic, *((uint32_t *)(s->regs + APIC_SPIV)));
-    memcpy(vcpu->lapic->regs, s->regs, sizeof *s);
-    /* call vmm_apic_set_id() to put apic into apic_map */
-    vmm_apic_set_id(apic, vmm_apic_id(apic));
-    vmm_apic_set_version(vcpu);
-
-    apic_update_ppr(apic);
-    //hrtimer_cancel(&apic->lapic_timer.timer);
-    update_divide_count(apic);
-    start_apic_timer(apic);
-    apic->irr_pending = true;
-    apic->isr_count = count_vectors(apic->regs + APIC_ISR);
-    apic->highest_isr_cache = -1;
-    vmm_x86_ops->hwapic_isr_update(vcpu->kvm, apic_find_highest_isr(apic));
-    vmm_make_request(KVM_REQ_EVENT, vcpu);
-    vmm_rtc_eoi_tracking_restore_one(vcpu);
-}
-
 #endif
 

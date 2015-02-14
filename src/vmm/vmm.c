@@ -48,7 +48,7 @@ void vmm_sync_guest_context(vmm_vcpu_t *vcpu) {
     }
 }
 
-static void vmm_reply_vm_exit(vmm_vcpu_t *vcpu) {
+void vmm_reply_vm_exit(vmm_vcpu_t *vcpu) {
     assert(vcpu->guest_state.exit.in_exit);
     int msg_len = 0;
 
@@ -72,9 +72,6 @@ static void vmm_reply_vm_exit(vmm_vcpu_t *vcpu) {
     }
 
     seL4_MessageInfo_t msg = seL4_MessageInfo_new(0, 0, 0, msg_len);
-
-    // TODO double check, but I don't think this will ever occur
-    //vmm_check_external_interrupt(vcpu->vmm);
 
     /* Before we resume the guest, ensure there is no dirty state around */
     assert(vmm_guest_state_no_modified(&vcpu->guest_state));
@@ -192,7 +189,6 @@ void vmm_run(vmm_t *vmm) {
         if (badge >= vmm->num_vcpus) {
             /* assume interrupt */
             int raise = vmm->plat_callbacks.do_async(badge);
-            //printf("async - r%d, b%08x\n", raise, badge);
             if (raise == 0) {
                 /* Check if this caused PIC to generate interrupt */
                 vmm_check_external_interrupt(vmm);

@@ -150,5 +150,6 @@ void vmm_run(vmm_t *vmm);
 /* TODO htf did these get here? lets refactor everything  */
 void vmm_sync_guest_state(vmm_vcpu_t *vcpu);
 void vmm_sync_guest_context(vmm_vcpu_t *vcpu);
+void vmm_reply_vm_exit(vmm_vcpu_t *vcpu);
 
 #endif

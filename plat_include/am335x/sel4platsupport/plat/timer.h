@@ -10,6 +10,16 @@
 #ifndef _SEL4PLATSUPPORT_PLAT_TIMER_H
 #define _SEL4PLATSUPPORT_PLAT_TIMER_H
 
-/* no timers implemented yet */
+#include <sel4platsupport/timer.h>
+#include <platsupport/plat/timer.h>
+
+#define DEFAULT_TIMER_PADDR DMTIMER2_PADDR
+#define DEFAULT_TIMER_INTERRUPT DMTIMER2_INTERRUPT
+
+seL4_timer_t *sel4platsupport_get_timer(enum timer_id id,
+                                        vka_t *vka,
+                                        vspace_t *vspace,
+                                        simple_t *simple,
+                                        seL4_CPtr aep);
 
 #endif /* _SEL4PLATSUPPORT_PLAT_TIMER_H */

@@ -1,7 +1,5 @@
 /* TODO work out licensing  W.A. is responsible for this version */
 
-/* XXX This code is a work in progress, there are many bugs and todos */
-
 /*
  * Local APIC virtualization
  *
@@ -192,7 +190,6 @@ static const unsigned int apic_lvt_mask[APIC_LVT_NUM] = {
     LVT_MASK        /* LVTERR */
 };
 
-//TODO these shouldn't need to be separate functions
 static inline void vmm_apic_set_id(vmm_lapic_t *apic, uint8_t id)
 {
     apic_set_reg(apic, APIC_ID, id << 24);
@@ -223,18 +220,12 @@ static inline int apic_lvt_nmi_mode(uint32_t lvt_val)
     return (lvt_val & (APIC_MODE_MASK | APIC_LVT_MASKED)) == APIC_DM_NMI;
 }
 
-void vmm_apic_set_version(vmm_vcpu_t *vcpu)
-{
-    vmm_lapic_t *apic = vcpu->lapic;
-    apic_set_reg(apic, APIC_LVR, APIC_VERSION);
-}
-
 int vmm_apic_compare_prio(vmm_vcpu_t *vcpu1, vmm_vcpu_t *vcpu2)
 {
     return vcpu1->lapic->arb_prio - vcpu2->lapic->arb_prio;
 }
 
-static void dump_vector(const char *name, void *bitmap)
+static void UNUSED dump_vector(const char *name, void *bitmap)
 {
     int vec;
     uint32_t *reg = bitmap;
@@ -361,13 +352,7 @@ static inline void apic_clear_isr(int vec, vmm_lapic_t *apic)
 int vmm_lapic_find_highest_irr(vmm_vcpu_t *vcpu)
 {
     int highest_irr;
-
-    /* This may race with setting of irr in __apic_accept_irq() and
-     * value returned may be wrong, but vmm_vcpu_kick() in __apic_accept_irq
-     * will cause vmexit immediately and the value will be recalculated
-     * on the next vmentry.
-     */
-    //TODO is this important?
+    
     highest_irr = apic_find_highest_irr(vcpu->lapic);
 
     return highest_irr;
@@ -393,13 +378,6 @@ void vmm_apic_update_tmr(vmm_vcpu_t *vcpu, uint32_t *tmr)
         apic_set_reg(apic, APIC_TMR + 0x10 * i, tmr[i]);
 }
 
-static void inject_if_necessary(vmm_vcpu_t *vcpu)
-{
-    if (vmm_apic_has_interrupt(vcpu)) {
-        vmm_vcpu_accept_interrupt(vcpu);
-    }
-}
-
 static void apic_update_ppr(vmm_vcpu_t *vcpu)
 {
     uint32_t tpr, isrv, ppr, old_ppr;
@@ -423,7 +401,7 @@ static void apic_update_ppr(vmm_vcpu_t *vcpu)
         apic_set_reg(apic, APIC_PROCPRI, ppr);
         if (ppr < old_ppr) {
             /* Might have unmasked some pending interrupts */
-            inject_if_necessary(vcpu);
+            vmm_vcpu_accept_interrupt(vcpu);
         }
     }
 }
@@ -522,7 +500,6 @@ int vmm_irq_delivery_to_apic(vmm_vcpu_t *src_vcpu, struct vmm_lapic_irq *irq, un
     
     for (i = 0; i < vmm->num_vcpus; i++) {
         vmm_vcpu_t *dest_vcpu = &vmm->vcpus[i];
-        //printf("dest=%d\n", dest_vcpu->vcpu_id);
 
         if (!vmm_apic_hw_enabled(dest_vcpu->lapic)) {
             continue;
@@ -573,7 +550,7 @@ static int __apic_accept_irq(vmm_vcpu_t *vcpu, int delivery_mode,
     case APIC_DM_FIXED:
         /* FIXME add logic for vcpu on reset */
         if (!vmm_apic_enabled(apic)) {
-            //break;
+            break;
         }
         apic_debug(4, "####fixed ipi 0x%x to vcpu %d\n", vector, vcpu->vcpu_id);
 
@@ -595,6 +572,10 @@ static int __apic_accept_irq(vmm_vcpu_t *vcpu, int delivery_mode,
     case APIC_DM_INIT:
         apic_debug(2, "Got init ipi on vcpu %d\n", vcpu->vcpu_id);
         if (!trig_mode || level) {
+            if (apic->state == LAPIC_STATE_RUN) {
+                /* Already running, ignore inits */
+                break;
+            }
             result = 1;
             vmm_lapic_reset(vcpu);
             apic->arb_prio = vmm_apic_id(apic);
@@ -615,9 +596,7 @@ static int __apic_accept_irq(vmm_vcpu_t *vcpu, int delivery_mode,
             apic->sipi_vector = vector;
             apic->state = LAPIC_STATE_RUN;
 
-            /* Start the VCPU thread. XXX this probably doesn't work if
-               the guest os tries to reset a processor by sending another
-               init + sipi, but this probably doesn't happen */
+            /* Start the VCPU thread. */
             vmm_start_ap_vcpu(vcpu, vector);
         }
         break;
@@ -679,7 +658,7 @@ static void apic_send_ipi(vmm_vcpu_t *vcpu)
            irq.trig_mode, irq.level, irq.dest_mode, irq.delivery_mode,
            irq.vector);
 
-    vmm_irq_delivery_to_apic(vcpu, &irq, NULL); // TODO maybe make use of dest_map
+    vmm_irq_delivery_to_apic(vcpu, &irq, NULL);
 }
 
 static uint32_t __apic_read(vmm_lapic_t *apic, unsigned int offset)
@@ -940,8 +919,8 @@ void vmm_lapic_reset(vmm_vcpu_t *vcpu)
 
     /* Stop the timer in case it's a reset to an active apic */
 
-    vmm_apic_set_id(apic, vcpu->vcpu_id); // TODO is this right or should it be +1 to agree with acpi tables?
-    vmm_apic_set_version(vcpu); // TODO is it necessary to pass in the vcpu?
+    vmm_apic_set_id(apic, vcpu->vcpu_id); /* In agreement with ACPI code */
+    apic_set_reg(apic, APIC_LVR, APIC_VERSION);
 
     for (i = 0; i < APIC_LVT_NUM; i++)
         apic_set_reg(apic, APIC_LVTT + 0x10 * i, APIC_LVT_MASKED);
@@ -984,16 +963,6 @@ void vmm_lapic_reset(vmm_vcpu_t *vcpu)
     }
 }
 
-
-// XXX what's this for?
-#if 0
-void vmm_apic_nmi_wd_deliver(vmm_vcpu_t *vcpu)
-{
-    if (vcpu)
-        vmm_apic_local_deliver(vcpu, APIC_LVT0);
-}
-#endif
-
 int vmm_create_lapic(vmm_vcpu_t *vcpu, int enabled)
 {
     vmm_lapic_t *apic;
@@ -1035,7 +1004,6 @@ int vmm_apic_accept_pic_intr(vmm_vcpu_t *vcpu)
 {
     vmm_lapic_t *apic = vcpu->lapic;
     uint32_t lvt0 = vmm_apic_get_reg(apic, APIC_LVT0);
-//    printf("vcpu %d lapic lvt0=%08x, sw_enabled=%d\n", vcpu->vcpu_id, lvt0, vmm_apic_sw_enabled(vcpu->lapic));
 
     return ((lvt0 & APIC_LVT_MASKED) == 0 &&
         GET_APIC_DELIVERY_MODE(lvt0) == APIC_MODE_EXTINT &&
@@ -1071,44 +1039,12 @@ int vmm_apic_has_interrupt(vmm_vcpu_t *vcpu)
     }
 
     highest_irr = apic_find_highest_irr(apic);
-    //printf("highest irr = 0x%x, ppr = 0x%x\n", highest_irr, vmm_apic_get_reg(apic, APIC_PROCPRI));
     if ((highest_irr == -1) ||
         ((highest_irr & 0xF0) <= vmm_apic_get_reg(apic, APIC_PROCPRI))) {
-        //printf("lapic doesn't have interrupt\n");
         return -1;
     }
 
     return highest_irr;
-}
-
-/* If we are accepting interrupts from an external controller (i.e. 8259), 
-   pull them all out of that controller, then inject them into our guest */
-void vmm_apic_consume_extints(vmm_vcpu_t *vcpu, int (*get)(void))
-{
-    assert(get);
-    assert(vmm_apic_accept_pic_intr(vcpu));
-
-    int irq = -1;
-
-    /* Load all the external interrupts pending into the irr */
-    /*while (1) {
-        //irq = get();
-        //printf("pic gave us irq 0x%x\n", irq);
-
-        if (irq < 0) {
-            break;
-        }
-
-        if (irq < 16) {
-            continue;
-        }
-        
-        assert(irq == (irq & 0xff));
-
-        //apic_set_irr(irq, vcpu->lapic);
-    }*/
-
-    vmm_vcpu_accept_interrupt(vcpu);
 }
 
 #if 0

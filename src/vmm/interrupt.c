@@ -88,7 +88,6 @@ void vmm_have_pending_interrupt(vmm_vcpu_t *vcpu) {
                 vcpu->guest_state.virt.interrupt_halt = 0;
                 vmm_sync_guest_state(vcpu);
                 vmm_reply_vm_exit(vcpu); /* unblock the guest */
-                printf("THIS CODE PATH DOES OCCUR!\n");
             } else {
                 int irq = vmm_apic_get_interrupt(vcpu);
                 inject_irq(vcpu, irq);
@@ -159,7 +158,7 @@ void vmm_check_external_interrupt(vmm_t *vmm)
         for (int i = 0; i < vmm->num_vcpus; i++) {
             vmm_vcpu_t *vcpu = &vmm->vcpus[i];
             if (vmm_apic_accept_pic_intr(vcpu)) {
-                vmm_apic_consume_extints(vcpu, vmm->plat_callbacks.get_interrupt);
+                vmm_vcpu_accept_interrupt(vcpu);
                 break; /* Only one VCPU can take a PIC interrupt */
             } 
         }

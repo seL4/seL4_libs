@@ -129,7 +129,6 @@ static int vmm_init_vcpu(vmm_t *vmm, unsigned int vcpu_num, int priority) {
     
     vcpu->vmm = vmm;
     vcpu->vcpu_id = vcpu_num;
-    vcpu->halted = 0;
 
     /* All LAPICs are created enabled, in virtual wire mode */
     vmm_create_lapic(vcpu, 1);

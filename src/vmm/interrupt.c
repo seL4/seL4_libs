@@ -30,26 +30,6 @@ static void resume_guest(vmm_vcpu_t *vcpu) {
 
 static void inject_irq(vmm_vcpu_t *vcpu, int irq) {
     /* Inject a vectored exception into the guest */
-#if 0
-    static uint32_t old_cs = 0;
-    uint32_t cs = vmm_guest_state_get_cs_selector(&vcpu->guest_state, vcpu->guest_vcpu);
-    uint32_t eip = vmm_read_user_context(&vcpu->guest_state, USER_CONTEXT_EIP);
-    if (cs == 0x60) {
-        assert(eip >= 0xc0000000);
-        if (vcpu->vcpu_id == 1) {
-        }
-    } else if (cs == 0x73) {
-        assert(eip < 0xc0000000);
-        if (vcpu->vcpu_id == 1) {
-            //printf("vcpu 1 inj irq in user mode eip 0x%08x\n", eip);
-        }
-    } else {
-        if (cs != old_cs) {
-            old_cs = cs;
-            printf("vcpu %d, cs 0x%x\n", vcpu->vcpu_id, cs);
-        }
-    }
-#endif
     assert(irq >= 16);
     vmm_guest_state_set_control_entry(&vcpu->guest_state, BIT(31) | irq);
 }

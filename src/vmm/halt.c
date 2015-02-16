@@ -20,10 +20,7 @@
 /* Handling halt instruction VMExit Events. */
 int vmm_hlt_handler(vmm_vcpu_t *vcpu) {
     if (!(vmm_guest_state_get_rflags(&vcpu->guest_state, vcpu->guest_vcpu) & BIT(9))) {
-        if (!vcpu->halted) {
-            printf("vcpu %d is halted forever :(\n", vcpu->vcpu_id);
-            vcpu->halted = 1;
-        }
+        printf("vcpu %d is halted forever :(\n", vcpu->vcpu_id);
     }
 
     if (vmm_apic_has_interrupt(vcpu) == -1) {

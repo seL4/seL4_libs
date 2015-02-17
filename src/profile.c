@@ -44,3 +44,21 @@ void profile_scrape(profile_callback32 callback32, profile_callback64 callback64
         }
     }
 }
+
+void profile_reset(void)
+{
+    profile_var_t *i;
+    for (i = __start__profile_var; i < __stop__profile_var; i++) {
+        switch (i->type) {
+        case PROFILE_VAR_TYPE_INT32:
+            *(uint32_t*)i->var = 0;
+            break;
+        case PROFILE_VAR_TYPE_INT64:
+            *(uint64_t*)i->var = 0;
+            break;
+        default:
+            LOG_ERROR("Unknown profile var. Probable memory corruption or linker failure!");
+            break;
+        }
+    }
+}

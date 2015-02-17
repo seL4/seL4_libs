@@ -54,6 +54,9 @@ void profile_print64(uint64_t value, const char *varname, const char *descriptio
  * with the current value. */
 void profile_scrape(profile_callback32 callback32, profile_callback64 callback64, void *cookie);
 
+/* Iterates over all profile variables and resets the value to zero */
+void profile_reset(void);
+
 #define _PSTART_TIME(x) uint32_t __begin_time##x = read_ccnt()
 #define _PEND_TIME(x) uint32_t __end_time##x = read_ccnt()
 #define _PTIME_DIFF(x) (__end_time##x - __begin_time##x)
@@ -62,7 +65,7 @@ void profile_scrape(profile_callback32 callback32, profile_callback64 callback64
 #define PADDTIME(name) PEND_TIME(name); PADDTIMEDIFF(name)
 #define PTIMEDIFF(x) _PTIME_DIFF(x)
 
-#ifdef SEL4UTILS_PROFILE
+#ifdef CONFIG_SEL4UTILS_PROFILE
 #define PVARUINT32(name, desc) static uint32_t name = 0; WATCH_VAR32(name, desc);
 #define PVARUINT64(name, desc) static uint64_t name = 0; WATCH_VAR64(name, desc);
 #define PADD(name, x) do {name += (x); } while(0)

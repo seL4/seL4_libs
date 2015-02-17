@@ -14,7 +14,8 @@ menuconfig LIB_SEL4_UTILS
     select HAVE_SEL4_LIBS
     default y
     help
-        A library of utils for building an OS on seL4, including virtual memory and process and thread creation.
+        A library of utils for building an OS on seL4, including virtual memory and process and 
+        thread creation.
 
 if LIB_SEL4_UTILS
     config SEL4UTILS_STACK_SIZE
@@ -27,6 +28,9 @@ if LIB_SEL4_UTILS
     default 12
 
     config SEL4UTILS_PROFILE
-    bool "Allows the user to enable or disable sel4utils' profiling tools."
+    bool "Profiling tools"
     default n
+    help
+        Enables the functionality of a set of profiling tools. When disabled these profiling tools
+        will compile down to nothing.
 endif

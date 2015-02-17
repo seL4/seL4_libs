@@ -11,7 +11,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
-#include <sel4debug/backtrace.h>
+#include <sel4debug/stack_trace.h>
 
 #define STACK_TRACE(x) do { \
     void *frame = __builtin_frame_address(x); \

@@ -25,4 +25,8 @@ if LIB_SEL4_UTILS
     int "Size of default cspace to spawn processes with"
     range 2 27
     default 12
+
+    config SEL4UTILS_PROFILE
+    bool "Allows the user to enable or disable sel4utils' profiling tools."
+    default n
 endif

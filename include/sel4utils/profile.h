@@ -62,7 +62,7 @@ void profile_scrape(profile_callback32 callback32, profile_callback64 callback64
 #define PADDTIME(name) PEND_TIME(name); PADDTIMEDIFF(name)
 #define PTIMEDIFF(x) _PTIME_DIFF(x)
 
-#ifdef PROFILE
+#ifdef SEL4UTILS_PROFILE
 #define PVARUINT32(name, desc) static uint32_t name = 0; WATCH_VAR32(name, desc);
 #define PVARUINT64(name, desc) static uint64_t name = 0; WATCH_VAR64(name, desc);
 #define PADD(name, x) do {name += (x); } while(0)

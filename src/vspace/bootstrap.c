@@ -203,6 +203,7 @@ alloc_and_map_bootstrap_frame(vspace_t *vspace, vka_object_t *frame, void *vaddr
                                seL4_AllRights, 1, objects, &num);
 
     if (error) {
+        vka_free_object(data->vka, frame);
         LOG_ERROR("Failed to map bootstrap frame at %p, error: %d", vaddr, error);
         return error;
     }

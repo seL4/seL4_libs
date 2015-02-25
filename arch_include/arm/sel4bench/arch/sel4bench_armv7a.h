@@ -38,7 +38,9 @@ void seL4_DebugRun(void (* userfn) (void *), void* userarg);
 
 static FASTFN void sel4bench_init() {
 	//do kernel-mode PMC init
+#ifndef CONFIG_EXPORT_PMU_USER
 	seL4_DebugRun(&sel4bench_private_init, NULL);
+#endif
 
 	//ensure all counters are in the stopped state
 	sel4bench_private_write_cntenc(-1);
@@ -64,7 +66,9 @@ static FASTFN void sel4bench_destroy() {
 	MODIFY_PMCR(&, ~SEL4BENCH_ARMV7A_PMCR_ENABLE);
 
 	//disable user-mode performance-counter access
+#ifndef CONFIG_EXPORT_PMU_USER
 	seL4_DebugRun(&sel4bench_private_deinit, NULL);
+#endif
 }
 
 static FASTFN seL4_Word sel4bench_get_num_counters() {

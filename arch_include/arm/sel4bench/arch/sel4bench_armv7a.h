@@ -54,6 +54,11 @@ static FASTFN void sel4bench_init() {
 	//Enable counters globally.
 	MODIFY_PMCR(|, SEL4BENCH_ARMV7A_PMCR_ENABLE);
 
+#ifdef ARM_HYP
+	// Select instruction count incl. PL2 by default */
+	sel4bench_private_write_pmnxsel(0x1f);
+	sel4bench_private_write_evtsel(BIT(27));
+#endif
 	//start CCNT
 	sel4bench_private_write_cntens(BIT(SEL4BENCH_ARMV7A_COUNTER_CCNT));
 }

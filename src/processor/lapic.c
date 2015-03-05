@@ -49,11 +49,13 @@
 
 inline static int pic_get_interrupt(vmm_t *vmm)
 {
+    vmm_save_reply_cap(vmm);
     return vmm->plat_callbacks.get_interrupt();
 }
 
 inline static int pic_has_interrupt(vmm_t *vmm)
 {
+    vmm_save_reply_cap(vmm);
     return vmm->plat_callbacks.has_interrupt();
 }
 

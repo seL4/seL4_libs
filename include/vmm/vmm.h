@@ -76,7 +76,8 @@ typedef struct guest_image {
 
 /* Represents a libsel4vmm vcpu */
 typedef struct vmm_vcpu {
-    /* Reply slot for guest messages */
+    /* Reply slot for guest messages. This is for if we cannot reply to
+     * fault immediately */
     cspacepath_t reply_slot;
 
     /* kernel objects */
@@ -134,6 +135,11 @@ typedef struct vmm {
     unsigned int num_vcpus;
     vmm_vcpu_t *vcpus;
 
+    /* This variable controls whether we have saved the reply cap
+     * or not, and for which vcpu the reply cap was for. negative
+     * indicates no saved cap */
+    int reply_slot_vcpu;
+
     /*TODO add
         map of vcpu affinities
     */
@@ -144,6 +150,9 @@ int vmm_finalize(vmm_t *vmm);
 
 /*running vmm moudle*/
 void vmm_run(vmm_t *vmm);
+
+/* Save any reply cap that exists */
+void vmm_save_reply_cap(vmm_t *vmm);
 
 /* TODO htf did these get here? lets refactor everything  */
 void vmm_sync_guest_state(vmm_vcpu_t *vcpu);

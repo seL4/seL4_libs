@@ -134,6 +134,7 @@ void vmm_check_external_interrupt(vmm_t *vmm)
 {
     /* TODO if all lapics are enabled, store which lapic
        (only one allowed) receives extints, and short circuit this */
+    vmm_save_reply_cap(vmm);
     if (vmm->plat_callbacks.has_interrupt() != -1) {
         for (int i = 0; i < vmm->num_vcpus; i++) {
             vmm_vcpu_t *vcpu = &vmm->vcpus[i];

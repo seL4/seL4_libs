@@ -20,6 +20,7 @@
 
 #include <sel4/sel4.h>
 #include <vka/capops.h>
+#include <platsupport/arch/tsc.h>
 
 #include "vmm/debug.h"
 #include "vmm/vmm.h"
@@ -77,7 +78,13 @@ void vmm_reply_vm_exit(vmm_vcpu_t *vcpu) {
     assert(vmm_guest_state_no_modified(&vcpu->guest_state));
     vmm_guest_state_invalidate_all(&vcpu->guest_state);
 
-    seL4_Send(vcpu->reply_slot.capPtr, msg);
+    /* Check if we are in the reply slot */
+    if (vcpu->vmm->reply_slot_vcpu == vcpu->vcpu_id) {
+        seL4_Reply(msg);
+        vcpu->vmm->reply_slot_vcpu = -1;
+    } else {
+        seL4_Send(vcpu->reply_slot.capPtr, msg);
+    }
 
     vcpu->guest_state.exit.in_exit = 0;
 }
@@ -154,6 +161,14 @@ static void vmm_update_guest_state_from_fault(vmm_vcpu_t *vcpu, seL4_Word *msg) 
     MACHINE_STATE_READ(vcpu->guest_state.machine.context, context);
 }
 
+void vmm_save_reply_cap(vmm_t *vmm) {
+    if (vmm->reply_slot_vcpu >= 0) {
+        vmm_vcpu_t *vcpu = &vmm->vcpus[vmm->reply_slot_vcpu];
+        vka_cnode_saveCaller(&vcpu->reply_slot);
+        vmm->reply_slot_vcpu = -1;
+    }
+}
+
 /* Entry point of of VMM main host module. */
 void vmm_run(vmm_t *vmm) {
     DPRINTF(2, "VMM MAIN HOST MODULE STARTED\n");
@@ -178,10 +193,15 @@ void vmm_run(vmm_t *vmm) {
     /* Get our interrupt pending callback happening */
     seL4_TCB_BindAEP(simple_get_init_cap(&vmm->host_simple, seL4_CapInitThreadTCB), vmm->plat_callbacks.get_async_event_aep());
 
+    vmm->reply_slot_vcpu = -1;
+
     while (1) {
         /* Block and wait for incoming msg or VM exits. */
         seL4_Word badge;
-        seL4_MessageInfo_t msg = seL4_Wait(vmm->guest_fault_ep, &badge);
+        seL4_MessageInfo_t msg;
+
+        vmm_save_reply_cap(vmm);
+        msg = seL4_Wait(vmm->guest_fault_ep, &badge);
 
         seL4_Word msg_len = seL4_MessageInfo_get_length(msg);
 
@@ -205,9 +225,8 @@ void vmm_run(vmm_t *vmm) {
             fault_message[i] = seL4_GetMR(i);
         }
 
+        vmm->reply_slot_vcpu = badge;
         vmm_vcpu_t *vcpu = &vmm->vcpus[badge];
-
-        vka_cnode_saveCaller(&vcpu->reply_slot);
 
         /* Set all our state to invalid as we just received a fault and
          * none of it can conceivably be valid */

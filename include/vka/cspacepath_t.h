@@ -95,13 +95,13 @@ typedef struct _cspacepath_t {
 inline static void cspacepath_t_print(const cspacepath_t* src)
 {
     (void)(src);
-    CSPACEPATHPRINT("capPtr:     0x%"PRIxPTR"\n", src->capPtr);
-    CSPACEPATHPRINT("capDepth:   0x%"PRIxPTR"\n", src->capDepth);
-    CSPACEPATHPRINT("root:       0x%"PRIxPTR"\n", src->root);
-    CSPACEPATHPRINT("dest:       0x%"PRIxPTR"\n", src->dest);
-    CSPACEPATHPRINT("destDepth:  0x%"PRIxPTR"\n", src->destDepth);
-    CSPACEPATHPRINT("offset:     0x%"PRIxPTR"\n", src->offset);
-    CSPACEPATHPRINT("window:     0x%"PRIxPTR"\n", src->window);
+    CSPACEPATHPRINT("capPtr:     0x%"PRIx32"\n", src->capPtr);
+    CSPACEPATHPRINT("capDepth:   0x%"PRIx32"\n", src->capDepth);
+    CSPACEPATHPRINT("root:       0x%"PRIx32"\n", src->root);
+    CSPACEPATHPRINT("dest:       0x%"PRIx32"\n", src->dest);
+    CSPACEPATHPRINT("destDepth:  0x%"PRIx32"\n", src->destDepth);
+    CSPACEPATHPRINT("offset:     0x%"PRIx32"\n", src->offset);
+    CSPACEPATHPRINT("window:     0x%"PRIx32"\n", src->window);
 }
 
 #endif /* _CSPACEPATH_T_H_ */

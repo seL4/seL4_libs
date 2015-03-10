@@ -234,8 +234,11 @@ static inline seL4_Error simple_get_frame_cap(simple_t *simple, void *paddr, int
 
 static inline void *simple_get_frame_vaddr(simple_t *simple, void *paddr, int size_bits) {
     assert(simple);
-    assert(simple->frame_mapping);
-    return simple->frame_mapping(simple->data, paddr, size_bits);
+    if (simple->frame_mapping) {
+        return simple->frame_mapping(simple->data, paddr, size_bits);
+    } else {
+        return NULL;
+    }
 }
 
 static inline seL4_Error simple_get_IRQ_control(simple_t *simple, int irq, cspacepath_t path) {

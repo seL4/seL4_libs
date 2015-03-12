@@ -95,7 +95,7 @@ static int crExitRegs[] = {
     USER_CONTEXT_ECX,
     USER_CONTEXT_EDX,
     USER_CONTEXT_EBX,
-    USER_CONTEXT_ESP,
+    /*USER_CONTEXT_ESP*/-1,
     USER_CONTEXT_EBP,
     USER_CONTEXT_ESI,
     USER_CONTEXT_EDI
@@ -112,6 +112,9 @@ int vmm_cr_access_handler(vmm_vcpu_t *vcpu) {
 
     switch ((exit_qualification >> 4) & 3) {
         case 0: /* mov to cr */
+            if (crExitRegs[reg] < 0) {
+                return -1;
+            }
             val = vmm_read_user_context(&vcpu->guest_state, crExitRegs[reg]);
 
             switch (cr) {
@@ -188,7 +191,7 @@ int vmm_cr_access_handler(vmm_vcpu_t *vcpu) {
     }
 
     if (!ret) {
-        vmm_guest_exit_next_instruction(&vcpu->guest_state);
+        vmm_guest_exit_next_instruction(&vcpu->guest_state, vcpu->guest_vcpu);
     }
 
     return ret;

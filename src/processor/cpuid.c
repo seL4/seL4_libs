@@ -371,7 +371,7 @@ int vmm_cpuid_handler(vmm_vcpu_t *vcpu) {
     vmm_set_user_context(&vcpu->guest_state, USER_CONTEXT_ECX, val.ecx);
     vmm_set_user_context(&vcpu->guest_state, USER_CONTEXT_EDX, val.edx);
 
-    vmm_guest_exit_next_instruction(&vcpu->guest_state);
+    vmm_guest_exit_next_instruction(&vcpu->guest_state, vcpu->guest_vcpu);
 
     /* Return success. */
     return 0;

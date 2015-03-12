@@ -26,13 +26,6 @@
 #include "vmm/processor/apicdef.h"
 #include "vmm/processor/lapic.h"
 
-/* The guest only has a single cap in its cnode (fault ep) so define
- * the smallest EP possible */
-#define GUEST_CNODE_SIZE       2
-
-/* This is the slot we place its fault endpoint in */
-#define LIB_VMM_GUEST_OS_FAULT_EP_CAP     2
-
 int vmm_init(vmm_t *vmm, simple_t simple, vka_t vka, vspace_t vspace, platform_callbacks_t callbacks) {
     int err;
     memset(vmm, 0, sizeof(vmm_t));
@@ -40,6 +33,7 @@ int vmm_init(vmm_t *vmm, simple_t simple, vka_t vka, vspace_t vspace, platform_c
     vmm->host_simple = simple;
     vmm->host_vspace = vspace;
     vmm->plat_callbacks = callbacks;
+    vmm->tcb = simple_get_tcb(&simple);
     // Currently set this to 4k pages by default
     vmm->page_size = seL4_PageBits;
     err = vmm_pci_init(&vmm->pci);
@@ -57,76 +51,26 @@ int vmm_init(vmm_t *vmm, simple_t simple, vka_t vka, vspace_t vspace, platform_c
     return 0;
 }
 
-static int create_guest_fault_ep(vmm_t *vmm) {
-    vmm->guest_fault_ep = vka_alloc_endpoint_leaky(&vmm->vka);
-    if (vmm->guest_fault_ep == 0) {
-        return -1;
-    }
-    return 0;
-}
-
 int vmm_init_host(vmm_t *vmm) {
-    int error;
-    error = create_guest_fault_ep(vmm);
-    if (error) {
-        return error;
-    }
     vmm->done_host_init = 1;
     return 0;
-}
-
-static void install_guest_fault_ep(vmm_t *vmm, unsigned int vcpu_num) {
-    cspacepath_t host_fault_path;
-    cspacepath_t guest_fault_path;
-    int error;
-
-    vka_cspace_make_path(&vmm->vka, vmm->guest_fault_ep, &host_fault_path);
-
-    guest_fault_path.root = vmm->vcpus[vcpu_num].guest_cnode;
-    guest_fault_path.capPtr = LIB_VMM_GUEST_OS_FAULT_EP_CAP;
-    guest_fault_path.capDepth = GUEST_CNODE_SIZE;
-
-    error = vka_cnode_mint(&guest_fault_path, &host_fault_path, seL4_AllRights,
-            seL4_CapData_Badge_new(vcpu_num));
-    assert(error == seL4_NoError);
 }
 
 static int vmm_init_vcpu(vmm_t *vmm, unsigned int vcpu_num, int priority) {
     int error;
     assert(vcpu_num < vmm->num_vcpus);
     vmm_vcpu_t *vcpu = &vmm->vcpus[vcpu_num];
-    
-    error = vka_cspace_alloc_path(&vmm->vka, &vcpu->reply_slot);
-    if (error) {
-        return error;
-    }
 
-    /* allocate tcb, cnode and sel4 vcpu (vmcs) */
-    vcpu->guest_tcb = vka_alloc_tcb_leaky(&vmm->vka);
-    if (vcpu->guest_tcb == 0) {
-        return -1;
-    }
-    vcpu->guest_cnode = vka_alloc_cnode_object_leaky(&vmm->vka, GUEST_CNODE_SIZE);
-    if (vcpu->guest_cnode == 0) {
-        return -1;
-    }
+    /* sel4 vcpu (vmcs) */
     vcpu->guest_vcpu = vka_alloc_vcpu_leaky(&vmm->vka);
     if (vcpu->guest_vcpu == 0) {
         return -1;
     }
 
-    /* Set the guest TCB information */
-    install_guest_fault_ep(vmm, vcpu_num);
-    error = seL4_TCB_SetSpace(vcpu->guest_tcb, LIB_VMM_GUEST_OS_FAULT_EP_CAP,
-            vcpu->guest_cnode,
-            seL4_CapData_Guard_new(0, 32 - GUEST_CNODE_SIZE),
-            vmm->guest_pd, seL4_NilData);
+    /* bind the VCPU to the VMM thread */
+    error = seL4_IA32_VCPU_SetTCB(vcpu->guest_vcpu, vmm->tcb);
     assert(error == seL4_NoError);
-    error = seL4_TCB_SetPriority(vcpu->guest_tcb, priority);
-    assert(error == seL4_NoError);
-    error = seL4_IA32_VCPU_SetTCB(vcpu->guest_vcpu, vcpu->guest_tcb);
-    assert(error == seL4_NoError);
-    
+
     vcpu->vmm = vmm;
     vcpu->vcpu_id = vcpu_num;
 
@@ -156,6 +100,9 @@ int vmm_init_guest_multi(vmm_t *vmm, int priority, int num_vcpus) {
     if (vmm->guest_pd == 0) {
         return -1;
     }
+    /* Install the guest PD */
+    error = seL4_TCB_SetEPTRoot(vmm->tcb, vmm->guest_pd);
+    assert(error == seL4_NoError);
     /* Initialize a vspace for the guest */
     error = vmm_get_guest_vspace(&vmm->host_vspace, &vmm->host_vspace,
             &vmm->guest_mem.vspace, &vmm->vka, vmm->guest_pd);

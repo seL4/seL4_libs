@@ -121,12 +121,13 @@ void vmm_start_ap_vcpu(vmm_vcpu_t *vcpu, unsigned int sipi_vector)
     eip = vmm_emulate_realmode(&vcpu->vmm->guest_mem, instr, &segment, eip,
             TRAMPOLINE_LENGTH, gs);
 
-    vmm_set_user_context(&vcpu->guest_state, USER_CONTEXT_EIP, eip);
+    vmm_guest_state_set_eip(&vcpu->guest_state, eip);
 
     vmm_sync_guest_context(vcpu);
     vmm_sync_guest_state(vcpu);
 
-    seL4_TCB_Resume(vcpu->guest_tcb);
+    assert(!"no tcb");
+//    seL4_TCB_Resume(vcpu->guest_tcb);
 }
 
 /* Got interrupt(s) from PIC, propagate to relevant vcpu lapic */
@@ -134,7 +135,6 @@ void vmm_check_external_interrupt(vmm_t *vmm)
 {
     /* TODO if all lapics are enabled, store which lapic
        (only one allowed) receives extints, and short circuit this */
-    vmm_save_reply_cap(vmm);
     if (vmm->plat_callbacks.has_interrupt() != -1) {
         for (int i = 0; i < vmm->num_vcpus; i++) {
             vmm_vcpu_t *vcpu = &vmm->vcpus[i];
@@ -174,25 +174,5 @@ void vmm_vcpu_accept_interrupt(vmm_vcpu_t *vcpu)
         wait_for_guest_ready(vcpu);
         vmm_guest_state_sync_control_ppc(&vcpu->guest_state, vcpu->guest_vcpu);
     }
-#if 0
-    int did_suspend = 0;
-    /* Pause the guest so we can sensibly inspect its state, unless it is
-     * already blocked */
-    if (!vcpu->guest_state.exit.in_exit) {
-        int state = seL4_TCB_SuspendIf(vmm->guest_tcb);
-        if (!state) {
-            did_suspend = 1;
-            /* All state is invalid as the guest was running */
-            vmm_guest_state_invalidate_all(&vcpu->guest_state);
-        }
-    }
-    vmm_have_pending_interrupt(vmm);
-    vmm_sync_guest_state(vmm);
-    if (did_suspend) {
-        seL4_TCB_Resume(vmm->guest_tcb);
-        /* Guest is running, everything invalid again */
-        vmm_guest_state_invalidate_all(&vcpu->guest_state);
-    }
-#endif
 }
 

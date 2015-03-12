@@ -95,7 +95,7 @@ int vmm_io_instruction_handler(vmm_vcpu_t *vcpu) {
             }
             vmm_set_user_context(&vcpu->guest_state, USER_CONTEXT_EAX, eax);
         }
-        vmm_guest_exit_next_instruction(&vcpu->guest_state);
+        vmm_guest_exit_next_instruction(&vcpu->guest_state, vcpu->guest_vcpu);
         return 0;
     }
 
@@ -124,7 +124,7 @@ int vmm_io_instruction_handler(vmm_vcpu_t *vcpu) {
         return -1;
     }
 
-    vmm_guest_exit_next_instruction(&vcpu->guest_state);
+    vmm_guest_exit_next_instruction(&vcpu->guest_state, vcpu->guest_vcpu);
 
     return 0;
 }

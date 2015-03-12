@@ -29,10 +29,7 @@
 
 void vmm_sync_guest_context(vmm_vcpu_t *vcpu) {
     if (IS_MACHINE_STATE_MODIFIED(vcpu->guest_state.machine.context)) {
-        seL4_UserContext context;
-        context.eip = vmm_read_user_context(&vcpu->guest_state, USER_CONTEXT_EIP);
-        context.esp = vmm_read_user_context(&vcpu->guest_state, USER_CONTEXT_ESP);
-        context.eflags = vmm_read_user_context(&vcpu->guest_state, USER_CONTEXT_EFLAGS);
+        seL4_VCPUContext context;
         context.eax = vmm_read_user_context(&vcpu->guest_state, USER_CONTEXT_EAX);
         context.ebx = vmm_read_user_context(&vcpu->guest_state, USER_CONTEXT_EBX);
         context.ecx = vmm_read_user_context(&vcpu->guest_state, USER_CONTEXT_ECX);
@@ -40,10 +37,7 @@ void vmm_sync_guest_context(vmm_vcpu_t *vcpu) {
         context.esi = vmm_read_user_context(&vcpu->guest_state, USER_CONTEXT_ESI);
         context.edi = vmm_read_user_context(&vcpu->guest_state, USER_CONTEXT_EDI);
         context.ebp = vmm_read_user_context(&vcpu->guest_state, USER_CONTEXT_EBP);
-        context.tls_base = vmm_read_user_context(&vcpu->guest_state, USER_CONTEXT_TLS_BASE);
-        context.fs = vmm_read_user_context(&vcpu->guest_state, USER_CONTEXT_FS);
-        context.gs = vmm_read_user_context(&vcpu->guest_state, USER_CONTEXT_GS);
-        seL4_TCB_WriteRegisters(vcpu->guest_tcb, false, 0, 13, &context);
+        seL4_IA32_VCPU_WriteRegisters(vcpu->guest_vcpu, &context);
         /* Sync our context */
         MACHINE_STATE_SYNC(vcpu->guest_state.machine.context);
     }
@@ -51,45 +45,20 @@ void vmm_sync_guest_context(vmm_vcpu_t *vcpu) {
 
 void vmm_reply_vm_exit(vmm_vcpu_t *vcpu) {
     assert(vcpu->guest_state.exit.in_exit);
-    int msg_len = 0;
 
     if (IS_MACHINE_STATE_MODIFIED(vcpu->guest_state.machine.context)) {
-        seL4_SetMR(0, vmm_read_user_context(&vcpu->guest_state, USER_CONTEXT_EIP));
-        seL4_SetMR(1, vmm_read_user_context(&vcpu->guest_state, USER_CONTEXT_ESP));
-        seL4_SetMR(2, vmm_read_user_context(&vcpu->guest_state, USER_CONTEXT_EFLAGS));
-        seL4_SetMR(3, vmm_read_user_context(&vcpu->guest_state, USER_CONTEXT_EAX));
-        seL4_SetMR(4, vmm_read_user_context(&vcpu->guest_state, USER_CONTEXT_EBX));
-        seL4_SetMR(5, vmm_read_user_context(&vcpu->guest_state, USER_CONTEXT_ECX));
-        seL4_SetMR(6, vmm_read_user_context(&vcpu->guest_state, USER_CONTEXT_EDX));
-        seL4_SetMR(7, vmm_read_user_context(&vcpu->guest_state, USER_CONTEXT_ESI));
-        seL4_SetMR(8, vmm_read_user_context(&vcpu->guest_state, USER_CONTEXT_EDI));
-        seL4_SetMR(9, vmm_read_user_context(&vcpu->guest_state, USER_CONTEXT_EBP));
-        seL4_SetMR(10, vmm_read_user_context(&vcpu->guest_state, USER_CONTEXT_TLS_BASE));
-        seL4_SetMR(11, vmm_read_user_context(&vcpu->guest_state, USER_CONTEXT_FS));
-        seL4_SetMR(12, vmm_read_user_context(&vcpu->guest_state, USER_CONTEXT_GS));
-        /* Sync our context */
-        MACHINE_STATE_SYNC(vcpu->guest_state.machine.context);
-        msg_len = 13;
+        vmm_sync_guest_context(vcpu);
     }
-
-    seL4_MessageInfo_t msg = seL4_MessageInfo_new(0, 0, 0, msg_len);
 
     /* Before we resume the guest, ensure there is no dirty state around */
     assert(vmm_guest_state_no_modified(&vcpu->guest_state));
     vmm_guest_state_invalidate_all(&vcpu->guest_state);
 
-    /* Check if we are in the reply slot */
-    if (vcpu->vmm->reply_slot_vcpu == vcpu->vcpu_id) {
-        seL4_Reply(msg);
-        vcpu->vmm->reply_slot_vcpu = -1;
-    } else {
-        seL4_Send(vcpu->reply_slot.capPtr, msg);
-    }
-
     vcpu->guest_state.exit.in_exit = 0;
 }
 
 void vmm_sync_guest_state(vmm_vcpu_t *vcpu) {
+    vmm_guest_state_sync_eip(&vcpu->guest_state, vcpu->guest_vcpu);
     vmm_guest_state_sync_control_entry(&vcpu->guest_state, vcpu->guest_vcpu);
     vmm_guest_state_sync_control_ppc(&vcpu->guest_state, vcpu->guest_vcpu);
     vmm_guest_state_sync_cr0(&vcpu->guest_state, vcpu->guest_vcpu);
@@ -113,6 +82,7 @@ static void vmm_handle_vm_exit(vmm_vcpu_t *vcpu) {
     if (!vcpu->vmm->vmexit_handlers[reason]) {
         printf("VM_FATAL_ERROR ::: vm exit handler is NULL for reason 0x%x.\n", reason);
         vmm_print_guest_context(0, vcpu);
+        vcpu->online = 0;
         return;
     }
 
@@ -120,6 +90,7 @@ static void vmm_handle_vm_exit(vmm_vcpu_t *vcpu) {
     if (vcpu->vmm->vmexit_handlers[reason](vcpu)) {
         printf("VM_FATAL_ERROR ::: vmexit handler return error\n");
         vmm_print_guest_context(0, vcpu);
+        vcpu->online = 0;
         return;
     }
 
@@ -144,29 +115,15 @@ static void vmm_update_guest_state_from_fault(vmm_vcpu_t *vcpu, seL4_Word *msg) 
 
     MACHINE_STATE_READ(vcpu->guest_state.machine.cr3, msg[7]);
 
-    seL4_UserContext context;
-    context.eip = msg[8];
-    context.esp = msg[9];
-    context.eflags = msg[10];
-    context.eax = msg[11];
-    context.ebx = msg[12];
-    context.ecx = msg[13];
-    context.edx = msg[14];
-    context.esi = msg[15];
-    context.edi = msg[16];
-    context.ebp = msg[17];
-    context.tls_base = msg[18];
-    context.fs = msg[19];
-    context.gs = msg[20];
+    seL4_VCPUContext context;
+    context.eax = msg[8];
+    context.ebx = msg[9];
+    context.ecx = msg[10];
+    context.edx = msg[11];
+    context.esi = msg[12];
+    context.edi = msg[13];
+    context.ebp = msg[14];
     MACHINE_STATE_READ(vcpu->guest_state.machine.context, context);
-}
-
-void vmm_save_reply_cap(vmm_t *vmm) {
-    if (vmm->reply_slot_vcpu >= 0) {
-        vmm_vcpu_t *vcpu = &vmm->vcpus[vmm->reply_slot_vcpu];
-        vka_cnode_saveCaller(&vcpu->reply_slot);
-        vmm->reply_slot_vcpu = -1;
-    }
 }
 
 /* Entry point of of VMM main host module. */
@@ -188,25 +145,26 @@ void vmm_run(vmm_t *vmm) {
     }
 
     /* Start the boot vcpu guest thread running */
-    seL4_TCB_Resume(vmm->vcpus[BOOT_VCPU].guest_tcb);
+    vmm->vcpus[BOOT_VCPU].online = 1;
 
     /* Get our interrupt pending callback happening */
+    seL4_CPtr aep = vmm->plat_callbacks.get_async_event_aep();
     seL4_TCB_BindAEP(simple_get_init_cap(&vmm->host_simple, seL4_CapInitThreadTCB), vmm->plat_callbacks.get_async_event_aep());
-
-    vmm->reply_slot_vcpu = -1;
 
     while (1) {
         /* Block and wait for incoming msg or VM exits. */
         seL4_Word badge;
-        seL4_MessageInfo_t msg;
+        int fault;
 
-        vmm_save_reply_cap(vmm);
-        msg = seL4_Wait(vmm->guest_fault_ep, &badge);
+        if (vmm->vcpus[BOOT_VCPU].online && !vmm->vcpus[BOOT_VCPU].guest_state.virt.interrupt_halt && !vmm->vcpus[BOOT_VCPU].guest_state.exit.in_exit) {
+            fault = seL4_VMEnter(vmm->vcpus[BOOT_VCPU].guest_vcpu, &badge);
+        } else {
+            seL4_Wait(aep, &badge);
+            fault = 0;
+        }
 
-        seL4_Word msg_len = seL4_MessageInfo_get_length(msg);
-
-
-        if (badge >= vmm->num_vcpus) {
+        if (!fault) {
+            assert(badge >= vmm->num_vcpus);
             /* assume interrupt */
             int raise = vmm->plat_callbacks.do_async(badge);
             if (raise == 0) {
@@ -217,15 +175,15 @@ void vmm_run(vmm_t *vmm) {
             continue;
         }
 
+        badge = BOOT_VCPU;
+
         /* We only accept guest faults */
-        assert(msg_len == LIB_VMM_VM_EXIT_MSG_LEN);
 
         seL4_Word fault_message[LIB_VMM_VM_EXIT_MSG_LEN];
         for (int i = 0 ; i < LIB_VMM_VM_EXIT_MSG_LEN; i++) {
             fault_message[i] = seL4_GetMR(i);
         }
 
-        vmm->reply_slot_vcpu = badge;
         vmm_vcpu_t *vcpu = &vmm->vcpus[badge];
 
         /* Set all our state to invalid as we just received a fault and

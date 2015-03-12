@@ -370,10 +370,7 @@ void vmm_init_guest_thread_state(vmm_vcpu_t *vcpu) {
 
     /* Entry point. */
     printf("Initializing guest to start running at 0x%x\n", (unsigned int)vcpu->vmm->guest_image.entry);
-    vmm_set_user_context(&vcpu->guest_state, USER_CONTEXT_EIP, vcpu->vmm->guest_image.entry);
-    /* Top of stack. */
-    LOG_INFO("Not giving Linux a real stack, this may be a problem");
-    vmm_set_user_context(&vcpu->guest_state, USER_CONTEXT_ESP, 0x420);
+    vmm_guest_state_set_eip(&vcpu->guest_state, vcpu->vmm->guest_image.entry);
     /* The boot_param structure. */
     vmm_set_user_context(&vcpu->guest_state, USER_CONTEXT_ESI, vcpu->vmm->guest_image.boot_info);
 

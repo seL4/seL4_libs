@@ -28,7 +28,7 @@ const static int vmm_decoder_reg_mapw[] = {
     USER_CONTEXT_ECX,
     USER_CONTEXT_EDX,
     USER_CONTEXT_EBX,
-    USER_CONTEXT_ESP,
+    /*USER_CONTEXT_ESP*/-1,
     USER_CONTEXT_EBP,
     USER_CONTEXT_ESI,
     USER_CONTEXT_EDI

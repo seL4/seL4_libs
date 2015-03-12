@@ -31,15 +31,14 @@ void vmm_print_guest_context(int level, vmm_vcpu_t *vcpu) {
     DPRINTF(level, "            guest interruptibility 0x%x   control entry 0x%x\n",
                    vmm_guest_state_get_interruptibility(&vcpu->guest_state, vcpu->guest_vcpu), vmm_guest_state_get_control_entry(&vcpu->guest_state, vcpu->guest_vcpu));
 
-    DPRINTF(level, "eip 0x%8x         esp 0x%8x      eflags 0x%8x\n",
-                   vmm_read_user_context(&vcpu->guest_state, USER_CONTEXT_EIP), vmm_read_user_context(&vcpu->guest_state, USER_CONTEXT_ESP), vmm_read_user_context(&vcpu->guest_state, USER_CONTEXT_EFLAGS));
+    DPRINTF(level, "eip 0x%8x\n",
+                   vmm_guest_state_get_eip(&vcpu->guest_state, vcpu->guest_vcpu));
     DPRINTF(level, "eax 0x%8x         ebx 0x%8x      ecx 0x%8x\n",
                    vmm_read_user_context(&vcpu->guest_state, USER_CONTEXT_EAX), vmm_read_user_context(&vcpu->guest_state, USER_CONTEXT_EBX), vmm_read_user_context(&vcpu->guest_state, USER_CONTEXT_ECX));
     DPRINTF(level, "edx 0x%8x         esi 0x%8x      edi 0x%8x\n",
                    vmm_read_user_context(&vcpu->guest_state, USER_CONTEXT_EDX), vmm_read_user_context(&vcpu->guest_state, USER_CONTEXT_ESI), vmm_read_user_context(&vcpu->guest_state, USER_CONTEXT_EDI));
-    DPRINTF(level, "ebp 0x%8x         tls_base 0x%8x      fs 0x%8x\n",
-                   vmm_read_user_context(&vcpu->guest_state, USER_CONTEXT_EBP), vmm_read_user_context(&vcpu->guest_state, USER_CONTEXT_TLS_BASE), vmm_read_user_context(&vcpu->guest_state, USER_CONTEXT_FS));
-    DPRINTF(level, "gs 0x%8x \n", vmm_read_user_context(&vcpu->guest_state, USER_CONTEXT_GS));
+    DPRINTF(level, "ebp 0x%8x\n",
+                   vmm_read_user_context(&vcpu->guest_state, USER_CONTEXT_EBP));
 
     DPRINTF(level, "cr0 0x%x      cr3 0x%x   cr4 0x%x\n", vmm_guest_state_get_cr0(&vcpu->guest_state, vcpu->guest_vcpu), vmm_guest_state_get_cr3(&vcpu->guest_state, vcpu->guest_vcpu), vmm_guest_state_get_cr4(&vcpu->guest_state, vcpu->guest_vcpu));
 

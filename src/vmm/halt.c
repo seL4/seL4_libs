@@ -28,6 +28,6 @@ int vmm_hlt_handler(vmm_vcpu_t *vcpu) {
         vcpu->guest_state.virt.interrupt_halt = 1;
     }
 
-    vmm_guest_exit_next_instruction(&vcpu->guest_state);
+    vmm_guest_exit_next_instruction(&vcpu->guest_state, vcpu->guest_vcpu);
     return 0;
 }

@@ -70,7 +70,7 @@ int vmm_mmio_exit_handler(vmm_vcpu_t *vcpu, uintptr_t addr, unsigned int qualifi
             uint8_t ibuf[15];
             int instr_len = vmm_guest_exit_get_int_len(&vcpu->guest_state);
             vmm_fetch_instruction(vcpu,
-                    vmm_read_user_context(&vcpu->guest_state, USER_CONTEXT_EIP),
+                    vmm_guest_state_get_eip(&vcpu->guest_state, vcpu->guest_vcpu),
                     vmm_guest_state_get_cr3(&vcpu->guest_state, vcpu->guest_vcpu),
                     instr_len, ibuf);
 
@@ -87,14 +87,18 @@ assert(size == 4); // we don't support non-32 bit accesses. TODO fix this
 
                 // Inject into register
                 assert(reg >= 0 && reg < 8);
+                int vcpu_reg = vmm_decoder_reg_mapw[reg];
+                assert(vcpu_reg >= 0);
                 vmm_set_user_context(&vcpu->guest_state,
-                        vmm_decoder_reg_mapw[reg], result);
+                        vcpu_reg, result);
             } else {
                 // Get value to pass in
                 uint32_t value = imm;
                 assert (reg >= 0);
+                int vcpu_reg =  vmm_decoder_reg_mapw[reg];
+                assert(vcpu_reg >= 0);
                 value = vmm_read_user_context(&vcpu->guest_state,
-                        vmm_decoder_reg_mapw[reg]);
+                        vcpu_reg);
 
                 range->write_handler(vcpu, range->cookie, addr - range->start, size, value);
             }

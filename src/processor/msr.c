@@ -75,7 +75,7 @@ int vmm_rdmsr_handler(vmm_vcpu_t *vcpu) {
     if (!ret) {
         vmm_set_user_context(&vcpu->guest_state, USER_CONTEXT_EAX, (uint32_t)(data & 0xffffffff));
         vmm_set_user_context(&vcpu->guest_state, USER_CONTEXT_EDX, (uint32_t)(data >> 32));
-        vmm_guest_exit_next_instruction(&vcpu->guest_state);
+        vmm_guest_exit_next_instruction(&vcpu->guest_state, vcpu->guest_vcpu);
     }
 
     return ret;
@@ -116,7 +116,7 @@ int vmm_wrmsr_handler(vmm_vcpu_t *vcpu) {
     }
 
     if (!ret)
-        vmm_guest_exit_next_instruction(&vcpu->guest_state);
+        vmm_guest_exit_next_instruction(&vcpu->guest_state, vcpu->guest_vcpu);
 
     return ret;
 }

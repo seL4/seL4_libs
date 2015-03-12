@@ -32,7 +32,7 @@ typedef struct vmm_vcpu vmm_vcpu_t;
 #include "vmm/processor/lapic.h"
 
 /* TODO: Use a badge and/or this constant should be defined in libsel4 */
-#define LIB_VMM_VM_EXIT_MSG_LEN    21
+#define LIB_VMM_VM_EXIT_MSG_LEN    15
 
 /* ID of the boot vcpu in a vmm */
 #define BOOT_VCPU 0
@@ -76,13 +76,7 @@ typedef struct guest_image {
 
 /* Represents a libsel4vmm vcpu */
 typedef struct vmm_vcpu {
-    /* Reply slot for guest messages. This is for if we cannot reply to
-     * fault immediately */
-    cspacepath_t reply_slot;
-
     /* kernel objects */
-    seL4_CPtr guest_tcb;
-    seL4_CPtr guest_cnode;
     seL4_CPtr guest_vcpu;
 
     /* context */
@@ -93,6 +87,9 @@ typedef struct vmm_vcpu {
 
     vmm_lapic_t *lapic;
     int vcpu_id;
+
+    /* is the vcpu online */
+    int online;
 } vmm_vcpu_t;
 
 /* Represents a vmm instance that runs a single guest with one or more vcpus */
@@ -104,10 +101,10 @@ typedef struct vmm {
     vka_t vka;
     simple_t host_simple;
     vspace_t host_vspace;
-    
-    /* Endpoint that will be given to guest TCB for fault handling
-     * TODO have a different EP for each vcpu, so vmm can have a thread per vcpu*/
-    seL4_CPtr guest_fault_ep;
+
+    /* TCB of the VMM thread
+     * TODO: Should eventually have one vmm thread per vcpu */
+    seL4_CPtr tcb;
 
     /* platform callback functions */
     platform_callbacks_t plat_callbacks;
@@ -135,11 +132,6 @@ typedef struct vmm {
     unsigned int num_vcpus;
     vmm_vcpu_t *vcpus;
 
-    /* This variable controls whether we have saved the reply cap
-     * or not, and for which vcpu the reply cap was for. negative
-     * indicates no saved cap */
-    int reply_slot_vcpu;
-
     /*TODO add
         map of vcpu affinities
     */
@@ -150,9 +142,6 @@ int vmm_finalize(vmm_t *vmm);
 
 /*running vmm moudle*/
 void vmm_run(vmm_t *vmm);
-
-/* Save any reply cap that exists */
-void vmm_save_reply_cap(vmm_t *vmm);
 
 /* TODO htf did these get here? lets refactor everything  */
 void vmm_sync_guest_state(vmm_vcpu_t *vcpu);

@@ -57,7 +57,8 @@ typedef enum machine_state_status {
 #define IS_MACHINE_STATE_MODIFIED(name) (name##_status == machine_state_modified)
 
 typedef struct guest_machine_state {
-    MACHINE_STATE(seL4_UserContext, context);
+    MACHINE_STATE(seL4_VCPUContext, context);
+    MACHINE_STATE(unsigned int, eip);
     MACHINE_STATE(unsigned int, cr0);
     MACHINE_STATE(unsigned int, cr3);
     MACHINE_STATE(unsigned int, cr4);
@@ -73,19 +74,13 @@ typedef struct guest_machine_state {
 } guest_machine_state_t;
 
 /* Define the seL4_UserContext layout so we can treat it as an array */
-#define USER_CONTEXT_EIP 0
-#define USER_CONTEXT_ESP 1
-#define USER_CONTEXT_EFLAGS 2
-#define USER_CONTEXT_EAX 3
-#define USER_CONTEXT_EBX 4
-#define USER_CONTEXT_ECX 5
-#define USER_CONTEXT_EDX 6
-#define USER_CONTEXT_ESI 7
-#define USER_CONTEXT_EDI 8
-#define USER_CONTEXT_EBP 9
-#define USER_CONTEXT_TLS_BASE 10
-#define USER_CONTEXT_FS 11
-#define USER_CONTEXT_GS 12
+#define USER_CONTEXT_EAX 0
+#define USER_CONTEXT_EBX 1
+#define USER_CONTEXT_ECX 2
+#define USER_CONTEXT_EDX 3
+#define USER_CONTEXT_ESI 4
+#define USER_CONTEXT_EDI 5
+#define USER_CONTEXT_EBP 6
 
 typedef struct guest_virt_state {
     guest_cr_virt_state_t cr;
@@ -119,7 +114,8 @@ static inline bool vmm_guest_state_no_modified(guest_state_t *gs) {
         IS_MACHINE_STATE_MODIFIED(gs->machine.idt_limit) ||
         IS_MACHINE_STATE_MODIFIED(gs->machine.gdt_base) ||
         IS_MACHINE_STATE_MODIFIED(gs->machine.gdt_limit) ||
-        IS_MACHINE_STATE_MODIFIED(gs->machine.cs_selector)
+        IS_MACHINE_STATE_MODIFIED(gs->machine.cs_selector) ||
+        IS_MACHINE_STATE_MODIFIED(gs->machine.eip)
     );
 }
 
@@ -137,12 +133,21 @@ static inline void vmm_guest_state_invalidate_all(guest_state_t *gs) {
     MACHINE_STATE_INVAL(gs->machine.gdt_base);
     MACHINE_STATE_INVAL(gs->machine.gdt_limit);
     MACHINE_STATE_INVAL(gs->machine.cs_selector);
+    MACHINE_STATE_INVAL(gs->machine.eip);
 }
 
 /* get */
 static inline uint32_t vmm_read_user_context(guest_state_t *gs, int reg) {
     assert(!IS_MACHINE_STATE_UNKNOWN(gs->machine.context));
-    return (&gs->machine.context.eip)[reg];
+    assert(reg >= 0 && reg <= USER_CONTEXT_EBP);
+    return (&gs->machine.context.eax)[reg];
+}
+
+static inline unsigned int vmm_guest_state_get_eip(guest_state_t *gs, seL4_CPtr vcpu) {
+    if (IS_MACHINE_STATE_UNKNOWN(gs->machine.eip)) {
+        MACHINE_STATE_READ(gs->machine.eip, vmm_vmcs_read(vcpu, VMX_GUEST_RIP));
+    }
+    return gs->machine.eip;
 }
 
 static inline unsigned int vmm_guest_state_get_cr0(guest_state_t *gs, seL4_CPtr vcpu) {
@@ -233,7 +238,13 @@ static inline unsigned int vmm_guest_state_get_cs_selector(guest_state_t *gs, se
 /* set */
 static inline void vmm_set_user_context(guest_state_t *gs, int reg, uint32_t val) {
     MACHINE_STATE_DIRTY(gs->machine.context);
-    (&gs->machine.context.eip)[reg] = val;
+    assert(reg >= 0 && reg <= USER_CONTEXT_EBP);
+    (&gs->machine.context.eax)[reg] = val;
+}
+
+static inline void vmm_guest_state_set_eip(guest_state_t *gs, unsigned int val) {
+    MACHINE_STATE_DIRTY(gs->machine.eip);
+    gs->machine.eip = val;
 }
 
 static inline void vmm_guest_state_set_cr0(guest_state_t *gs, unsigned int val) {
@@ -292,6 +303,13 @@ static inline void vmm_guest_state_sync_cr0(guest_state_t *gs, seL4_CPtr vcpu) {
     if(IS_MACHINE_STATE_MODIFIED(gs->machine.cr0)) {
         vmm_vmcs_write(vcpu, VMX_GUEST_CR0, gs->machine.cr0);
         MACHINE_STATE_SYNC(gs->machine.cr0);
+    }
+}
+
+static inline void vmm_guest_state_sync_eip(guest_state_t *gs, seL4_CPtr vcpu) {
+    if (IS_MACHINE_STATE_MODIFIED(gs->machine.eip)) {
+        vmm_vmcs_write(vcpu, VMX_GUEST_RIP, gs->machine.eip);
+        MACHINE_STATE_SYNC(gs->machine.eip);
     }
 }
 
@@ -380,8 +398,8 @@ static inline unsigned int vmm_guest_exit_get_qualification(guest_state_t *gs) {
     return gs->exit.qualification;
 }
 
-static inline void vmm_guest_exit_next_instruction(guest_state_t *gs) {
-    vmm_set_user_context(gs, USER_CONTEXT_EIP, vmm_read_user_context(gs, USER_CONTEXT_EIP) + vmm_guest_exit_get_int_len(gs));
+static inline void vmm_guest_exit_next_instruction(guest_state_t *gs, seL4_CPtr vcpu) {
+    vmm_guest_state_set_eip(gs, vmm_guest_state_get_eip(gs, vcpu) + vmm_guest_exit_get_int_len(gs));
 }
 
 #endif

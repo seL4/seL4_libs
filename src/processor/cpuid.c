@@ -98,12 +98,9 @@ static int vmm_cpuid_virt(unsigned int function, unsigned int index, struct cpui
 
     switch (function) {
         case 0: /* Get vendor ID */
-            if (eax > VMM_CPUID_EAX_P4_HT)
-                eax = VMM_CPUID_EAX_P4_HT;
             break;
 
         case 1: /* Processor, info and feature. family, model, stepping */
-            eax = VMM_CPUID_P4_FAMILY | VMM_CPUID_P4_MODLE | VMM_CPUID_P4_STEP;
             edx &= kvm_supported_word0_x86_features;
             ecx &= kvm_supported_word4_x86_features;
             break;
@@ -113,14 +110,23 @@ static int vmm_cpuid_virt(unsigned int function, unsigned int index, struct cpui
             /* Simply pass through information from native CPUID. */
             break;
 
+        case 7: /* Extended flags */
+            break;
+
+        case 0xa: /* disable performance monitoring */
+            eax = ebx = ecx = edx = 0;
+            break;
+
+        case 0xb: /* Disable topology information */
+            eax = ebx = ecx = edx = 0;
+            break;
+
         case VMM_CPUID_KVM_SIGNATURE: /* Unsupported KVM features. We are not KVM. */
         case VMM_CPUID_KVM_FEATURES:
             eax = ebx = ecx = edx = 0;
             break;
 
         case 0x80000000: /* Get highest extended function supported */
-            if (eax > VMM_CPUID_P4_MAX_EXTFUNCTION)
-                eax = VMM_CPUID_P4_MAX_EXTFUNCTION;
             break;
 
         case 0x80000001: /* extended processor info and feature bits */
@@ -136,10 +142,10 @@ static int vmm_cpuid_virt(unsigned int function, unsigned int index, struct cpui
             break;
 
         case 0x80000008: /* Virtual and Physics address sizes */
-            eax = (VMM_CPUID_P4_VIRADDR_SIZE << 8) | VMM_CPUID_P4_PHYADDR_SIZE;
             break;
 
         case 3: /* Processor serial number. */
+            break;
         case 5: /* MONITOR / MWAIT */
         case 6: /* Thermal management */
         case 0x80000007: /* Advanced power management - unsupported. */

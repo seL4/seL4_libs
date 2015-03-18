@@ -9,4 +9,4 @@
 #
 
 libs-$(CONFIG_LIB_SEL4_VKA) += libsel4vka
-libsel4vka: libsel4 common $(libc)
+libsel4vka: libsel4 common $(libc) libutils

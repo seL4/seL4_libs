@@ -150,7 +150,7 @@ int sel4utils_start_fault_handler(seL4_CPtr fault_endpoint, vka_t *vka, vspace_t
 
 
 /**
- * Pretty print a fault messge.
+ * Pretty print a fault message.
  *
  * @param tag the message info tag delivered by the fault.
  * @param name thread name

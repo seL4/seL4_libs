@@ -27,13 +27,13 @@
  * malloc block of memory, find the frame capabilities, duplicate and map these into the appropriate
  * iospaces. It is the responsibility of the user to ensure that whatever frames are used in mapping
  * the malloc region are of a size that the hardware will accept being mapped into the IOMMU
- * @param vka Allocation interface used for allocated cslots and any required paging structores for the iospace.
+ * @param vka Allocation interface used for allocated cslots and any required paging structures for the iospace.
  *            This interface will be copied
  * @param vspace Virtual memory manager that needs to contain any mappings used to back malloc.
  *            This interface will be copied
  * @param dma_man Pointer to dma manager struct that will be filled out
  * @param num_iospaces Number of iospaces we wish allocations from this dma manager to be valid in
- * @param iospaces Pointer to list of cptrs represeting the iospaces to map into
+ * @param iospaces Pointer to list of cptrs representing the iospaces to map into
  * @return 0 on success
  */
 int sel4utils_make_iommu_dma_alloc(vka_t *vka, vspace_t *vspace, ps_dma_man_t *dma_man, unsigned int num_iospaces, seL4_CPtr *iospaces);

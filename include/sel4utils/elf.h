@@ -56,7 +56,7 @@ sel4utils_elf_load_record_regions(vspace_t *loadee, vspace_t *loader, vka_t *loa
                                   vka_t *loader_vka, char *image_name, sel4utils_elf_region_t *regions, int mapanywhere);
 
 /**
- * Wrapper for sel4utils_elf_load_record_regions. Does not record/perform resevations and
+ * Wrapper for sel4utils_elf_load_record_regions. Does not record/perform reservations and
  * maps into the correct virtual addresses
  *
  * @param loadee the vspace to load the elf file into

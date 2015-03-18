@@ -93,13 +93,13 @@ static int UNUSED sel4_supported_page_sizes[] = {12, 22};
 #include <vka/vka.h>
 #include <vka/object.h>
 
-/* Map a page to a virtual address, allocating a page table if neccessary.
+/* Map a page to a virtual address, allocating a page table if necessary.
 *
 *
 * @param vka a vka compliant allocator
 * @param pd page directory to map the page into
 * @param page capability to the page to map in
-* @param vaddr unmapped virutal address to map the page into
+* @param vaddr unmapped virtual address to map the page into
 * @param rights permissions to map the page with
 * @param cacheable 1 if the page should be cached (0 if it is for DMA)
 * @param objects array of vka_object_t structure to be populated with paging structures

@@ -107,7 +107,7 @@ typedef struct {
 /**
  * Start a process, and copy arguments into the processes address space.
  *
- * This is intented to use when loading applications of the format:
+ * This is intended to use when loading applications of the format:
  *
  * int main(int argc, char **argv) { };
  *
@@ -137,7 +137,7 @@ int sel4utils_spawn_process(sel4utils_process_t *process, vka_t *vka, vspace_t *
 /**
  * Start a process, and copy arguments into the processes address space.
  *
- * This is intented for use when loading applications that have a System V ABI compliant
+ * This is intended for use when loading applications that have a System V ABI compliant
  * entry point. This means that the entry point should *not* be a 'main' that is expecting
  * argc and argv in the form as passed here, but should be an _start routine that will
  * take a stack frame with the arguments on it and construct an appropriate invocation
@@ -189,7 +189,7 @@ int sel4utils_configure_process(sel4utils_process_t *process, vka_t *vka, vspace
 /**
  * Configure a process with more customisations (Create your own vspace, customise cspace size).
  *
- * @param process               uninitliased process struct
+ * @param process               uninitialised process struct
  * @param vka                   allocator to use to allocate objects.
  * @param spawner_vspace        vspace to use to allocate virtual memory in the current address space.
  * @param config process config.
@@ -203,7 +203,7 @@ int sel4utils_configure_process_custom(sel4utils_process_t *process, vka_t *targ
  * Copy a cap into a process' cspace.
  *
  * This will only work if you configured the process using one of the above functions, or
- * have mimiced their functionality.
+ * have mimicked their functionality.
  *
  * @param process process to copy the cap to
  * @param src     path in the current cspace to copy the cap from

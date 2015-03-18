@@ -15,4 +15,6 @@
 
 void __sel4_error(int, const char *, const char *, int, char *);
 
+extern char *sel4_errlist[];
+
 #endif /* _SEL4_DEBUG_ */

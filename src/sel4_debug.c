@@ -23,7 +23,8 @@ char *sel4_errlist[] = {
     "seL4_TruncatedMessage",
     "seL4_DeleteFirst",
     "seL4_RevokeFirst",
-    "seL4_NotEnoughMemory"
+    "seL4_NotEnoughMemory",
+    NULL
 };
 
 void

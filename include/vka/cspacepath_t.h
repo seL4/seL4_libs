@@ -64,7 +64,7 @@
  * at the root.
  *
  * capPtr x  [rrrr rrrr rrrr rrrr rrrr|aaaa aaaa|bbbb]
-            |<---------------------->|<------->|<-->|
+ *           |<---------------------->|<------->|<-->|
  * bitlength            20                 8       4
  *
  *

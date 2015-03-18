@@ -58,9 +58,6 @@ void vmm_reply_vm_exit(vmm_vcpu_t *vcpu) {
 }
 
 void vmm_sync_guest_state(vmm_vcpu_t *vcpu) {
-    vmm_guest_state_sync_eip(&vcpu->guest_state, vcpu->guest_vcpu);
-    vmm_guest_state_sync_control_entry(&vcpu->guest_state, vcpu->guest_vcpu);
-    vmm_guest_state_sync_control_ppc(&vcpu->guest_state, vcpu->guest_vcpu);
     vmm_guest_state_sync_cr0(&vcpu->guest_state, vcpu->guest_vcpu);
     vmm_guest_state_sync_cr3(&vcpu->guest_state, vcpu->guest_vcpu);
     vmm_guest_state_sync_cr4(&vcpu->guest_state, vcpu->guest_vcpu);
@@ -102,27 +99,36 @@ static void vmm_handle_vm_exit(vmm_vcpu_t *vcpu) {
     }
 }
 
+static void vmm_update_guest_state_from_interrupt(vmm_vcpu_t *vcpu, seL4_Word *msg) {
+    vcpu->guest_state.machine.eip = msg[0];
+    vcpu->guest_state.machine.control_ppc = msg[1];
+    vcpu->guest_state.machine.control_entry = msg[2];
+}
+
 static void vmm_update_guest_state_from_fault(vmm_vcpu_t *vcpu, seL4_Word *msg) {
     assert(vcpu->guest_state.exit.in_exit);
-    vcpu->guest_state.exit.reason = msg[0];
-    vcpu->guest_state.exit.qualification = msg[1];
-    vcpu->guest_state.exit.instruction_length = msg[2];
-    vcpu->guest_state.exit.guest_physical = msg[3];
 
-    MACHINE_STATE_READ(vcpu->guest_state.machine.rflags, msg[4]);
-    MACHINE_STATE_READ(vcpu->guest_state.machine.guest_interruptibility, msg[5]);
-    MACHINE_STATE_READ(vcpu->guest_state.machine.control_entry, msg[6]);
+    /* The interrupt state is a subset of the fault state */
+    vmm_update_guest_state_from_interrupt(vcpu, msg);
 
-    MACHINE_STATE_READ(vcpu->guest_state.machine.cr3, msg[7]);
+    vcpu->guest_state.exit.reason = msg[3];
+    vcpu->guest_state.exit.qualification = msg[4];
+    vcpu->guest_state.exit.instruction_length = msg[5];
+    vcpu->guest_state.exit.guest_physical = msg[6];
+
+    MACHINE_STATE_READ(vcpu->guest_state.machine.rflags, msg[7]);
+    MACHINE_STATE_READ(vcpu->guest_state.machine.guest_interruptibility, msg[8]);
+
+    MACHINE_STATE_READ(vcpu->guest_state.machine.cr3, msg[9]);
 
     seL4_VCPUContext context;
-    context.eax = msg[8];
-    context.ebx = msg[9];
-    context.ecx = msg[10];
-    context.edx = msg[11];
-    context.esi = msg[12];
-    context.edi = msg[13];
-    context.ebp = msg[14];
+    context.eax = msg[10];
+    context.ebx = msg[11];
+    context.ecx = msg[12];
+    context.edx = msg[13];
+    context.esi = msg[14];
+    context.edi = msg[15];
+    context.ebp = msg[16];
     MACHINE_STATE_READ(vcpu->guest_state.machine.context, context);
 }
 
@@ -156,8 +162,34 @@ void vmm_run(vmm_t *vmm) {
         seL4_Word badge;
         int fault;
 
-        if (vmm->vcpus[BOOT_VCPU].online && !vmm->vcpus[BOOT_VCPU].guest_state.virt.interrupt_halt && !vmm->vcpus[BOOT_VCPU].guest_state.exit.in_exit) {
-            fault = seL4_VMEnter(vmm->vcpus[BOOT_VCPU].guest_vcpu, &badge);
+        vmm_vcpu_t *vcpu = &vmm->vcpus[BOOT_VCPU];
+
+        if (vcpu->online && !vcpu->guest_state.virt.interrupt_halt && !vcpu->guest_state.exit.in_exit) {
+            seL4_SetMR(0, vmm_guest_state_get_eip(&vcpu->guest_state));
+            seL4_SetMR(1, vmm_guest_state_get_control_ppc(&vcpu->guest_state));
+            seL4_SetMR(2, vmm_guest_state_get_control_entry(&vcpu->guest_state));
+            fault = seL4_VMEnter(vcpu->guest_vcpu, &badge);
+
+            if (fault) {
+                /* We in a fault */
+                vcpu->guest_state.exit.in_exit = 1;
+
+                /* Update the guest state from a fault */
+                seL4_Word fault_message[LIB_VMM_VM_FAULT_EXIT_MSG_LEN];
+                for (int i = 0 ; i < LIB_VMM_VM_FAULT_EXIT_MSG_LEN; i++) {
+                    fault_message[i] = seL4_GetMR(i);
+                }
+                vmm_guest_state_invalidate_all(&vcpu->guest_state);
+                vmm_update_guest_state_from_fault(vcpu, fault_message);
+            } else {
+                /* update the guest state from a non fault */
+                seL4_Word int_message[LIB_VMM_VM_INT_EXIT_MSG_LEN];
+                for (int i = 0 ; i < LIB_VMM_VM_INT_EXIT_MSG_LEN; i++) {
+                    int_message[i] = seL4_GetMR(i);
+                }
+                vmm_guest_state_invalidate_all(&vcpu->guest_state);
+                vmm_update_guest_state_from_interrupt(vcpu, int_message);
+            }
         } else {
             seL4_Wait(aep, &badge);
             fault = 0;
@@ -174,26 +206,6 @@ void vmm_run(vmm_t *vmm) {
 
             continue;
         }
-
-        badge = BOOT_VCPU;
-
-        /* We only accept guest faults */
-
-        seL4_Word fault_message[LIB_VMM_VM_EXIT_MSG_LEN];
-        for (int i = 0 ; i < LIB_VMM_VM_EXIT_MSG_LEN; i++) {
-            fault_message[i] = seL4_GetMR(i);
-        }
-
-        vmm_vcpu_t *vcpu = &vmm->vcpus[badge];
-
-        /* Set all our state to invalid as we just received a fault and
-         * none of it can conceivably be valid */
-        vmm_guest_state_invalidate_all(&vcpu->guest_state);
-
-        /* We in a fault */
-        vcpu->guest_state.exit.in_exit = 1;
-        /* Save the information we got in the fault */
-        vmm_update_guest_state_from_fault(vcpu, fault_message);
 
         /* Handle the vm exit */
         vmm_handle_vm_exit(vcpu);

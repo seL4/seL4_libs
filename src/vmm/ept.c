@@ -37,7 +37,7 @@ int vmm_ept_violation_handler(vmm_vcpu_t *vcpu) {
         printf("    Guest OS VMExit due to EPT Violation:\n");
         printf("        Linear address 0x%x.\n", linear_address);
         printf("        Guest-Physical address 0x%x.\n", vmm_guest_exit_get_physical(&vcpu->guest_state));
-        printf("        Instruction pointer 0x%x.\n", vmm_guest_state_get_eip(&vcpu->guest_state, vcpu->guest_vcpu));
+        printf("        Instruction pointer 0x%x.\n", vmm_guest_state_get_eip(&vcpu->guest_state));
         printf("    This is most likely due to a bug or misconfiguration.\n" COLOUR_RESET);
     }
 

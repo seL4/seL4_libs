@@ -85,7 +85,9 @@ void vmm_vmcs_init_guest(vmm_vcpu_t *vcpu) {
     vmm_vmcs_write(vcpu->guest_vcpu, VMX_GUEST_RFLAGS, BIT(1));
     vmm_vmcs_write(vcpu->guest_vcpu, VMX_GUEST_SYSENTER_ESP, 0);
     vmm_vmcs_write(vcpu->guest_vcpu, VMX_GUEST_SYSENTER_EIP, 0);
-    vmm_vmcs_write(vcpu->guest_vcpu, VMX_CONTROL_PRIMARY_PROCESSOR_CONTROLS, BIT(7));
+    vcpu->guest_state.machine.control_ppc = BIT(7);
+    vmm_vmcs_write(vcpu->guest_vcpu, VMX_CONTROL_PRIMARY_PROCESSOR_CONTROLS, vcpu->guest_state.machine.control_ppc);
+    vcpu->guest_state.machine.control_entry = vmm_vmcs_read(vcpu->guest_vcpu, VMX_CONTROL_ENTRY_INTERRUPTION_INFO);
 
 #ifdef CONFIG_LIB_VMM_VMX_TIMER_DEBUG
     /* Enable pre-emption timer */

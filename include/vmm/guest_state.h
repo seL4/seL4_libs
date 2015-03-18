@@ -58,19 +58,21 @@ typedef enum machine_state_status {
 
 typedef struct guest_machine_state {
     MACHINE_STATE(seL4_VCPUContext, context);
-    MACHINE_STATE(unsigned int, eip);
     MACHINE_STATE(unsigned int, cr0);
     MACHINE_STATE(unsigned int, cr3);
     MACHINE_STATE(unsigned int, cr4);
     MACHINE_STATE(unsigned int, rflags);
     MACHINE_STATE(unsigned int, guest_interruptibility);
-    MACHINE_STATE(unsigned int, control_entry);
-    MACHINE_STATE(unsigned int, control_ppc); // primary processor controls
     MACHINE_STATE(unsigned int, idt_base);
     MACHINE_STATE(unsigned int, idt_limit);
     MACHINE_STATE(unsigned int, gdt_base);
     MACHINE_STATE(unsigned int, gdt_limit);
     MACHINE_STATE(unsigned int, cs_selector);
+    /* This is state that we set on VMentry and get back on
+     * a vmexit, therefore it is always valid and correct */
+    unsigned int eip;
+    unsigned int control_entry;
+    unsigned int control_ppc;
 } guest_machine_state_t;
 
 /* Define the seL4_UserContext layout so we can treat it as an array */
@@ -108,14 +110,11 @@ static inline bool vmm_guest_state_no_modified(guest_state_t *gs) {
         IS_MACHINE_STATE_MODIFIED(gs->machine.cr4) ||
         IS_MACHINE_STATE_MODIFIED(gs->machine.rflags) ||
         IS_MACHINE_STATE_MODIFIED(gs->machine.guest_interruptibility) ||
-        IS_MACHINE_STATE_MODIFIED(gs->machine.control_entry) ||
-        IS_MACHINE_STATE_MODIFIED(gs->machine.control_ppc) ||
         IS_MACHINE_STATE_MODIFIED(gs->machine.idt_base) ||
         IS_MACHINE_STATE_MODIFIED(gs->machine.idt_limit) ||
         IS_MACHINE_STATE_MODIFIED(gs->machine.gdt_base) ||
         IS_MACHINE_STATE_MODIFIED(gs->machine.gdt_limit) ||
-        IS_MACHINE_STATE_MODIFIED(gs->machine.cs_selector) ||
-        IS_MACHINE_STATE_MODIFIED(gs->machine.eip)
+        IS_MACHINE_STATE_MODIFIED(gs->machine.cs_selector)
     );
 }
 
@@ -126,14 +125,11 @@ static inline void vmm_guest_state_invalidate_all(guest_state_t *gs) {
     MACHINE_STATE_INVAL(gs->machine.cr4);
     MACHINE_STATE_INVAL(gs->machine.rflags);
     MACHINE_STATE_INVAL(gs->machine.guest_interruptibility);
-    MACHINE_STATE_INVAL(gs->machine.control_entry);
-    MACHINE_STATE_INVAL(gs->machine.control_ppc);
     MACHINE_STATE_INVAL(gs->machine.idt_base);
     MACHINE_STATE_INVAL(gs->machine.idt_limit);
     MACHINE_STATE_INVAL(gs->machine.gdt_base);
     MACHINE_STATE_INVAL(gs->machine.gdt_limit);
     MACHINE_STATE_INVAL(gs->machine.cs_selector);
-    MACHINE_STATE_INVAL(gs->machine.eip);
 }
 
 /* get */
@@ -143,10 +139,7 @@ static inline uint32_t vmm_read_user_context(guest_state_t *gs, int reg) {
     return (&gs->machine.context.eax)[reg];
 }
 
-static inline unsigned int vmm_guest_state_get_eip(guest_state_t *gs, seL4_CPtr vcpu) {
-    if (IS_MACHINE_STATE_UNKNOWN(gs->machine.eip)) {
-        MACHINE_STATE_READ(gs->machine.eip, vmm_vmcs_read(vcpu, VMX_GUEST_RIP));
-    }
+static inline unsigned int vmm_guest_state_get_eip(guest_state_t *gs) {
     return gs->machine.eip;
 }
 
@@ -185,17 +178,11 @@ static inline unsigned int vmm_guest_state_get_interruptibility(guest_state_t *g
     return gs->machine.guest_interruptibility;
 }
 
-static inline unsigned int vmm_guest_state_get_control_entry(guest_state_t *gs, seL4_CPtr vcpu) {
-    if (IS_MACHINE_STATE_UNKNOWN(gs->machine.control_entry)) {
-        MACHINE_STATE_READ(gs->machine.control_entry, vmm_vmcs_read(vcpu, VMX_CONTROL_ENTRY_INTERRUPTION_INFO));
-    }
+static inline unsigned int vmm_guest_state_get_control_entry(guest_state_t *gs) {
     return gs->machine.control_entry;
 }
 
-static inline unsigned int vmm_guest_state_get_control_ppc(guest_state_t *gs, seL4_CPtr vcpu) {
-    if (IS_MACHINE_STATE_UNKNOWN(gs->machine.control_ppc)) {
-        MACHINE_STATE_READ(gs->machine.control_ppc, vmm_vmcs_read(vcpu, VMX_CONTROL_PRIMARY_PROCESSOR_CONTROLS));
-    }
+static inline unsigned int vmm_guest_state_get_control_ppc(guest_state_t *gs) {
     return gs->machine.control_ppc;
 }
 
@@ -243,7 +230,6 @@ static inline void vmm_set_user_context(guest_state_t *gs, int reg, uint32_t val
 }
 
 static inline void vmm_guest_state_set_eip(guest_state_t *gs, unsigned int val) {
-    MACHINE_STATE_DIRTY(gs->machine.eip);
     gs->machine.eip = val;
 }
 
@@ -263,12 +249,10 @@ static inline void vmm_guest_state_set_cr4(guest_state_t *gs, unsigned int val) 
 }
 
 static inline void vmm_guest_state_set_control_entry(guest_state_t *gs, unsigned int val) {
-    MACHINE_STATE_DIRTY(gs->machine.control_entry);
     gs->machine.control_entry = val;
 }
 
 static inline void vmm_guest_state_set_control_ppc(guest_state_t *gs, unsigned int val) {
-    MACHINE_STATE_DIRTY(gs->machine.control_ppc);
     gs->machine.control_ppc = val;
 }
 
@@ -306,13 +290,6 @@ static inline void vmm_guest_state_sync_cr0(guest_state_t *gs, seL4_CPtr vcpu) {
     }
 }
 
-static inline void vmm_guest_state_sync_eip(guest_state_t *gs, seL4_CPtr vcpu) {
-    if (IS_MACHINE_STATE_MODIFIED(gs->machine.eip)) {
-        vmm_vmcs_write(vcpu, VMX_GUEST_RIP, gs->machine.eip);
-        MACHINE_STATE_SYNC(gs->machine.eip);
-    }
-}
-
 static inline void vmm_guest_state_sync_cr3(guest_state_t *gs, seL4_CPtr vcpu) {
     if(IS_MACHINE_STATE_MODIFIED(gs->machine.cr3)) {
         vmm_vmcs_write(vcpu, VMX_GUEST_CR3, gs->machine.cr3);
@@ -324,20 +301,6 @@ static inline void vmm_guest_state_sync_cr4(guest_state_t *gs, seL4_CPtr vcpu) {
     if(IS_MACHINE_STATE_MODIFIED(gs->machine.cr4)) {
         vmm_vmcs_write(vcpu, VMX_GUEST_CR4, gs->machine.cr4);
         MACHINE_STATE_SYNC(gs->machine.cr4);
-    }
-}
-
-static inline void vmm_guest_state_sync_control_entry(guest_state_t *gs, seL4_CPtr vcpu) {
-    if(IS_MACHINE_STATE_MODIFIED(gs->machine.control_entry)) {
-        vmm_vmcs_write(vcpu, VMX_CONTROL_ENTRY_INTERRUPTION_INFO, gs->machine.control_entry);
-        MACHINE_STATE_SYNC(gs->machine.control_entry);
-    }
-}
-
-static inline void vmm_guest_state_sync_control_ppc(guest_state_t *gs, seL4_CPtr vcpu) {
-    if(IS_MACHINE_STATE_MODIFIED(gs->machine.control_ppc)) {
-        vmm_vmcs_write(vcpu, VMX_CONTROL_PRIMARY_PROCESSOR_CONTROLS, gs->machine.control_ppc);
-        MACHINE_STATE_SYNC(gs->machine.control_ppc);
     }
 }
 
@@ -399,7 +362,7 @@ static inline unsigned int vmm_guest_exit_get_qualification(guest_state_t *gs) {
 }
 
 static inline void vmm_guest_exit_next_instruction(guest_state_t *gs, seL4_CPtr vcpu) {
-    vmm_guest_state_set_eip(gs, vmm_guest_state_get_eip(gs, vcpu) + vmm_guest_exit_get_int_len(gs));
+    vmm_guest_state_set_eip(gs, vmm_guest_state_get_eip(gs) + vmm_guest_exit_get_int_len(gs));
 }
 
 #endif

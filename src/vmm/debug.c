@@ -29,10 +29,10 @@ void vmm_print_guest_context(int level, vmm_vcpu_t *vcpu) {
     DPRINTF(level, "            guest physical 0x%x     rflags 0x%x \n",
                    vmm_guest_exit_get_physical(&vcpu->guest_state), vmm_guest_state_get_rflags(&vcpu->guest_state, vcpu->guest_vcpu));
     DPRINTF(level, "            guest interruptibility 0x%x   control entry 0x%x\n",
-                   vmm_guest_state_get_interruptibility(&vcpu->guest_state, vcpu->guest_vcpu), vmm_guest_state_get_control_entry(&vcpu->guest_state, vcpu->guest_vcpu));
+                   vmm_guest_state_get_interruptibility(&vcpu->guest_state, vcpu->guest_vcpu), vmm_guest_state_get_control_entry(&vcpu->guest_state));
 
     DPRINTF(level, "eip 0x%8x\n",
-                   vmm_guest_state_get_eip(&vcpu->guest_state, vcpu->guest_vcpu));
+                   vmm_guest_state_get_eip(&vcpu->guest_state));
     DPRINTF(level, "eax 0x%8x         ebx 0x%8x      ecx 0x%8x\n",
                    vmm_read_user_context(&vcpu->guest_state, USER_CONTEXT_EAX), vmm_read_user_context(&vcpu->guest_state, USER_CONTEXT_EBX), vmm_read_user_context(&vcpu->guest_state, USER_CONTEXT_ECX));
     DPRINTF(level, "edx 0x%8x         esi 0x%8x      edi 0x%8x\n",

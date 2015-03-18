@@ -70,7 +70,7 @@ int vmm_mmio_exit_handler(vmm_vcpu_t *vcpu, uintptr_t addr, unsigned int qualifi
             uint8_t ibuf[15];
             int instr_len = vmm_guest_exit_get_int_len(&vcpu->guest_state);
             vmm_fetch_instruction(vcpu,
-                    vmm_guest_state_get_eip(&vcpu->guest_state, vcpu->guest_vcpu),
+                    vmm_guest_state_get_eip(&vcpu->guest_state),
                     vmm_guest_state_get_cr3(&vcpu->guest_state, vcpu->guest_vcpu),
                     instr_len, ibuf);
 

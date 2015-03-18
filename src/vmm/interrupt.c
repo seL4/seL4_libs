@@ -23,7 +23,7 @@
 
 static void resume_guest(vmm_vcpu_t *vcpu) {
     /* Disable exit-for-interrupt in guest state to allow the guest to resume. */
-    uint32_t state = vmm_guest_state_get_control_ppc(&vcpu->guest_state, vcpu->guest_vcpu);
+    uint32_t state = vmm_guest_state_get_control_ppc(&vcpu->guest_state);
     state &= ~BIT(2); /* clear the exit for interrupt flag */
     vmm_guest_state_set_control_ppc(&vcpu->guest_state, state);
 }
@@ -36,7 +36,7 @@ static void inject_irq(vmm_vcpu_t *vcpu, int irq) {
 
 void wait_for_guest_ready(vmm_vcpu_t *vcpu) {
     /* Request that the guest exit at the earliest point that we can inject an interrupt. */
-    uint32_t state = vmm_guest_state_get_control_ppc(&vcpu->guest_state, vcpu->guest_vcpu);
+    uint32_t state = vmm_guest_state_get_control_ppc(&vcpu->guest_state);
     state |= BIT(2); /* set the exit for interrupt flag */
     vmm_guest_state_set_control_ppc(&vcpu->guest_state, state);
 }
@@ -44,7 +44,7 @@ void wait_for_guest_ready(vmm_vcpu_t *vcpu) {
 int can_inject(vmm_vcpu_t *vcpu) {
     uint32_t rflags = vmm_guest_state_get_rflags(&vcpu->guest_state, vcpu->guest_vcpu);
     uint32_t guest_int = vmm_guest_state_get_interruptibility(&vcpu->guest_state, vcpu->guest_vcpu);
-    uint32_t int_control = vmm_guest_state_get_control_entry(&vcpu->guest_state, vcpu->guest_vcpu);
+    uint32_t int_control = vmm_guest_state_get_control_entry(&vcpu->guest_state);
 
     /* we can only inject if the interrupt mask flag is not set in flags,
        guest is not in an uninterruptable state and we are not already trying to
@@ -172,7 +172,6 @@ void vmm_vcpu_accept_interrupt(vmm_vcpu_t *vcpu)
         /* Have some interrupts to inject, but we need to do this with
          * the guest not running */
         wait_for_guest_ready(vcpu);
-        vmm_guest_state_sync_control_ppc(&vcpu->guest_state, vcpu->guest_vcpu);
     }
 }
 

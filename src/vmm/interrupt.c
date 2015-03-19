@@ -148,30 +148,11 @@ void vmm_check_external_interrupt(vmm_t *vmm)
 
 void vmm_vcpu_accept_interrupt(vmm_vcpu_t *vcpu)
 {
-    /* TODO: there is a really annoying race between our need to stop the guest thread
-     * so that we can inspect its state and potentially inject an interrupt (this
-     * is done in vmm_have_pending_interrupt). Unfortunatley if we just stop it
-     * and it has decided to fault, we will lose the fault message. One option
-     * is a 'SuspendIf' style syscall, however this requires kernel changes
-     * that are maybe disagreeable. The other option is to ask the kernel to atomically
-     * inspect the state, inject if possible, and the ntell you waht happened. THis
-     * is the approach we will eventually use, but it requires 'locking' the interrupt
-     * controller such that you can poll the current interrupt, and then still have
-     * that be the current pending interrupt after calling the kernel and then
-     * knowing if it was actually injected or not. Do this once interrupt overhead
-     * starts to matter */
     if (vmm_apic_has_interrupt(vcpu) == -1) {
         return;
     }
 
-    if (vcpu->guest_state.exit.in_exit) {
-        /* in an exit, can call the regular injection method */
-        vmm_have_pending_interrupt(vcpu);
-        vmm_sync_guest_state(vcpu);
-    } else {
-        /* Have some interrupts to inject, but we need to do this with
-         * the guest not running */
-        wait_for_guest_ready(vcpu);
-    }
+    /* in an exit, can call the regular injection method */
+    vmm_have_pending_interrupt(vcpu);
 }
 

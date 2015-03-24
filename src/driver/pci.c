@@ -103,7 +103,7 @@ int vmm_pci_io_port_in(void *cookie, unsigned int port_no, unsigned int size, un
         if (addr.bus != 0) {
             LOG_INFO("Guest attempted access to non existent device %02x:%02x.%d register 0x%x", addr.bus, addr.dev, addr.fun, reg);
         } else {
-            LOG_INFO("Ignoring guest probe for device %02x:%02x.%d register 0x%x", addr.bus, addr.dev, addr.fun, reg);
+            DPRINTF(3, "Ignoring guest probe for device %02x:%02x.%d register 0x%x\n", addr.bus, addr.dev, addr.fun, reg);
         }
         *result = -1;
         return 0;

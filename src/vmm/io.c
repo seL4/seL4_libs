@@ -81,7 +81,7 @@ int vmm_io_instruction_handler(vmm_vcpu_t *vcpu) {
     if (!port) {
         static int last_port = -1;
         if (last_port != port_no) {
-            LOG_INFO("vm exit io request: WARNING - ignoring unsupported ioport 0x%x (%s)", port_no,
+            DPRINTF(3, "vm exit io request: WARNING - ignoring unsupported ioport 0x%x (%s)\n", port_no,
                     vmm_debug_io_portno_desc(&vcpu->vmm->io_port, port_no));
             last_port = port_no;
         }

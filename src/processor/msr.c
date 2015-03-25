@@ -67,7 +67,7 @@ int vmm_rdmsr_handler(vmm_vcpu_t *vcpu) {
 
         default:
             DPRINTF(1, "rdmsr WARNING unsupported msr_no 0x%x\n", msr_no);
-            ret = -1;
+	    data = 0; /* should raise exception */
             break;
 
    }

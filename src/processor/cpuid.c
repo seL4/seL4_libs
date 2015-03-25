@@ -97,8 +97,10 @@ static int vmm_cpuid_virt(unsigned int function, unsigned int index, struct cpui
     /* ref: http://www.sandpile.org/x86/cpuid.htm */
 
     switch (function) {
-        case 0: /* Get vendor ID */
-            break;
+        case 0: /* Get highest function supported plus vendor ID */
+	    if (eax > 0xb)
+	        eax = 0xb;
+	    break;
 
         case 1: /* Processor, info and feature. family, model, stepping */
             edx &= kvm_supported_word0_x86_features;

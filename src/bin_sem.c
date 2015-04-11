@@ -9,7 +9,7 @@
  */
 
 #include <sync/bin_sem.h>
-#include <sync/atomic.h>
+#include <sync/bin_sem_bare.h>
 #include <stddef.h>
 #include <assert.h>
 
@@ -27,23 +27,12 @@ int sync_bin_sem_init(sync_bin_sem_t *sem, seL4_CPtr aep) {
 
 int sync_bin_sem_wait(sync_bin_sem_t *sem) {
     assert(sem != NULL);
-    int value = sync_atomic_decrement(&sem->value);
-    if (value < 0) {
-        seL4_Wait(sem->aep, NULL);
-    }
-    __sync_synchronize();
-    return 0;
+    return sync_bin_sem_bare_wait(sem->aep, &sem->value);
 }
 
 int sync_bin_sem_post(sync_bin_sem_t *sem) {
     assert(sem != NULL);
-    __sync_synchronize();
-    int value = sync_atomic_increment(&sem->value);
-    assert(sem->value <= 1);
-    if (value <= 0) {
-        seL4_Notify(sem->aep, 0);
-    }
-    return 0;
+    return sync_bin_sem_bare_post(sem->aep, &sem->value);
 }
 
 int sync_bin_sem_destroy(sync_bin_sem_t *sem) {

@@ -11,6 +11,7 @@
 #include <sync/recursive_mutex.h>
 #include <stddef.h>
 #include <assert.h>
+#include <limits.h>
 
 #include <sel4/sel4.h>
 
@@ -42,6 +43,13 @@ int sync_recursive_mutex_lock(sync_recursive_mutex_t *mutex) {
         assert(mutex->owner == NULL);
         mutex->owner = thread_id();
         assert(mutex->held == 0);
+    }
+    if (mutex->held == UINT_MAX) {
+        /* We would overflow if we re-acquired the mutex. Note that we can only
+         * be in this branch if we already held the mutex before entering this
+         * function, so we don't need to release the mutex here.
+         */
+        return -1;
     }
     mutex->held++;
     return 0;

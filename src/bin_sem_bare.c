@@ -15,7 +15,12 @@
 #include <sync/bin_sem_bare.h>
 
 int sync_bin_sem_bare_wait(seL4_CPtr aep, volatile int *value) {
-    int val = sync_atomic_decrement(value);
+    int val;
+    int result = sync_atomic_decrement_safe(value, &val);
+    if (result != 0) {
+        /* Failed decrement; too many outstanding lock holders. */
+        return -1;
+    }
     if (val < 0) {
         seL4_Wait(aep, NULL);
     }
@@ -25,6 +30,9 @@ int sync_bin_sem_bare_wait(seL4_CPtr aep, volatile int *value) {
 
 int sync_bin_sem_bare_post(seL4_CPtr aep, volatile int *value) {
     __sync_synchronize();
+    /* We can do an "unsafe" increment here because we know we are the only
+     * lock holder.
+     */
     int val = sync_atomic_increment(value);
     assert(*value <= 1);
     if (val <= 0) {

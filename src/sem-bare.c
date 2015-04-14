@@ -9,6 +9,7 @@
  */
 
 #include <assert.h>
+#include <limits.h>
 #include <stdlib.h>
 #include <sel4/sel4.h>
 #include <sync/sem-bare.h>
@@ -21,7 +22,12 @@ int sync_sem_bare_wait(seL4_CPtr ep, volatile int *value) {
     assert(seL4_DebugCapIdentify(ep) == 4);
 #endif
     assert(value != NULL);
-    int v = sync_atomic_decrement(value);
+    int v;
+    int result = sync_atomic_decrement_safe(value, &v);
+    if (result != 0) {
+        /* Failed decrement; too many outstanding lock holders. */
+        return -1;
+    }
     if (v < 0) {
         seL4_Wait(ep, NULL);
     }
@@ -52,6 +58,10 @@ int sync_sem_bare_post(seL4_CPtr ep, volatile int *value) {
 #endif
     assert(value != NULL);
     __sync_synchronize();
+    /* We can do an "unsafe" increment here because we know the lock cannot be
+     * full due to ourselves having been able to acquire it.
+     */
+    assert(*value < INT_MAX);
     int v = sync_atomic_increment(value);
     if (v <= 0) {
         seL4_Notify(ep, 0);

@@ -11,6 +11,26 @@
 #ifndef _SYNC_ATOMIC_H_
 #define _SYNC_ATOMIC_H_
 
+#include <utils/util.h>
+
+/** \brief Atomically increment an integer, accounting for possible overflow.
+ *
+ * @param x Pointer to integer to increment.
+ * @param[out] oldval Previous value of the integer. May be written to even if
+ *   the increment fails.
+ * @return 0 if the increment succeeds, non-zero if it would cause an overflow.
+ */
+int sync_atomic_increment_safe(volatile int *x, int *oldval);
+
+/** \brief Atomically decrement an integer, accounting for possible overflow.
+ *
+ * @param x Pointer to integer to decrement.
+ * @param[out] oldval Previous value of the integer. May be written to even if
+ *   the decrement fails.
+ * @return 0 if the decrement succeeds, non-zero if it would cause an overflow.
+ */
+int sync_atomic_decrement_safe(volatile int *x, int *oldval);
+
 /* Atomically increment an integer and return its new value. */
 int sync_atomic_increment(volatile int *x);
 

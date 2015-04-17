@@ -47,6 +47,11 @@ typedef struct platform_callbacks {
     int (*has_interrupt)();
     int (*do_async)(seL4_Word badge);
     seL4_CPtr (*get_async_event_aep)();
+
+    int (*open)(const char *name);
+    int (*read)(void *dest, int fd, off_t offset, size_t size);
+    size_t (*filelength)(int fd);
+    void (*close)(int fd);
 } platform_callbacks_t;
 
 /* Stores informatoin about the guest image we are loading. This information probably stops

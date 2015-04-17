@@ -29,6 +29,7 @@
 #include "vmm/platform/e820.h"
 #include "vmm/platform/bootinfo.h"
 #include "vmm/platform/guest_vspace.h"
+#include "vmm/platform/elf_helper.h"
 #include "vmm/platform/acpi.h"
 
 #ifdef CONFIG_VMM_VESA_FRAMEBUFFER
@@ -41,8 +42,10 @@
 #define VMM_VMCS_CR4_MASK           (X86_CR4_PSE)
 #define VMM_VMCS_CR4_SHADOW         VMM_VMCS_CR4_MASK
 
-/* TODO: don't use cpio archives explicitly */
-extern char _cpio_archive[];
+typedef struct boot_guest_cookie {
+    vmm_t *vmm;
+    int fd;
+} boot_guest_cookie_t;
 
 static int guest_elf_write_address(uintptr_t paddr, void *vaddr, size_t size, size_t offset, void *cookie) {
     memcpy(vaddr, cookie + offset, size);
@@ -68,15 +71,17 @@ void vmm_plat_guest_elf_relocate(vmm_t *vmm, const char *relocs_filename) {
 
     /* Open the relocs file. */
     DPRINTF(2, "plat: opening relocs file %s\n", relocs_filename);
-    long unsigned int relocs_size = 0;
-    char* relocs_file = cpio_get_file(_cpio_archive, relocs_filename, &relocs_size);
-    if (!relocs_file) {
+
+    size_t relocs_size = 0;
+    int fd = vmm->plat_callbacks.open(relocs_filename);
+    if(fd == -1) {
         printf(COLOUR_Y "ERROR: Guest OS kernel relocation is required, but corresponding"
-               "%s was not found in CPIO archive. This is most likely due to a Makefile"
-               "error, or configuration error.\n", relocs_filename);
-        panic("Relocation required but relocation data file not found.");
-        return;
+          "%s was not found. This is most likely due to a Makefile"
+          "error, or configuration error.\n", relocs_filename);
+           panic("Relocation required but relocation data file not found.");
+           return;
     }
+    relocs_size = vmm->plat_callbacks.filelength(fd);
 
     /* The relocs file is the same relocs file format used by the Linux kernel decompressor to
      * relocate the Linux kernel:
@@ -95,8 +100,10 @@ void vmm_plat_guest_elf_relocate(vmm_t *vmm, const char *relocs_filename) {
     uint32_t last_relocated_vaddr = 0xFFFFFFFF;
     uint32_t num_relocations = relocs_size / sizeof(uint32_t) - 1;
     for (int i = 0; ; i++) {
+        uint32_t vaddr;
         /* Get the next relocation from the relocs file. */
-        uint32_t vaddr = *( ((uint32_t*)(relocs_file + relocs_size)) - (i+1) );
+        uint32_t offset = relocs_size - (sizeof(uint32_t) * (i+1));
+        vmm->plat_callbacks.read(&vaddr, fd, offset, sizeof(uint32_t));
         if (!vaddr) {
             break;
         }
@@ -130,32 +137,46 @@ void vmm_plat_guest_elf_relocate(vmm_t *vmm, const char *relocs_filename) {
     if (num_relocations == 0) {
         panic("Relocation required, but Kernel has not been build with CONFIG_RELOCATABLE.");
     }
+
+    vmm->plat_callbacks.close(fd);
+
 }
 
 static int vmm_guest_load_boot_module_continued(uintptr_t paddr, void *addr, size_t size, size_t offset, void *cookie) {
-    memcpy(addr, cookie + offset, size);
+    boot_guest_cookie_t *pass = ( boot_guest_cookie_t *) cookie;
+    pass->vmm->plat_callbacks.read(addr, pass->fd, offset, size);
+
     return 0;
 }
 
 int vmm_guest_load_boot_module(vmm_t *vmm, const char *name) {
     uintptr_t load_addr = guest_ram_largest_free_region_start(&vmm->guest_mem);
     printf("Loading boot module \"%s\" at 0x%x\n", name, (unsigned int)load_addr);
-    unsigned long initrd_size = 0; 
-    char *initrd = cpio_get_file(_cpio_archive, name, &initrd_size);
-    if (!initrd) {
+
+    size_t initrd_size = 0;
+    int fd = vmm->plat_callbacks.open(name);
+    if (fd == -1) {
         LOG_ERROR("Boot module \"%s\" not found.", name);
         return -1;
     }
+    initrd_size = vmm->plat_callbacks.filelength(fd);
     if (!initrd_size) {
         LOG_ERROR("Boot module has zero size. This is probably not what you want.");
         return -1;
     }
+
     vmm->guest_image.boot_module_paddr = load_addr;
     vmm->guest_image.boot_module_size = initrd_size;
+
     guest_ram_mark_allocated(&vmm->guest_mem, load_addr, initrd_size);
-    vmm_guest_vspace_touch(&vmm->guest_mem.vspace, load_addr, initrd_size, vmm_guest_load_boot_module_continued, initrd);
+    boot_guest_cookie_t pass = { .vmm = vmm, .fd = fd };
+    vmm_guest_vspace_touch(&vmm->guest_mem.vspace, load_addr, initrd_size, vmm_guest_load_boot_module_continued, &pass);
+
     printf("Guest memory after loading initrd:\n");
     print_guest_ram_regions(&vmm->guest_mem);
+
+    vmm->plat_callbacks.close(fd);
+
     return 0;
 }
 
@@ -391,12 +412,11 @@ void vmm_init_guest_thread_state(vmm_vcpu_t *vcpu) {
 }
 
 /* TODO: Refactor and stop rewriting fucking elf loading code */
-static int vmm_load_guest_segment(vmm_t *vmm, seL4_Word source_addr,
-        seL4_Word dest_addr, unsigned int segment_size, unsigned int file_size) {
+static int vmm_load_guest_segment(vmm_t *vmm, seL4_Word source_offset,
+        seL4_Word dest_addr, unsigned int segment_size, unsigned int file_size, int fd) {
 
     int ret;
     unsigned int page_size = vmm->page_size;
-
     assert(file_size <= segment_size);
 
     /* Allocate a cslot for duplicating frame caps */
@@ -429,8 +449,8 @@ static int vmm_load_guest_segment(vmm_t *vmm, seL4_Word source_addr,
         }
 
         /* Copy the contents of page from ELF into the mapped frame. */
+        size_t offset = dest_addr & ((1 << page_size) - 1);
 
-        size_t offset = dest_addr & ((1 << page_size) - 1); 
         void *copy_vaddr = map_vaddr + offset;
         size_t copy_len = (1 << page_size) - offset;
 
@@ -440,10 +460,10 @@ static int vmm_load_guest_segment(vmm_t *vmm, seL4_Word source_addr,
         }
 
         DPRINTF(5, "load page src 0x%x dest 0x%x remain 0x%x offset 0x%x copy vaddr %p "
-                "copy len 0x%x\n", source_addr, dest_addr, remain, offset, copy_vaddr, copy_len);
+                "copy len 0x%x\n", source_offset, dest_addr, remain, offset, copy_vaddr, copy_len);
 
-        memcpy(copy_vaddr, (void*)source_addr, copy_len);
-        source_addr += copy_len;
+        vmm->plat_callbacks.read(copy_vaddr, fd, source_offset, copy_len);
+        source_offset += copy_len;
         dest_addr += copy_len;
 
         current += copy_len;
@@ -453,47 +473,42 @@ static int vmm_load_guest_segment(vmm_t *vmm, seL4_Word source_addr,
         vspace_unmap_pages(&vmm->host_vspace, map_vaddr, 1, page_size, NULL);
         vka_cnode_delete(&dup_slot);
     }
+
     return 0;
 }
 
 /* Load the actual ELF file contents into pre-allocated frames.
    Used for both host and guest threads.
 
- @param resource    the thread structure for resource 
- @param elf_name    the name of elf file 
- 
+ @param resource    the thread structure for resource
+ @param elf_name    the name of elf file
+
 */
 /* TODO: refactor yet more elf loading code */
 int vmm_load_guest_elf(vmm_t *vmm, const char *elfname, size_t alignment) {
-    unsigned int n_headers;
     int ret;
+    char elf_file[256];
 
-    printf("Loading guest elf %s\n", elfname);
-
-    /* Lookup the ELF file. */
-    long unsigned int elf_size = 0;
-    char *elf_file = cpio_get_file(_cpio_archive, elfname, &elf_size);
-    if (!elf_file || !elf_size) {
-        LOG_ERROR("ELF file %s not found in CPIO archive. Are you sure your Makefile\n"
-               "is set up correctly to compile the above executable into the CPIO archive of this\n"
-               "executable's binary?", elfname);
+    DPRINTF(4, "Loading guest elf %s\n", elfname);
+    int fd = vmm->plat_callbacks.open(elfname);
+    if (fd == -1) {
+        LOG_ERROR("Guest elf \"%s\" not found.", elfname);
         return -1;
     }
 
-    /* Check the ELF file. */
-    if (elf_checkFile(elf_file)) {
-        LOG_ERROR("ELF file check failed.");
+    ret = vmm_read_elf_headers(elf_file, vmm, fd, sizeof(elf_file));
+    if(ret < 0) {
+        LOG_ERROR("Guest elf \"%s\" invalid.", elfname);
         return -1;
     }
+
+    unsigned int n_headers = elf_getNumProgramHeaders(elf_file);
 
     /* Find the largest guest ram region and use that for loading */
     uintptr_t load_addr = guest_ram_largest_free_region_start(&vmm->guest_mem);
     /* Round up by the alignemnt. We just hope its still in the memory region.
      * if it isn't we will just fail when we try and get the frame */
     load_addr = ROUND_UP(load_addr, alignment);
-
-    n_headers = elf_getNumProgramHeaders(elf_file);
-
     /* Calculate relocation offset. */
     uintptr_t guest_kernel_addr = 0xFFFFFFFF;
     uintptr_t guest_kernel_vaddr = 0xFFFFFFFF;
@@ -510,10 +525,10 @@ int vmm_load_guest_elf(vmm_t *vmm, const char *elfname, size_t alignment) {
             guest_kernel_vaddr = vaddr;
         }
     }
+
     printf("Guest kernel is compiled to be located at paddr 0x%x vaddr 0x%x\n",
             (unsigned int)guest_kernel_addr, (unsigned int)guest_kernel_vaddr);
     printf("Guest kernel allocated 1:1 start is at paddr = 0x%x\n", (unsigned int)load_addr);
-
     int guest_relocation_offset = (int)((int64_t)load_addr - (int64_t)guest_kernel_addr);
     printf("Therefore relocation offset is %d (%s0x%x)\n",
             guest_relocation_offset,
@@ -521,7 +536,7 @@ int vmm_load_guest_elf(vmm_t *vmm, const char *elfname, size_t alignment) {
             abs(guest_relocation_offset));
 
     for (int i = 0; i < n_headers; i++) {
-        seL4_Word source_addr, dest_addr;
+        seL4_Word source_offset, dest_addr;
         unsigned int file_size, segment_size;
 
         /* Skip unloadable program headers. */
@@ -530,11 +545,11 @@ int vmm_load_guest_elf(vmm_t *vmm, const char *elfname, size_t alignment) {
         }
 
         /* Fetch information about this segment. */
-        source_addr = (seL4_Word)elf_file + elf_getProgramHeaderOffset(elf_file, i);
+        source_offset = elf_getProgramHeaderOffset(elf_file, i);
         file_size = elf_getProgramHeaderFileSize(elf_file, i);
         segment_size = elf_getProgramHeaderMemorySize(elf_file, i);
 
-        dest_addr = (seL4_Word)elf_getProgramHeaderPaddr(elf_file, i);
+        dest_addr = (seL4_Word) elf_getProgramHeaderPaddr(elf_file, i);
         dest_addr += guest_relocation_offset;
 
         if (!segment_size) {
@@ -543,7 +558,7 @@ int vmm_load_guest_elf(vmm_t *vmm, const char *elfname, size_t alignment) {
         }
 
         /* Load this ELf segment. */
-        ret = vmm_load_guest_segment(vmm, source_addr, dest_addr, segment_size, file_size);
+        ret = vmm_load_guest_segment(vmm, source_offset, dest_addr, segment_size, file_size, fd);
         if (ret) {
             return ret;
         }
@@ -565,5 +580,8 @@ int vmm_load_guest_elf(vmm_t *vmm, const char *elfname, size_t alignment) {
 
     printf("Guest memory layout after loading elf\n");
     print_guest_ram_regions(&vmm->guest_mem);
+
+    vmm->plat_callbacks.close(fd);
+
     return 0;
 }

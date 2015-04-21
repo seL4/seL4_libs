@@ -288,11 +288,7 @@ int libvchan_is_open(libvchan_t *ctrl) {
 int libvchan_data_ready(libvchan_t *ctrl) {
     vchan_buf_t *b = get_vchan_ctrl_databuf(ctrl, VCHAN_RECV);
     size_t filled = abs(b->read_pos - b->write_pos);
-    if(filled) {
-        return 1;
-    }
-
-    return 0;
+    return filled;
 }
 
 /*

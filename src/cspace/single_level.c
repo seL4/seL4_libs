@@ -89,7 +89,7 @@ int _cspace_single_level_alloc_at(allocman_t *alloc, void *_cspace, seL4_CPtr sl
     return 0;
 }
 
-void _cspace_single_level_free(allocman_t *alloc, void *_cspace, cspacepath_t *slot)
+void _cspace_single_level_free(allocman_t *alloc, void *_cspace, const cspacepath_t *slot)
 {
     cspace_single_level_t *cspace = (cspace_single_level_t*)_cspace;
     uint32_t index = slot->capPtr - cspace->config.first_slot;

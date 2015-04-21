@@ -32,9 +32,9 @@ struct allocman;
 typedef struct utspace_interface {
     /* size_bits is always the size in memory of allocated object. This differs to the untypedretype
        semantics of size_bits when cnodes are involved */
-    uint32_t (*alloc)(struct allocman *alloc, void *utspace, uint32_t size_bits, seL4_Word object_type, cspacepath_t *slot, int *error);
+    uint32_t (*alloc)(struct allocman *alloc, void *utspace, uint32_t size_bits, seL4_Word object_type, const cspacepath_t *slot, int *error);
     void (*free)(struct allocman *alloc, void *utspace, uint32_t cookie, uint32_t size_bits);
-    int (*add_uts)(struct allocman *alloc, void *utspace, uint32_t num, cspacepath_t *uts, uint32_t *size_bits, uint32_t *paddr);
+    int (*add_uts)(struct allocman *alloc, void *utspace, uint32_t num, const cspacepath_t *uts, uint32_t *size_bits, uint32_t *paddr);
     uint32_t (*paddr)(void *utspace, uint32_t cookie, uint32_t size_bits);
     struct allocman_properties properties;
     void *utspace;

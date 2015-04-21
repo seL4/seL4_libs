@@ -84,7 +84,7 @@ void utspace_split_create(utspace_split_t *split)
     }
 }
 
-int _utspace_split_add_uts(allocman_t *alloc, void *_split, uint32_t num, cspacepath_t *uts, uint32_t *size_bits, uint32_t *paddr) {
+int _utspace_split_add_uts(allocman_t *alloc, void *_split, uint32_t num, const cspacepath_t *uts, uint32_t *size_bits, uint32_t *paddr) {
     utspace_split_t *split = (utspace_split_t*) _split;
     int error;
     uint32_t i;
@@ -170,7 +170,7 @@ static int _refill_pool(allocman_t *alloc, utspace_split_t *split, uint32_t size
     return 0;
 }
 
-uint32_t _utspace_split_alloc(allocman_t *alloc, void *_split, uint32_t size_bits, seL4_Word type, cspacepath_t *slot, int *error)
+uint32_t _utspace_split_alloc(allocman_t *alloc, void *_split, uint32_t size_bits, seL4_Word type, const cspacepath_t *slot, int *error)
 {
     utspace_split_t *split = (utspace_split_t*)_split;
     uint32_t sel4_size_bits;

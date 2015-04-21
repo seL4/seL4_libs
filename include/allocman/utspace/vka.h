@@ -27,7 +27,7 @@ typedef struct utspace_vka_cookie {
     seL4_Word type;
 } utspace_vka_cookie_t;
 
-static inline uint32_t _utspace_vka_alloc(struct allocman *alloc, void *_vka, uint32_t size_bits, seL4_Word type, cspacepath_t *slot, int *error)
+static inline uint32_t _utspace_vka_alloc(struct allocman *alloc, void *_vka, uint32_t size_bits, seL4_Word type, const cspacepath_t *slot, int *error)
 {
     vka_t *vka = (vka_t *)_vka;
     int sel4_size_bits = get_sel4_object_size(type, size_bits);
@@ -61,7 +61,7 @@ static inline uint32_t _utspace_vka_paddr(void *_vka, uint32_t _cookie, uint32_t
     return vka_utspace_paddr(vka, cookie->original_cookie, cookie->type, get_sel4_object_size(cookie->type, size_bits));
 }
 
-static inline int _utspace_vka_add_uts(struct allocman *alloc, void *_trickle, uint32_t num, cspacepath_t *uts, uint32_t *size_bits, uint32_t *paddr)
+static inline int _utspace_vka_add_uts(struct allocman *alloc, void *_trickle, uint32_t num, const cspacepath_t *uts, uint32_t *size_bits, uint32_t *paddr)
 {
     assert(!"VKA interface does not support adding untypeds after creation");
     return -1;

@@ -224,7 +224,7 @@ static void _destroy_second_level(allocman_t *alloc, cspace_two_level_t *cspace,
     _cspace_single_level_free(alloc, &cspace->first_level, &path);
 }
 
-void _cspace_two_level_free(struct allocman *alloc, void *_cspace, cspacepath_t *slot)
+void _cspace_two_level_free(struct allocman *alloc, void *_cspace, const cspacepath_t *slot)
 {
     uint32_t l1slot;
     uint32_t l2slot;

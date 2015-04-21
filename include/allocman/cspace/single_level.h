@@ -42,7 +42,7 @@ void cspace_single_level_destroy(struct allocman *alloc, cspace_single_level_t *
 
 int _cspace_single_level_alloc(struct allocman *alloc, void *_cspace, cspacepath_t *slot);
 int _cspace_single_level_alloc_at(struct allocman *alloc, void *_cspace, seL4_CPtr slot);
-void _cspace_single_level_free(struct allocman *alloc, void *_cspace, cspacepath_t *slot);
+void _cspace_single_level_free(struct allocman *alloc, void *_cspace, const cspacepath_t *slot);
 
 static inline cspacepath_t _cspace_single_level_make_path(void *_cspace, seL4_CPtr slot)
 {

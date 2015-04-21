@@ -59,7 +59,7 @@ void cspace_simple1level_create(cspace_simple1level_t *cspace, struct cspace_sim
    declared as void* to make type siginatures match up. I know it's ugly, but
    not my fault that this is the pattern for doing ADTs in C */
 int _cspace_simple1level_alloc(struct allocman *alloc, void *_cspace, cspacepath_t *slot);
-void _cspace_simple1level_free(struct allocman *alloc, void *_cspace, cspacepath_t *slot);
+void _cspace_simple1level_free(struct allocman *alloc, void *_cspace, const cspacepath_t *slot);
 
 static inline struct cspace_interface cspace_simple1level_make_interface(cspace_simple1level_t *cspace) {
     return (struct cspace_interface){

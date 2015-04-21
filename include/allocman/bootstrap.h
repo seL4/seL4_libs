@@ -214,7 +214,7 @@ int bootstrap_set_boot_cspace(bootstrap_info_t *bs, cspace_interface_t cspace, c
  *
  * @return returns 0 on success
  */
-int bootstrap_add_untypeds(bootstrap_info_t *bs, int num, cspacepath_t *uts, uint32_t *size_bits, uint32_t *paddr);
+int bootstrap_add_untypeds(bootstrap_info_t *bs, int num, const cspacepath_t *uts, uint32_t *size_bits, uint32_t *paddr);
 
 /**
  * Adds knowledge of all the untypeds of bootinfo to the bootstrapper. These will

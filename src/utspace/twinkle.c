@@ -32,7 +32,7 @@ void utspace_twinkle_create(utspace_twinkle_t *twinkle)
     twinkle->uts = NULL;
 }
 
-int _utspace_twinkle_add_uts(allocman_t *alloc, void *_twinkle, uint32_t num, cspacepath_t *uts, uint32_t *size_bits, uint32_t *paddr) {
+int _utspace_twinkle_add_uts(allocman_t *alloc, void *_twinkle, uint32_t num, const cspacepath_t *uts, uint32_t *size_bits, uint32_t *paddr) {
     utspace_twinkle_t *twinkle = (utspace_twinkle_t*) _twinkle;
     struct utspace_twinkle_ut *new_uts;
     int error;
@@ -52,7 +52,7 @@ int _utspace_twinkle_add_uts(allocman_t *alloc, void *_twinkle, uint32_t num, cs
     return 0;
 }
 
-uint32_t _utspace_twinkle_alloc(allocman_t *alloc, void *_twinkle, uint32_t size_bits, seL4_Word type, cspacepath_t *slot, int *error)
+uint32_t _utspace_twinkle_alloc(allocman_t *alloc, void *_twinkle, uint32_t size_bits, seL4_Word type, const cspacepath_t *slot, int *error)
 {
     utspace_twinkle_t *twinkle = (utspace_twinkle_t*)_twinkle;
     uint32_t sel4_size_bits;

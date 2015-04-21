@@ -62,7 +62,7 @@ static void allocman_mspace_queue_for_free(allocman_t *alloc, void *ptr, uint32_
     alloc->num_freed_mspace_chunks++;
 }
 
-static void allocman_cspace_queue_for_free(allocman_t *alloc, cspacepath_t *path) {
+static void allocman_cspace_queue_for_free(allocman_t *alloc, const cspacepath_t *path) {
     if (alloc->num_freed_slots == alloc->desired_freed_slots) {
         assert(!"Out of space to store free'd objects. Leaking memory");
         return;
@@ -97,7 +97,7 @@ static void allocman_utspace_queue_for_free(allocman_t *alloc, uint32_t cookie, 
     _end_operation(alloc, root); \
 } while(0)
 
-void allocman_cspace_free(allocman_t *alloc, cspacepath_t *slot)
+void allocman_cspace_free(allocman_t *alloc, const cspacepath_t *slot)
 {
     ALLOCMAN_FREE(alloc, cspace, slot);
 }
@@ -139,7 +139,7 @@ static int _try_watermark_cspace(allocman_t *alloc, cspacepath_t *slot)
     return 0;
 }
 
-static uint32_t _try_watermark_utspace(allocman_t *alloc, uint32_t size_bits, seL4_Word type, cspacepath_t *path, int *_error)
+static uint32_t _try_watermark_utspace(allocman_t *alloc, uint32_t size_bits, seL4_Word type, const cspacepath_t *path, int *_error)
 {
     uint32_t i;
 
@@ -259,7 +259,7 @@ static int _allocman_cspace_alloc(allocman_t *alloc, cspacepath_t *slot, int use
     }
 }
 
-static uint32_t _allocman_utspace_alloc(allocman_t *alloc, uint32_t size_bits, seL4_Word type, cspacepath_t *path, int *_error, int use_watermark)
+static uint32_t _allocman_utspace_alloc(allocman_t *alloc, uint32_t size_bits, seL4_Word type, const cspacepath_t *path, int *_error, int use_watermark)
 {
     int root_op;
     int error;
@@ -318,7 +318,7 @@ int allocman_cspace_alloc(allocman_t *alloc, cspacepath_t *slot)
     return _allocman_cspace_alloc(alloc, slot, 1);
 }
 
-uint32_t allocman_utspace_alloc(allocman_t *alloc, uint32_t size_bits, seL4_Word type, cspacepath_t *path, int *_error)
+uint32_t allocman_utspace_alloc(allocman_t *alloc, uint32_t size_bits, seL4_Word type, const cspacepath_t *path, int *_error)
 {
     return _allocman_utspace_alloc(alloc, size_bits, type, path, _error, 1);
 }

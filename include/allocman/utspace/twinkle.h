@@ -33,9 +33,9 @@ typedef struct utspace_twinkle {
 } utspace_twinkle_t;
 
 void utspace_twinkle_create(utspace_twinkle_t *twinkle);
-int _utspace_twinkle_add_uts(struct allocman *alloc, void *_twinkle, uint32_t num, cspacepath_t *uts, uint32_t *size_bits, uint32_t *paddr);
+int _utspace_twinkle_add_uts(struct allocman *alloc, void *_twinkle, uint32_t num, const cspacepath_t *uts, uint32_t *size_bits, uint32_t *paddr);
 
-uint32_t _utspace_twinkle_alloc(struct allocman *alloc, void *_twinkle, uint32_t size_bits, seL4_Word type, cspacepath_t *slot, int *error);
+uint32_t _utspace_twinkle_alloc(struct allocman *alloc, void *_twinkle, uint32_t size_bits, seL4_Word type, const cspacepath_t *slot, int *error);
 void _utspace_twinkle_free(struct allocman *alloc, void *_twinkle, uint32_t cookie, uint32_t size_bits);
 
 static inline uint32_t _utspace_twinkle_paddr(void *_twinkle, uint32_t cookie, uint32_t size_bits) {

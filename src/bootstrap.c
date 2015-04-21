@@ -175,7 +175,7 @@ static int _add_ut(bootstrap_info_t *bs, cspacepath_t slot, uint32_t size_bits, 
     return 0;
 }
 
-int bootstrap_add_untypeds(bootstrap_info_t *bs, int num, cspacepath_t *uts, uint32_t *size_bits, uint32_t *paddr) {
+int bootstrap_add_untypeds(bootstrap_info_t *bs, int num, const cspacepath_t *uts, uint32_t *size_bits, uint32_t *paddr) {
     int i;
     int error;
     for (i = 0; i < num; i++) {

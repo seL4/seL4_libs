@@ -200,7 +200,7 @@ int allocman_cspace_alloc(allocman_t *alloc, cspacepath_t *slot);
  *
  * @return returns 0 on sucess
  */
-void allocman_cspace_free(allocman_t *alloc, cspacepath_t *slot);
+void allocman_cspace_free(allocman_t *alloc, const cspacepath_t *slot);
 
 /**
  * Converts a seL4_CPtr into a cspacepath_t using the cspace attached to the allocman.
@@ -228,7 +228,7 @@ static inline cspacepath_t allocman_cspace_make_path(allocman_t *alloc, seL4_CPt
  *
  * @return Returns a cookie that can be used in future to free this allocation
  */
-uint32_t allocman_utspace_alloc(allocman_t *alloc, uint32_t size_bits, seL4_Word type, cspacepath_t *path, int *_error);
+uint32_t allocman_utspace_alloc(allocman_t *alloc, uint32_t size_bits, seL4_Word type, const cspacepath_t *path, int *_error);
 
 /**
  * Returns a portion of untyped memory back to the allocator. It is assumed that this
@@ -360,7 +360,7 @@ int allocman_configure_max_freed_untyped_chunks(allocman_t *alloc, uint32_t num)
  *
  * @return returns 0 on success
  */
-static inline int allocman_utspace_add_uts(allocman_t *alloc, uint32_t num, cspacepath_t *uts, uint32_t *size_bits, uint32_t *paddr) {
+static inline int allocman_utspace_add_uts(allocman_t *alloc, uint32_t num, const cspacepath_t *uts, uint32_t *size_bits, uint32_t *paddr) {
     int error;
     assert(alloc->have_utspace);
     error = alloc->utspace.add_uts(alloc, alloc->utspace.utspace, num, uts, size_bits, paddr);

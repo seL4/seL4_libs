@@ -35,9 +35,9 @@ typedef struct utspace_trickle {
 
 void utspace_trickle_create(utspace_trickle_t *trickle);
 
-int _utspace_trickle_add_uts(struct allocman *alloc, void *_trickle, uint32_t num, cspacepath_t *uts, uint32_t *size_bits, uint32_t *paddr);
+int _utspace_trickle_add_uts(struct allocman *alloc, void *_trickle, uint32_t num, const cspacepath_t *uts, uint32_t *size_bits, uint32_t *paddr);
 
-uint32_t _utspace_trickle_alloc(struct allocman *alloc, void *_trickle, uint32_t size_bits, seL4_Word type, cspacepath_t *slot, int *error);
+uint32_t _utspace_trickle_alloc(struct allocman *alloc, void *_trickle, uint32_t size_bits, seL4_Word type, const cspacepath_t *slot, int *error);
 void _utspace_trickle_free(struct allocman *alloc, void *_trickle, uint32_t cookie, uint32_t size_bits);
 
 uint32_t _utspace_trickle_paddr(void *_trickle, uint32_t cookie, uint32_t size_bits);

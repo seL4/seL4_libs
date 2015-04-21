@@ -32,7 +32,7 @@ int _cspace_simple1level_alloc(allocman_t *alloc, void *_cspace, cspacepath_t *s
     return 0;
 }
 
-void _cspace_simple1level_free(allocman_t *alloc, void *_cspace, cspacepath_t *slot)
+void _cspace_simple1level_free(allocman_t *alloc, void *_cspace, const cspacepath_t *slot)
 {
     /* We happily ignore this */
 }

@@ -71,7 +71,7 @@ void cspace_two_level_destroy(struct allocman *alloc, cspace_two_level_t *cspace
 
 seL4_CPtr _cspace_two_level_boot_alloc(struct allocman *alloc, void *_cspace, int *error);
 int _cspace_two_level_alloc(struct allocman *alloc, void *_cspace, cspacepath_t *slot);
-void _cspace_two_level_free(struct allocman *alloc, void *_cspace, cspacepath_t *slot);
+void _cspace_two_level_free(struct allocman *alloc, void *_cspace, const cspacepath_t *slot);
 int _cspace_two_level_alloc_at(struct allocman *alloc, void *_cspace, seL4_CPtr slot);
 
 cspacepath_t _cspace_two_level_make_path(void *_cspace, seL4_CPtr slot);

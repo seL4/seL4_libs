@@ -19,7 +19,7 @@ struct allocman;
 
 typedef struct cspace_interface {
     int (*alloc)(struct allocman *alloc, void *cookie, cspacepath_t *path);
-    void (*free)(struct allocman *alloc, void *cookie, cspacepath_t *path);
+    void (*free)(struct allocman *alloc, void *cookie, const cspacepath_t *path);
     cspacepath_t (*make_path)(void *cookie, seL4_CPtr slot);
     struct allocman_properties properties;
     void *cspace;

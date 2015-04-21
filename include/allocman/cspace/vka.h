@@ -25,13 +25,13 @@ static inline cspacepath_t _cspace_vka_make_path(void *_cspace, seL4_CPtr slot)
     return path;
 }
 
-int _cspace_vka_alloc(struct allocman *alloc, void *_cspace, cspacepath_t *slot)
+static int _cspace_vka_alloc(struct allocman *alloc, void *_cspace, cspacepath_t *slot)
 {
     vka_t *vka = (vka_t*)_cspace;
     (void)alloc;
     return vka_cspace_alloc_path(vka, slot);
 }
-void _cspace_vka_free(struct allocman *alloc, void *_cspace, cspacepath_t *slot)
+static void _cspace_vka_free(struct allocman *alloc, void *_cspace, const cspacepath_t *slot)
 {
     vka_t *vka = (vka_t*)_cspace;
     (void)alloc;

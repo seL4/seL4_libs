@@ -86,7 +86,7 @@ static inline void _free_node(struct allocman *alloc, struct utspace_trickle_nod
     allocman_mspace_free(alloc, (void*)node->padding, 68);
 }
 
-int _utspace_trickle_add_uts(allocman_t *alloc, void *_trickle, uint32_t num, cspacepath_t *uts, uint32_t *size_bits, uint32_t *paddr) {
+int _utspace_trickle_add_uts(allocman_t *alloc, void *_trickle, uint32_t num, const cspacepath_t *uts, uint32_t *size_bits, uint32_t *paddr) {
     utspace_trickle_t *trickle = (utspace_trickle_t*) _trickle;
     struct utspace_trickle_node *nodes[num];
     cspacepath_t *uts_copy[num];
@@ -182,7 +182,7 @@ static int _refill_pool(struct allocman *alloc, utspace_trickle_t *trickle, uint
     return 1;
 }
 
-uint32_t _utspace_trickle_alloc(struct allocman *alloc, void *_trickle, uint32_t size_bits, seL4_Word type, cspacepath_t *slot, int *error)
+uint32_t _utspace_trickle_alloc(struct allocman *alloc, void *_trickle, uint32_t size_bits, seL4_Word type, const cspacepath_t *slot, int *error)
 {
     uint32_t sel4_size_bits;
     int _error;

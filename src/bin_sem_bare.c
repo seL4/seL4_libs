@@ -15,13 +15,13 @@
 #include <sync/bin_sem_bare.h>
 
 int sync_bin_sem_bare_wait(seL4_CPtr aep, volatile int *value) {
-    int val;
-    int result = sync_atomic_decrement_safe(value, &val);
+    int oldval;
+    int result = sync_atomic_decrement_safe(value, &oldval);
     if (result != 0) {
         /* Failed decrement; too many outstanding lock holders. */
         return -1;
     }
-    if (val < 0) {
+    if (oldval <= 0) {
         seL4_Wait(aep, NULL);
     }
     __sync_synchronize();

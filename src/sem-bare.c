@@ -22,13 +22,13 @@ int sync_sem_bare_wait(seL4_CPtr ep, volatile int *value) {
     assert(seL4_DebugCapIdentify(ep) == 4);
 #endif
     assert(value != NULL);
-    int v;
-    int result = sync_atomic_decrement_safe(value, &v);
+    int oldval;
+    int result = sync_atomic_decrement_safe(value, &oldval);
     if (result != 0) {
         /* Failed decrement; too many outstanding lock holders. */
         return -1;
     }
-    if (v < 0) {
+    if (oldval <= 0) {
         seL4_Wait(ep, NULL);
     }
     __sync_synchronize();

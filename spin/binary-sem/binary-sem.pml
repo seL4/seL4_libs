@@ -19,18 +19,18 @@ chan endpoint = [1] of {bit};
 int sem_value = 1;
 
 inline bin_sem_wait() {
-    int new_val;
+    int oldval;
     
     /* Atomic decrement */
     atomic {
+        oldval = sem_value;
         sem_value--;
-        new_val = sem_value;
     }
 
     /* Conditional wait */
     if
-    :: (new_val < 0) -> endpoint ? 1;
-    :: (new_val >= 0) -> skip
+    :: (oldval <= 0) -> endpoint ? 1;
+    :: (oldval > 0) -> skip
     fi
 }
 

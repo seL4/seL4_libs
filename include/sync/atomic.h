@@ -11,8 +11,6 @@
 #ifndef _SYNC_ATOMIC_H_
 #define _SYNC_ATOMIC_H_
 
-#include <utils/util.h>
-
 /** \brief Atomically increment an integer, accounting for possible overflow.
  *
  * @param x Pointer to integer to increment.

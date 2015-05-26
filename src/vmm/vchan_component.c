@@ -108,14 +108,14 @@ int libvchan_recv(libvchan_t *ctrl, void *data, size_t size) {
     Return correct buffer for given vchan read/write action
 */
 vchan_buf_t *get_vchan_buf(vchan_ctrl_t *args, camkes_vchan_con_t *c, int action) {
-    intptr_t buf_pos = c->get_buf(*args, action);
-    /* Check that a buffer was retrieved */
-    if(buf_pos < 0) {
+    if(c->data_buf == NULL) {
+        LOG_ERROR("Mangled vchan connection: null data buffer\n");
         return NULL;
     }
 
-    if(c->data_buf == NULL) {
-        LOG_ERROR("Mangled vchan connection: null data buffer\n");
+    int buf_pos = c->get_buf(*args, action);
+    /* Check that a buffer was retrieved */
+    if(buf_pos < 0) {
         return NULL;
     }
 
@@ -145,7 +145,6 @@ vchan_buf_t *get_vchan_ctrl_databuf(libvchan_t *ctrl, int action) {
      This function is intended for non Init components, Init components have a different method
 */
 int libvchan_readwrite_action(libvchan_t *ctrl, void *data, size_t size, int stream, int action) {
-    void *src, *dest;
     int *update;
     vchan_buf_t *b = get_vchan_ctrl_databuf(ctrl, action);
     if(b == NULL) {
@@ -219,24 +218,15 @@ int libvchan_readwrite_action(libvchan_t *ctrl, void *data, size_t size, int str
         size -= remain;
     }
 
+    void *dbuf = &b->sync_data;
+
     if(action == VCHAN_SEND) {
-        /*
-            src = address given by function caller
-            dest = vchan dataport
-        */
-        src = data;
-        dest = &b->sync_data;
-        memcpy(dest + start, src, size);
+        memcpy(dbuf + start, data, size);
+        memcpy(dbuf, data + size, remain);
     } else {
-        /*
-            src = vchan dataport
-            dest = address given by function caller
-        */
-        src = &b->sync_data;
-        dest = data;
-        memcpy(dest, src + start, size);
+        memcpy(data, ((void *) dbuf) + start, size);
+        memcpy(data + size, dbuf, remain);
     }
-    memcpy(dest, src, remain);
     __sync_synchronize();
 
     /*
@@ -261,6 +251,7 @@ int libvchan_wait(libvchan_t *ctrl) {
     size_t filled = abs(b->read_pos - b->write_pos);
     while(filled == 0) {
         ctrl->con->wait();
+        b = get_vchan_ctrl_databuf(ctrl, VCHAN_RECV);
         filled = abs(b->read_pos - b->write_pos);
     }
 

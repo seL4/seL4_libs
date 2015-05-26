@@ -76,11 +76,11 @@ typedef struct vchan_connect {
 
 void volatile_copy(void *dest, void *rec, int size);
 
-/* Used in testing */
-#define NUM_PACKETS 800
+/* Used for helloworld testsuite */
 #define MSG_HELLO   0
 #define MSG_ACK     1
 #define MSG_CONC    2
+#define TEST_VCHAN_PAK_GUARD    0xBEEDEADA
 
 typedef struct vchan_header {
     int msg_type;
@@ -88,7 +88,9 @@ typedef struct vchan_header {
 } vchan_header_t;
 
 typedef struct vchan_packet {
-    char pnum[6];
+    int pnum;
+    int datah[4];
+    int guard;
 } vchan_packet_t;
 
 #endif

@@ -83,7 +83,7 @@ kobject_get_size(kobject_t type, seL4_Word objectSize)
         default:
             return 0;
         }
-#elif defined(CONFIG_ARCH_I386)
+#elif defined(CONFIG_ARCH_IA32)
         /* IA32-specific frames */
     case KOBJECT_FRAME:
         switch (objectSize) {
@@ -161,7 +161,7 @@ kobject_get_type(kobject_t type, seL4_Word objectSize)
         default:
             return -1;
         }
-#elif defined(CONFIG_ARCH_I386)
+#elif defined(CONFIG_ARCH_IA32)
 #ifdef CONFIG_X86_64
     case KOBJECT_PAGE_MAP_LEVEL4:
         return seL4_X64_PageMapLevel4Object;

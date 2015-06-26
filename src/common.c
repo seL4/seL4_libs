@@ -32,9 +32,9 @@
 #include <sel4platsupport/arch/io.h>
 
 #ifdef CONFIG_KERNEL_STABLE
-    #include <simple-stable/simple-stable.h>
+#include <simple-stable/simple-stable.h>
 #else
-    #include <simple-default/simple-default.h>
+#include <simple-default/simple-default.h>
 #endif
 
 enum serial_setup_status {
@@ -98,14 +98,14 @@ _platsupport_find_device_cap(seL4_Word paddr, seL4_Word page_bits, simple_t *sim
     cspacepath_t path;
     error = vka_cspace_alloc_path(vka, &path);
     assert(!error);
-    error = simple_get_frame_cap(simple,(void *) paddr, page_bits, &path);
+    error = simple_get_frame_cap(simple, (void *) paddr, page_bits, &path);
     assert(error == seL4_NoError);
     return path.capPtr;
 }
 
 static void*
-__map_device_page_failsafe(void* cookie UNUSED, uintptr_t paddr, size_t size, 
-                          int cached UNUSED, ps_mem_flags_t flags UNUSED)
+__map_device_page_failsafe(void* cookie UNUSED, uintptr_t paddr, size_t size,
+                           int cached UNUSED, ps_mem_flags_t flags UNUSED)
 {
     int bits = CTZ(size);
     int error;
@@ -113,7 +113,7 @@ __map_device_page_failsafe(void* cookie UNUSED, uintptr_t paddr, size_t size,
 
     if (device_cap != 0) {
         /* we only support a single page for the serial */
-        for(;;);
+        for (;;);
     }
     device_cap = _platsupport_find_device_cap(paddr, bits, simple, vka);
     assert(device_cap);
@@ -128,7 +128,7 @@ __map_device_page_failsafe(void* cookie UNUSED, uintptr_t paddr, size_t size,
             0
         );
     if (error)
-        for(;;);
+        for (;;);
 
     assert(!error);
 
@@ -136,7 +136,7 @@ __map_device_page_failsafe(void* cookie UNUSED, uintptr_t paddr, size_t size,
 }
 
 static void*
-__map_device_page_regular(void* cookie UNUSED, uintptr_t paddr, size_t size, 
+__map_device_page_regular(void* cookie UNUSED, uintptr_t paddr, size_t size,
                           int cached UNUSED, ps_mem_flags_t flags UNUSED)
 {
     int bits = CTZ(size);
@@ -149,7 +149,7 @@ __map_device_page_regular(void* cookie UNUSED, uintptr_t paddr, size_t size,
     vaddr = vspace_map_pages(vspace, &cap, NULL, seL4_AllRights, 1, bits, 0);
     if (!vaddr) {
         printf("Failed to map serial device :(\n");
-        for(;;);
+        for (;;);
     }
     device_cap = cap;
 
@@ -162,11 +162,11 @@ __map_device_page(void* cookie, uintptr_t paddr, size_t size,
 {
     if (setup_status == START_REGULAR_SETUP && vspace) {
         return __map_device_page_regular(cookie, paddr, size, cached, flags);
-    } else if(setup_status == START_FAILSAFE_SETUP || !vspace) {
+    } else if (setup_status == START_FAILSAFE_SETUP || !vspace) {
         return __map_device_page_failsafe(cookie, paddr, size, cached, flags);
     }
     printf("Unknown setup status!\n");
-    for(;;);
+    for (;;);
 }
 
 void
@@ -214,7 +214,7 @@ platsupport_serial_setup_io_ops(ps_io_ops_t* io_ops)
         return 0;
     }
     err = __plat_serial_init(io_ops);
-    if(!err){
+    if (!err) {
         setup_status = SETUP_COMPLETE;
     }
     return err;
@@ -234,11 +234,11 @@ platsupport_serial_setup_bootinfo_failsafe(void)
     setup_status = SETUP_COMPLETE;
 #else
     setup_status = START_FAILSAFE_SETUP;
-    #ifdef CONFIG_KERNEL_STABLE
-        simple_stable_init_bootinfo(&_simple_mem, seL4_GetBootInfo());
-    #else
-        simple_default_init_bootinfo(&_simple_mem, seL4_GetBootInfo());
-    #endif
+#ifdef CONFIG_KERNEL_STABLE
+    simple_stable_init_bootinfo(&_simple_mem, seL4_GetBootInfo());
+#else
+    simple_default_init_bootinfo(&_simple_mem, seL4_GetBootInfo());
+#endif
     simple = &_simple_mem;
     vka = &_vka_mem;
     simple_make_vka(simple, vka);
@@ -252,9 +252,9 @@ platsupport_serial_setup_bootinfo_failsafe(void)
 
 int
 platsupport_serial_setup_simple(
-        vspace_t *_vspace __attribute__((unused)),
-        simple_t *_simple __attribute__((unused)),
-        vka_t *_vka __attribute__((unused)))
+    vspace_t *_vspace __attribute__((unused)),
+    simple_t *_simple __attribute__((unused)),
+    vka_t *_vka __attribute__((unused)))
 {
     int err = 0;
     if (setup_status == SETUP_COMPLETE) {
@@ -286,11 +286,12 @@ platsupport_serial_setup_simple(
     return err;
 }
 
-static void __serial_setup() {
+static void __serial_setup()
+{
     int started_regular __attribute__((unused)) = 0;
     /* this function is called if we attempt to do serial and it isn't setup.
      * we now need to handle this somehow */
-    switch(setup_status) {
+    switch (setup_status) {
     case START_FAILSAFE_SETUP:
         /* we're stuck. nothing to do but make some noise and hope someone hears us */
         while (1) {
@@ -310,11 +311,11 @@ static void __serial_setup() {
         platsupport_serial_setup_bootinfo_failsafe();
         if (started_regular) {
             printf("Regular serial setup failed.\n"
-            "This message coming to you courtesy of failsafe serial\n"
-            "Your vspace has been clobbered but we will keep running to get any more error output\n");
+                   "This message coming to you courtesy of failsafe serial\n"
+                   "Your vspace has been clobbered but we will keep running to get any more error output\n");
         } else {
             printf("You attempted to print before initialising the libsel4platsupport serial device!\n");
-            while(1);
+            while (1);
         }
 #endif /* CONFIG_LIB_SEL4_PLAT_SUPPORT_USE_SEL4_DEBUG_PUTCHAR */
         break;
@@ -326,7 +327,7 @@ static void __serial_setup() {
 /* Squash compiler warnings (these functions are prototyped in
 * libsel4rootserver).
 */
-void __arch_putchar(int c) __attribute__((weak,noinline));
+void __arch_putchar(int c) __attribute__((weak, noinline));
 int __arch_getchar(void);
 
 void

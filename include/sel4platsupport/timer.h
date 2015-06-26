@@ -65,10 +65,10 @@ sel4_timer_handle_single_irq(seL4_timer_t *timer)
  *
  * The default timer, at minimum, supports setting periodic timeouts for small intervals.
  *
- * @param aep endpoint capability for irqs to be delivered to. 
+ * @param aep endpoint capability for irqs to be delivered to.
  * @return initialised timer.
  */
 seL4_timer_t * sel4platsupport_get_default_timer(vka_t *vka, vspace_t *vspace, simple_t *simple,
-        seL4_CPtr aep);
+                                                 seL4_CPtr aep);
 
 #endif /* _SEL4_PLATSUPPORT_TIMER_H */

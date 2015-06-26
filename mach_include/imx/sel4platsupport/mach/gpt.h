@@ -27,8 +27,8 @@
  * @param prescaler to scale time by. 0 = divide by 1. 1 = divide by 2, ...
  */
 seL4_timer_t *
-sel4platsupport_get_gpt(vspace_t *vspace, simple_t *simple, vka_t *vka, seL4_CPtr aep, 
-        uint32_t prescaler);
+sel4platsupport_get_gpt(vspace_t *vspace, simple_t *simple, vka_t *vka, seL4_CPtr aep,
+                        uint32_t prescaler);
 void sel4platsupport_destroy_gpt(seL4_timer_t *timer, vka_t *vka, vspace_t *vspace);
 
 #endif /* __SEL4_PLAT_SUPPORT_EPIT_H */

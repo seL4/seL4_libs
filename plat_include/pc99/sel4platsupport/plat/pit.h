@@ -27,8 +27,8 @@
 /*
  * Get the PIT interface.
  *
- * @param aep endpoint for PIT irqs to come in on. 
- * @return NULL on error. 
+ * @param aep endpoint for PIT irqs to come in on.
+ * @return NULL on error.
  */
 seL4_timer_t* sel4platsupport_get_pit(vka_t *vka, simple_t *simple, ps_io_port_ops_t *ops, seL4_CPtr aep);
 

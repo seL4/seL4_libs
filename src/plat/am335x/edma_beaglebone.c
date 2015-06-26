@@ -50,7 +50,7 @@
 
 
 /**
- *  \brief    This function maps the crossbar events. 
+ *  \brief    This function maps the crossbar events.
  *
  *  \param    baseAdd         It is the Control Module Address.
  *
@@ -71,36 +71,35 @@ unsigned int EDMA3CrossBarChannelMap(unsigned int baseAdd, unsigned int crossBar
     /* offset of the TPCC_MUX to be configured */
     offset = Channel / 4;
 
-    /* 
+    /*
     ** Each TPCC_MUX register has four event mux which can be used for
     ** cross bar mapping.Thus "select" variable is used to select,
-    ** which of the event mux out of four,for a given TPCC_MUX register 
+    ** which of the event mux out of four,for a given TPCC_MUX register
     ** to be used.
     */
     select = Channel - offset * 4;
 
-    switch(select)
-    {
-         case 0:
-              n = 0;
-         break;
+    switch (select) {
+    case 0:
+        n = 0;
+        break;
 
-         case 1:
-              n = 8;
-         break;
+    case 1:
+        n = 8;
+        break;
 
-         case 2:
-              n = 16;
-         break;
+    case 2:
+        n = 16;
+        break;
 
-         case 3:
-              n = 24;
-         break;
+    case 3:
+        n = 24;
+        break;
 
-         default:
-         break;
+    default:
+        break;
     }
-    
+
     /* 'n' specifies the offset of the event mux */
     HWREG(baseAdd + TPCC_MUX(offset)) &= ~(crossBarEvent << n);
 
@@ -110,12 +109,12 @@ unsigned int EDMA3CrossBarChannelMap(unsigned int baseAdd, unsigned int crossBar
 }
 
 
- /**  
- * \brief  This API returns a unique number which identifies itself  
- *         with the EDMA IP in AM335x SoC.  
- * \param  None  
- * \return This returns a number '2' which is unique to EDMA IP in AM335x.
- */
+/**
+* \brief  This API returns a unique number which identifies itself
+*         with the EDMA IP in AM335x SoC.
+* \param  None
+* \return This returns a number '2' which is unique to EDMA IP in AM335x.
+*/
 unsigned int EDMAVersionGet(void)
 {
     return 2;
@@ -132,188 +131,188 @@ void EDMAModuleClkConfig(void)
 
     /* Writing to MODULEMODE field of CM_PER_L3_CLKCTRL register. */
     HWREG(SOC_CM_PER_REGS + CM_PER_L3_CLKCTRL) |=
-          CM_PER_L3_CLKCTRL_MODULEMODE_ENABLE;
+        CM_PER_L3_CLKCTRL_MODULEMODE_ENABLE;
 
     /* Waiting for MODULEMODE field to reflect the written value. */
-    while(CM_PER_L3_CLKCTRL_MODULEMODE_ENABLE !=
-          (HWREG(SOC_CM_PER_REGS + CM_PER_L3_CLKCTRL) &
-           CM_PER_L3_CLKCTRL_MODULEMODE));
+    while (CM_PER_L3_CLKCTRL_MODULEMODE_ENABLE !=
+            (HWREG(SOC_CM_PER_REGS + CM_PER_L3_CLKCTRL) &
+             CM_PER_L3_CLKCTRL_MODULEMODE));
 
     /* Writing to MODULEMODE field of CM_PER_L3_INSTR_CLKCTRL register. */
     HWREG(SOC_CM_PER_REGS + CM_PER_L3_INSTR_CLKCTRL) |=
-          CM_PER_L3_INSTR_CLKCTRL_MODULEMODE_ENABLE;
+        CM_PER_L3_INSTR_CLKCTRL_MODULEMODE_ENABLE;
 
     /* Waiting for MODULEMODE field to reflect the written value. */
-    while(CM_PER_L3_INSTR_CLKCTRL_MODULEMODE_ENABLE !=
-          (HWREG(SOC_CM_PER_REGS + CM_PER_L3_INSTR_CLKCTRL) &
-           CM_PER_L3_INSTR_CLKCTRL_MODULEMODE));
+    while (CM_PER_L3_INSTR_CLKCTRL_MODULEMODE_ENABLE !=
+            (HWREG(SOC_CM_PER_REGS + CM_PER_L3_INSTR_CLKCTRL) &
+             CM_PER_L3_INSTR_CLKCTRL_MODULEMODE));
 
     /* Writing to CLKTRCTRL field of CM_PER_L3_CLKSTCTRL register. */
     HWREG(SOC_CM_PER_REGS + CM_PER_L3_CLKSTCTRL) |=
-          CM_PER_L3_CLKSTCTRL_CLKTRCTRL_SW_WKUP;
+        CM_PER_L3_CLKSTCTRL_CLKTRCTRL_SW_WKUP;
 
     /* Waiting for CLKTRCTRL field to reflect the written value. */
-    while(CM_PER_L3_CLKSTCTRL_CLKTRCTRL_SW_WKUP !=
-          (HWREG(SOC_CM_PER_REGS + CM_PER_L3_CLKSTCTRL) &
-           CM_PER_L3_CLKSTCTRL_CLKTRCTRL));
+    while (CM_PER_L3_CLKSTCTRL_CLKTRCTRL_SW_WKUP !=
+            (HWREG(SOC_CM_PER_REGS + CM_PER_L3_CLKSTCTRL) &
+             CM_PER_L3_CLKSTCTRL_CLKTRCTRL));
 
     /* Writing to CLKTRCTRL field of CM_PER_OCPWP_L3_CLKSTCTRL register. */
     HWREG(SOC_CM_PER_REGS + CM_PER_OCPWP_L3_CLKSTCTRL) |=
-          CM_PER_OCPWP_L3_CLKSTCTRL_CLKTRCTRL_SW_WKUP;
+        CM_PER_OCPWP_L3_CLKSTCTRL_CLKTRCTRL_SW_WKUP;
 
     /*Waiting for CLKTRCTRL field to reflect the written value. */
-    while(CM_PER_OCPWP_L3_CLKSTCTRL_CLKTRCTRL_SW_WKUP !=
-          (HWREG(SOC_CM_PER_REGS + CM_PER_OCPWP_L3_CLKSTCTRL) &
-           CM_PER_OCPWP_L3_CLKSTCTRL_CLKTRCTRL));
+    while (CM_PER_OCPWP_L3_CLKSTCTRL_CLKTRCTRL_SW_WKUP !=
+            (HWREG(SOC_CM_PER_REGS + CM_PER_OCPWP_L3_CLKSTCTRL) &
+             CM_PER_OCPWP_L3_CLKSTCTRL_CLKTRCTRL));
 
     /* Writing to CLKTRCTRL field of CM_PER_L3S_CLKSTCTRL register. */
     HWREG(SOC_CM_PER_REGS + CM_PER_L3S_CLKSTCTRL) |=
-          CM_PER_L3S_CLKSTCTRL_CLKTRCTRL_SW_WKUP;
+        CM_PER_L3S_CLKSTCTRL_CLKTRCTRL_SW_WKUP;
 
     /*Waiting for CLKTRCTRL field to reflect the written value. */
-    while(CM_PER_L3S_CLKSTCTRL_CLKTRCTRL_SW_WKUP !=
-          (HWREG(SOC_CM_PER_REGS + CM_PER_L3S_CLKSTCTRL) &
-           CM_PER_L3S_CLKSTCTRL_CLKTRCTRL));
+    while (CM_PER_L3S_CLKSTCTRL_CLKTRCTRL_SW_WKUP !=
+            (HWREG(SOC_CM_PER_REGS + CM_PER_L3S_CLKSTCTRL) &
+             CM_PER_L3S_CLKSTCTRL_CLKTRCTRL));
 
     /* Checking fields for necessary values.  */
 
     /* Waiting for IDLEST field in CM_PER_L3_CLKCTRL register to be set to 0x0. */
-    while((CM_PER_L3_CLKCTRL_IDLEST_FUNC << CM_PER_L3_CLKCTRL_IDLEST_SHIFT)!=
-          (HWREG(SOC_CM_PER_REGS + CM_PER_L3_CLKCTRL) &
-           CM_PER_L3_CLKCTRL_IDLEST));
+    while ((CM_PER_L3_CLKCTRL_IDLEST_FUNC << CM_PER_L3_CLKCTRL_IDLEST_SHIFT) !=
+            (HWREG(SOC_CM_PER_REGS + CM_PER_L3_CLKCTRL) &
+             CM_PER_L3_CLKCTRL_IDLEST));
 
     /*
     ** Waiting for IDLEST field in CM_PER_L3_INSTR_CLKCTRL register to attain the
     ** desired value.
     */
-    while((CM_PER_L3_INSTR_CLKCTRL_IDLEST_FUNC <<
-           CM_PER_L3_INSTR_CLKCTRL_IDLEST_SHIFT)!=
-          (HWREG(SOC_CM_PER_REGS + CM_PER_L3_INSTR_CLKCTRL) &
-           CM_PER_L3_INSTR_CLKCTRL_IDLEST));
+    while ((CM_PER_L3_INSTR_CLKCTRL_IDLEST_FUNC <<
+            CM_PER_L3_INSTR_CLKCTRL_IDLEST_SHIFT) !=
+            (HWREG(SOC_CM_PER_REGS + CM_PER_L3_INSTR_CLKCTRL) &
+             CM_PER_L3_INSTR_CLKCTRL_IDLEST));
 
     /*
     ** Waiting for CLKACTIVITY_L3_GCLK field in CM_PER_L3_CLKSTCTRL register to
     ** attain the desired value.
     */
-    while(CM_PER_L3_CLKSTCTRL_CLKACTIVITY_L3_GCLK !=
-          (HWREG(SOC_CM_PER_REGS + CM_PER_L3_CLKSTCTRL) &
-           CM_PER_L3_CLKSTCTRL_CLKACTIVITY_L3_GCLK));
+    while (CM_PER_L3_CLKSTCTRL_CLKACTIVITY_L3_GCLK !=
+            (HWREG(SOC_CM_PER_REGS + CM_PER_L3_CLKSTCTRL) &
+             CM_PER_L3_CLKSTCTRL_CLKACTIVITY_L3_GCLK));
 
     /*
     ** Waiting for CLKACTIVITY_OCPWP_L3_GCLK field in CM_PER_OCPWP_L3_CLKSTCTRL
     ** register to attain the desired value.
     */
-    while(CM_PER_OCPWP_L3_CLKSTCTRL_CLKACTIVITY_OCPWP_L3_GCLK !=
-          (HWREG(SOC_CM_PER_REGS + CM_PER_OCPWP_L3_CLKSTCTRL) &
-           CM_PER_OCPWP_L3_CLKSTCTRL_CLKACTIVITY_OCPWP_L3_GCLK));
+    while (CM_PER_OCPWP_L3_CLKSTCTRL_CLKACTIVITY_OCPWP_L3_GCLK !=
+            (HWREG(SOC_CM_PER_REGS + CM_PER_OCPWP_L3_CLKSTCTRL) &
+             CM_PER_OCPWP_L3_CLKSTCTRL_CLKACTIVITY_OCPWP_L3_GCLK));
 
     /*
     ** Waiting for CLKACTIVITY_L3S_GCLK field in CM_PER_L3S_CLKSTCTRL register
     ** to attain the desired value.
     */
-    while(CM_PER_L3S_CLKSTCTRL_CLKACTIVITY_L3S_GCLK !=
-          (HWREG(SOC_CM_PER_REGS + CM_PER_L3S_CLKSTCTRL) &
-          CM_PER_L3S_CLKSTCTRL_CLKACTIVITY_L3S_GCLK));
+    while (CM_PER_L3S_CLKSTCTRL_CLKACTIVITY_L3S_GCLK !=
+            (HWREG(SOC_CM_PER_REGS + CM_PER_L3S_CLKSTCTRL) &
+             CM_PER_L3S_CLKSTCTRL_CLKACTIVITY_L3S_GCLK));
 
     /* Configuring clocks for EDMA3 TPCC and TPTCs. */
 
     /* Writing to MODULEMODE field of CM_PER_TPCC_CLKCTRL register. */
     HWREG(SOC_CM_PER_REGS + CM_PER_TPCC_CLKCTRL) |=
-          CM_PER_TPCC_CLKCTRL_MODULEMODE_ENABLE;
+        CM_PER_TPCC_CLKCTRL_MODULEMODE_ENABLE;
 
     /* Waiting for MODULEMODE field to reflect the written value. */
-    while(CM_PER_TPCC_CLKCTRL_MODULEMODE_ENABLE !=
-          (HWREG(SOC_CM_PER_REGS + CM_PER_TPCC_CLKCTRL) &
-          CM_PER_TPCC_CLKCTRL_MODULEMODE));
+    while (CM_PER_TPCC_CLKCTRL_MODULEMODE_ENABLE !=
+            (HWREG(SOC_CM_PER_REGS + CM_PER_TPCC_CLKCTRL) &
+             CM_PER_TPCC_CLKCTRL_MODULEMODE));
 
     /* Writing to MODULEMODE field of CM_PER_TPTC0_CLKCTRL register. */
     HWREG(SOC_CM_PER_REGS + CM_PER_TPTC0_CLKCTRL) |=
-          CM_PER_TPTC0_CLKCTRL_MODULEMODE_ENABLE;
+        CM_PER_TPTC0_CLKCTRL_MODULEMODE_ENABLE;
 
     /* Waiting for MODULEMODE field to reflect the written value. */
-    while(CM_PER_TPTC0_CLKCTRL_MODULEMODE_ENABLE !=
-          (HWREG(SOC_CM_PER_REGS + CM_PER_TPTC0_CLKCTRL) &
-           CM_PER_TPTC0_CLKCTRL_MODULEMODE));
+    while (CM_PER_TPTC0_CLKCTRL_MODULEMODE_ENABLE !=
+            (HWREG(SOC_CM_PER_REGS + CM_PER_TPTC0_CLKCTRL) &
+             CM_PER_TPTC0_CLKCTRL_MODULEMODE));
 
     /* Writing to MODULEMODE field of CM_PER_TPTC1_CLKCTRL register. */
     HWREG(SOC_CM_PER_REGS + CM_PER_TPTC1_CLKCTRL) |=
-          CM_PER_TPTC1_CLKCTRL_MODULEMODE_ENABLE;
+        CM_PER_TPTC1_CLKCTRL_MODULEMODE_ENABLE;
 
     /* Waiting for MODULEMODE field to reflect the written value. */
-    while(CM_PER_TPTC1_CLKCTRL_MODULEMODE_ENABLE !=
-          (HWREG(SOC_CM_PER_REGS + CM_PER_TPTC1_CLKCTRL) &
-           CM_PER_TPTC1_CLKCTRL_MODULEMODE));
+    while (CM_PER_TPTC1_CLKCTRL_MODULEMODE_ENABLE !=
+            (HWREG(SOC_CM_PER_REGS + CM_PER_TPTC1_CLKCTRL) &
+             CM_PER_TPTC1_CLKCTRL_MODULEMODE));
 
     /* Writing to MODULEMODE field of CM_PER_TPTC2_CLKCTRL register. */
     HWREG(SOC_CM_PER_REGS + CM_PER_TPTC2_CLKCTRL) |=
-          CM_PER_TPTC2_CLKCTRL_MODULEMODE_ENABLE;
+        CM_PER_TPTC2_CLKCTRL_MODULEMODE_ENABLE;
 
     /* Waiting for MODULEMODE field to reflect the written value. */
-    while(CM_PER_TPTC2_CLKCTRL_MODULEMODE_ENABLE !=
-          (HWREG(SOC_CM_PER_REGS + CM_PER_TPTC2_CLKCTRL) &
-           CM_PER_TPTC2_CLKCTRL_MODULEMODE));
+    while (CM_PER_TPTC2_CLKCTRL_MODULEMODE_ENABLE !=
+            (HWREG(SOC_CM_PER_REGS + CM_PER_TPTC2_CLKCTRL) &
+             CM_PER_TPTC2_CLKCTRL_MODULEMODE));
 
     /*
     ** Waiting for IDLEST field in CM_PER_TPCC_CLKCTRL register to attain the
     ** desired value.
     */
-    while((CM_PER_TPCC_CLKCTRL_IDLEST_FUNC <<
-           CM_PER_TPCC_CLKCTRL_IDLEST_SHIFT) !=
-           (HWREG(SOC_CM_PER_REGS + CM_PER_TPCC_CLKCTRL) &
-            CM_PER_TPCC_CLKCTRL_IDLEST));
+    while ((CM_PER_TPCC_CLKCTRL_IDLEST_FUNC <<
+            CM_PER_TPCC_CLKCTRL_IDLEST_SHIFT) !=
+            (HWREG(SOC_CM_PER_REGS + CM_PER_TPCC_CLKCTRL) &
+             CM_PER_TPCC_CLKCTRL_IDLEST));
 
     /*
     ** Waiting for IDLEST field in CM_PER_TPTC0_CLKCTRL register to attain the
     ** desired value.
     */
-    while((CM_PER_TPTC0_CLKCTRL_IDLEST_FUNC <<
-           CM_PER_TPTC0_CLKCTRL_IDLEST_SHIFT) !=
-           (HWREG(SOC_CM_PER_REGS + CM_PER_TPTC0_CLKCTRL) &
-            CM_PER_TPTC0_CLKCTRL_IDLEST));
+    while ((CM_PER_TPTC0_CLKCTRL_IDLEST_FUNC <<
+            CM_PER_TPTC0_CLKCTRL_IDLEST_SHIFT) !=
+            (HWREG(SOC_CM_PER_REGS + CM_PER_TPTC0_CLKCTRL) &
+             CM_PER_TPTC0_CLKCTRL_IDLEST));
 
     /*
     ** Waiting for STBYST field in CM_PER_TPTC0_CLKCTRL register to attain the
     ** desired value.
     */
-    while((CM_PER_TPTC0_CLKCTRL_STBYST_FUNC <<
-           CM_PER_TPTC0_CLKCTRL_STBYST_SHIFT) !=
-           (HWREG(SOC_CM_PER_REGS + CM_PER_TPTC0_CLKCTRL) &
-            CM_PER_TPTC0_CLKCTRL_STBYST));
+    while ((CM_PER_TPTC0_CLKCTRL_STBYST_FUNC <<
+            CM_PER_TPTC0_CLKCTRL_STBYST_SHIFT) !=
+            (HWREG(SOC_CM_PER_REGS + CM_PER_TPTC0_CLKCTRL) &
+             CM_PER_TPTC0_CLKCTRL_STBYST));
 
     /*
     ** Waiting for IDLEST field in CM_PER_TPTC1_CLKCTRL register to attain the
     ** desired value.
     */
-    while((CM_PER_TPTC1_CLKCTRL_IDLEST_FUNC <<
-           CM_PER_TPTC1_CLKCTRL_IDLEST_SHIFT) !=
-           (HWREG(SOC_CM_PER_REGS + CM_PER_TPTC1_CLKCTRL) &
-            CM_PER_TPTC1_CLKCTRL_IDLEST));
+    while ((CM_PER_TPTC1_CLKCTRL_IDLEST_FUNC <<
+            CM_PER_TPTC1_CLKCTRL_IDLEST_SHIFT) !=
+            (HWREG(SOC_CM_PER_REGS + CM_PER_TPTC1_CLKCTRL) &
+             CM_PER_TPTC1_CLKCTRL_IDLEST));
 
     /*
     ** Waiting for STBYST field in CM_PER_TPTC1_CLKCTRL register to attain the
     ** desired value.
     */
-    while((CM_PER_TPTC1_CLKCTRL_STBYST_FUNC <<
-           CM_PER_TPTC1_CLKCTRL_STBYST_SHIFT) !=
-           (HWREG(SOC_CM_PER_REGS + CM_PER_TPTC1_CLKCTRL) &
-            CM_PER_TPTC1_CLKCTRL_STBYST));
+    while ((CM_PER_TPTC1_CLKCTRL_STBYST_FUNC <<
+            CM_PER_TPTC1_CLKCTRL_STBYST_SHIFT) !=
+            (HWREG(SOC_CM_PER_REGS + CM_PER_TPTC1_CLKCTRL) &
+             CM_PER_TPTC1_CLKCTRL_STBYST));
 
     /*
     ** Waiting for IDLEST field in CM_PER_TPTC2_CLKCTRL register to attain the
     ** desired value.
     */
-    while((CM_PER_TPTC2_CLKCTRL_IDLEST_FUNC <<
-           CM_PER_TPTC2_CLKCTRL_IDLEST_SHIFT) !=
-           (HWREG(SOC_CM_PER_REGS + CM_PER_TPTC2_CLKCTRL) &
-            CM_PER_TPTC2_CLKCTRL_IDLEST));
+    while ((CM_PER_TPTC2_CLKCTRL_IDLEST_FUNC <<
+            CM_PER_TPTC2_CLKCTRL_IDLEST_SHIFT) !=
+            (HWREG(SOC_CM_PER_REGS + CM_PER_TPTC2_CLKCTRL) &
+             CM_PER_TPTC2_CLKCTRL_IDLEST));
 
     /*
     ** Waiting for STBYST field in CM_PER_TPTC2_CLKCTRL register to attain the
     ** desired value.
     */
-    while((CM_PER_TPTC2_CLKCTRL_STBYST_FUNC <<
-           CM_PER_TPTC2_CLKCTRL_STBYST_SHIFT) !=
-           (HWREG(SOC_CM_PER_REGS + CM_PER_TPTC2_CLKCTRL) &
-            CM_PER_TPTC2_CLKCTRL_STBYST));
+    while ((CM_PER_TPTC2_CLKCTRL_STBYST_FUNC <<
+            CM_PER_TPTC2_CLKCTRL_STBYST_SHIFT) !=
+            (HWREG(SOC_CM_PER_REGS + CM_PER_TPTC2_CLKCTRL) &
+             CM_PER_TPTC2_CLKCTRL_STBYST));
 }
 

@@ -20,7 +20,7 @@
 
 
 seL4_timer_t *
-sel4platsupport_get_timer(enum timer_id id, vka_t *vka, vspace_t *vspace, 
+sel4platsupport_get_timer(enum timer_id id, vka_t *vka, vspace_t *vspace,
                           simple_t *simple, seL4_CPtr aep)
 {
     timer_common_data_t *data;

@@ -26,7 +26,7 @@
 #include "../../timer_common.h"
 
 typedef struct {
-   seL4_CPtr irq;
+    seL4_CPtr irq;
 } seL4_pit_data_t;
 
 
@@ -93,7 +93,7 @@ error:
     return NULL;
 }
 
-void 
+void
 sel4platsupport_destroy_pit(seL4_timer_t *pit, vka_t *vka)
 {
 

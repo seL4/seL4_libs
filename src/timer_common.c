@@ -16,8 +16,9 @@
 
 #ifdef CONFIG_LIB_SEL4_VSPACE
 
-seL4_CPtr 
-timer_common_get_irq(vka_t *vka, simple_t *simple, uint32_t irq_number) {
+seL4_CPtr
+timer_common_get_irq(vka_t *vka, simple_t *simple, uint32_t irq_number)
+{
     seL4_CPtr irq;
 
     /* allocate a cslot for the irq cap */
@@ -43,7 +44,7 @@ timer_common_get_irq(vka_t *vka, simple_t *simple, uint32_t irq_number) {
 void
 timer_common_handle_irq(seL4_timer_t *timer, uint32_t irq)
 {
-    timer_common_data_t *data = (timer_common_data_t *) timer->data; 
+    timer_common_data_t *data = (timer_common_data_t *) timer->data;
     timer_handle_irq(timer->timer, irq);
     seL4_IRQHandler_Ack(data->irq);
 }
@@ -60,7 +61,7 @@ timer_common_cleanup_irq(vka_t *vka, seL4_CPtr irq)
 
 timer_common_data_t *
 timer_common_init(vspace_t *vspace, simple_t *simple,
-        vka_t *vka, seL4_CPtr aep, uint32_t irq_number, void *paddr)
+                  vka_t *vka, seL4_CPtr aep, uint32_t irq_number, void *paddr)
 {
     int error;
     timer_common_data_t *timer_data = NULL;
@@ -84,7 +85,7 @@ timer_common_init(vspace_t *vspace, simple_t *simple,
     vka_cspace_make_path(vka, frame_cap, &timer_data->frame);
     error = simple_get_frame_cap(simple, paddr, seL4_PageBits, &timer_data->frame);
     if (error) {
-    LOG_ERROR("Failed to find frame at paddr %p\n", paddr);
+        LOG_ERROR("Failed to find frame at paddr %p\n", paddr);
         goto error;
     }
 
@@ -118,11 +119,12 @@ error:
 }
 
 void
-timer_common_destroy(timer_common_data_t *timer_data, vka_t *vka, vspace_t *vspace) {
-   if (timer_data != NULL) {
-        
-      if (timer_data->irq != 0) {
-            seL4_IRQHandler_Clear(timer_data->irq); 
+timer_common_destroy(timer_common_data_t *timer_data, vka_t *vka, vspace_t *vspace)
+{
+    if (timer_data != NULL) {
+
+        if (timer_data->irq != 0) {
+            seL4_IRQHandler_Clear(timer_data->irq);
             cspacepath_t irq_path;
             vka_cspace_make_path(vka, timer_data->irq, &irq_path);
             vka_cnode_delete(&irq_path);

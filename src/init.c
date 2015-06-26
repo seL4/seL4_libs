@@ -14,12 +14,13 @@ extern char __init_array_end[];
 
 /* Run pre-main initialisation functions. This function is called from _start.
  */
-void _init(void) {
-/* Commented out because this functionality doesn't work during certain links.
- * It's unclear to me exactly why, but sometimes the linker doesn't give you
- * the externs declared above. This should probably eventually be repaired
- * using crtbegin.o and crtend.o.
- */
+void _init(void)
+{
+    /* Commented out because this functionality doesn't work during certain links.
+     * It's unclear to me exactly why, but sometimes the linker doesn't give you
+     * the externs declared above. This should probably eventually be repaired
+     * using crtbegin.o and crtend.o.
+     */
 #if 0
 
     /* The 'ctors' section of the ELF file contains an array of pointers to

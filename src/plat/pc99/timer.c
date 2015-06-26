@@ -18,8 +18,9 @@
 
 static ps_io_port_ops_t ops;
 
-seL4_timer_t *sel4platsupport_get_default_timer(vka_t *vka, UNUSED vspace_t *vspace, 
-        simple_t *simple, seL4_CPtr aep) {
+seL4_timer_t *sel4platsupport_get_default_timer(vka_t *vka, UNUSED vspace_t *vspace,
+                                                simple_t *simple, seL4_CPtr aep)
+{
 
     UNUSED int error = sel4platsupport_get_io_port_ops(&ops, simple);
     assert(error == 0);

@@ -72,21 +72,21 @@ extern "C" {
 #define MDIO_USERACCESS1	(0x88)
 #define MDIO_USERPHYSEL1	(0x8C)
 
-/**************************************************************************\
-* Field Definition Macros
-\**************************************************************************/
+    /**************************************************************************\
+    * Field Definition Macros
+    \**************************************************************************/
 
-/* REVID */
+    /* REVID */
 
 #define MDIO_REVID_REV (0xFFFFFFFFu)
 #define MDIO_REVID_REV_SHIFT (0x00000000u)
 
 
-/* CONTROL */
+    /* CONTROL */
 
 #define MDIO_CONTROL_IDLE (0x80000000u)
 #define MDIO_CONTROL_IDLE_SHIFT (0x0000001Fu)
-/*----IDLE Tokens----*/
+    /*----IDLE Tokens----*/
 #define MDIO_CONTROL_IDLE_NO (0x00000000u)
 #define MDIO_CONTROL_IDLE_YES (0x00000001u)
 
@@ -99,35 +99,35 @@ extern "C" {
 
 #define MDIO_CONTROL_PREAMBLE (0x00100000u)
 #define MDIO_CONTROL_PREAMBLE_SHIFT (0x00000014u)
-/*----PREAMBLE Tokens----*/
+    /*----PREAMBLE Tokens----*/
 
 #define MDIO_CONTROL_FAULT (0x00080000u)
 #define MDIO_CONTROL_FAULT_SHIFT (0x00000013u)
 
 #define MDIO_CONTROL_FAULTENB (0x00040000u)
 #define MDIO_CONTROL_FAULTENB_SHIFT (0x00000012u)
-/*----FAULTENB Tokens----*/
+    /*----FAULTENB Tokens----*/
 
 
 
 #define MDIO_CONTROL_CLKDIV (0x0000FFFFu)
 #define MDIO_CONTROL_CLKDIV_SHIFT (0x00000000u)
-/*----CLKDIV Tokens----*/
+    /*----CLKDIV Tokens----*/
 
 
-/* ALIVE */
+    /* ALIVE */
 
 #define MDIO_ALIVE_REGVAL (0xFFFFFFFFu)
 #define MDIO_ALIVE_REGVAL_SHIFT (0x00000000u)
 
 
-/* LINK */
+    /* LINK */
 
 #define MDIO_LINK_REGVAL (0xFFFFFFFFu)
 #define MDIO_LINK_REGVAL_SHIFT (0x00000000u)
 
 
-/* LINKINTRAW */
+    /* LINKINTRAW */
 
 
 #define MDIO_LINKINTRAW_USERPHY1 (0x00000002u)
@@ -137,7 +137,7 @@ extern "C" {
 #define MDIO_LINKINTRAW_USERPHY0_SHIFT (0x00000000u)
 
 
-/* LINKINTMASKED */
+    /* LINKINTMASKED */
 
 
 #define MDIO_LINKINTMASKED_USERPHY1 (0x00000002u)
@@ -147,7 +147,7 @@ extern "C" {
 #define MDIO_LINKINTMASKED_USERPHY0_SHIFT (0x00000000u)
 
 
-/* USERINTRAW */
+    /* USERINTRAW */
 
 
 #define MDIO_USERINTRAW_USERACCESS1 (0x00000002u)
@@ -157,7 +157,7 @@ extern "C" {
 #define MDIO_USERINTRAW_USERACCESS0_SHIFT (0x00000000u)
 
 
-/* USERINTMASKED */
+    /* USERINTMASKED */
 
 
 #define MDIO_USERINTMASKED_USERACCESS1 (0x00000002u)
@@ -167,7 +167,7 @@ extern "C" {
 #define MDIO_USERINTMASKED_USERACCESS0_SHIFT (0x00000000u)
 
 
-/* USERINTMASKSET */
+    /* USERINTMASKSET */
 
 
 #define MDIO_USERINTMASKSET_USERACCESS1 (0x00000002u)
@@ -177,7 +177,7 @@ extern "C" {
 #define MDIO_USERINTMASKSET_USERACCESS0_SHIFT (0x00000000u)
 
 
-/* USERINTMASKCLEAR */
+    /* USERINTMASKCLEAR */
 
 
 #define MDIO_USERINTMASKCLEAR_USERACCESS1 (0x00000002u)
@@ -187,7 +187,7 @@ extern "C" {
 #define MDIO_USERINTMASKCLEAR_USERACCESS0_SHIFT (0x00000000u)
 
 
-/* USERACCESS0 */
+    /* USERACCESS0 */
 
 #define MDIO_USERACCESS0_GO (0x80000000u)
 #define MDIO_USERACCESS0_GO_SHIFT (0x0000001Fu)
@@ -210,7 +210,7 @@ extern "C" {
 #define MDIO_USERACCESS0_DATA_SHIFT (0x00000000u)
 
 
-/* USERPHYSEL0 */
+    /* USERPHYSEL0 */
 
 
 #define MDIO_USERPHYSEL0_LINKSEL (0x00000080u)
@@ -224,7 +224,7 @@ extern "C" {
 #define MDIO_USERPHYSEL0_PHYADRMON_SHIFT (0x00000000u)
 
 
-/* USERACCESS1 */
+    /* USERACCESS1 */
 
 #define MDIO_USERACCESS1_GO (0x80000000u)
 #define MDIO_USERACCESS1_GO_SHIFT (0x0000001Fu)
@@ -246,7 +246,7 @@ extern "C" {
 #define MDIO_USERACCESS1_DATA_SHIFT (0x00000000u)
 
 
-/* USERPHYSEL1 */
+    /* USERPHYSEL1 */
 
 
 #define MDIO_USERPHYSEL1_LINKSEL (0x00000080u)

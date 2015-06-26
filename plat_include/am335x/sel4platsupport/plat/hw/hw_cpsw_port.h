@@ -59,25 +59,25 @@ extern "C" {
 #endif
 
 
-/***********************************************************************\
- * Register arrays Definition
-\***********************************************************************/
+    /***********************************************************************\
+     * Register arrays Definition
+    \***********************************************************************/
 
 
-/***********************************************************************\
- * Bundle arrays Definition
-\***********************************************************************/
+    /***********************************************************************\
+     * Bundle arrays Definition
+    \***********************************************************************/
 
 
-/***********************************************************************\
- * Bundles Definition
-\***********************************************************************/
+    /***********************************************************************\
+     * Bundles Definition
+    \***********************************************************************/
 
 
 
-/*************************************************************************\
- * Registers Definition
-\*************************************************************************/
+    /*************************************************************************\
+     * Registers Definition
+    \*************************************************************************/
 
 #define CPSW_PORT_CONTROL   (0x0)
 #define CPSW_PORT_MAX_BLKS   (0x8)
@@ -93,11 +93,11 @@ extern "C" {
 #define CPSW_PORT_SA_HI   (0x24)
 #define CPSW_PORT_SEND_PERCENT   (0x28)
 
-/**************************************************************************\
- * Field Definition Macros
-\**************************************************************************/
+    /**************************************************************************\
+     * Field Definition Macros
+    \**************************************************************************/
 
-/* P0_CONTROL */
+    /* P0_CONTROL */
 #define CPSW_PORT_P0_CONTROL_P0_DLR_CPDMA_CH   (0x70000000u)
 #define CPSW_PORT_P0_CONTROL_P0_DLR_CPDMA_CH_SHIFT   (0x0000001Cu)
 
@@ -114,7 +114,7 @@ extern "C" {
 #define CPSW_PORT_P0_CONTROL_P0_VLAN_LTYPE2_EN_SHIFT   (0x00000015u)
 
 
-/* P0_MAX_BLKS */
+    /* P0_MAX_BLKS */
 #define CPSW_PORT_P0_MAX_BLKS_P0_RX_MAX_BLKS   (0x0000000Fu)
 #define CPSW_PORT_P0_MAX_BLKS_P0_RX_MAX_BLKS_SHIFT   (0x00000000u)
 
@@ -122,7 +122,7 @@ extern "C" {
 #define CPSW_PORT_P0_MAX_BLKS_P0_TX_MAX_BLKS_SHIFT   (0x00000004u)
 
 
-/* P0_BLK_CNT */
+    /* P0_BLK_CNT */
 #define CPSW_PORT_P0_BLK_CNT_P0_RX_BLK_CNT   (0x0000000Fu)
 #define CPSW_PORT_P0_BLK_CNT_P0_RX_BLK_CNT_SHIFT   (0x00000000u)
 
@@ -130,7 +130,7 @@ extern "C" {
 #define CPSW_PORT_P0_BLK_CNT_P0_TX_BLK_CNT_SHIFT   (0x00000004u)
 
 
-/* P0_TX_IN_CTL */
+    /* P0_TX_IN_CTL */
 #define CPSW_PORT_P0_TX_IN_CTL_TX_BLKS_REM   (0x0000F000u)
 #define CPSW_PORT_P0_TX_IN_CTL_TX_BLKS_REM_SHIFT   (0x0000000Cu)
 
@@ -145,7 +145,7 @@ extern "C" {
 #define CPSW_PORT_P0_TX_IN_CTL_TX_RATE_EN_SHIFT   (0x00000014u)
 
 
-/* P0_PORT_VLAN */
+    /* P0_PORT_VLAN */
 #define CPSW_PORT_P0_PORT_VLAN_PORT_CFI   (0x00001000u)
 #define CPSW_PORT_P0_PORT_VLAN_PORT_CFI_SHIFT   (0x0000000Cu)
 
@@ -156,7 +156,7 @@ extern "C" {
 #define CPSW_PORT_P0_PORT_VLAN_PORT_VID_SHIFT   (0x00000000u)
 
 
-/* P0_TX_PRI_MAP */
+    /* P0_TX_PRI_MAP */
 #define CPSW_PORT_P0_TX_PRI_MAP_PRI0   (0x00000003u)
 #define CPSW_PORT_P0_TX_PRI_MAP_PRI0_SHIFT   (0x00000000u)
 
@@ -182,7 +182,7 @@ extern "C" {
 #define CPSW_PORT_P0_TX_PRI_MAP_PRI7_SHIFT   (0x0000001Cu)
 
 
-/* P0_CPDMA_TX_PRI_MAP */
+    /* P0_CPDMA_TX_PRI_MAP */
 #define CPSW_PORT_P0_CPDMA_TX_PRI_MAP_PRI0   (0x00000007u)
 #define CPSW_PORT_P0_CPDMA_TX_PRI_MAP_PRI0_SHIFT   (0x00000000u)
 
@@ -208,7 +208,7 @@ extern "C" {
 #define CPSW_PORT_P0_CPDMA_TX_PRI_MAP_PRI7_SHIFT   (0x0000001Cu)
 
 
-/* P0_CPDMA_RX_CH_MAP */
+    /* P0_CPDMA_RX_CH_MAP */
 #define CPSW_PORT_P0_CPDMA_RX_CH_MAP_P1_PRI0   (0x00000007u)
 #define CPSW_PORT_P0_CPDMA_RX_CH_MAP_P1_PRI0_SHIFT   (0x00000000u)
 
@@ -234,7 +234,7 @@ extern "C" {
 #define CPSW_PORT_P0_CPDMA_RX_CH_MAP_P2_PRI3_SHIFT   (0x0000001Cu)
 
 
-/* P0_RX_DSCP_PRI_MAP0 */
+    /* P0_RX_DSCP_PRI_MAP0 */
 #define CPSW_PORT_P0_RX_DSCP_PRI_MAP0_PRI0   (0x00000007u)
 #define CPSW_PORT_P0_RX_DSCP_PRI_MAP0_PRI0_SHIFT   (0x00000000u)
 
@@ -260,7 +260,7 @@ extern "C" {
 #define CPSW_PORT_P0_RX_DSCP_PRI_MAP0_PRI7_SHIFT   (0x0000001Cu)
 
 
-/* P0_RX_DSCP_PRI_MAP1 */
+    /* P0_RX_DSCP_PRI_MAP1 */
 #define CPSW_PORT_P0_RX_DSCP_PRI_MAP1_PRI10   (0x00000700u)
 #define CPSW_PORT_P0_RX_DSCP_PRI_MAP1_PRI10_SHIFT   (0x00000008u)
 
@@ -286,7 +286,7 @@ extern "C" {
 #define CPSW_PORT_P0_RX_DSCP_PRI_MAP1_PRI9_SHIFT   (0x00000004u)
 
 
-/* P0_RX_DSCP_PRI_MAP2 */
+    /* P0_RX_DSCP_PRI_MAP2 */
 #define CPSW_PORT_P0_RX_DSCP_PRI_MAP2_PRI16   (0x00000007u)
 #define CPSW_PORT_P0_RX_DSCP_PRI_MAP2_PRI16_SHIFT   (0x00000000u)
 
@@ -312,7 +312,7 @@ extern "C" {
 #define CPSW_PORT_P0_RX_DSCP_PRI_MAP2_PRI23_SHIFT   (0x0000001Cu)
 
 
-/* P0_RX_DSCP_PRI_MAP3 */
+    /* P0_RX_DSCP_PRI_MAP3 */
 #define CPSW_PORT_P0_RX_DSCP_PRI_MAP3_PRI24   (0x00000007u)
 #define CPSW_PORT_P0_RX_DSCP_PRI_MAP3_PRI24_SHIFT   (0x00000000u)
 
@@ -338,7 +338,7 @@ extern "C" {
 #define CPSW_PORT_P0_RX_DSCP_PRI_MAP3_PRI31_SHIFT   (0x0000001Cu)
 
 
-/* P0_RX_DSCP_PRI_MAP4 */
+    /* P0_RX_DSCP_PRI_MAP4 */
 #define CPSW_PORT_P0_RX_DSCP_PRI_MAP4_PRI32   (0x00000007u)
 #define CPSW_PORT_P0_RX_DSCP_PRI_MAP4_PRI32_SHIFT   (0x00000000u)
 
@@ -364,7 +364,7 @@ extern "C" {
 #define CPSW_PORT_P0_RX_DSCP_PRI_MAP4_PRI39_SHIFT   (0x0000001Cu)
 
 
-/* P0_RX_DSCP_PRI_MAP5 */
+    /* P0_RX_DSCP_PRI_MAP5 */
 #define CPSW_PORT_P0_RX_DSCP_PRI_MAP5_PRI40   (0x00000007u)
 #define CPSW_PORT_P0_RX_DSCP_PRI_MAP5_PRI40_SHIFT   (0x00000000u)
 
@@ -390,7 +390,7 @@ extern "C" {
 #define CPSW_PORT_P0_RX_DSCP_PRI_MAP5_PRI47_SHIFT   (0x0000001Cu)
 
 
-/* P0_RX_DSCP_PRI_MAP6 */
+    /* P0_RX_DSCP_PRI_MAP6 */
 #define CPSW_PORT_P0_RX_DSCP_PRI_MAP6_PRI48   (0x00000007u)
 #define CPSW_PORT_P0_RX_DSCP_PRI_MAP6_PRI48_SHIFT   (0x00000000u)
 
@@ -416,7 +416,7 @@ extern "C" {
 #define CPSW_PORT_P0_RX_DSCP_PRI_MAP6_PRI55_SHIFT   (0x0000001Cu)
 
 
-/* P0_RX_DSCP_PRI_MAP7 */
+    /* P0_RX_DSCP_PRI_MAP7 */
 #define CPSW_PORT_P0_RX_DSCP_PRI_MAP7_PRI56   (0x00000007u)
 #define CPSW_PORT_P0_RX_DSCP_PRI_MAP7_PRI56_SHIFT   (0x00000000u)
 
@@ -442,7 +442,7 @@ extern "C" {
 #define CPSW_PORT_P0_RX_DSCP_PRI_MAP7_PRI63_SHIFT   (0x0000001Cu)
 
 
-/* P1_CONTROL */
+    /* P1_CONTROL */
 #define CPSW_PORT_P1_CONTROL_P1_DSCP_PRI_EN   (0x00010000u)
 #define CPSW_PORT_P1_CONTROL_P1_DSCP_PRI_EN_SHIFT   (0x00000010u)
 
@@ -489,7 +489,7 @@ extern "C" {
 #define CPSW_PORT_P1_CONTROL_P1_VLAN_LTYPE2_EN_SHIFT   (0x00000015u)
 
 
-/* P1_MAX_BLKS */
+    /* P1_MAX_BLKS */
 #define CPSW_PORT_P1_MAX_BLKS_P1_RX_MAX_BLKS   (0x0000000Fu)
 #define CPSW_PORT_P1_MAX_BLKS_P1_RX_MAX_BLKS_SHIFT   (0x00000000u)
 
@@ -497,7 +497,7 @@ extern "C" {
 #define CPSW_PORT_P1_MAX_BLKS_P1_TX_MAX_BLKS_SHIFT   (0x00000004u)
 
 
-/* P1_BLK_CNT */
+    /* P1_BLK_CNT */
 #define CPSW_PORT_P1_BLK_CNT_P1_RX_BLK_CNT   (0x0000000Fu)
 #define CPSW_PORT_P1_BLK_CNT_P1_RX_BLK_CNT_SHIFT   (0x00000000u)
 
@@ -505,7 +505,7 @@ extern "C" {
 #define CPSW_PORT_P1_BLK_CNT_P1_TX_BLK_CNT_SHIFT   (0x00000004u)
 
 
-/* P1_TX_IN_CTL */
+    /* P1_TX_IN_CTL */
 #define CPSW_PORT_P1_TX_IN_CTL_HOST_BLKS_REM   (0x0F000000u)
 #define CPSW_PORT_P1_TX_IN_CTL_HOST_BLKS_REM_SHIFT   (0x00000018u)
 
@@ -522,7 +522,7 @@ extern "C" {
 #define CPSW_PORT_P1_TX_IN_CTL_TX_RATE_EN_SHIFT   (0x00000014u)
 
 
-/* P1_PORT_VLAN */
+    /* P1_PORT_VLAN */
 #define CPSW_PORT_P1_PORT_VLAN_PORT_CFI   (0x00001000u)
 #define CPSW_PORT_P1_PORT_VLAN_PORT_CFI_SHIFT   (0x0000000Cu)
 
@@ -533,7 +533,7 @@ extern "C" {
 #define CPSW_PORT_P1_PORT_VLAN_PORT_VID_SHIFT   (0x00000000u)
 
 
-/* P1_TX_PRI_MAP */
+    /* P1_TX_PRI_MAP */
 #define CPSW_PORT_P1_TX_PRI_MAP_PRI0   (0x00000003u)
 #define CPSW_PORT_P1_TX_PRI_MAP_PRI0_SHIFT   (0x00000000u)
 
@@ -559,7 +559,7 @@ extern "C" {
 #define CPSW_PORT_P1_TX_PRI_MAP_PRI7_SHIFT   (0x0000001Cu)
 
 
-/* P1_TS_SEQ_MTYPE */
+    /* P1_TS_SEQ_MTYPE */
 #define CPSW_PORT_P1_TS_SEQ_MTYPE_P1_TS_MSG_TYPE_EN   (0x0000FFFFu)
 #define CPSW_PORT_P1_TS_SEQ_MTYPE_P1_TS_MSG_TYPE_EN_SHIFT   (0x00000000u)
 
@@ -567,7 +567,7 @@ extern "C" {
 #define CPSW_PORT_P1_TS_SEQ_MTYPE_P1_TS_SEQ_ID_OFFSET_SHIFT   (0x00000010u)
 
 
-/* P1_SA_LO */
+    /* P1_SA_LO */
 #define CPSW_PORT_P1_SA_LO_MACSRCADDR_15_8   (0x000000FFu)
 #define CPSW_PORT_P1_SA_LO_MACSRCADDR_15_8_SHIFT   (0x00000000u)
 
@@ -575,7 +575,7 @@ extern "C" {
 #define CPSW_PORT_P1_SA_LO_MACSRCADDR_7_0_SHIFT   (0x00000008u)
 
 
-/* P1_SA_HI */
+    /* P1_SA_HI */
 #define CPSW_PORT_P1_SA_HI_MACSRCADDR_23_16   (0xFF000000u)
 #define CPSW_PORT_P1_SA_HI_MACSRCADDR_23_16_SHIFT   (0x00000018u)
 
@@ -589,7 +589,7 @@ extern "C" {
 #define CPSW_PORT_P1_SA_HI_MACSRCADDR_47_40_SHIFT   (0x00000000u)
 
 
-/* P1_SEND_PERCENT */
+    /* P1_SEND_PERCENT */
 #define CPSW_PORT_P1_SEND_PERCENT_PRI1_SEND_PERCENT   (0x0000007Fu)
 #define CPSW_PORT_P1_SEND_PERCENT_PRI1_SEND_PERCENT_SHIFT   (0x00000000u)
 
@@ -600,7 +600,7 @@ extern "C" {
 #define CPSW_PORT_P1_SEND_PERCENT_PRI3_SEND_PERCENT_SHIFT   (0x00000010u)
 
 
-/* P1_RX_DSCP_PRI_MAP0 */
+    /* P1_RX_DSCP_PRI_MAP0 */
 #define CPSW_PORT_P1_RX_DSCP_PRI_MAP0_PRI0   (0x00000007u)
 #define CPSW_PORT_P1_RX_DSCP_PRI_MAP0_PRI0_SHIFT   (0x00000000u)
 
@@ -626,7 +626,7 @@ extern "C" {
 #define CPSW_PORT_P1_RX_DSCP_PRI_MAP0_PRI7_SHIFT   (0x0000001Cu)
 
 
-/* P1_RX_DSCP_PRI_MAP1 */
+    /* P1_RX_DSCP_PRI_MAP1 */
 #define CPSW_PORT_P1_RX_DSCP_PRI_MAP1_PRI10   (0x00000700u)
 #define CPSW_PORT_P1_RX_DSCP_PRI_MAP1_PRI10_SHIFT   (0x00000008u)
 
@@ -652,7 +652,7 @@ extern "C" {
 #define CPSW_PORT_P1_RX_DSCP_PRI_MAP1_PRI9_SHIFT   (0x00000004u)
 
 
-/* P1_RX_DSCP_PRI_MAP2 */
+    /* P1_RX_DSCP_PRI_MAP2 */
 #define CPSW_PORT_P1_RX_DSCP_PRI_MAP2_PRI16   (0x00000007u)
 #define CPSW_PORT_P1_RX_DSCP_PRI_MAP2_PRI16_SHIFT   (0x00000000u)
 
@@ -678,7 +678,7 @@ extern "C" {
 #define CPSW_PORT_P1_RX_DSCP_PRI_MAP2_PRI23_SHIFT   (0x0000001Cu)
 
 
-/* P1_RX_DSCP_PRI_MAP3 */
+    /* P1_RX_DSCP_PRI_MAP3 */
 #define CPSW_PORT_P1_RX_DSCP_PRI_MAP3_PRI24   (0x00000007u)
 #define CPSW_PORT_P1_RX_DSCP_PRI_MAP3_PRI24_SHIFT   (0x00000000u)
 
@@ -704,7 +704,7 @@ extern "C" {
 #define CPSW_PORT_P1_RX_DSCP_PRI_MAP3_PRI31_SHIFT   (0x0000001Cu)
 
 
-/* P1_RX_DSCP_PRI_MAP4 */
+    /* P1_RX_DSCP_PRI_MAP4 */
 #define CPSW_PORT_P1_RX_DSCP_PRI_MAP4_PRI32   (0x00000007u)
 #define CPSW_PORT_P1_RX_DSCP_PRI_MAP4_PRI32_SHIFT   (0x00000000u)
 
@@ -730,7 +730,7 @@ extern "C" {
 #define CPSW_PORT_P1_RX_DSCP_PRI_MAP4_PRI39_SHIFT   (0x0000001Cu)
 
 
-/* P1_RX_DSCP_PRI_MAP5 */
+    /* P1_RX_DSCP_PRI_MAP5 */
 #define CPSW_PORT_P1_RX_DSCP_PRI_MAP5_PRI40   (0x00000007u)
 #define CPSW_PORT_P1_RX_DSCP_PRI_MAP5_PRI40_SHIFT   (0x00000000u)
 
@@ -756,7 +756,7 @@ extern "C" {
 #define CPSW_PORT_P1_RX_DSCP_PRI_MAP5_PRI47_SHIFT   (0x0000001Cu)
 
 
-/* P1_RX_DSCP_PRI_MAP6 */
+    /* P1_RX_DSCP_PRI_MAP6 */
 #define CPSW_PORT_P1_RX_DSCP_PRI_MAP6_PRI48   (0x00000007u)
 #define CPSW_PORT_P1_RX_DSCP_PRI_MAP6_PRI48_SHIFT   (0x00000000u)
 
@@ -782,7 +782,7 @@ extern "C" {
 #define CPSW_PORT_P1_RX_DSCP_PRI_MAP6_PRI55_SHIFT   (0x0000001Cu)
 
 
-/* P1_RX_DSCP_PRI_MAP7 */
+    /* P1_RX_DSCP_PRI_MAP7 */
 #define CPSW_PORT_P1_RX_DSCP_PRI_MAP7_PRI56   (0x00000007u)
 #define CPSW_PORT_P1_RX_DSCP_PRI_MAP7_PRI56_SHIFT   (0x00000000u)
 
@@ -808,7 +808,7 @@ extern "C" {
 #define CPSW_PORT_P1_RX_DSCP_PRI_MAP7_PRI63_SHIFT   (0x0000001Cu)
 
 
-/* P2_CONTROL */
+    /* P2_CONTROL */
 #define CPSW_PORT_P2_CONTROL_P2_DSCP_PRI_EN   (0x00010000u)
 #define CPSW_PORT_P2_CONTROL_P2_DSCP_PRI_EN_SHIFT   (0x00000010u)
 
@@ -855,7 +855,7 @@ extern "C" {
 #define CPSW_PORT_P2_CONTROL_P2_VLAN_LTYPE2_EN_SHIFT   (0x00000015u)
 
 
-/* P2_MAX_BLKS */
+    /* P2_MAX_BLKS */
 #define CPSW_PORT_P2_MAX_BLKS_P2_RX_MAX_BLKS   (0x0000000Fu)
 #define CPSW_PORT_P2_MAX_BLKS_P2_RX_MAX_BLKS_SHIFT   (0x00000000u)
 
@@ -863,7 +863,7 @@ extern "C" {
 #define CPSW_PORT_P2_MAX_BLKS_P2_TX_MAX_BLKS_SHIFT   (0x00000004u)
 
 
-/* P2_BLK_CNT */
+    /* P2_BLK_CNT */
 #define CPSW_PORT_P2_BLK_CNT_P2_RX_BLK_CNT   (0x0000000Fu)
 #define CPSW_PORT_P2_BLK_CNT_P2_RX_BLK_CNT_SHIFT   (0x00000000u)
 
@@ -871,7 +871,7 @@ extern "C" {
 #define CPSW_PORT_P2_BLK_CNT_P2_TX_BLK_CNT_SHIFT   (0x00000004u)
 
 
-/* P2_TX_IN_CTL */
+    /* P2_TX_IN_CTL */
 #define CPSW_PORT_P2_TX_IN_CTL_HOST_BLKS_REM   (0x0F000000u)
 #define CPSW_PORT_P2_TX_IN_CTL_HOST_BLKS_REM_SHIFT   (0x00000018u)
 
@@ -888,7 +888,7 @@ extern "C" {
 #define CPSW_PORT_P2_TX_IN_CTL_TX_RATE_EN_SHIFT   (0x00000014u)
 
 
-/* P2_PORT_VLAN */
+    /* P2_PORT_VLAN */
 #define CPSW_PORT_P2_PORT_VLAN_PORT_CFI   (0x00001000u)
 #define CPSW_PORT_P2_PORT_VLAN_PORT_CFI_SHIFT   (0x0000000Cu)
 
@@ -899,7 +899,7 @@ extern "C" {
 #define CPSW_PORT_P2_PORT_VLAN_PORT_VID_SHIFT   (0x00000000u)
 
 
-/* P2_TX_PRI_MAP */
+    /* P2_TX_PRI_MAP */
 #define CPSW_PORT_P2_TX_PRI_MAP_PRI0   (0x00000003u)
 #define CPSW_PORT_P2_TX_PRI_MAP_PRI0_SHIFT   (0x00000000u)
 
@@ -925,7 +925,7 @@ extern "C" {
 #define CPSW_PORT_P2_TX_PRI_MAP_PRI7_SHIFT   (0x0000001Cu)
 
 
-/* P2_TS_SEQ_MTYPE */
+    /* P2_TS_SEQ_MTYPE */
 #define CPSW_PORT_P2_TS_SEQ_MTYPE_P2_TS_MSG_TYPE_EN   (0x0000FFFFu)
 #define CPSW_PORT_P2_TS_SEQ_MTYPE_P2_TS_MSG_TYPE_EN_SHIFT   (0x00000000u)
 
@@ -933,7 +933,7 @@ extern "C" {
 #define CPSW_PORT_P2_TS_SEQ_MTYPE_P2_TS_SEQ_ID_OFFSET_SHIFT   (0x00000010u)
 
 
-/* P2_SA_LO */
+    /* P2_SA_LO */
 #define CPSW_PORT_P2_SA_LO_MACSRCADDR_15_8   (0x000000FFu)
 #define CPSW_PORT_P2_SA_LO_MACSRCADDR_15_8_SHIFT   (0x00000000u)
 
@@ -941,7 +941,7 @@ extern "C" {
 #define CPSW_PORT_P2_SA_LO_MACSRCADDR_7_0_SHIFT   (0x00000008u)
 
 
-/* P2_SA_HI */
+    /* P2_SA_HI */
 #define CPSW_PORT_P2_SA_HI_MACSRCADDR_23_16   (0xFF000000u)
 #define CPSW_PORT_P2_SA_HI_MACSRCADDR_23_16_SHIFT   (0x00000018u)
 
@@ -955,7 +955,7 @@ extern "C" {
 #define CPSW_PORT_P2_SA_HI_MACSRCADDR_47_40_SHIFT   (0x00000000u)
 
 
-/* P2_SEND_PERCENT */
+    /* P2_SEND_PERCENT */
 #define CPSW_PORT_P2_SEND_PERCENT_PRI1_SEND_PERCENT   (0x0000007Fu)
 #define CPSW_PORT_P2_SEND_PERCENT_PRI1_SEND_PERCENT_SHIFT   (0x00000000u)
 
@@ -966,7 +966,7 @@ extern "C" {
 #define CPSW_PORT_P2_SEND_PERCENT_PRI3_SEND_PERCENT_SHIFT   (0x00000010u)
 
 
-/* P2_RX_DSCP_PRI_MAP0 */
+    /* P2_RX_DSCP_PRI_MAP0 */
 #define CPSW_PORT_P2_RX_DSCP_PRI_MAP0_PRI0   (0x00000007u)
 #define CPSW_PORT_P2_RX_DSCP_PRI_MAP0_PRI0_SHIFT   (0x00000000u)
 
@@ -992,7 +992,7 @@ extern "C" {
 #define CPSW_PORT_P2_RX_DSCP_PRI_MAP0_PRI7_SHIFT   (0x0000001Cu)
 
 
-/* P2_RX_DSCP_PRI_MAP1 */
+    /* P2_RX_DSCP_PRI_MAP1 */
 #define CPSW_PORT_P2_RX_DSCP_PRI_MAP1_PRI10   (0x00000700u)
 #define CPSW_PORT_P2_RX_DSCP_PRI_MAP1_PRI10_SHIFT   (0x00000008u)
 
@@ -1018,7 +1018,7 @@ extern "C" {
 #define CPSW_PORT_P2_RX_DSCP_PRI_MAP1_PRI9_SHIFT   (0x00000004u)
 
 
-/* P2_RX_DSCP_PRI_MAP2 */
+    /* P2_RX_DSCP_PRI_MAP2 */
 #define CPSW_PORT_P2_RX_DSCP_PRI_MAP2_PRI16   (0x00000007u)
 #define CPSW_PORT_P2_RX_DSCP_PRI_MAP2_PRI16_SHIFT   (0x00000000u)
 
@@ -1044,7 +1044,7 @@ extern "C" {
 #define CPSW_PORT_P2_RX_DSCP_PRI_MAP2_PRI23_SHIFT   (0x0000001Cu)
 
 
-/* P2_RX_DSCP_PRI_MAP3 */
+    /* P2_RX_DSCP_PRI_MAP3 */
 #define CPSW_PORT_P2_RX_DSCP_PRI_MAP3_PRI24   (0x00000007u)
 #define CPSW_PORT_P2_RX_DSCP_PRI_MAP3_PRI24_SHIFT   (0x00000000u)
 
@@ -1070,7 +1070,7 @@ extern "C" {
 #define CPSW_PORT_P2_RX_DSCP_PRI_MAP3_PRI31_SHIFT   (0x0000001Cu)
 
 
-/* P2_RX_DSCP_PRI_MAP4 */
+    /* P2_RX_DSCP_PRI_MAP4 */
 #define CPSW_PORT_P2_RX_DSCP_PRI_MAP4_PRI32   (0x00000007u)
 #define CPSW_PORT_P2_RX_DSCP_PRI_MAP4_PRI32_SHIFT   (0x00000000u)
 
@@ -1096,7 +1096,7 @@ extern "C" {
 #define CPSW_PORT_P2_RX_DSCP_PRI_MAP4_PRI39_SHIFT   (0x0000001Cu)
 
 
-/* P2_RX_DSCP_PRI_MAP5 */
+    /* P2_RX_DSCP_PRI_MAP5 */
 #define CPSW_PORT_P2_RX_DSCP_PRI_MAP5_PRI40   (0x00000007u)
 #define CPSW_PORT_P2_RX_DSCP_PRI_MAP5_PRI40_SHIFT   (0x00000000u)
 
@@ -1122,7 +1122,7 @@ extern "C" {
 #define CPSW_PORT_P2_RX_DSCP_PRI_MAP5_PRI47_SHIFT   (0x0000001Cu)
 
 
-/* P2_RX_DSCP_PRI_MAP6 */
+    /* P2_RX_DSCP_PRI_MAP6 */
 #define CPSW_PORT_P2_RX_DSCP_PRI_MAP6_PRI48   (0x00000007u)
 #define CPSW_PORT_P2_RX_DSCP_PRI_MAP6_PRI48_SHIFT   (0x00000000u)
 
@@ -1148,7 +1148,7 @@ extern "C" {
 #define CPSW_PORT_P2_RX_DSCP_PRI_MAP6_PRI55_SHIFT   (0x0000001Cu)
 
 
-/* P2_RX_DSCP_PRI_MAP7 */
+    /* P2_RX_DSCP_PRI_MAP7 */
 #define CPSW_PORT_P2_RX_DSCP_PRI_MAP7_PRI56   (0x00000007u)
 #define CPSW_PORT_P2_RX_DSCP_PRI_MAP7_PRI56_SHIFT   (0x00000000u)
 

@@ -34,7 +34,7 @@ typedef timer_common_data_t pwm_data;
  * @param aep async endpoint for the irq to come in on
  */
 seL4_timer_t *sel4platsupport_get_pwm(vspace_t *vspace, simple_t *simple, vka_t *vka,
-        seL4_CPtr aep);
+                                      seL4_CPtr aep);
 
 void sel4platsupport_destroy_pwm(seL4_timer_t *timer, vka_t *vka, vspace_t *vspace);
 

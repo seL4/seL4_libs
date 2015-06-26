@@ -81,19 +81,18 @@ unsigned int MDIOPhyRegRead(unsigned int baseAddr, unsigned int phyAddr,
                             unsigned int regNum, volatile unsigned short *dataPtr)
 {
     /* Wait till transaction completion if any */
-    while(HWREG(baseAddr + MDIO_USERACCESS0) & MDIO_USERACCESS0_GO);
+    while (HWREG(baseAddr + MDIO_USERACCESS0) & MDIO_USERACCESS0_GO);
 
     HWREG(baseAddr + MDIO_USERACCESS0)
-                           = (MDIO_USERACCESS0_READ | MDIO_USERACCESS0_GO
-                              |((regNum & PHY_REG_MASK) << PHY_REG_SHIFT)
-                              |((phyAddr & PHY_ADDR_MASK) << PHY_ADDR_SHIFT));
+        = (MDIO_USERACCESS0_READ | MDIO_USERACCESS0_GO
+           | ((regNum & PHY_REG_MASK) << PHY_REG_SHIFT)
+           | ((phyAddr & PHY_ADDR_MASK) << PHY_ADDR_SHIFT));
 
     /* wait for command completion */
-    while(HWREG(baseAddr + MDIO_USERACCESS0) & MDIO_USERACCESS0_GO);
+    while (HWREG(baseAddr + MDIO_USERACCESS0) & MDIO_USERACCESS0_GO);
 
     /* Store the data if the read is acknowledged */
-    if((HWREG(baseAddr + MDIO_USERACCESS0)) & MDIO_USERACCESS0_ACK)
-    {
+    if ((HWREG(baseAddr + MDIO_USERACCESS0)) & MDIO_USERACCESS0_ACK) {
         *dataPtr = (unsigned short)((HWREG(baseAddr + MDIO_USERACCESS0))
                                     & PHY_DATA_MASK);
         return TRUE;
@@ -117,16 +116,16 @@ void MDIOPhyRegWrite(unsigned int baseAddr, unsigned int phyAddr,
                      unsigned int regNum, unsigned short RegVal)
 {
     /* Wait till transaction completion if any */
-    while(HWREG(baseAddr + MDIO_USERACCESS0) & MDIO_USERACCESS0_GO);
+    while (HWREG(baseAddr + MDIO_USERACCESS0) & MDIO_USERACCESS0_GO);
 
     HWREG(baseAddr + MDIO_USERACCESS0)
-                               = (MDIO_USERACCESS0_WRITE | MDIO_USERACCESS0_GO
-                                  |((regNum & PHY_REG_MASK) << PHY_REG_SHIFT)
-                                  |((phyAddr & PHY_ADDR_MASK) << PHY_ADDR_SHIFT)
-                                  | RegVal);
+        = (MDIO_USERACCESS0_WRITE | MDIO_USERACCESS0_GO
+           | ((regNum & PHY_REG_MASK) << PHY_REG_SHIFT)
+           | ((phyAddr & PHY_ADDR_MASK) << PHY_ADDR_SHIFT)
+           | RegVal);
 
     /* wait for command completion*/
-    while(HWREG(baseAddr + MDIO_USERACCESS0) & MDIO_USERACCESS0_GO);
+    while (HWREG(baseAddr + MDIO_USERACCESS0) & MDIO_USERACCESS0_GO);
 }
 /**
  * \brief   Reads the alive status of all PHY connected to this MDIO.
@@ -171,20 +170,20 @@ unsigned int MDIOPhyLinkStatusGet(unsigned int baseAddr)
 void MDIOInit(unsigned int baseAddr, unsigned int mdioInputFreq,
               unsigned int mdioOutputFreq)
 {
-   unsigned int clkDiv = (mdioInputFreq/mdioOutputFreq) - 1;
+    unsigned int clkDiv = (mdioInputFreq / mdioOutputFreq) - 1;
 
-   HWREG(baseAddr + MDIO_CONTROL) = ((clkDiv & MDIO_CONTROL_CLKDIV)
-                                     | MDIO_CONTROL_ENABLE 
-                                     | MDIO_CONTROL_PREAMBLE
-                                     | MDIO_CONTROL_FAULTENB);
+    HWREG(baseAddr + MDIO_CONTROL) = ((clkDiv & MDIO_CONTROL_CLKDIV)
+                                      | MDIO_CONTROL_ENABLE
+                                      | MDIO_CONTROL_PREAMBLE
+                                      | MDIO_CONTROL_FAULTENB);
 }
 
 /**
- * \brief   Saves the MDIO register context. Note that only MDIO control 
+ * \brief   Saves the MDIO register context. Note that only MDIO control
  *          register context is saved here.
  *
  * \param   baseAddr       Base Address of the MDIO Module Registers.
- * \param   contextPtr     Pointer to the structure where MDIO context 
+ * \param   contextPtr     Pointer to the structure where MDIO context
  *                         needs to be saved.
  * \return  None
  *
@@ -195,12 +194,12 @@ void MDIOContextSave(unsigned int baseAddr, MDIOCONTEXT *contextPtr)
 }
 
 /**
- * \brief   Restores the MDIO register context. Note that only MDIO control 
+ * \brief   Restores the MDIO register context. Note that only MDIO control
  *          register context is restored here. Hence enough delay shall be
  *          given after this API
  *
  * \param   baseAddr       Base Address of the MDIO Module Registers.
- * \param   contextPtr     Pointer to the structure where MDIO context 
+ * \param   contextPtr     Pointer to the structure where MDIO context
  *                         needs to be restored from
  * \return  None
  *

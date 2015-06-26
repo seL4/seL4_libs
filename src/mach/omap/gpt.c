@@ -21,8 +21,8 @@
 
 
 seL4_timer_t *
-sel4platsupport_get_gpt(vspace_t *vspace, simple_t *simple, vka_t *vka, seL4_CPtr aep, 
-        gpt_id_t gpt_id, uint32_t prescaler)
+sel4platsupport_get_gpt(vspace_t *vspace, simple_t *simple, vka_t *vka, seL4_CPtr aep,
+                        gpt_id_t gpt_id, uint32_t prescaler)
 {
 
     /* check the id */
@@ -40,12 +40,12 @@ sel4platsupport_get_gpt(vspace_t *vspace, simple_t *simple, vka_t *vka, seL4_CPt
     /* find paddr/irq */
     void *paddr = omap_get_gpt_paddr(gpt_id);
     uint32_t irq = omap_get_gpt_irq(gpt_id);
-  
+
     timer_common_data_t *data = timer_common_init(vspace, simple, vka, aep, irq, paddr);
     timer->data = data;
-    
+
     if (timer->data == NULL) {
-         goto error;
+        goto error;
     }
 
     timer->handle_irq = timer_common_handle_irq;
@@ -72,8 +72,8 @@ error:
     return NULL;
 }
 
-void 
-sel4platsupport_destroy_gpt(seL4_timer_t *timer, vka_t *vka, vspace_t *vspace) 
+void
+sel4platsupport_destroy_gpt(seL4_timer_t *timer, vka_t *vka, vspace_t *vspace)
 {
     timer_stop(timer->timer);
     timer_common_destroy(timer->data, vka, vspace);

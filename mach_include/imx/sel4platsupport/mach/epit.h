@@ -44,7 +44,7 @@ typedef timer_common_data_t epit_data;
  * @param epit_id some platforms have more than one epit, pick one.
  */
 seL4_timer_t *sel4platsupport_get_epit(vspace_t *vspace, simple_t *simple, vka_t *vka,
-        seL4_CPtr aep, uint32_t prescaler, epit_id_t id);
+                                       seL4_CPtr aep, uint32_t prescaler, epit_id_t id);
 
 
 void sel4platsupport_destroy_epit(seL4_timer_t *timer, vka_t *vka, vspace_t *vspace);

@@ -20,7 +20,7 @@
 #include <sel4platsupport/timer.h>
 
 
-/* 
+/*
  * Allocate a cslot for an irq and get the cap for that irq.
  *
  * @param irq_number to get the cap to
@@ -42,7 +42,7 @@ void timer_common_handle_irq(seL4_timer_t *timer, uint32_t irq);
  * @param aep the badged async endpoint that the irq should be delivered to.
  */
 timer_common_data_t *timer_common_init(vspace_t *vspace, simple_t *simple,
-        vka_t *vka, seL4_CPtr aep, uint32_t irq_number, void *paddr);
+                                       vka_t *vka, seL4_CPtr aep, uint32_t irq_number, void *paddr);
 
 /*
  * Something went wrong, clean up everything we did in timer_common_init.

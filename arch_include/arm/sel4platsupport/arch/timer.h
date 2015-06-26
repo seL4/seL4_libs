@@ -14,7 +14,7 @@
 #include <platsupport/timer.h>
 #include <platsupport/plat/timer.h>
 
-#ifdef CONFIG_ARCH_ARM_V7A 
+#ifdef CONFIG_ARCH_ARM_V7A
 #ifdef CONFIG_ARM_CORTEX_A15
 
 seL4_timer_t *sel4platsupport_get_generic_timer(void);

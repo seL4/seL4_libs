@@ -56,9 +56,9 @@
 extern "C" {
 #endif
 
-/**************************************************************************\
-* Register Offsets
-\**************************************************************************/
+    /**************************************************************************\
+    * Register Offsets
+    \**************************************************************************/
 #define EDMA3TC_REVID		(0x0)
 #define EDMA3TC_TCCFG		(0x4)
 #define EDMA3TC_TCSTAT		(0x100)
@@ -87,11 +87,11 @@ extern "C" {
 #define EDMA3TC_DFBIDX		(0x310 + (0x40 * 0))
 #define EDMA3TC_DFMPPRXY	(0x314 + (0x40 * 0))
 
-/**************************************************************************\
-* Field Definition Macros
-\**************************************************************************/
+    /**************************************************************************\
+    * Field Definition Macros
+    \**************************************************************************/
 
-/* DFOPT */
+    /* DFOPT */
 #define EDMA3TC_DFOPT_TCCHEN (0x00400000u)
 #define EDMA3TC_DFOPT_TCCHEN_SHIFT (0x00000016u)
 #define EDMA3TC_DFOPT_TCINTEN (0x00100000u)
@@ -100,7 +100,7 @@ extern "C" {
 #define EDMA3TC_DFOPT_TCC_SHIFT (0x0000000Cu)
 #define EDMA3TC_DFOPT_FWID (0x00000700u)
 #define EDMA3TC_DFOPT_FWID_SHIFT (0x00000008u)
-/*----FWID Tokens----*/
+    /*----FWID Tokens----*/
 #define EDMA3TC_DFOPT_FWID_8BIT (0x00000000u)
 #define EDMA3TC_DFOPT_FWID_16BIT (0x00000001u)
 #define EDMA3TC_DFOPT_FWID_32BIT (0x00000002u)
@@ -122,13 +122,13 @@ extern "C" {
 #define EDMA3TC_DFOPT_SAM (0x00000001u)
 #define EDMA3TC_DFOPT_SAM_SHIFT (0x00000000u)
 
-/* DFSRC */
+    /* DFSRC */
 
 #define EDMA3TC_DFSRC_SADDR (0xFFFFFFFFu)
 #define EDMA3TC_DFSRC_SADDR_SHIFT (0x00000000u)
 
 
-/* DFCNT */
+    /* DFCNT */
 
 #define EDMA3TC_DFCNT_BCNT (0xFFFF0000u)
 #define EDMA3TC_DFCNT_BCNT_SHIFT (0x00000010u)
@@ -137,13 +137,13 @@ extern "C" {
 #define EDMA3TC_DFCNT_ACNT_SHIFT (0x00000000u)
 
 
-/* DFDST */
+    /* DFDST */
 
 #define EDMA3TC_DFDST_DADDR (0xFFFFFFFFu)
 #define EDMA3TC_DFDST_DADDR_SHIFT (0x00000000u)
 
 
-/* DFBIDX */
+    /* DFBIDX */
 
 #define EDMA3TC_DFBIDX_DSTBIDX (0xFFFF0000u)
 #define EDMA3TC_DFBIDX_DSTBIDX_SHIFT (0x00000010u)
@@ -152,14 +152,14 @@ extern "C" {
 #define EDMA3TC_DFBIDX_SRCBIDX_SHIFT (0x00000000u)
 
 
-/* DFMPPRXY */
+    /* DFMPPRXY */
 
 
 #define EDMA3TC_DFMPPRXY_PRIV (0x00000100u)
 #define EDMA3TC_DFMPPRXY_PRIV_SHIFT (0x00000008u)
 #define EDMA3TC_DFMPPRXY_PRIVID (0x0000000Fu)
 #define EDMA3TC_DFMPPRXY_PRIVID_SHIFT (0x00000000u)
-/*----PRIVID Tokens----*/
+    /*----PRIVID Tokens----*/
 #define EDMATC_DFMPPRXY_PRIVID_ARM   (0x00000000u)
 #define EDMATC_DFMPPRXY_PRIVID_DSP   (0x00000001u)
 #define EDMATC_DFMPPRXY_PRIVID_DMAX  (0x00000002u)
@@ -170,18 +170,18 @@ extern "C" {
 #define EDMATC_DFMPPRXY_PRIVID_LCDC  (0x00000007u)
 
 
-/* PID */
+    /* PID */
 
 #define EDMA3TC_PID_PID (0xFFFFFFFFu)
 #define EDMA3TC_PID_PID_SHIFT (0x00000000u)
 
 
-/* TCCFG */
+    /* TCCFG */
 
 
 #define EDMA3TC_TCCFG_DREGDEPTH (0x00000300u)
 #define EDMA3TC_TCCFG_DREGDEPTH_SHIFT (0x00000008u)
-/*----DREGDEPTH Tokens----*/
+    /*----DREGDEPTH Tokens----*/
 #define EDMA3TC_TCCFG_DREGDEPTH_1ENTRY (0x00000000u)
 #define EDMA3TC_TCCFG_DREGDEPTH_2ENTRY (0x00000001u)
 #define EDMA3TC_TCCFG_DREGDEPTH_4ENTRY (0x00000002u)
@@ -189,7 +189,7 @@ extern "C" {
 
 #define EDMA3TC_TCCFG_BUSWIDTH (0x00000030u)
 #define EDMA3TC_TCCFG_BUSWIDTH_SHIFT (0x00000004u)
-/*----BUSWIDTH Tokens----*/
+    /*----BUSWIDTH Tokens----*/
 #define EDMA3TC_TCCFG_BUSWIDTH_32BIT (0x00000000u)
 #define EDMA3TC_TCCFG_BUSWIDTH_64BIT (0x00000001u)
 #define EDMA3TC_TCCFG_BUSWIDTH_128BIT (0x00000002u)
@@ -197,7 +197,7 @@ extern "C" {
 
 #define EDMA3TC_TCCFG_FIFOSIZE (0x00000007u)
 #define EDMA3TC_TCCFG_FIFOSIZE_SHIFT (0x00000000u)
-/*----FIFOSIZE Tokens----*/
+    /*----FIFOSIZE Tokens----*/
 #define EDMA3TC_TCCFG_FIFOSIZE_32BYTE (0x00000000u)
 #define EDMA3TC_TCCFG_FIFOSIZE_64BYTE (0x00000001u)
 #define EDMA3TC_TCCFG_FIFOSIZE_128BYTE (0x00000002u)
@@ -205,7 +205,7 @@ extern "C" {
 #define EDMA3TC_TCCFG_FIFOSIZE_512BYTE (0x00000004u)
 
 
-/* TCSTAT */
+    /* TCSTAT */
 
 
 #define EDMA3TC_TCSTAT_DFSTRTPTR (0x00001800u)
@@ -226,7 +226,7 @@ extern "C" {
 #define EDMA3TC_TCSTAT_PROGBUSY (0x00000001u)
 #define EDMA3TC_TCSTAT_PROGBUSY_SHIFT (0x00000000u)
 
-/* ERRSTAT */
+    /* ERRSTAT */
 
 
 #define EDMA3TC_ERRSTAT_MMRAERR (0x00000008u)
@@ -236,7 +236,7 @@ extern "C" {
 #define EDMA3TC_ERRSTAT_BUSERR (0x00000001u)
 #define EDMA3TC_ERRSTAT_BUSERR_SHIFT (0x00000000u)
 
-/* ERREN */
+    /* ERREN */
 
 
 #define EDMA3TC_ERREN_MMRAERR (0x00000008u)
@@ -247,7 +247,7 @@ extern "C" {
 #define EDMA3TC_ERREN_BUSERR_SHIFT (0x00000000u)
 
 
-/* ERRCLR */
+    /* ERRCLR */
 
 
 #define EDMA3TC_ERRCLR_MMRAERR (0x00000008u)
@@ -257,7 +257,7 @@ extern "C" {
 #define EDMA3TC_ERRCLR_BUSERR (0x00000001u)
 #define EDMA3TC_ERRCLR_BUSERR_SHIFT (0x00000000u)
 
-/* ERRDET */
+    /* ERRDET */
 
 
 #define EDMA3TC_ERRDET_TCCHEN (0x00020000u)
@@ -273,7 +273,7 @@ extern "C" {
 
 #define EDMA3TC_ERRDET_STAT (0x0000000Fu)
 #define EDMA3TC_ERRDET_STAT_SHIFT (0x00000000u)
-/*----STAT Tokens----*/
+    /*----STAT Tokens----*/
 #define EDMA3TC_ERRDET_STAT_NONE (0x00000000u)
 #define EDMA3TC_ERRDET_STAT_READ_ADDRESS (0x00000001u)
 #define EDMA3TC_ERRDET_STAT_READ_PRIVILEGE (0x00000002u)
@@ -287,18 +287,18 @@ extern "C" {
 #define EDMA3TC_ERRDET_STAT_WRITE_EXCLUSIVE (0x0000000Fu)
 
 
-/* ERRCMD */
+    /* ERRCMD */
 
 
 #define EDMA3TC_ERRCMD_EVAL (0x00000001u)
 #define EDMA3TC_ERRCMD_EVAL_SHIFT (0x00000000u)
 
-/* RDRATE */
+    /* RDRATE */
 
 
 #define EDMA3TC_RDRATE_RDRATE (0x00000007u)
 #define EDMA3TC_RDRATE_RDRATE_SHIFT (0x00000000u)
-/*----RDRATE Tokens----*/
+    /*----RDRATE Tokens----*/
 #define EDMA3TC_RDRATE_RDRATE_AFAP (0x00000000u)
 #define EDMA3TC_RDRATE_RDRATE_4CYCLE (0x00000001u)
 #define EDMA3TC_RDRATE_RDRATE_8CYCLE (0x00000002u)
@@ -306,7 +306,7 @@ extern "C" {
 #define EDMA3TC_RDRATE_RDRATE_32CYCLE (0x00000004u)
 
 
-/* SAOPT */
+    /* SAOPT */
 
 
 #define EDMA3TC_SAOPT_TCCHEN (0x00400000u)
@@ -317,7 +317,7 @@ extern "C" {
 #define EDMA3TC_SAOPT_TCC_SHIFT (0x0000000Cu)
 #define EDMA3TC_SAOPT_FWID (0x00000700u)
 #define EDMA3TC_SAOPT_FWID_SHIFT (0x00000008u)
-/*----FWID Tokens----*/
+    /*----FWID Tokens----*/
 #define EDMA3TC_SAOPT_FWID_8BIT (0x00000000u)
 #define EDMA3TC_SAOPT_FWID_16BIT (0x00000001u)
 #define EDMA3TC_SAOPT_FWID_32BIT (0x00000002u)
@@ -343,13 +343,13 @@ extern "C" {
 #define EDMA3TC_SAOPT_SAM (0x00000001u)
 #define EDMA3TC_SAOPT_SAM_SHIFT (0x00000000u)
 
-/* SASRC */
+    /* SASRC */
 
 #define EDMA3TC_SASRC_SADDR (0xFFFFFFFFu)
 #define EDMA3TC_SASRC_SADDR_SHIFT (0x00000000u)
 
 
-/* SACNT */
+    /* SACNT */
 
 #define EDMA3TC_SACNT_BCNT (0xFFFF0000u)
 #define EDMA3TC_SACNT_BCNT_SHIFT (0x00000010u)
@@ -358,13 +358,13 @@ extern "C" {
 #define EDMA3TC_SACNT_ACNT_SHIFT (0x00000000u)
 
 
-/* SADST */
+    /* SADST */
 
 #define EDMA3TC_SADST_DADDR (0xFFFFFFFFu)
 #define EDMA3TC_SADST_DADDR_SHIFT (0x00000000u)
 
 
-/* SABIDX */
+    /* SABIDX */
 
 #define EDMA3TC_SABIDX_DSTBIDX (0xFFFF0000u)
 #define EDMA3TC_SABIDX_DSTBIDX_SHIFT (0x00000010u)
@@ -373,14 +373,14 @@ extern "C" {
 #define EDMA3TC_SABIDX_SRCBIDX_SHIFT (0x00000000u)
 
 
-/* SAMPPRXY */
+    /* SAMPPRXY */
 
 
 #define EDMA3TC_SAMPPRXY_PRIV (0x00000100u)
 #define EDMA3TC_SAMPPRXY_PRIV_SHIFT (0x00000008u)
 #define EDMA3TC_SAMPPRXY_PRIVID (0x0000000Fu)
 #define EDMA3TC_SAMPPRXY_PRIVID_SHIFT (0x00000000u)
-/*----PRIVID Tokens----*/
+    /*----PRIVID Tokens----*/
 #define EDMATC_SAMPPRXY_PRIVID_ARM   (0x00000000u)
 #define EDMATC_SAMPPRXY_PRIVID_DSP   (0x00000001u)
 #define EDMATC_SAMPPRXY_PRIVID_DMAX  (0x00000002u)
@@ -391,39 +391,39 @@ extern "C" {
 #define EDMATC_SAMPPRXY_PRIVID_LCDC  (0x00000007u)
 
 
-/* SACNTRLD */
+    /* SACNTRLD */
 
 
 #define EDMA3TC_SACNTRLD_ACNTRLD (0x0000FFFFu)
 #define EDMA3TC_SACNTRLD_ACNTRLD_SHIFT (0x00000000u)
 
 
-/* SASRCBREF */
+    /* SASRCBREF */
 
 #define EDMA3TC_SASRCBREF_SADDRBREF (0xFFFFFFFFu)
 #define EDMA3TC_SASRCBREF_SADDRBREF_SHIFT (0x00000000u)
 
 
-/* SADSTBREF */
+    /* SADSTBREF */
 
 #define EDMA3TC_SADSTBREF_DADDRBREF (0xFFFFFFFFu)
 #define EDMA3TC_SADSTBREF_DADDRBREF_SHIFT (0x00000000u)
 
 
-/* DFCNTRLD */
+    /* DFCNTRLD */
 
 
 #define EDMA3TC_DFCNTRLD_ACNTRLD (0x0000FFFFu)
 #define EDMA3TC_DFCNTRLD_ACNTRLD_SHIFT (0x00000000u)
 
 
-/* DFSRCBREF */
+    /* DFSRCBREF */
 
 #define EDMA3TC_DFSRCBREF_SADDRBREF (0xFFFFFFFFu)
 #define EDMA3TC_DFSRCBREF_SADDRBREF_SHIFT (0x00000000u)
 
 
-/* DFDSTBREF */
+    /* DFDSTBREF */
 
 #define EDMA3TC_DFDSTBREF_DADDRBREF (0xFFFFFFFFu)
 #define EDMA3TC_DFDSTBREF_DADDRBREF_SHIFT (0x00000000u)

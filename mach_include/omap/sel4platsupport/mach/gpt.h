@@ -39,7 +39,7 @@ typedef timer_common_data_t gpt_data;
  * @param gpt_id some platforms have more than one gpt, pick one.
  */
 seL4_timer_t *sel4platsupport_get_gpt(vspace_t *vspace, simple_t *simple, vka_t *vka,
-        seL4_CPtr aep, gpt_id_t id, uint32_t prescaler);
+                                      seL4_CPtr aep, gpt_id_t id, uint32_t prescaler);
 
 void sel4platsupport_destroy_gpt(seL4_timer_t *timer, vka_t *vka, vspace_t *vspace);
 

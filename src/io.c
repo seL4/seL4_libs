@@ -12,7 +12,10 @@
 
 #include <simple/simple.h>
 #include <sel4platsupport/io.h>
-
+#ifdef ARCH_ARM
+#include <platsupport/clock.h>
+#include <platsupport/mux.h>
+#endif
 #include <utils/util.h>
 #include <sel4utils/util.h>
 #include <sel4utils/mapping.h>
@@ -43,18 +46,19 @@ typedef struct sel4platsupport_io_mapper_cookie {
     io_mapping_t *head;
 } sel4platsupport_io_mapper_cookie_t;
 
-static io_mapping_t *new_unmapped_node(void *addr) {
+static io_mapping_t *new_unmapped_node(void *addr)
+{
     io_mapping_t *ret = (io_mapping_t*)malloc(sizeof(*ret));
     if (!ret) {
         return NULL;
     }
     *ret = (io_mapping_t) {
         .was_mapped = 0,
-        .returned_addr = addr,
-        .next = NULL,
-        .prev = NULL,
-        .caps = NULL,
-        .mapped_addr = NULL
+         .returned_addr = addr,
+          .next = NULL,
+           .prev = NULL,
+            .caps = NULL,
+             .mapped_addr = NULL
     };
     return ret;
 }
@@ -176,10 +180,10 @@ sel4platsupport_map_paddr_with_page_size(sel4platsupport_io_mapper_cookie_t *io_
         /* fill out and insert the node */
         *node = (io_mapping_t) {
             .mapped_addr = vaddr,
-            .returned_addr = vaddr + offset,
-            .num_pages = num_pages,
-            .page_size = page_size_bits,
-            .caps = frames
+             .returned_addr = vaddr + offset,
+              .num_pages = num_pages,
+               .page_size = page_size_bits,
+                .caps = frames
         };
         _insert_node(io_mapper, node);
         return vaddr + offset;
@@ -244,7 +248,7 @@ sel4platsupport_map_paddr(void *cookie, uintptr_t paddr, size_t size, int cached
      * are in contiguous virtual address if there is more than one.
      * In both cases we will try and use the largest frame size possible */
     sel4platsupport_io_mapper_cookie_t* io_mapper = (sel4platsupport_io_mapper_cookie_t*)cookie;
-  
+
 
     int frame_size_index = 0;
     /* find the largest reasonable frame size */
@@ -254,7 +258,7 @@ sel4platsupport_map_paddr(void *cookie, uintptr_t paddr, size_t size, int cached
         }
         frame_size_index++;
     }
-    
+
     /* try mapping in this and all smaller frame sizes until something works */
     for (int i = frame_size_index; i >= 0; i--) {
         void *result = sel4platsupport_map_paddr_with_page_size(io_mapper, paddr, size, sel4_supported_page_sizes[i], cached);
@@ -299,8 +303,8 @@ sel4platsupport_unmap_vaddr(void *cookie, void *vaddr, size_t size)
     vspace_t *vspace = &io_mapper->vspace;
     vka_t *vka = &io_mapper->vka;
 
-    vspace_unmap_pages(vspace, mapping->mapped_addr, mapping->num_pages, mapping->page_size, 
-            VSPACE_PRESERVE);
+    vspace_unmap_pages(vspace, mapping->mapped_addr, mapping->num_pages, mapping->page_size,
+                       VSPACE_PRESERVE);
 
     for (int i = 0; i < mapping->num_pages; i++) {
         cspacepath_t path;
@@ -323,12 +327,33 @@ sel4platsupport_new_io_mapper(simple_t simple, vspace_t vspace, vka_t vka, ps_io
     }
     *cookie = (sel4platsupport_io_mapper_cookie_t) {
         .vspace = vspace,
-        .simple = simple,
-        .vka = vka};
+         .simple = simple,
+          .vka = vka
+    };
     *io_mapper = (ps_io_mapper_t) {
         .cookie = cookie,
-        .io_map_fn = sel4platsupport_map_paddr,
-        .io_unmap_fn = sel4platsupport_unmap_vaddr
-        };
+         .io_map_fn = sel4platsupport_map_paddr,
+          .io_unmap_fn = sel4platsupport_unmap_vaddr
+    };
     return 0;
 }
+
+int
+sel4platsupport_new_io_ops(simple_t simple, vspace_t vspace, vka_t vka, ps_io_ops_t *io_ops)
+{
+    int err;
+    err = sel4platsupport_new_io_mapper(simple, vspace, vka, &io_ops->io_mapper);
+    if (err) {
+        return err;
+    }
+#ifdef ARCH_ARM
+    /* We don't consider these as failures */
+    err = clock_sys_init(io_ops, &io_ops->clock_sys);
+    (void)err;
+    err = mux_sys_init(io_ops, &io_ops->mux_sys);
+    (void)err;
+#endif
+    return 0;
+}
+
+

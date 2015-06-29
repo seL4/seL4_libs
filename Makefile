@@ -23,8 +23,11 @@ ASMFILES := $(patsubst $(SOURCE_DIR)/%,%,$(wildcard ${SOURCE_DIR}/src/arch/$(ARC
 HDRFILES := \
     $(wildcard ${SOURCE_DIR}/include/*) \
     $(wildcard ${SOURCE_DIR}/plat_include/$(PLAT)/*) \
-    $(wildcard ${SOURCE_DIR}/arch_include/${ARCH}/*) \
-    $(wildcard ${SOURCE_DIR}/mach_include/${MACH}/*) 
+    $(wildcard ${SOURCE_DIR}/arch_include/${ARCH}/*)
+
+ifneq ($(MACH),)
+HDRFILES += $(wildcard ${SOURCE_DIR}/mach_include/$(MACH)/*)
+endif
 
 CFLAGS += -W -Wall
 

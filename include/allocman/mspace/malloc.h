@@ -13,6 +13,7 @@
 
 #include <autoconf.h>
 #include <sel4/types.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <allocman/mspace/mspace.h>
 

@@ -10,6 +10,7 @@
 #ifndef _SEL4UTILS_ARCH_UTIL_H
 #define _SEL4UTILS_ARCH_UTIL_H
 
+#include <stdint.h>
 #include <sel4/sel4.h>
 #include <sel4/arch/pfIPC.h>
 #include <sel4/arch/exIPC.h>

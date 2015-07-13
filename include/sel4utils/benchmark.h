@@ -14,8 +14,9 @@
 /* entire ipc buffer except tag register (word 0) */
 #define MAX_IPC_BUFFER (1024 - 1)
 
+#include <stdio.h>
+
 #include <sel4/simple_types.h>
-#include <sel4/printf.h>
 
 // Include seL4_BenchmarkLogSize and seL4_BenchmarkDumpLog.
 #include <sel4/arch/syscalls.h>
@@ -35,18 +36,18 @@ seL4_BenchmarkDumpFullLog()
         seL4_Uint32 requested = chunk > MAX_IPC_BUFFER ? MAX_IPC_BUFFER : chunk;
         seL4_Uint32 recorded = seL4_BenchmarkDumpLog(j, requested);
         for (seL4_Uint32 i = 0; i < recorded; i++) {
-            seL4_Printf("%u\t", seL4_GetMR(i));
+            printf("%u\t", seL4_GetMR(i));
         }
-        seL4_Printf("\n");
+        printf("\n");
         /* we filled the log buffer */
         if (requested != recorded) {
-            seL4_Printf("Dumped %u of %u potential logs\n", j + recorded, potential_size);
+            printf("Dumped %u of %u potential logs\n", j + recorded, potential_size);
             return;
         }
     }
 
     /* logged amount was smaller than log buffer */
-    seL4_Printf("Dumped entire log, size %u\n", potential_size);
+    printf("Dumped entire log, size %u\n", potential_size);
 }
 
 #endif // __SEL4_BENCHMARK_H

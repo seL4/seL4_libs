@@ -16,26 +16,28 @@
  * @param x Pointer to integer to increment.
  * @param[out] oldval Previous value of the integer. May be written to even if
  *   the increment fails.
+ * @param memorder The memory order to enforce
  * @return 0 if the increment succeeds, non-zero if it would cause an overflow.
  */
-int sync_atomic_increment_safe(volatile int *x, int *oldval);
+int sync_atomic_increment_safe(volatile int *x, int *oldval, int memorder);
 
 /** \brief Atomically decrement an integer, accounting for possible overflow.
  *
  * @param x Pointer to integer to decrement.
  * @param[out] oldval Previous value of the integer. May be written to even if
  *   the decrement fails.
+ * @param success_memorder The memory order to enforce if the decrement is successful
  * @return 0 if the decrement succeeds, non-zero if it would cause an overflow.
  */
-int sync_atomic_decrement_safe(volatile int *x, int *oldval);
+int sync_atomic_decrement_safe(volatile int *x, int *oldval, int success_memorder);
 
 /* Atomically increment an integer and return its new value. */
-int sync_atomic_increment(volatile int *x);
+int sync_atomic_increment(volatile int *x, int memorder);
 
 /* Atomically decrement an integer and return its new value. */
-int sync_atomic_decrement(volatile int *x);
+int sync_atomic_decrement(volatile int *x, int memorder);
 
 /* Atomic CAS. Returns the old value. */
-int sync_atomic_compare_and_swap(volatile int *x, int oldval, int newval);
+int sync_atomic_compare_and_swap(volatile int *x, int oldval, int newval, int success_memorder);
 
 #endif

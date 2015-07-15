@@ -40,6 +40,7 @@ int sync_recursive_mutex_lock(sync_recursive_mutex_t *mutex) {
     if (thread_id() != mutex->owner) {
         /* We don't already have the mutex. */
         (void)seL4_Wait(mutex->aep, NULL);
+        __atomic_thread_fence(__ATOMIC_ACQUIRE);
         assert(mutex->owner == NULL);
         mutex->owner = thread_id();
         assert(mutex->held == 0);
@@ -62,7 +63,7 @@ int sync_recursive_mutex_unlock(sync_recursive_mutex_t *mutex) {
     mutex->held--;
     if (mutex->held == 0) {
         /* This was the outermost lock we held. Wake the next person up. */
-        mutex->owner = NULL;
+        __atomic_store_n(&mutex->owner, NULL, __ATOMIC_RELEASE);
         seL4_Notify(mutex->aep, 1);
     }
     return 0;

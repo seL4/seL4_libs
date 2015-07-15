@@ -23,25 +23,27 @@ int sync_sem_bare_wait(seL4_CPtr ep, volatile int *value) {
 #endif
     assert(value != NULL);
     int oldval;
-    int result = sync_atomic_decrement_safe(value, &oldval);
+    int result = sync_atomic_decrement_safe(value, &oldval, __ATOMIC_ACQUIRE);
     if (result != 0) {
         /* Failed decrement; too many outstanding lock holders. */
         return -1;
     }
     if (oldval <= 0) {
         seL4_Wait(ep, NULL);
+        /* Even though we performed an acquire barrier during the atomic
+         * decrement we did not actually have the lock yet, so we have
+         * to do another one now */
+        __atomic_thread_fence(__ATOMIC_ACQUIRE);
     }
-    __sync_synchronize();
     return 0;
 }
 
 int sync_sem_bare_trywait(seL4_CPtr ep UNUSED, volatile int *value) {
     int val = *value;
     while (val > 0) {
-        int oldval = sync_atomic_compare_and_swap(value, val, val - 1);
+        int oldval = sync_atomic_compare_and_swap(value, val, val - 1, __ATOMIC_ACQUIRE);
         if (oldval == val) {
             /* We got it! */
-            __sync_synchronize();
             return 0;
         }
         /* We didn't get it. */
@@ -57,12 +59,11 @@ int sync_sem_bare_post(seL4_CPtr ep, volatile int *value) {
     assert(seL4_DebugCapIdentify(ep) == 4);
 #endif
     assert(value != NULL);
-    __sync_synchronize();
     /* We can do an "unsafe" increment here because we know the lock cannot be
      * full due to ourselves having been able to acquire it.
      */
     assert(*value < INT_MAX);
-    int v = sync_atomic_increment(value);
+    int v = sync_atomic_increment(value, __ATOMIC_RELEASE);
     if (v <= 0) {
         seL4_Notify(ep, 0);
     }

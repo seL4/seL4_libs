@@ -18,20 +18,18 @@ int sync_spinlock_init(sync_spinlock_t *lock) {
 }
 
 int sync_spinlock_lock(sync_spinlock_t *lock) {
-    while (!__sync_bool_compare_and_swap(lock, 0, 1));
+    int expected = 0;
+    while (!__atomic_compare_exchange_n(lock, &expected, 1, 1, __ATOMIC_ACQUIRE, __ATOMIC_RELAXED));
     return 0;
 }
 
 int sync_spinlock_trylock(sync_spinlock_t *lock) {
-    return !__sync_bool_compare_and_swap(lock, 0, 1);
+    int expected = 0;
+    return !__atomic_compare_exchange_n(lock, &expected, 1, 0, __ATOMIC_ACQUIRE, __ATOMIC_RELAXED);
 }
 
 int sync_spinlock_unlock(sync_spinlock_t *lock) {
-    int result UNUSED = __sync_bool_compare_and_swap(lock, 1, 0);
-    /* This should have succeeded because we should have been the (only) holder
-     * of the lock.
-     */
-    assert(result == 1);
+    __atomic_store_n(lock, 0, __ATOMIC_RELEASE);
     return 0;
 }
 

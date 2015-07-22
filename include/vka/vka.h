@@ -197,6 +197,11 @@ static inline void vka_cspace_free(vka_t *vka, seL4_CPtr slot)
     vka->cspace_free(vka->data, slot);
 }
 
+static inline void vka_cspace_free_path(vka_t *vka, cspacepath_t path) 
+{
+    vka_cspace_free(vka, path.capPtr);
+}
+
 static inline int vka_utspace_alloc(vka_t *vka, const cspacepath_t *dest, seL4_Word type, seL4_Word size_bits, uint32_t *res)
 {
     assert(vka);

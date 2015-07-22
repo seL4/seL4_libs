@@ -176,5 +176,24 @@ struct irq_data* irq_server_register_irq(irq_server_t irq_server, irq_t irq,
  */
 void irq_server_handle_irq_ipc(irq_server_t irq_server);
 
+/**
+ * Waits on the IRQ delivery endpoint for the next IRQ.
+ * If an IPC is received, but the label does not match that which was assigned
+ * to the IRQ server, the message info and badge are returned to the caller,
+ * much like seL4_Wait(...). If the label does match,
+ * irq_server_handle_irq_ipc(...) will be called before returning.
+ * @param[in]  irq_server  A handle to the IRQ server
+ * @param[out] badge_ret   If badge_ret is not NULL, the received badge will be
+ *                         written to badge_ret.
+ * @return                 The seL4_MessageInfo_t structure as provided by the
+ *                         seL4 kernel in response to a seL4_Wait call. The
+ *                         caller may check that the label matches that which
+ *                         was registered for the IRQ server in order to
+ *                         determine if the received event was destined for the
+ *                         IRQ server or if the thread was activated by some
+ *                         other IPC event.
+ */
+seL4_MessageInfo_t irq_server_wait_for_irq(irq_server_t irq_server, seL4_Word* badge_ret);
+
 #endif /* (defined CONFIG_LIB_SEL4_VKA && defined CONFIG_LIB_SEL4_VSPACE) */
 #endif /* SEL4UTILS_IRQ_SERVER_H */

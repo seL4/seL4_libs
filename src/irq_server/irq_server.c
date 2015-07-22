@@ -388,4 +388,24 @@ irq_server_new(vspace_t* vspace, vka_t* vka, seL4_CPtr cspace, seL4_Word priorit
     return 0;
 }
 
+
+seL4_MessageInfo_t
+irq_server_wait_for_irq(irq_server_t irq_server, seL4_Word* badge_ret)
+{
+    seL4_MessageInfo_t msginfo;
+    seL4_Word badge;
+
+    /* Wait for an event */
+    msginfo = seL4_Wait(irq_server->delivery_ep, &badge);
+    if (badge_ret) {
+        *badge_ret = badge;
+    }
+
+    /* Forward to IRQ handlers */
+    if (seL4_MessageInfo_get_label(msginfo) == irq_server->label) {
+        irq_server_handle_irq_ipc(irq_server);
+    }
+    return msginfo;
+}
+
 #endif /* (defined CONFIG_LIB_SEL4_VKA && defined CONFIG_LIB_SEL4_VSPACE) */

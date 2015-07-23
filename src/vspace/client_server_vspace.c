@@ -351,7 +351,7 @@ int sel4utils_cs_vspace_set_root(vspace_t *vspace, seL4_CPtr page_directory)
 {
     assert(vspace);
 
-    client_server_vspace_t *cs_vspace = (client_server_vspace_t*)vspace->data;  
+    client_server_vspace_t *cs_vspace = (client_server_vspace_t*)vspace->data;
     cs_vspace->translation_data.page_directory = page_directory;
 
     return 0;

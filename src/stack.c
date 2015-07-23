@@ -15,12 +15,12 @@
 #include <utils/stack.h>
 
 void *
-sel4utils_run_on_stack(vspace_t *vspace, void *(*func)(void *arg), void *arg)
+sel4utils_run_on_stack(vspace_t *vspace, void * (*func)(void *arg), void *arg)
 {
     void *stack_top = vspace_new_stack(vspace);
     if (stack_top == NULL) {
         LOG_ERROR("Failed to allocate new stack\n");
-        return (void*)-1;
+        return (void*)(-1);
     }
 
     return utils_run_on_stack(stack_top, func, arg);

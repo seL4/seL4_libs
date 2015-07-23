@@ -179,8 +179,10 @@ static void dma_cache_op(void *cookie, void *addr, size_t size, dma_cache_op_t o
     uintptr_t cur = (uintptr_t)addr;
     while (cur < end) {
         uintptr_t top = ROUND_UP(cur + 1, PAGE_SIZE_4K);
-        if (top > end) top = end;
-        switch(op) {
+        if (top > end) {
+            top = end;
+        }
+        switch (op) {
         case DMA_CACHE_OP_CLEAN:
             seL4_ARCH_PageDirectory_Clean_Data(root, (seL4_Word)cur, (seL4_Word)top);
             break;

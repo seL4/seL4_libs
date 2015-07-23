@@ -23,6 +23,6 @@
  *        Note: it would be unwise to write func such that it returns -1.
  *
  */
-void *sel4utils_run_on_stack(vspace_t *vspace, void *(*func)(void *arg), void *arg);
+void *sel4utils_run_on_stack(vspace_t *vspace, void * (*func)(void *arg), void *arg);
 
 #endif /* __SEL4UTILS_STACK_H */

@@ -12,6 +12,7 @@
 #include <sel4/sel4.h>
 #include <stddef.h>
 #include <stdio.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sel4debug/faults.h>

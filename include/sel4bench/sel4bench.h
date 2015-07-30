@@ -11,6 +11,9 @@
 #ifndef __SEL4BENCH_H__
 #define __SEL4BENCH_H__
 
+#include <stddef.h>
+#include <stdint.h>
+
 #include <sel4/sel4.h>
 #include <sel4bench/arch/sel4bench.h>
 

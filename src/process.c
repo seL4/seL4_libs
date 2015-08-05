@@ -463,6 +463,7 @@ int sel4utils_configure_process_custom(sel4utils_process_t *process, vka_t *vka,
                                                              seL4_WordBits - config.one_level_cspace_size_bits);
 
     /* create a page directory */
+    process->own_vspace = config.create_vspace;
     if (config.create_vspace) {
         error = vka_alloc_vspace_root(vka, &process->pd);
         if (error) {
@@ -482,6 +483,7 @@ int sel4utils_configure_process_custom(sel4utils_process_t *process, vka_t *vka,
         process->pd = config.page_dir;
     }
 
+    process->own_cspace = config.create_cspace;
     if (config.create_cspace) {
         if (create_cspace(vka, config.one_level_cspace_size_bits, process, cspace_root_data) != 0) {
             goto error;
@@ -594,13 +596,16 @@ sel4utils_destroy_process(sel4utils_process_t *process, vka_t *vka)
     sel4utils_clean_up_thread(vka, &process->vspace, &process->thread);
 
     /* destroy the cnode */
-    vka_free_object(vka, &process->cspace);
+    if (process->own_cspace) {
+        vka_free_object(vka, &process->cspace);
+    }
 
     /* tear down the vspace */
-    vspace_tear_down(&process->vspace, VSPACE_FREE);
-
-    /* free any objects created by the vspace */
-    clear_objects(process, vka);
+    if (process->own_vspace) {
+        vspace_tear_down(&process->vspace, VSPACE_FREE);
+        /* free any objects created by the vspace */
+        clear_objects(process, vka);
+    }
 
     /* destroy the endpoint */
     if (process->fault_endpoint.cptr != 0) {
@@ -608,7 +613,9 @@ sel4utils_destroy_process(sel4utils_process_t *process, vka_t *vka)
     }
 
     /* destroy the page directory */
-    vka_free_object(vka, &process->pd);
+    if (process->own_vspace) {
+        vka_free_object(vka, &process->pd);
+    }
 }
 
 #endif /*(defined CONFIG_LIB_SEL4_VKA && defined CONFIG_LIB_SEL4_VSPACE)*/

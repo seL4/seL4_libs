@@ -47,6 +47,8 @@ typedef struct {
      * you want to implement */
     int num_elf_regions;
     sel4utils_elf_region_t *elf_regions;
+    bool own_vspace;
+    bool own_cspace;
 } sel4utils_process_t;
 
 /* sel4utils processes start with some caps in their cspace.

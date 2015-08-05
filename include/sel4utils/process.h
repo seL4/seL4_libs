@@ -21,6 +21,8 @@
 #include <sel4utils/vspace.h>
 #include <sel4utils/elf.h>
 
+#define WORD_STRING_SIZE ((CONFIG_WORD_SIZE / 10) + 1)
+
 typedef struct object_node object_node_t;
 
 struct object_node {
@@ -240,6 +242,18 @@ void sel4utils_destroy_process(sel4utils_process_t *process, vka_t *vka);
  * when sel4utils_destroy_process is called.
  */
 void sel4utils_allocated_object(void *cookie, vka_object_t object);
+
+/*
+ * Create c-formatted argument list to pass to a process from arbitrarily long amount of words.
+ *
+ * @param strings empty 2d array of chars to populate with word strings.
+ * @param argv empty 1d array of char pointers which will be set up with pointers to 
+ *             strings in strings.
+ * @param argc number of words
+ * @param ... list of words to create arguments from. 
+ *
+ */
+void sel4utils_create_word_args(char strings[][WORD_STRING_SIZE], char *argv[], int argc, ...);
 
 #endif /* (defined CONFIG_LIB_SEL4_VSPACE && defined CONFIG_LIB_SEL4_VKA) */
 #endif /* SEL4UTILS_PROCESS_H */

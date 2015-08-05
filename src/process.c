@@ -18,6 +18,7 @@
 #include <sel4/sel4.h>
 #include <vka/object.h>
 #include <vka/capops.h>
+#include <stdarg.h>
 #include <sel4utils/vspace.h>
 #include <sel4utils/process.h>
 #include <sel4utils/util.h>
@@ -85,6 +86,22 @@ allocate_next_slot(sel4utils_process_t *process)
     process->cspace_next_free++;
 }
 
+
+void
+sel4utils_create_word_args(char strings[][WORD_STRING_SIZE], char *argv[], int argc, ...)
+{
+    va_list args;
+    va_start(args, argc);
+
+    for (int i = 0; i < argc; i++) {
+        seL4_Word arg = va_arg(args, seL4_Word);
+        argv[i] = strings[i];
+        snprintf(argv[i], WORD_STRING_SIZE, "%d", arg);
+
+    }
+
+    va_end(args);
+}
 
 seL4_CPtr
 sel4utils_mint_cap_to_process(sel4utils_process_t *process, cspacepath_t src, seL4_CapRights rights, seL4_CapData_t data)

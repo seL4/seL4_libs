@@ -245,10 +245,12 @@ fault_handler(char *name, seL4_CPtr endpoint)
     seL4_Word badge;
     seL4_MessageInfo_t info = seL4_Wait(endpoint, &badge);
 
-    sel4utils_print_fault_message(info, name);
+    while (1) {
+        sel4utils_print_fault_message(info, name);
 
-    /* go back to sleep so other things can run */
-    seL4_Wait(endpoint, &badge);
+        /* go back to sleep so other things can run */
+        seL4_Wait(endpoint, &badge);
+    }
 
     return 0;
 }

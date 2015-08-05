@@ -21,7 +21,7 @@
 #include <sel4utils/vspace.h>
 #include <sel4utils/elf.h>
 
-#define WORD_STRING_SIZE ((CONFIG_WORD_SIZE / 10) + 1)
+#define WORD_STRING_SIZE ((CONFIG_WORD_SIZE / 3) + 1)
 
 typedef struct object_node object_node_t;
 

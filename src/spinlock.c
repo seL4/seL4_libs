@@ -18,8 +18,12 @@ int sync_spinlock_init(sync_spinlock_t *lock) {
 }
 
 int sync_spinlock_lock(sync_spinlock_t *lock) {
-    int expected = 0;
-    while (!__atomic_compare_exchange_n(lock, &expected, 1, 1, __ATOMIC_ACQUIRE, __ATOMIC_RELAXED));
+    while (true) {
+        int expected = 0;
+        if (__atomic_compare_exchange_n(lock, &expected, 1, 1, __ATOMIC_ACQUIRE, __ATOMIC_RELAXED)) {
+            break;
+        }
+    }
     return 0;
 }
 

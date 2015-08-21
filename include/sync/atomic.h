@@ -37,7 +37,4 @@ int sync_atomic_increment(volatile int *x, int memorder);
 /* Atomically decrement an integer and return its new value. */
 int sync_atomic_decrement(volatile int *x, int memorder);
 
-/* Atomic CAS. Returns the old value. */
-int sync_atomic_compare_and_swap(volatile int *x, int oldval, int newval, int success_memorder);
-
 #endif

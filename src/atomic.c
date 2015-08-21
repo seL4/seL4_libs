@@ -21,14 +21,6 @@ int sync_atomic_decrement(volatile int *x, int memorder) {
     return __atomic_sub_fetch(x, 1, memorder);
 }
 
-int sync_atomic_compare_and_swap(volatile int *x, int oldval, int newval, int success_memorder) {
-    if (__atomic_compare_exchange_n(x, &oldval, &newval, 1, success_memorder, __ATOMIC_RELAXED)) {
-        return newval;
-    } else {
-        return oldval;
-    }
-}
-
 int sync_atomic_increment_safe(volatile int *x, int *oldval, int success_memorder) {
     assert(x != NULL);
     assert(oldval != NULL);
@@ -38,7 +30,7 @@ int sync_atomic_increment_safe(volatile int *x, int *oldval, int success_memorde
             /* We would overflow */
             return -1;
         }
-    } while (*oldval != sync_atomic_compare_and_swap(x, *oldval, *oldval + 1, success_memorder));
+    } while (!__atomic_compare_exchange_n(x, oldval, *oldval + 1, 1, success_memorder, __ATOMIC_RELAXED));
     return 0;
 }
 
@@ -51,6 +43,6 @@ int sync_atomic_decrement_safe(volatile int *x, int *oldval, int success_memorde
             /* We would overflow */
             return -1;
         }
-    } while (*oldval != sync_atomic_compare_and_swap(x, *oldval, *oldval - 1, success_memorder));
+    } while (!__atomic_compare_exchange_n(x, oldval, *oldval - 1, 1, success_memorder, __ATOMIC_RELAXED));
     return 0;
 }

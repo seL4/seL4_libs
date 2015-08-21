@@ -41,13 +41,12 @@ int sync_sem_bare_wait(seL4_CPtr ep, volatile int *value) {
 int sync_sem_bare_trywait(seL4_CPtr ep UNUSED, volatile int *value) {
     int val = *value;
     while (val > 0) {
-        int oldval = sync_atomic_compare_and_swap(value, val, val - 1, __ATOMIC_ACQUIRE);
-        if (oldval == val) {
+        if (__atomic_compare_exchange_n(value, &val, val - 1, 1, __ATOMIC_ACQUIRE, __ATOMIC_RELAXED)) {
             /* We got it! */
             return 0;
         }
         /* We didn't get it. */
-        val = oldval;
+        val = *value;
     }
     /* The semaphore is empty. */
     return -1;

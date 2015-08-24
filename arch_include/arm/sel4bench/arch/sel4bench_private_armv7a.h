@@ -11,6 +11,8 @@
 #ifndef __SEL4BENCH_PRIVATE_H__
 #define __SEL4BENCH_PRIVATE_H__
 
+#include <stdint.h>
+
 typedef uint32_t sel4bench_counter_t;
 #define SEL4BENCH_COUNTER_FORMAT "u"
 

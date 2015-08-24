@@ -36,7 +36,28 @@
 #define SEL4BENCH_ARMV7A_EVENT_BRANCH_MISPREDICT           0x10
 #define SEL4BENCH_ARMV7A_EVENT_CCNT                        0x11
 #define SEL4BENCH_ARMV7A_EVENT_EXECUTE_BRANCH_PREDICTABLE  0x12
-
+/* Data memory access */
+#define SEL4BENCH_ARMV7A_EVENT_MEM_ACCESS                  0x13
+/* Level 1 instruction cache access */
+#define SEL4BENCH_ARMV7A_EVENT_L1I_CACHE                   0x14
+/* Level 1 data cache write-back */
+#define SEL4BENCH_ARMV7A_EVENT_L1D_CACHE_WB                0x15
+/* Level 2 data cache access */
+#define SEL4BENCH_ARMV7A_EVENT_L2D_CACHE                   0x16
+/* Level 2 data cache refill */
+#define SEL4BENCH_ARMV7A_EVENT_L2D_CACHE_REFILL            0x17
+/* Level 2 data cache write-back */
+#define SEL4BENCH_ARMV7A_EVENT_L2D_CACHE_WB                0x18
+/* Bus access */
+#define SEL4BENCH_ARMV7A_EVENT_BUS_ACCESS                  0x19
+/* Local memory error */
+#define SEL4BENCH_ARMV7A_EVENT_MEMORY_ERROR                0x1A
+/* Instruction speculatively executed */
+#define SEL4BENCH_ARMV7A_EVENT_INST_SPEC                   0x1B
+/* Instruction architecturally executed, condition code check pass, write to TTBR */
+#define SEL4BENCH_ARMV7A_EVENT_TTBR_WRITE_RETIRED          0x1C
+/* Bus cycle */
+#define SEL4BENCH_ARMV7A_EVENT_BUS_CYCLES                  0x1D
 
 #ifdef CONFIG_ARM_CORTEX_A8
 #include "sel4bench_events_cortexa8.h"

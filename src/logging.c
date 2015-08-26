@@ -43,67 +43,28 @@ void logging_append_log_buffer(log_buffer_t *log_buffer, seL4_Word data) {
     }
 }
 
-void logging_separate_log(log_entry_t *logs, unsigned int num_logs, log_buffer_t *buffers, unsigned int num_buffers) {
+void logging_separate_log(seL4_LogEntry *logs, unsigned int num_logs, log_buffer_t *buffers, unsigned int num_buffers) {
     for (int i = 0; i < num_logs; ++i) {
-        log_entry_t *entry = &logs[i];
+        seL4_LogEntry *entry = &logs[i];
         if (entry->key < num_buffers) {
             logging_append_log_buffer(&buffers[entry->key], entry->data);
         }
     }
 }
 
-static void
-swap(log_entry_t *logs, int i, int j) {
-    log_entry_t tmp = logs[i];
-    logs[i] = logs[j];
-    logs[j] = tmp;
-}
-
 static int
-partition(log_entry_t *logs, int lo, int hi) {
-
-    int pivot;
-    int i = lo - 1;
-    int j = hi + 1;
-
-    /* We will use the middle element as the pivot.
-     * Swap it to the start of the range and use Hoare partitioning. */
-    swap(logs, lo, (hi + lo) / 2);
-
-    pivot = logs[lo].key;
-
-    while (1) {
-        do {
-            ++i;
-        } while (logs[i].key < pivot);
-        do {
-            --j;
-        } while (logs[j].key > pivot);
-        if (i < j) {
-            swap(logs, i, j);
-        } else {
-            return j;
-        }
-    }
+log_compare(const void *a, const void *b) {
+    return ((seL4_LogEntry*)a)->key - ((seL4_LogEntry*)b)->key;
 }
 
-static void
-quicksort(log_entry_t *logs, int lo, int hi) {
-    if (lo < hi) {
-        int pivot_index = partition(logs, lo, hi);
-        quicksort(logs, lo, pivot_index);
-        quicksort(logs, pivot_index + 1, hi);
-    }
+void logging_sort_log(seL4_LogEntry *logs, unsigned int num_logs) {
+    qsort(logs, num_logs, sizeof(seL4_LogEntry), log_compare);
 }
 
-void logging_sort_log(log_entry_t *logs, unsigned int num_logs) {
-    quicksort(logs, 0, num_logs - 1);
-}
-
-void logging_stable_sort_log(log_entry_t *logs, unsigned int num_logs) {
+void logging_stable_sort_log(seL4_LogEntry *logs, unsigned int num_logs) {
     /* Modify the keys so sorting preserves order within a single key */
     for (int i = 0; i < num_logs; ++i) {
-        log_entry_t *entry = &logs[i];
+        seL4_LogEntry *entry = &logs[i];
         entry->key = entry->key * num_logs + i;
     }
 
@@ -111,13 +72,13 @@ void logging_stable_sort_log(log_entry_t *logs, unsigned int num_logs) {
 
     /* Restore the original key values */
     for (int i = 0; i < num_logs; ++i) {
-        log_entry_t *entry = &logs[i];
+        seL4_LogEntry *entry = &logs[i];
         entry->key = entry->key / num_logs;
     }
 }
 
 void
-logging_group_log_by_key(log_entry_t *logs, unsigned int num_logs,
+logging_group_log_by_key(seL4_LogEntry *logs, unsigned int num_logs,
                          unsigned int *sizes, unsigned int *offsets,
                          unsigned int max_groups)
 {

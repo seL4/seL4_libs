@@ -20,7 +20,7 @@
 #include <sel4bench/logging.h>
 
 /* Must be at least the number of logs that can be stored by the kernel */
-#define KERNEL_LOG_BUFFER_SIZE ((1<<20) / sizeof(seL4_LogEntry))
+#define KERNEL_MAX_LOG_SIZE (seL4_LogBufferSize / sizeof(seL4_LogEntry))
 
 /* Copies up to n entries from the kernel's internal log to the specified array,
  * returning the number of entries copied.

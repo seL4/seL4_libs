@@ -212,6 +212,8 @@ void vmm_run(vmm_t *vmm) {
         /* Handle the vm exit */
         vmm_handle_vm_exit(vcpu);
 
+        vmm_check_external_interrupt(vmm);
+
         DPRINTF(5, "VMM main host blocking for another message...\n");
     }
 

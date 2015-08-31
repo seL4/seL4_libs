@@ -42,12 +42,16 @@ static inline void kernel_logging_finalize_log(void) {
 static inline unsigned int kernel_logging_log_size(void) {
 #ifdef CONFIG_BENCHMARK
     return seL4_BenchmarkLogSize();
+#else
+    return 0;
 #endif
 }
 
 static inline unsigned int kernel_logging_dump_log(unsigned int start, unsigned int size) {
 #ifdef CONFIG_BENCHMARK
     return seL4_BenchmarkDumpLog(start, size);
+#else
+    return 0;
 #endif
 }
 

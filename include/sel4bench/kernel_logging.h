@@ -14,13 +14,12 @@
 /* Utilities for extracting logs from the kernel */
 
 #include <sel4/types.h>
-#include <sel4/constants.h>
+#include <sel4/arch/constants.h>
 #include <sel4/simple_types.h>
 #include <sel4/arch/syscalls.h>
 #include <sel4bench/logging.h>
 
-/* Must be at least the number of logs that can be stored by the kernel */
-#define KERNEL_MAX_LOG_SIZE (seL4_LogBufferSize / sizeof(seL4_LogEntry))
+#define KERNEL_MAX_NUM_LOG_ENTRIES (seL4_LogBufferSize / sizeof(seL4_LogEntry))
 
 /* Copies up to n entries from the kernel's internal log to the specified array,
  * returning the number of entries copied.

@@ -27,19 +27,19 @@
 unsigned int kernel_logging_sync_log(seL4_LogEntry log[], unsigned int n);
 
 static inline void kernel_logging_reset_log(void) {
-#ifdef CONFIG_BENCHMARK
+#if CONFIG_MAX_NUM_TRACE_POINTS > 0
     seL4_BenchmarkResetLog();
 #endif
 }
 
 static inline void kernel_logging_finalize_log(void) {
-#ifdef CONFIG_BENCHMARK
+#if CONFIG_MAX_NUM_TRACE_POINTS > 0
     seL4_BenchmarkFinalizeLog();
 #endif
 }
 
 static inline unsigned int kernel_logging_log_size(void) {
-#ifdef CONFIG_BENCHMARK
+#if CONFIG_MAX_NUM_TRACE_POINTS > 0
     return seL4_BenchmarkLogSize();
 #else
     return 0;
@@ -47,7 +47,7 @@ static inline unsigned int kernel_logging_log_size(void) {
 }
 
 static inline unsigned int kernel_logging_dump_log(unsigned int start, unsigned int size) {
-#ifdef CONFIG_BENCHMARK
+#if CONFIG_MAX_NUM_TRACE_POINTS > 0
     return seL4_BenchmarkDumpLog(start, size);
 #else
     return 0;

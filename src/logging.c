@@ -13,7 +13,9 @@
 #include <malloc.h>
 #include <assert.h>
 
-void logging_init_log_buffer(log_buffer_t *log_buffer, unsigned int initial_capacity) {
+void
+logging_init_log_buffer(log_buffer_t *log_buffer, unsigned int initial_capacity)
+{
     log_buffer->capacity = initial_capacity;
     log_buffer->length = 0;
     log_buffer->buffer = (seL4_Word*)malloc(initial_capacity * sizeof(seL4_Word));
@@ -21,7 +23,9 @@ void logging_init_log_buffer(log_buffer_t *log_buffer, unsigned int initial_capa
     assert(log_buffer->buffer);
 }
 
-static void expand_log_buffer(log_buffer_t *log_buffer) {
+static void
+expand_log_buffer(log_buffer_t *log_buffer)
+{
     unsigned int new_capacity = log_buffer->capacity * 2;
     seL4_Word* new_buffer = (seL4_Word*)realloc(log_buffer->buffer, new_capacity * sizeof(seL4_Word));
     if (new_buffer == NULL) {
@@ -33,7 +37,9 @@ static void expand_log_buffer(log_buffer_t *log_buffer) {
     }
 }
 
-void logging_append_log_buffer(log_buffer_t *log_buffer, seL4_Word data) {
+void
+logging_append_log_buffer(log_buffer_t *log_buffer, seL4_Word data)
+{
     if (log_buffer->length == log_buffer->capacity) {
         expand_log_buffer(log_buffer);
     }
@@ -43,42 +49,54 @@ void logging_append_log_buffer(log_buffer_t *log_buffer, seL4_Word data) {
     }
 }
 
-void logging_separate_log(seL4_LogEntry *logs, unsigned int num_logs, log_buffer_t *buffers, unsigned int num_buffers) {
+void
+logging_separate_log(kernel_log_entry_t *logs, unsigned int num_logs, log_buffer_t *buffers, unsigned int num_buffers)
+{
     for (int i = 0; i < num_logs; ++i) {
-        seL4_LogEntry *entry = &logs[i];
-        if (entry->key < num_buffers) {
-            logging_append_log_buffer(&buffers[entry->key], entry->data);
+        kernel_log_entry_t *entry = &logs[i];
+        seL4_Word key = kernel_logging_entry_get_key(entry);
+        seL4_Word data = kernel_logging_entry_get_data(entry);
+        if (key < num_buffers) {
+            logging_append_log_buffer(&buffers[key], data);
         }
     }
 }
 
 static int
-log_compare(const void *a, const void *b) {
-    return ((seL4_LogEntry*)a)->key - ((seL4_LogEntry*)b)->key;
+log_compare(const void *a, const void *b)
+{
+    return kernel_logging_entry_get_key((kernel_log_entry_t*)a) -
+           kernel_logging_entry_get_key((kernel_log_entry_t*)b);
 }
 
-void logging_sort_log(seL4_LogEntry *logs, unsigned int num_logs) {
-    qsort(logs, num_logs, sizeof(seL4_LogEntry), log_compare);
+void
+logging_sort_log(kernel_log_entry_t *logs, unsigned int num_logs)
+{
+    qsort(logs, num_logs, sizeof(kernel_log_entry_t), log_compare);
 }
 
-void logging_stable_sort_log(seL4_LogEntry *logs, unsigned int num_logs) {
+void
+logging_stable_sort_log(kernel_log_entry_t *logs, unsigned int num_logs)
+{
     /* Modify the keys so sorting preserves order within a single key */
     for (int i = 0; i < num_logs; ++i) {
-        seL4_LogEntry *entry = &logs[i];
-        entry->key = entry->key * num_logs + i;
+        kernel_log_entry_t *entry = &logs[i];
+        seL4_Word key = kernel_logging_entry_get_key(entry);
+        key = key * num_logs + i;
     }
 
     logging_sort_log(logs, num_logs);
 
     /* Restore the original key values */
     for (int i = 0; i < num_logs; ++i) {
-        seL4_LogEntry *entry = &logs[i];
-        entry->key = entry->key / num_logs;
+        kernel_log_entry_t *entry = &logs[i];
+        seL4_Word key = kernel_logging_entry_get_key(entry);
+        key = key / num_logs;
     }
 }
 
 void
-logging_group_log_by_key(seL4_LogEntry *logs, unsigned int num_logs,
+logging_group_log_by_key(kernel_log_entry_t *logs, unsigned int num_logs,
                          unsigned int *sizes, unsigned int *offsets,
                          unsigned int max_groups)
 {
@@ -86,7 +104,7 @@ logging_group_log_by_key(seL4_LogEntry *logs, unsigned int num_logs,
     int index = 0;
     for (int i = 0; i < max_groups; ++i) {
         offsets[i] = index;
-        while (index < num_logs && logs[index].key == i) {
+        while (index < num_logs && kernel_logging_entry_get_key(&logs[index]) == i) {
             ++index;
         }
         sizes[i] = index - offsets[i];

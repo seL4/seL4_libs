@@ -17,14 +17,47 @@
 #include <sel4/arch/constants.h>
 #include <sel4/simple_types.h>
 #include <sel4/arch/syscalls.h>
-#include <sel4bench/logging.h>
 
+#if CONFIG_MAX_NUM_TRACE_POINTS > 0
 #define KERNEL_MAX_NUM_LOG_ENTRIES (seL4_LogBufferSize / sizeof(seL4_LogEntry))
+typedef seL4_LogEntry kernel_log_entry_t;
+#else
+#define KERNEL_MAX_NUM_LOG_ENTRIES 0
+typedef void *kernel_log_entry_t;
+#endif
+
+static inline seL4_Word kernel_logging_entry_get_key(kernel_log_entry_t *entry) {
+#if CONFIG_MAX_NUM_TRACE_POINTS > 0
+    return entry->key;
+#else
+    return 0;
+#endif
+}
+
+static inline void kernel_logging_entry_set_key(kernel_log_entry_t *entry, seL4_Word key) {
+#if CONFIG_MAX_NUM_TRACE_POINTS > 0
+    entry->key = key;
+#endif
+}
+
+static inline seL4_Word kernel_logging_entry_get_data(kernel_log_entry_t *entry) {
+#if CONFIG_MAX_NUM_TRACE_POINTS > 0
+    return entry->data;
+#else
+    return 0;
+#endif
+}
+
+static inline void kernel_logging_entry_set_data(kernel_log_entry_t *entry, seL4_Word data) {
+#if CONFIG_MAX_NUM_TRACE_POINTS > 0
+    entry->data = data;
+#endif
+}
 
 /* Copies up to n entries from the kernel's internal log to the specified array,
  * returning the number of entries copied.
  */
-unsigned int kernel_logging_sync_log(seL4_LogEntry log[], unsigned int n);
+unsigned int kernel_logging_sync_log(kernel_log_entry_t log[], unsigned int n);
 
 static inline void kernel_logging_reset_log(void) {
 #if CONFIG_MAX_NUM_TRACE_POINTS > 0

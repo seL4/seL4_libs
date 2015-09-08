@@ -22,7 +22,7 @@
 #include <sel4/arch/syscalls.h>
 
 /**
- * Dump the benchmark log. The kernel must be compiled with CONFIG_BENCHMARK=y,
+ * Dump the benchmark log. The kernel must be compiled with CONFIG_MAX_NUM_TRACE_POINTS > 0,
  * either edit .config manually or add it using "make menuconfig" by selecting
  * "Kernel" -> "seL4 System Parameters" -> "Adds a log buffer to the kernel for instrumentation."
  */

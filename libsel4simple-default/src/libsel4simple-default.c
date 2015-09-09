@@ -13,6 +13,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
+#include <inttypes.h>
 
 #include <sel4/sel4.h>
 #include <sel4debug/debug.h>

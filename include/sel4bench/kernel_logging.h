@@ -26,7 +26,14 @@ typedef seL4_LogEntry kernel_log_entry_t;
 typedef void *kernel_log_entry_t;
 #endif
 
-static inline seL4_Word kernel_logging_entry_get_key(kernel_log_entry_t *entry) {
+/* Copies up to n entries from the kernel's internal log to the specified array,
+ * returning the number of entries copied.
+ */
+unsigned int kernel_logging_sync_log(kernel_log_entry_t log[], unsigned int n);
+
+static inline seL4_Word
+kernel_logging_entry_get_key(kernel_log_entry_t *entry)
+{
 #if CONFIG_MAX_NUM_TRACE_POINTS > 0
     return entry->key;
 #else
@@ -34,13 +41,17 @@ static inline seL4_Word kernel_logging_entry_get_key(kernel_log_entry_t *entry) 
 #endif
 }
 
-static inline void kernel_logging_entry_set_key(kernel_log_entry_t *entry, seL4_Word key) {
+static inline void
+kernel_logging_entry_set_key(kernel_log_entry_t *entry, seL4_Word key)
+{
 #if CONFIG_MAX_NUM_TRACE_POINTS > 0
     entry->key = key;
 #endif
 }
 
-static inline seL4_Word kernel_logging_entry_get_data(kernel_log_entry_t *entry) {
+static inline seL4_Word
+kernel_logging_entry_get_data(kernel_log_entry_t *entry)
+{
 #if CONFIG_MAX_NUM_TRACE_POINTS > 0
     return entry->data;
 #else
@@ -48,30 +59,33 @@ static inline seL4_Word kernel_logging_entry_get_data(kernel_log_entry_t *entry)
 #endif
 }
 
-static inline void kernel_logging_entry_set_data(kernel_log_entry_t *entry, seL4_Word data) {
+static inline void
+kernel_logging_entry_set_data(kernel_log_entry_t *entry, seL4_Word data)
+{
 #if CONFIG_MAX_NUM_TRACE_POINTS > 0
     entry->data = data;
 #endif
 }
 
-/* Copies up to n entries from the kernel's internal log to the specified array,
- * returning the number of entries copied.
- */
-unsigned int kernel_logging_sync_log(kernel_log_entry_t log[], unsigned int n);
-
-static inline void kernel_logging_reset_log(void) {
+static inline void
+kernel_logging_reset_log(void)
+{
 #if CONFIG_MAX_NUM_TRACE_POINTS > 0
     seL4_BenchmarkResetLog();
 #endif
 }
 
-static inline void kernel_logging_finalize_log(void) {
+static inline void
+kernel_logging_finalize_log(void)
+{
 #if CONFIG_MAX_NUM_TRACE_POINTS > 0
     seL4_BenchmarkFinalizeLog();
 #endif
 }
 
-static inline unsigned int kernel_logging_log_size(void) {
+static inline unsigned int
+kernel_logging_log_size(void)
+{
 #if CONFIG_MAX_NUM_TRACE_POINTS > 0
     return seL4_BenchmarkLogSize();
 #else
@@ -79,7 +93,9 @@ static inline unsigned int kernel_logging_log_size(void) {
 #endif
 }
 
-static inline unsigned int kernel_logging_dump_log(unsigned int start, unsigned int size) {
+static inline unsigned int
+kernel_logging_dump_log(unsigned int start, unsigned int size)
+{
 #if CONFIG_MAX_NUM_TRACE_POINTS > 0
     return seL4_BenchmarkDumpLog(start, size);
 #else

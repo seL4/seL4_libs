@@ -14,7 +14,9 @@
 #define MAX_IPC_BUFFER (seL4_MsgMaxLength - 1)
 #define MAX_IPC_LOGS ((MAX_IPC_BUFFER) / sizeof(kernel_log_entry_t))
 
-unsigned int kernel_logging_sync_log(kernel_log_entry_t log[], unsigned int n) {
+unsigned int
+kernel_logging_sync_log(kernel_log_entry_t log[], unsigned int n)
+{
     unsigned int size = kernel_logging_log_size();
     unsigned int index = 0;
 
@@ -31,7 +33,9 @@ unsigned int kernel_logging_sync_log(kernel_log_entry_t log[], unsigned int n) {
             int base_index = j * 2;
             seL4_Word key = seL4_GetMR(base_index);
             seL4_Word data = seL4_GetMR(base_index+1);
-            log[index] = (kernel_log_entry_t) {key, data};
+            log[index] = (kernel_log_entry_t) {
+                key, data
+            };
             ++index;
         }
     }
@@ -40,7 +44,9 @@ unsigned int kernel_logging_sync_log(kernel_log_entry_t log[], unsigned int n) {
 }
 
 #else
-unsigned int kernel_logging_sync_log(kernel_log_entry_t log[], unsigned int n) {
+unsigned int
+kernel_logging_sync_log(kernel_log_entry_t log[], unsigned int n)
+{
     return 0;
 }
 #endif

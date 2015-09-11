@@ -31,6 +31,7 @@ typedef void *kernel_log_entry_t;
  */
 unsigned int kernel_logging_sync_log(kernel_log_entry_t log[], unsigned int n);
 
+/* Returns the key field of a log entry. */
 static inline seL4_Word
 kernel_logging_entry_get_key(kernel_log_entry_t *entry)
 {
@@ -41,6 +42,7 @@ kernel_logging_entry_get_key(kernel_log_entry_t *entry)
 #endif
 }
 
+/* Sets the key field of a log entry to a given value. */
 static inline void
 kernel_logging_entry_set_key(kernel_log_entry_t *entry, seL4_Word key)
 {
@@ -49,6 +51,7 @@ kernel_logging_entry_set_key(kernel_log_entry_t *entry, seL4_Word key)
 #endif
 }
 
+/* Returns the data field of a log entry. */
 static inline seL4_Word
 kernel_logging_entry_get_data(kernel_log_entry_t *entry)
 {
@@ -59,6 +62,7 @@ kernel_logging_entry_get_data(kernel_log_entry_t *entry)
 #endif
 }
 
+/* Sets the data field of a log entry to a given value. */
 static inline void
 kernel_logging_entry_set_data(kernel_log_entry_t *entry, seL4_Word data)
 {
@@ -67,6 +71,7 @@ kernel_logging_entry_set_data(kernel_log_entry_t *entry, seL4_Word data)
 #endif
 }
 
+/* Resets the in-kernel log buffer to contain no entries. */
 static inline void
 kernel_logging_reset_log(void)
 {
@@ -75,6 +80,9 @@ kernel_logging_reset_log(void)
 #endif
 }
 
+/* Calls to kernel_logging_sync_log will extract entries created before
+ * the most-recent call to this function. Call this function before calling
+ * kernel_logging_sync_log. */
 static inline void
 kernel_logging_finalize_log(void)
 {
@@ -83,6 +91,8 @@ kernel_logging_finalize_log(void)
 #endif
 }
 
+/* Returns the number of log entries that were stored in the kernel's log buffer
+ * last time kernel_logging_finalize_log was called. */
 static inline unsigned int
 kernel_logging_log_size(void)
 {
@@ -93,6 +103,10 @@ kernel_logging_log_size(void)
 #endif
 }
 
+/* Copies "size" entries from the kernel's log buffer, starting with the "start-th" entry,
+ * into the ipc buffer, returning the number of entries that were copied. Log entries
+ * consist of a key (the tracepoint id) and a value. Entries are copied in the format
+ * "key, value, key, value, ..." with each value being preceded by its key. */
 static inline unsigned int
 kernel_logging_dump_log(unsigned int start, unsigned int size)
 {

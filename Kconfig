@@ -9,11 +9,12 @@
 #
 
 menuconfig LIB_SEL4_TEST
-    bool "sel4test printing library"
+    bool "libsel4test"
     depends on HAVE_LIBC
+    select HAVE_LIB_SEL4_TEST
     default y
     help
-        A test framework library
+        A test framework and output formatting library
 
 config TESTPRINTER_REGEX
     string "Tests to perform"
@@ -47,4 +48,5 @@ config BUFFER_OUTPUT
         Buffer the output and print in <stdout> blocks so that bamboo 
         can parse the test logs properly. Turn this off for debugging your test suite
 
-
+config HAVE_LIB_SEL4_TEST
+    bool 

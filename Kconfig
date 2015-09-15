@@ -9,10 +9,13 @@
 #
 
 config LIB_SEL4_SIMPLE_DEFAULT
-    bool "Build sel4simple-default"
-    depends on LIB_SEL4 && HAVE_LIBC && LIB_SEL4_SIMPLE && LIB_SEL4_UTILS
+    bool "libsel4simple-default"
+    depends on HAVE_LIB_SEL4 && HAVE_LIBC && HAVE_LIB_SEL4_SIMPLE && HAVE_LIB_SEL4_UTILS
     select HAVE_SEL4_LIBS
+    select HAVE_LIB_SEL4_SIMPLE_DEFAULT
     default y
     help
-        Implementation of libsel4simple abstraction for the default and usable kernels
+        Implementation of libsel4simple abstraction for the master branch of seL4
 
+config HAVE_LIB_SEL4_SIMPLE_DEFAULT
+    bool

@@ -9,10 +9,13 @@
 #
 
 config LIB_SEL4_SIMPLE
-    bool "Build sel4simple"
-    depends on LIB_SEL4 && HAVE_LIBC && LIB_SEL4_VKA
+    bool "libsel4simple"
+    depends on HAVE_LIB_SEL4 && HAVE_LIBC && HAVE_LIB_SEL4_VKA
     select HAVE_SEL4_LIBS
+    select HAVE_LIB_SEL4_SIMPLE
     default y
     help
-        Simple sel4 resource abstraction
+        Simple resource abstraction interface for seL4 based applications
 
+config HAVE_LIB_SEL4_SIMPLE
+    bool

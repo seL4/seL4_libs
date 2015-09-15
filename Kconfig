@@ -9,10 +9,13 @@
 #
 
 config LIB_SEL4_SIMPLE_STABLE
-    bool "Build sel4simple-stable"
-    depends on LIB_SEL4 && HAVE_LIBC && LIB_SEL4_SIMPLE && LIB_SEL4_UTILS && LIB_SEL4_VKA
+    bool "libsel4simple-stable"
+    depends on HAVE_LIB_SEL4 && HAVE_LIBC && HAVE_LIB_SEL4_SIMPLE && HAVE_LIB_SEL4_UTILS && HAVE_LIB_SEL4_VKA
     select HAVE_SEL4_LIBS
+    select HAVE_LIB_SEL4_SIMPLE_STABLE
     default y
     help
-        Implementation of libsel4simple abstraction for the stable (searchable CDT) kernel
+        Implementation of libsel4simple abstraction for the experimental branch (searchable CDT) of the kernel
 
+config HAVE_LIB_SEL4_SIMPLE_STABLE
+    bool

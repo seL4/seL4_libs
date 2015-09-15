@@ -9,9 +9,13 @@
 #
 
 config LIB_SEL4_VSPACE
-    bool "Build sel4vspace"
-    depends on LIB_SEL4 && HAVE_LIBC && LIB_SEL4_VKA && LIB_UTILS
+    bool "libsel4vspace"
+    depends on HAVE_LIB_SEL4 && HAVE_LIBC && HAVE_LIB_SEL4_VKA && HAVE_LIB_UTILS
     select HAVE_SEL4_LIBS
+    select HAVE_LIB_SEL4_VSPACE
     default y
     help
-        "Interface for virtual memory management"
+        "Interface for virtual memory management on seL4"
+
+config HAVE_LIB_SEL4_VSPACE
+    bool

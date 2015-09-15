@@ -9,11 +9,13 @@
 #
 
 menuconfig LIB_SEL4_PLAT_SUPPORT
-    bool "Build sel4platsupport"
-    depends on LIB_SEL4_UTILS && LIB_SEL4 && HAVE_LIBC && LIB_SEL4_VSPACE && LIB_SEL4_SIMPLE && LIB_PLATSUPPORT && LIB_UTILS && LIB_SEL4_VKA
+    bool libsel4platsupport
+    depends on HAVE_LIB_SEL4_UTILS && HAVE_LIB_SEL4 && HAVE_LIBC && HAVE_LIB_SEL4_VSPACE && \
+               HAVE_LIB_SEL4_SIMPLE && HAVE_LIB_PLATSUPPORT && HAVE_LIB_UTILS && HAVE_LIB_SEL4_VKA
+    select HAVE_LIB_SEL4_PLAT_SUPPORT
     default y
     help
-        A user level serial library for sel4
+        seL4 dependent driver and platform library
 
 config LIB_SEL4_PLAT_SUPPORT_USE_SEL4_DEBUG_PUTCHAR
     bool "Redirect putchar() to seL4_DebugPutchar()"
@@ -37,3 +39,6 @@ config LIB_SEL4_PLAT_SUPPORT_SEL4_START
     help
         Emit a _sel4_start that sets up a stack and does
         what's required to enter a regular _start routine
+
+config HAVE_LIB_SEL4_PLAT_SUPPORT
+    bool

@@ -9,12 +9,13 @@
 #
 
 menuconfig LIB_SEL4_VKA
-    bool "Build sel4vka"
-    depends on LIB_SEL4 && HAVE_LIBC && LIB_UTILS
+    bool "libsel4vka"
+    depends on HAVE_LIB_SEL4 && HAVE_LIBC && HAVE_LIB_UTILS
     select HAVE_SEL4_LIBS
+    select HAVE_LIB_SEL4_VKA
     default y
     help
-        Virtual kernel allocator interface.
+        Virtual kernel allocator interface, for allocating memory, untyped memory and cslots.
 
 config LIB_VKA_ALLOW_MEMORY_LEAKS
     bool "Leak memory on free"
@@ -46,3 +47,6 @@ config LIB_SEL4_VKA_DEBUG_LIVE_OBJS_SZ
     help
         As for the above option, but sets the maximum number of objects that
         can be tracked at any one time.
+
+config HAVE_LIB_SEL4_VKA
+    bool

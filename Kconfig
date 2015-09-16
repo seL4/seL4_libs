@@ -9,8 +9,9 @@
 #
 
 menuconfig LIB_SEL4_DEBUG
-    bool "Build sel4debug"
-    depends on LIB_SEL4 && HAVE_LIBC && LIB_SEL4_UTILS
+    bool "libsel4debug"
+    depends on HAVE_LIB_SEL4 && HAVE_LIBC && HAVE_LIB_SEL4_UTILS
+    select HAVE_LIB_SEL4_DEBUG
     default y
     help
         A user level debugging library for seL4
@@ -58,3 +59,6 @@ menuconfig LIB_SEL4_DEBUG
         enable this option if you want to retrieve programmatic backtraces.
 
     endchoice
+
+config HAVE_LIB_SEL4_DEBUG
+    bool

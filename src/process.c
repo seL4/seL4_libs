@@ -68,7 +68,7 @@ static int
 next_free_slot(sel4utils_process_t *process, cspacepath_t *dest)
 {
     if (process->cspace_next_free >= (1 << process->cspace_size)) {
-        LOG_ERROR("Can't allocate slot, cspace is full.\n");
+        ZF_LOGE("Can't allocate slot, cspace is full.\n");
         return -1;
     }
 
@@ -113,7 +113,7 @@ sel4utils_mint_cap_to_process(sel4utils_process_t *process, cspacepath_t src, se
 
     int error = vka_cnode_mint(&dest, &src, rights, data);
     if (error != seL4_NoError) {
-        LOG_ERROR("Failed to mint cap\n");
+        ZF_LOGE("Failed to mint cap\n");
         return 0;
     }
 
@@ -132,7 +132,7 @@ sel4utils_copy_cap_to_process(sel4utils_process_t *process, cspacepath_t src)
 
     int error = vka_cnode_copy(&dest, &src, seL4_AllRights);
     if (error != seL4_NoError) {
-        LOG_ERROR("Failed to copy cap\n");
+        ZF_LOGE("Failed to copy cap\n");
         return 0;
     }
 
@@ -337,6 +337,7 @@ sel4utils_spawn_process_v(sel4utils_process_t *process, vka_t *vka, vspace_t *vs
 #error Not implemented yet
 #endif
 
+    ZF_LOGD("Starting process at %p\n", process->entry_point);
     /* Write the registers */
     error = seL4_TCB_WriteRegisters(process->thread.tcb.cptr, resume, 0, sizeof(context) / sizeof(seL4_Word), &context);
     return error;
@@ -371,7 +372,7 @@ create_reservations(vspace_t *vspace, int num, sel4utils_elf_region_t regions[])
         region->reservation = vspace_reserve_range_at(vspace, region->elf_vstart,
                                                       region->size, region->rights, region->cacheable);
         if (region->reservation.res == NULL) {
-            LOG_ERROR("Failed to create region\n");
+            ZF_LOGE("Failed to create region\n");
             for (int j = i - 1; j >= 0; j--) {
                 vspace_free_reservation(vspace, regions[i].reservation);
             }
@@ -390,13 +391,13 @@ assign_asid_pool(seL4_CPtr asid_pool, seL4_CPtr pd)
     int error;
 
     if (asid_pool == 0) {
-        LOG_INFO("This method will fail if run in a thread that is not in the root server cspace\n");
+        ZF_LOGW("This method will fail if run in a thread that is not in the root server cspace\n");
         asid_pool = seL4_CapInitThreadASIDPool;
     }
 
     error = seL4_ARCH_ASIDPool_Assign(asid_pool, pd);
     if (error) {
-        LOG_ERROR("Failed to assign asid pool\n");
+        ZF_LOGE("Failed to assign asid pool\n");
     }
 
     return error;
@@ -412,7 +413,7 @@ create_cspace(vka_t *vka, int size_bits, sel4utils_process_t *process,
     /* create a cspace */
     error = vka_alloc_cnode_object(vka, size_bits, &process->cspace);
     if (error) {
-        LOG_ERROR("Failed to create cspace: %d\n", error);
+        ZF_LOGE("Failed to create cspace: %d\n", error);
         return error;
     }
 
@@ -435,7 +436,7 @@ create_fault_endpoint(vka_t *vka, sel4utils_process_t *process)
     /* create a fault endpoint and put it into the cspace */
     int error = vka_alloc_endpoint(vka, &process->fault_endpoint);
     if (error) {
-        LOG_ERROR("Failed to allocate fault endpoint: %d\n", error);
+        ZF_LOGE("Failed to allocate fault endpoint: %d\n", error);
         return error;
     }
 
@@ -444,7 +445,7 @@ create_fault_endpoint(vka_t *vka, sel4utils_process_t *process)
     error = sel4utils_copy_cap_to_process(process, src);
 
     if (error == 0) {
-        LOG_ERROR("Failed to move allocated endpoint: %d\n", error);
+        ZF_LOGE("Failed to move allocated endpoint: %d\n", error);
         return error;
     }
     assert(error == SEL4UTILS_ENDPOINT_SLOT);
@@ -467,7 +468,7 @@ int sel4utils_configure_process_custom(sel4utils_process_t *process, vka_t *vka,
     if (config.create_vspace) {
         error = vka_alloc_vspace_root(vka, &process->pd);
         if (error) {
-            LOG_ERROR("Failed to allocate page directory for new process: %d\n", error);
+            ZF_LOGE("Failed to allocate page directory for new process: %d\n", error);
             goto error;
         }
 
@@ -523,14 +524,14 @@ int sel4utils_configure_process_custom(sel4utils_process_t *process, vka_t *vka,
             process->num_elf_regions = sel4utils_elf_num_regions(config.image_name);
             process->elf_regions = calloc(process->num_elf_regions, sizeof(*process->elf_regions));
             if (!process->elf_regions) {
-                LOG_ERROR("Failed to allocate memory for elf region information");
+                ZF_LOGE("Failed to allocate memory for elf region information");
                 goto error;
             }
             process->entry_point = sel4utils_elf_reserve(&process->vspace, config.image_name, process->elf_regions);
         }
 
         if (process->entry_point == NULL) {
-            LOG_ERROR("Failed to load elf file\n");
+            ZF_LOGE("Failed to load elf file\n");
             goto error;
         }
 
@@ -546,7 +547,7 @@ int sel4utils_configure_process_custom(sel4utils_process_t *process, vka_t *vka,
                                        config.priority, process->cspace.cptr, cspace_root_data, &process->thread);
 
     if (error) {
-        LOG_ERROR("ERROR: failed to configure thread for new process %d\n", error);
+        ZF_LOGE("ERROR: failed to configure thread for new process %d\n", error);
         goto error;
     }
 
@@ -565,7 +566,7 @@ error:
     if (config.create_vspace && process->pd.cptr != 0) {
         vka_free_object(vka, &process->pd);
         if (process->vspace.data != 0) {
-            LOG_ERROR("Could not clean up vspace\n");
+            ZF_LOGE("Could not clean up vspace\n");
         }
     }
 

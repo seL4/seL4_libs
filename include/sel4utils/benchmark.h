@@ -10,6 +10,7 @@
 
 #ifndef __SEL4_BENCHMARK_H
 #define __SEL4_BENCHMARK_H
+#if CONFIG_MAX_NUM_TRACE_POINTS > 0
 
 /* entire ipc buffer except tag register (word 0) */
 #define MAX_IPC_BUFFER (1024 - 1)
@@ -49,6 +50,6 @@ seL4_BenchmarkDumpFullLog()
     /* logged amount was smaller than log buffer */
     printf("Dumped entire log, size %u\n", potential_size);
 }
-
+#endif /* CONFIG_MAX_NUM_TRACE_POINTS > 0 */
 #endif // __SEL4_BENCHMARK_H
 

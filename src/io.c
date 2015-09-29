@@ -252,8 +252,8 @@ sel4platsupport_map_paddr(void *cookie, uintptr_t paddr, size_t size, int cached
 
     int frame_size_index = 0;
     /* find the largest reasonable frame size */
-    while (frame_size_index + 1 < NUM_SEL4_PAGE_SIZES) {
-        if (size >> sel4_supported_page_sizes[frame_size_index + 1] == 0) {
+    while (frame_size_index + 1 < UTILS_NUM_PAGE_SIZES) {
+        if (size >> utils_page_sizes[frame_size_index + 1] == 0) {
             break;
         }
         frame_size_index++;
@@ -261,7 +261,7 @@ sel4platsupport_map_paddr(void *cookie, uintptr_t paddr, size_t size, int cached
 
     /* try mapping in this and all smaller frame sizes until something works */
     for (int i = frame_size_index; i >= 0; i--) {
-        void *result = sel4platsupport_map_paddr_with_page_size(io_mapper, paddr, size, sel4_supported_page_sizes[i], cached);
+        void *result = sel4platsupport_map_paddr_with_page_size(io_mapper, paddr, size, utils_page_sizes[i], cached);
         if (result) {
             return result;
         }
@@ -269,7 +269,7 @@ sel4platsupport_map_paddr(void *cookie, uintptr_t paddr, size_t size, int cached
 
     /* try the get_frame_vaddr technique */
     for (int i = frame_size_index; i >= 0; i--) {
-        void *result = sel4platsupport_get_vaddr_with_page_size(io_mapper, paddr, size, sel4_supported_page_sizes[i]);
+        void *result = sel4platsupport_get_vaddr_with_page_size(io_mapper, paddr, size, utils_page_sizes[i]);
         if (result) {
             return result;
         }

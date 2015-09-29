@@ -11,26 +11,9 @@
 #ifndef _UTILS_MAPPING_H_
 #define _UTILS_MAPPING_H_
 
+#include <autoconf.h>
 #include <utils/util.h>
 #include <sel4/sel4.h>
-#if defined(CONFIG_ARCH_ARM)
-
-/* sizes (in bits) of pages supported by sel4 in ascending order */
-#if defined(ARM_HYP)
-static int UNUSED sel4_supported_page_sizes[] = {12, 16, 21, 25};
-#else
-static int UNUSED sel4_supported_page_sizes[] = {12, 16, 20, 24};
-#endif
-
-#elif defined(CONFIG_X86_64)
-/* sizes (in bits) of pages supported by sel4 in ascending order */
-static int UNUSED sel4_supported_page_sizes[] = {12, 21};
-
-#elif defined(CONFIG_ARCH_IA32) /* CONFIG_ARCH_ARM */
-/* sizes (in bits) of pages supported by sel4 in ascending order */
-static int UNUSED sel4_supported_page_sizes[] = {12, 22};
-
-#define NUM_SEL4_PAGE_SIZES ((int) ARRAY_SIZE(sel4_supported_page_sizes))
 #include <sel4utils/arch/mapping.h>
 
 #ifdef CONFIG_LIB_SEL4_VKA

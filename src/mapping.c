@@ -30,17 +30,10 @@ sel4utils_map_page(vka_t *vka, seL4_CPtr pd, seL4_CPtr frame, void *vaddr,
     assert(rights != 0);
     assert(num_objects);
 
-    seL4_ARCH_VMAttributes attr = 0;
+    seL4_ARCH_VMAttributes attr = cacheable ? seL4_ARCH_Default_VMAttributes :
+        seL4_ARCH_Uncached_VMAttributes;
     int num = 0;
 
-#ifdef CONFIG_ARCH_IA32
-    if (!cacheable) {
-        attr = seL4_IA32_CacheDisabled;
-    }
-#elif CONFIG_ARCH_ARM /* CONFIG_ARCH_IA32 */
-    if (cacheable) {
-        attr = seL4_ARM_PageCacheable;
-    }
 #endif /* CONFIG_ARCH_ARM */
     int error = seL4_ARCH_Page_Map(frame, pd, (seL4_Word) vaddr, rights, attr);
 

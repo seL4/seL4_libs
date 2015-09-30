@@ -10,6 +10,8 @@
 #ifndef _SEL4UTILS_ARCH_MAPPING_H
 #define _SEL4UTILS_ARCH_MAPPING_H
 
+#define seL4_ARCH_Uncached_VMAttributes seL4_IA32_CacheDisabled
+
 #define seL4_ARCH_Page_Map             seL4_IA32_Page_Map
 #define seL4_ARCH_Page_Unmap           seL4_IA32_Page_Unmap
 #define seL4_ARCH_Page_GetAddress      seL4_IA32_Page_GetAddress

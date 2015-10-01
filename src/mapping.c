@@ -34,7 +34,6 @@ sel4utils_map_page(vka_t *vka, seL4_CPtr pd, seL4_CPtr frame, void *vaddr,
         seL4_ARCH_Uncached_VMAttributes;
     int num = 0;
 
-#endif /* CONFIG_ARCH_ARM */
     int error = seL4_ARCH_Page_Map(frame, pd, (seL4_Word) vaddr, rights, attr);
 
 #ifdef CONFIG_X86_64

@@ -8,8 +8,8 @@
  * @TAG(NICTA_BSD)
  */
 
-#ifndef _UTILS_MAPPING_H_
-#define _UTILS_MAPPING_H_
+#ifndef _SEL4UTILS_MAPPING_H_
+#define _SEL4UTILS_MAPPING_H_
 
 #include <autoconf.h>
 #include <utils/util.h>
@@ -94,4 +94,4 @@ int sel4utils_map_ept_page(vka_t *vka, seL4_CPtr pd, seL4_CPtr frame, seL4_Word 
 #endif /* CONFIG_VTX */
 #endif /* CONFIG_ARCH_IA32 */
 
-#endif /* UTILS_MAPPING_H_ */
+#endif /* _SEL4UTILS_MAPPING_H_ */

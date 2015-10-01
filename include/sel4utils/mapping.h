@@ -8,85 +8,13 @@
  * @TAG(NICTA_BSD)
  */
 
-#ifndef _UTILS_MAPPING_H_
-#define _UTILS_MAPPING_H_
+#ifndef _SEL4UTILS_MAPPING_H_
+#define _SEL4UTILS_MAPPING_H_
 
+#include <autoconf.h>
 #include <utils/util.h>
 #include <sel4/sel4.h>
-#include <autoconf.h>
-
-
-#if defined(CONFIG_ARCH_ARM)
-
-/* sizes (in bits) of pages supported by sel4 in ascending order */
-#if defined(ARM_HYP)
-static int UNUSED sel4_supported_page_sizes[] = {12, 16, 21, 25};
-#else
-static int UNUSED sel4_supported_page_sizes[] = {12, 16, 20, 24};
-#endif
-
-#define seL4_ARCH_Uncached_VMAttributes 0
-
-#define seL4_ARCH_Page_Map             seL4_ARM_Page_Map
-#define seL4_ARCH_Page_Unmap           seL4_ARM_Page_Unmap
-#define seL4_ARCH_Page_GetAddress      seL4_ARM_Page_GetAddress
-#define seL4_ARCH_Page_GetAddress_t    seL4_ARM_Page_GetAddress_t
-#define seL4_ARCH_PageTable_Map        seL4_ARM_PageTable_Map
-#define seL4_ARCH_PageTable_Unmap      seL4_ARM_PageTable_Unmap
-#define seL4_ARCH_ASIDPool_Assign      seL4_ARM_ASIDPool_Assign
-#define seL4_ARCH_ASIDControl_MakePool seL4_ARM_ASIDControl_MakePool
-#define seL4_ARCH_PageTableObject      seL4_ARM_PageTableObject
-#define seL4_ARCH_PageDirectoryObject  seL4_ARM_PageDirectoryObject
-#define seL4_ARCH_Default_VMAttributes seL4_ARM_Default_VMAttributes
-#define seL4_ARCH_VMAttributes         seL4_ARM_VMAttributes
-#define seL4_ARCH_4KPage               seL4_ARM_SmallPageObject
-/* Remap does not exist on all kernels */
-#define seL4_ARCH_Page_Remap           seL4_ARM_Page_Remap
-#define ARCHPageGetAddress             ARMPageGetAddress
-
-#elif defined(CONFIG_X86_64)
-
-/* sizes (in bits) of pages supported by sel4 in ascending order */
-static int UNUSED sel4_supported_page_sizes[] = {12, 21};
-
-#define seL4_ARCH_Page_Unmap                    seL4_X64_Page_Unmap
-#define seL4_ARCH_Page_Map                      seL4_X64_Page_Map
-#define seL4_ARCH_Page_GetAddress               seL4_X64_Page_GetAddress
-#define seL4_ARCH_Page_GetAddress_t             seL4_X64_Page_GetAddress_t
-#define seL4_ARCH_PageTable_Map                 seL4_X64_PageTable_Map
-#define seL4_ARCH_PageDirectory_Map             seL4_X64_PageDirectory_Map
-#define seL4_ARCH_PageDirectoryPointerTable_Map seL4_X64_PageDirectoryPointerTable_Map
-#define seL4_CapInitThreadPD                    seL4_CapInitThreadPML4
-#define seL4_ARCH_VMAttributes                  seL4_IA32_VMAttributes
-#define seL4_ARCH_4KPage                        seL4_X64_4K
-#define seL4_ARCH_Default_VMAttributes          seL4_IA32_Default_VMAttributes
-
-#elif defined(CONFIG_ARCH_IA32) /* CONFIG_ARCH_ARM */
-
-/* sizes (in bits) of pages supported by sel4 in ascending order */
-static int UNUSED sel4_supported_page_sizes[] = {12, 22};
-
-#define seL4_ARCH_Page_Map             seL4_IA32_Page_Map
-#define seL4_ARCH_Page_Unmap           seL4_IA32_Page_Unmap
-#define seL4_ARCH_Page_GetAddress      seL4_IA32_Page_GetAddress
-#define seL4_ARCH_Page_GetAddress_t    seL4_IA32_Page_GetAddress_t
-#define seL4_ARCH_PageTable_Map        seL4_IA32_PageTable_Map
-#define seL4_ARCH_PageTable_Unmap      seL4_IA32_PageTable_Unmap
-#define seL4_ARCH_ASIDPool_Assign      seL4_IA32_ASIDPool_Assign
-#define seL4_ARCH_ASIDControl_MakePool seL4_IA32_ASIDControl_MakePool
-#define seL4_ARCH_PageTableObject      seL4_IA32_PageTableObject
-#define seL4_ARCH_PageDirectoryObject  seL4_IA32_PageDirectoryObject
-#define seL4_ARCH_Default_VMAttributes seL4_IA32_Default_VMAttributes
-#define seL4_ARCH_VMAttributes         seL4_IA32_VMAttributes
-#define seL4_ARCH_4KPage               seL4_IA32_4K
-#define seL4_ARCH_Uncached_VMAttributes 0
-/* Remap does not exist on all kernels */
-#define seL4_ARCH_Page_Remap           seL4_IA32_Page_Remap
-#define ARCHPageGetAddress             IA32PageGetAddress
-
-#endif /* CONFIG_ARCH_IA32 */
-
-#define NUM_SEL4_PAGE_SIZES ((int) ARRAY_SIZE(sel4_supported_page_sizes))
+#include <sel4utils/arch/mapping.h>
 
 #ifdef CONFIG_LIB_SEL4_VKA
 
@@ -166,4 +94,4 @@ int sel4utils_map_ept_page(vka_t *vka, seL4_CPtr pd, seL4_CPtr frame, seL4_Word 
 #endif /* CONFIG_VTX */
 #endif /* CONFIG_ARCH_IA32 */
 
-#endif /* UTILS_MAPPING_H_ */
+#endif /* _SEL4UTILS_MAPPING_H_ */

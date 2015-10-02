@@ -220,7 +220,7 @@ sel4utils_map_page_pd(vspace_t *vspace, seL4_CPtr cap, void *vaddr, seL4_CapRigh
                                    rights, cacheable, objects, &num);
     if (error) {
         /* everything has gone to hell. Do no clean up. */
-        LOG_ERROR("Error mapping pages, bailing: %d", error);
+        ZF_LOGE("Error mapping pages, bailing: %d", error);
         return -1;
     }
 
@@ -243,7 +243,7 @@ sel4utils_map_page_ept(vspace_t *vspace, seL4_CPtr cap, void *vaddr, seL4_CapRig
     int error = sel4utils_map_ept_page(data->vka, data->page_directory, cap,
                                        (seL4_Word) vaddr, rights, cacheable, size_bits, &pagetable, &pagedir);
     if (error) {
-        LOG_ERROR("Error mapping pages, bailing\n");
+        ZF_LOGE("Error mapping pages, bailing\n");
         return -1;
     }
 
@@ -274,7 +274,7 @@ sel4utils_map_page_iommu(vspace_t *vspace, seL4_CPtr cap, void *vaddr, seL4_CapR
     int error = sel4utils_map_iospace_page(data->vka, data->page_directory, cap,
                                            (seL4_Word) vaddr, rights, cacheable, size_bits, pts, &num_pts);
     if (error) {
-        LOG_ERROR("Error mapping pages, bailing");
+        ZF_LOGE("Error mapping pages, bailing");
         return -1;
     }
 
@@ -384,7 +384,7 @@ new_pages_at_vaddr(vspace_t *vspace, void *vaddr, size_t num_pages, size_t size_
         vka_object_t object;
         if (vka_alloc_frame(data->vka, size_bits, &object) != 0) {
             /* abort! */
-            LOG_ERROR("Failed to allocate page");
+            ZF_LOGE("Failed to allocate page");
             break;
         }
 
@@ -461,7 +461,7 @@ sel4utils_unmap_pages(vspace_t *vspace, void *vaddr, size_t num_pages, size_t si
         if (cap != 0) {
             int error = seL4_ARCH_Page_Unmap(get_cap(data->top_level, vaddr));
             if (error != seL4_NoError) {
-                LOG_ERROR("Failed to unmap page at vaddr %p", vaddr);
+                ZF_LOGE("Failed to unmap page at vaddr %p", vaddr);
             }
         }
 
@@ -492,7 +492,7 @@ sel4utils_new_pages_at_vaddr(vspace_t *vspace, void *vaddr, size_t num_pages,
     sel4utils_res_t *res = reservation_to_res(reservation);
 
     if (!check_reservation(data->top_level, res, vaddr, num_pages, size_bits)) {
-        LOG_ERROR("Range for vaddr %p with %"PRIuPTR" 4k pages not reserved!", vaddr, num_pages);
+        ZF_LOGE("Range for vaddr %p with %"PRIuPTR" 4k pages not reserved!", vaddr, num_pages);
         return -1;
     }
 
@@ -530,7 +530,7 @@ sel4utils_reserve_range_aligned(vspace_t *vspace, size_t bytes, size_t size_bits
     sel4utils_res_t *res = (sel4utils_res_t *) malloc(sizeof(sel4utils_res_t));
 
     if (res == NULL) {
-        LOG_ERROR("Malloc failed");
+        ZF_LOGE("Malloc failed");
         reservation.res = NULL;
         return reservation;
     }
@@ -553,7 +553,7 @@ int sel4utils_reserve_range_at_no_alloc(vspace_t *vspace, sel4utils_res_t *reser
     sel4utils_alloc_data_t *data = get_alloc_data(vspace);
     if (!check_empty_range(data->top_level, vaddr, BYTES_TO_4K_PAGES(size),
                            seL4_PageBits)) {
-        LOG_ERROR("Range not available at %p, size %p", vaddr, (void*)size);
+        ZF_LOGE("Range not available at %p, size %p", vaddr, (void*)size);
         return -1;
     }
     perform_reservation(vspace, reservation, vaddr, size, rights, cacheable);
@@ -568,7 +568,7 @@ sel4utils_reserve_range_at(vspace_t *vspace, void *vaddr, size_t size, seL4_CapR
     reservation.res = malloc(sizeof(sel4utils_res_t));
 
     if (reservation.res == NULL) {
-        LOG_ERROR("Malloc failed");
+        ZF_LOGE("Malloc failed");
         reservation.res = NULL;
         return reservation;
     }
@@ -692,7 +692,7 @@ sel4utils_tear_down(vspace_t *vspace, vka_t *vka)
     sel4utils_alloc_data_t *data = get_alloc_data(vspace);
 
     if (data->bootstrap == NULL) {
-        LOG_ERROR("Not implemented: sel4utils cannot currently tear down a self-bootstrapped vspace\n");
+        ZF_LOGE("Not implemented: sel4utils cannot currently tear down a self-bootstrapped vspace\n");
         return;
     }
 

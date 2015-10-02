@@ -742,6 +742,63 @@ sel4utils_tear_down(vspace_t *vspace, vka_t *vka)
 
 }
 
+int
+sel4utils_share_mem_at_vaddr(vspace_t *from, vspace_t *to, void *start, int num_pages,
+                             size_t size_bits, void *vaddr, reservation_t reservation)
+{
+    int error = 0; /* no error */
+    sel4utils_alloc_data_t *from_data = get_alloc_data(from);
+    sel4utils_alloc_data_t *to_data = get_alloc_data(to);
+    cspacepath_t from_path, to_path;
+    int page;
+    sel4utils_res_t *res = reservation_to_res(reservation);
 
+    /* go through, page by page, and duplicate the page cap into the to cspace and
+     * map it into the to vspace */
+    size_t size_bytes = 1 << size_bits;
+    for (page = 0; page < num_pages; page++) {
+        void *from_vaddr = start + page * size_bytes;
+        void *to_vaddr = vaddr + page * size_bytes;
+
+        /* get the frame cap to be copied */
+        seL4_CPtr cap = vspace_get_cap(from, from_vaddr);
+        if (cap == seL4_CapNull) {
+            ZF_LOGE("Cap not present in from vspace to copy, vaddr %p!", from_vaddr);
+            error = -1;
+            break;
+        }
+
+        /* create a path to the cap */
+        vka_cspace_make_path(from_data->vka, cap, &from_path);
+
+        /* allocate a path to put the copy in the destination */
+        error = vka_cspace_alloc_path(to_data->vka, &to_path);
+        if (error) {
+            ZF_LOGE("Failed to allocate slot in to cspace, error: %d", error);
+            break;
+        }
+
+        /* copy the frame cap into the to cspace */
+        error = vka_cnode_copy(&to_path, &from_path, res->rights);
+        if (error) {
+            ZF_LOGE("Failed to copy cap, error %d\n", error);
+            break;
+        }
+
+        /* now finally map the page */
+        error = map_page(to, to_path.capPtr, to_vaddr, res->rights, res->cacheable, size_bits);
+        if (error) {
+            ZF_LOGE("Failed to map page into target vspace at vaddr %p", to_vaddr);
+            break;
+        }
+    }
+
+    if (error) {
+        /* we didn't finish, undo any pages we did map */
+        vspace_unmap_pages(to, vaddr, page, size_bits, VSPACE_FREE);
+    }
+
+    return error;
+}
 
 #endif /* CONFIG_LIB_SEL4_VKA && CONFIG_LIB_SEL4_VSPACE */

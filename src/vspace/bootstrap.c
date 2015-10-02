@@ -117,6 +117,7 @@ common_init_post_bootstrap(vspace_t *vspace, sel4utils_map_page_fn map_page)
     vspace->get_root = sel4utils_get_root;
 
     vspace->tear_down = sel4utils_tear_down;
+    vspace->share_mem_at_vaddr = sel4utils_share_mem_at_vaddr;
 }
 
 static int

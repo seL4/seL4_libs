@@ -130,14 +130,14 @@ static int find_dup_and_map_many(client_server_vspace_t *cs_vspace, void *caddr,
     return dup_and_map_many(cs_vspace, caps, caddr, num_pages, size_bits);
 }
 
-static reservation_t cs_reserve_range(vspace_t *vspace, size_t size, seL4_CapRights rights,
-                                      int cacheable, void **result)
+static reservation_t cs_reserve_range_aligned(vspace_t *vspace, size_t size, size_t size_bits, seL4_CapRights rights,
+                                              int cacheable, void **result)
 {
     client_server_vspace_t *cs_vspace = (client_server_vspace_t*)vspace->data;
     assert(cacheable);
     get_alloc_data(cs_vspace->client)->page_directory = cs_vspace->translation_data.page_directory;
     /* we are not interested in client reservations, just proxy */
-    return vspace_reserve_range(cs_vspace->client, size, rights, cacheable, result);
+    return vspace_reserve_range_aligned(cs_vspace->client, size, size_bits, rights, cacheable, result);
 }
 
 static reservation_t cs_reserve_range_at(vspace_t *vspace, void *vaddr, size_t size, seL4_CapRights
@@ -300,7 +300,7 @@ int sel4utils_get_cs_vspace(vspace_t *vspace, vka_t *vka, vspace_t *server, vspa
     vspace->map_pages_at_vaddr = cs_map_pages_at_vaddr;
     vspace->unmap_pages = cs_unmap_pages;
 
-    vspace->reserve_range = cs_reserve_range;
+    vspace->reserve_range_aligned = cs_reserve_range_aligned;
     vspace->reserve_range_at = cs_reserve_range_at;
     vspace->free_reservation = cs_free_reservation;
 

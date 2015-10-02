@@ -109,7 +109,7 @@ common_init_post_bootstrap(vspace_t *vspace, sel4utils_map_page_fn map_page)
     vspace->map_pages_at_vaddr = sel4utils_map_pages_at_vaddr;
     vspace->unmap_pages = sel4utils_unmap_pages;
 
-    vspace->reserve_range = sel4utils_reserve_range;
+    vspace->reserve_range_aligned = sel4utils_reserve_range_aligned;
     vspace->reserve_range_at = sel4utils_reserve_range_at;
     vspace->free_reservation = sel4utils_free_reservation;
     vspace->free_reservation_by_vaddr = sel4utils_free_reservation_by_vaddr;

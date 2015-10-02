@@ -319,29 +319,33 @@ find_range(sel4utils_alloc_data_t *data, size_t num_pages, size_t size_bits)
     /* look for a contiguous range that is free.
      * We use first-fit with the optimisation that we store
      * a pointer to the last thing we freed/allocated */
-    int num_4k_pages = BYTES_TO_4K_PAGES(num_pages * (1 << size_bits));
     void *current = data->last_allocated;
     size_t contiguous = 0;
-    void *start = data->last_allocated;
-    while (contiguous < num_4k_pages) {
+    void *start = (void *) ALIGN_UP((uintptr_t) data->last_allocated, SIZE_BITS_TO_BYTES(size_bits));
 
-        if (is_available(data->top_level, current) && IS_ALIGNED((uint32_t)((seL4_Word)start), size_bits)) {
+    assert(IS_ALIGNED((uintptr_t) start, size_bits));
+    while (contiguous < num_pages) {
+
+        if (is_available(data->top_level, current)) {
             contiguous++;
         } else {
-            start = current + PAGE_SIZE_4K;
+            start = current + SIZE_BITS_TO_BYTES(size_bits);
             contiguous = 0;
         }
 
-        current += PAGE_SIZE_4K;
+        current += SIZE_BITS_TO_BYTES(size_bits);
 
         if (current >= (void *) KERNEL_RESERVED_START) {
-            LOG_ERROR("Out of virtual memory");
+            ZF_LOGE("Out of virtual memory");
             return NULL;
         }
 
     }
 
-    data->last_allocated = current;
+    /* only update last_allocated if we didn't leave a hole */
+    if (start == data->last_allocated) {
+        data->last_allocated = current;
+    }
 
     return start;
 }
@@ -534,12 +538,11 @@ sel4utils_new_pages(vspace_t *vspace, seL4_CapRights rights, size_t num_pages,
     }
 }
 
-
-int sel4utils_reserve_range_no_alloc(vspace_t *vspace, sel4utils_res_t *reservation, size_t size,
-                                     seL4_CapRights rights, int cacheable, void **result)
+int sel4utils_reserve_range_no_alloc_aligned(vspace_t *vspace, sel4utils_res_t *reservation,
+                                             size_t size, size_t size_bits, seL4_CapRights rights, int cacheable, void **result)
 {
     sel4utils_alloc_data_t *data = get_alloc_data(vspace);
-    void *vaddr = find_range(data, BYTES_TO_4K_PAGES(size), seL4_PageBits);
+    void *vaddr = find_range(data, BYTES_TO_SIZE_BITS_PAGES(size, size_bits), size_bits);
 
     if (vaddr == NULL) {
         return -1;
@@ -551,9 +554,16 @@ int sel4utils_reserve_range_no_alloc(vspace_t *vspace, sel4utils_res_t *reservat
     return 0;
 }
 
+int sel4utils_reserve_range_no_alloc(vspace_t *vspace, sel4utils_res_t *reservation, size_t size,
+                                     seL4_CapRights rights, int cacheable, void **result)
+{
+    return sel4utils_reserve_range_no_alloc_aligned(vspace, reservation, size, seL4_PageBits,
+                                                    rights, cacheable, result);
+}
+
 reservation_t
-sel4utils_reserve_range(vspace_t *vspace, size_t size, seL4_CapRights rights,
-                        int cacheable, void **result)
+sel4utils_reserve_range_aligned(vspace_t *vspace, size_t bytes, size_t size_bits, seL4_CapRights rights,
+                                int cacheable, void **result)
 {
     reservation_t reservation;
     sel4utils_res_t *res = (sel4utils_res_t *) malloc(sizeof(sel4utils_res_t));
@@ -567,7 +577,7 @@ sel4utils_reserve_range(vspace_t *vspace, size_t size, seL4_CapRights rights,
     reservation.res = res;
     res->malloced = 1;
 
-    int error = sel4utils_reserve_range_no_alloc(vspace, res, size, rights, cacheable, result);
+    int error = sel4utils_reserve_range_no_alloc_aligned(vspace, res, bytes, size_bits, rights, cacheable, result);
     if (error) {
         free(reservation.res);
         reservation.res = NULL;

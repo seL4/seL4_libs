@@ -64,6 +64,33 @@ vspace_free_ipc_buffer(vspace_t *vspace, void *addr)
 }
 
 void *
+vspace_share_mem(vspace_t *from, vspace_t *to, void *start, int num_pages, size_t size_bits,
+                 seL4_CapRights rights, int cacheable)
+{
+    void *result;
+
+    /* reserve a range to map the shared memory in to */
+    reservation_t res = vspace_reserve_range_aligned(to, num_pages * (1 << size_bits), size_bits,
+                                                     rights, cacheable, &result);
+
+    if (res.res == NULL) {
+        ZF_LOGE("Failed to reserve range");
+        return NULL;
+    }
+
+    int error = vspace_share_mem_at_vaddr(from, to, start, num_pages, size_bits, result, res);
+    if (error) {
+        /* fail */
+        result = NULL;
+    }
+
+    /* clean up reservation */
+    vspace_free_reservation(to, res);
+
+    return result;
+}
+
+void *
 vspace_map_pages(vspace_t *vspace, seL4_CPtr caps[], uint32_t cookies[], seL4_CapRights rights,
                  size_t num_caps, size_t size_bits, int cacheable)
 {

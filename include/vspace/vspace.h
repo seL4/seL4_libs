@@ -39,6 +39,27 @@ typedef struct reservation {
 reservation_t vspace_reserve_range(vspace_t *vspace, size_t bytes,
                                    seL4_CapRights rights, int cacheable, void **vaddr);
 
+
+/**
+ * Share memory from one vspace to another.
+ *
+ * Make duplicate mappings of the from vspace in a contiguous region in the
+ * to vspace. Pages are expected to already be mapped in the from vspace, or an error
+ * will be returned.
+ *
+ * @param from      vspace to share memory from
+ * @param to        vspace to share memory to
+ * @param start     address to start sharing at
+ * @param num_pages number of pages to share
+ * @param size_bits size of pages in bits
+ * @param rights    rights to map pages into the to vspace with.
+ * @param cacheable cacheable attribute to map pages into the vspace with
+ *
+ * @return address of shared region in to, NULL on failure.
+ */
+void *vspace_share_mem(vspace_t *from, vspace_t *to, void *start, int num_pages,
+                       size_t size_bits, seL4_CapRights rights, int cacheable);
+
 /**
  * Map in existing page capabilities, using contiguos virtual memory.
  *
@@ -295,10 +316,25 @@ typedef uint32_t (*vspace_get_cookie_fn)(vspace_t *vspace, void *vaddr);
  */
 typedef void (*vspace_allocated_object_fn)(void *allocated_object_cookie, vka_object_t object);
 
-
 /* @return the page directory for this vspace
  */
 typedef seL4_CPtr (*vspace_get_root_fn)(vspace_t *vspace);
+
+/**
+ * Share memory from one vspace to another at a specific address. Pages are expected
+ * to already be mapped in the from vspace, or an error will be returned.
+ *
+ * @param from        vspace to share memory from
+ * @param to          vspace to share memory to
+ * @param start       address to start sharing at
+ * @param num_pages   number of pages to share
+ * @param size_bits   size of pages in bits
+ * @param vaddr       vaddr to start sharing memory at
+ * @param reservation reservation for that vaddr.
+ *
+ * @return 0 on success
+ */
+typedef int (*vspace_share_mem_at_vaddr_fn)(vspace_t *from, vspace_t *to, void *start, int num_pages, size_t size_bits, void *vaddr, reservation_t res);
 
 /* Portable virtual memory allocation interface */
 struct vspace {
@@ -319,6 +355,8 @@ struct vspace {
     vspace_get_cap_fn get_cap;
     vspace_get_root_fn get_root;
     vspace_get_cookie_fn get_cookie;
+
+    vspace_share_mem_at_vaddr_fn share_mem_at_vaddr;
 
     vspace_allocated_object_fn allocated_object;
     void *allocated_object_cookie;
@@ -582,6 +620,45 @@ vspace_get_root(vspace_t *vspace)
         return seL4_CapNull;
     }
     return vspace->get_root(vspace);
+}
+
+static inline int
+vspace_share_mem_at_vaddr(vspace_t *from, vspace_t *to, void *start, int num_pages,
+                          size_t size_bits, void *vaddr, reservation_t res)
+{
+
+    if (num_pages == 0) {
+        /* nothing to do */
+        return 0;
+    } else if (num_pages < 0) {
+        ZF_LOGE("Attempted to share %d pages\n", num_pages);
+        return -1;
+    }
+
+    if (from == NULL) {
+        ZF_LOGE("From vspace does not exist");
+        return -1;
+    }
+
+    if (to == NULL) {
+        ZF_LOGE("To vspace does not exist");
+    }
+
+    if (start == NULL || vaddr == NULL) {
+        ZF_LOGE("Cannot share memory at NULL");
+    }
+
+    if (!utils_valid_size_bits(size_bits)) {
+        ZF_LOGE("Invalid size_bits %d", size_bits);
+        return -1;
+    }
+
+    if (from->share_mem_at_vaddr == NULL) {
+        ZF_LOGE("Not implemented for this vspace\n");
+        return -1;
+    }
+
+    return from->share_mem_at_vaddr(from, to, start, num_pages, size_bits, vaddr, res);
 }
 
 #endif /* _INTERFACE_VSPACE_H_ */

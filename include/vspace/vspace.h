@@ -21,6 +21,9 @@ typedef struct reservation {
     void *res;
 } reservation_t;
 
+/* IMPLEMENTATION INDEPENDANT FUNCTIONS - implemented by calling the implementation specific
+ * function pointers */
+
 /**
  * Reserve a range to map memory into later, aligned to 4K.
  * Regions will be aligned to 4K boundaries.
@@ -90,6 +93,7 @@ void vspace_free_ipc_buffer(vspace_t *vspace, void *addr);
  */
 typedef void *(*vspace_new_pages_fn)(vspace_t *vspace, seL4_CapRights rights,
                                      size_t num_pages, size_t size_bits);
+/* IMPLEMENTATION SPECIFIC FUNCTIONS -> function pointers of the vspace used */
 
 /**
  * Create a virtually contiguous area of mapped pages, at the specified virtual address.

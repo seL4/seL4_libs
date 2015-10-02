@@ -195,31 +195,6 @@ static seL4_CPtr cs_get_root(vspace_t *vspace)
     return cs_vspace->translation_data.page_directory;
 }
 
-static void *cs_map_pages(vspace_t *vspace, seL4_CPtr caps[], uint32_t cookies[], seL4_CapRights rights,
-                          size_t num_pages, size_t size_bits, int cacheable)
-{
-    client_server_vspace_t *cs_vspace = (client_server_vspace_t*)vspace->data;
-    get_alloc_data(cs_vspace->client)->page_directory = cs_vspace->translation_data.page_directory;
-    assert(size_bits >= 12);
-    assert(cacheable);
-    /* first map all the pages into the client */
-    void *result = vspace_map_pages(cs_vspace->client, caps, cookies, rights, num_pages,
-                                    size_bits, cacheable);
-    if (!result) {
-        LOG_ERROR("Error mapping pages into client vspace");
-        return result;
-    }
-    /* now map them all into the server */
-    int error = dup_and_map_many(cs_vspace, caps, result, num_pages, size_bits);
-    if (error) {
-        /* unmap */
-        LOG_ERROR("Error mapping pages into server vspace");
-        vspace_unmap_pages(cs_vspace->client, result, num_pages, size_bits, VSPACE_PRESERVE);
-        return NULL;
-    }
-    return result;
-}
-
 static void cs_unmap_pages(vspace_t *vspace, void *vaddr, size_t num_pages, size_t size_bits, vka_t *vka)
 {
     client_server_vspace_t *cs_vspace = (client_server_vspace_t*)vspace->data;
@@ -251,26 +226,6 @@ static int cs_new_pages_at_vaddr(vspace_t *vspace, void *vaddr, size_t num_pages
     return 0;
 }
 
-static void *cs_new_pages(vspace_t *vspace, seL4_CapRights rights, size_t num_pages,
-                          size_t size_bits)
-{
-    client_server_vspace_t *cs_vspace = (client_server_vspace_t*)vspace->data;
-    get_alloc_data(cs_vspace->client)->page_directory = cs_vspace->translation_data.page_directory;
-    assert(size_bits >= 12);
-    void *vaddr = vspace_new_pages(cs_vspace->client, rights, num_pages, size_bits);
-    if (!vaddr) {
-        LOG_ERROR("Error creating new pages in client vspace");
-        return NULL;
-    }
-    int result = find_dup_and_map_many(cs_vspace, vaddr, num_pages, size_bits);
-    if (result) {
-        LOG_ERROR("Error mapping new page in server vspace");
-        assert(!"Cannot delete pages we created in client vspace");
-        return NULL;
-    }
-    return vaddr;
-}
-
 int sel4utils_get_cs_vspace(vspace_t *vspace, vka_t *vka, vspace_t *server, vspace_t *client)
 {
     int error;
@@ -293,10 +248,8 @@ int sel4utils_get_cs_vspace(vspace_t *vspace, vka_t *vka, vspace_t *server, vspa
 
     vspace->data = cs_vspace;
 
-    vspace->new_pages = cs_new_pages;
     vspace->new_pages_at_vaddr = cs_new_pages_at_vaddr;
 
-    vspace->map_pages = cs_map_pages;
     vspace->map_pages_at_vaddr = cs_map_pages_at_vaddr;
     vspace->unmap_pages = cs_unmap_pages;
 

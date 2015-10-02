@@ -444,26 +444,6 @@ sel4utils_get_cookie(vspace_t *vspace, void *vaddr)
     return get_cookie(data->top_level, vaddr);
 }
 
-void *
-sel4utils_map_pages(vspace_t *vspace, seL4_CPtr caps[], uint32_t cookies[], seL4_CapRights rights,
-                    size_t num_pages, size_t size_bits, int cacheable)
-{
-    struct sel4utils_alloc_data *data = get_alloc_data(vspace);
-    void *vaddr = find_range(data, num_pages, size_bits);
-
-    if (vaddr == NULL) {
-        return NULL;
-    }
-
-    int error = map_pages_at_vaddr(vspace, caps, cookies, vaddr, num_pages, size_bits, rights,
-                                   cacheable);
-    if (error == seL4_NoError) {
-        return vaddr;
-    } else {
-        return NULL;
-    }
-}
-
 void
 sel4utils_unmap_pages(vspace_t *vspace, void *vaddr, size_t num_pages, size_t size_bits, vka_t *vka)
 {
@@ -517,25 +497,6 @@ sel4utils_new_pages_at_vaddr(vspace_t *vspace, void *vaddr, size_t num_pages,
     }
 
     return new_pages_at_vaddr(vspace, vaddr, num_pages, size_bits, res->rights, res->cacheable);
-}
-
-void *
-sel4utils_new_pages(vspace_t *vspace, seL4_CapRights rights, size_t num_pages,
-                    size_t size_bits)
-{
-    struct sel4utils_alloc_data *data = get_alloc_data(vspace);
-
-    void *vaddr = find_range(data, num_pages, size_bits);
-    if (vaddr == NULL) {
-        return NULL;
-    }
-
-    int error = new_pages_at_vaddr(vspace, vaddr, num_pages, size_bits, rights, 1);
-    if (error == seL4_NoError) {
-        return vaddr;
-    } else {
-        return NULL;
-    }
 }
 
 int sel4utils_reserve_range_no_alloc_aligned(vspace_t *vspace, sel4utils_res_t *reservation,

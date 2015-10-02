@@ -330,11 +330,20 @@ static inline int
 vspace_new_pages_at_vaddr(vspace_t *vspace, void *vaddr, size_t num_pages, size_t size_bits,
                           reservation_t reservation)
 {
-    assert(vspace);
-    assert(num_pages > 0);
-    assert(vspace->new_pages_at_vaddr);
+    if (vspace == NULL) {
+        ZF_LOGE("vspace is NULL");
+        return -1;
+    }
 
+    if (num_pages == 0) {
+        ZF_LOGW("attempt to create 0 pages");
+        return 0;
+    }
 
+    if (vspace->new_pages_at_vaddr == NULL) {
+        ZF_LOGE("Unimplemented");
+        return -1;
+    }
 
     return vspace->new_pages_at_vaddr(vspace, vaddr, num_pages, size_bits, reservation);
 }
@@ -343,11 +352,29 @@ static inline int
 vspace_map_pages_at_vaddr(vspace_t *vspace, seL4_CPtr caps[], uint32_t cookies[], void *vaddr,
                           size_t num_pages, size_t size_bits, reservation_t reservation)
 {
-    assert(vspace);
-    assert(num_pages > 0);
-    assert(size_bits > 0);
-    assert(vaddr);
-    assert(vspace->map_pages_at_vaddr);
+    if (vspace == NULL) {
+        ZF_LOGE("vspace is NULL");
+        return -1;
+    }
+
+    if (num_pages == 0) {
+        ZF_LOGW("Attempt to map 0 pages");
+        return 0;
+    }
+
+    if (!utils_valid_size_bits(size_bits)) {
+        ZF_LOGE("Invalid size bits %u", size_bits);
+        return -1;
+    }
+
+    if (vaddr == NULL) {
+        ZF_LOGW("Mapping NULL");
+    }
+
+    if (vspace->map_pages_at_vaddr == NULL) {
+        ZF_LOGW("Unimplemented\n");
+        return -1;
+    }
 
     return vspace->map_pages_at_vaddr(vspace, caps, cookies, vaddr, num_pages, size_bits, reservation);
 }
@@ -355,11 +382,31 @@ vspace_map_pages_at_vaddr(vspace_t *vspace, seL4_CPtr caps[], uint32_t cookies[]
 static inline void
 vspace_unmap_pages(vspace_t *vspace, void *vaddr, size_t num_pages, size_t size_bits, vka_t *vka)
 {
-    assert(vspace);
-    assert(num_pages > 0);
-    assert(size_bits > 0);
-    assert(vaddr);
-    assert(vspace->unmap_pages);
+
+    if (vspace == NULL) {
+        ZF_LOGE("vspace is NULL");
+        return;
+    }
+
+    if (num_pages == 0) {
+        printf("Num pages : %d\n", num_pages);
+        ZF_LOGW("Attempt to unmap 0 pages");
+        return;
+    }
+
+    if (!utils_valid_size_bits(size_bits)) {
+        ZF_LOGE("Invalid size_bits %d", size_bits);
+        return;
+    }
+
+    if (vaddr == NULL) {
+        ZF_LOGW("Attempt to unmap NULL\n");
+    }
+
+    if (vspace->unmap_pages == NULL) {
+        ZF_LOGE("Not implemented\n");
+        return;
+    }
 
     vspace->unmap_pages(vspace, vaddr, num_pages, size_bits, vka);
 }
@@ -367,10 +414,15 @@ vspace_unmap_pages(vspace_t *vspace, void *vaddr, size_t num_pages, size_t size_
 static inline void
 vspace_tear_down(vspace_t *vspace, vka_t *vka)
 {
-    assert(vspace);
-    assert(vka);
-    assert(vspace->tear_down);
+    if (vspace == NULL) {
+        ZF_LOGE("vspace is NULL");
+        return;
+    }
 
+    if (vspace->tear_down == NULL) {
+        ZF_LOGE("Not implemented");
+        return;
+    }
     vspace->tear_down(vspace, vka);
 }
 
@@ -379,10 +431,32 @@ static inline reservation_t
 vspace_reserve_range_aligned(vspace_t *vspace, size_t bytes, size_t size_bits,
                              seL4_CapRights rights, int cacheable, void **vaddr)
 {
-    assert(vspace);
-    assert(bytes > 0);
-    assert(vaddr != NULL);
-    assert(vspace->reserve_range);
+    reservation_t error = { .res = 0 };
+
+    if (vspace == NULL) {
+        ZF_LOGE("vspace is NULL");
+        return error;
+    }
+
+    if (vspace->reserve_range_aligned == NULL) {
+        ZF_LOGE("Not implemented");
+        return error;
+    }
+
+    if (bytes == 0) {
+        ZF_LOGE("Attempt to reserve 0 length range");
+        return error;
+    }
+
+    if (vaddr == NULL) {
+        ZF_LOGE("Cannot store result at NULL");
+        return error;
+    }
+
+    if (!utils_valid_size_bits(size_bits)) {
+        ZF_LOGE("Invalid size_bits %d", size_bits);
+        return error;
+    }
 
     return vspace->reserve_range_aligned(vspace, bytes, size_bits, rights, cacheable, vaddr);
 }
@@ -391,9 +465,22 @@ static inline reservation_t
 vspace_reserve_range_at(vspace_t *vspace, void *vaddr,
                         size_t bytes, seL4_CapRights rights, int cacheable)
 {
-    assert(vspace);
-    assert(bytes > 0);
-    assert(vspace->reserve_range_at);
+    reservation_t error = { .res = 0 };
+
+    if (vspace == NULL) {
+        ZF_LOGE("vspace is NULL");
+        return error;
+    }
+
+    if (vspace->reserve_range_at == NULL) {
+        ZF_LOGE("Not implemented");
+        return error;
+    }
+
+    if (bytes == 0) {
+        ZF_LOGE("Attempt to reserve 0 length range");
+        return error;
+    }
 
     return vspace->reserve_range_at(vspace, vaddr, bytes, rights, cacheable);
 }
@@ -401,8 +488,15 @@ vspace_reserve_range_at(vspace_t *vspace, void *vaddr,
 static inline void
 vspace_free_reservation(vspace_t *vspace, reservation_t reservation)
 {
-    assert(vspace);
-    assert(vspace->free_reservation);
+    if (vspace == NULL) {
+        ZF_LOGE("vspace is NULL");
+        return;
+    }
+
+    if (vspace->free_reservation == NULL) {
+        ZF_LOGE("Not implemented");
+        return;
+    }
 
     vspace->free_reservation(vspace, reservation);
 }
@@ -410,9 +504,15 @@ vspace_free_reservation(vspace_t *vspace, reservation_t reservation)
 static inline void
 vspace_free_reservation_by_vaddr(vspace_t *vspace, void *vaddr)
 {
-    assert(vspace);
-    assert(vaddr);
-    assert(vspace->free_reservation);
+    if (vspace == NULL) {
+        ZF_LOGE("vspace is NULL");
+        return;
+    }
+
+    if (vspace->free_reservation_by_vaddr == NULL) {
+        ZF_LOGE("Not implemented");
+        return;
+    }
 
     vspace->free_reservation_by_vaddr(vspace, vaddr);
 }
@@ -420,9 +520,20 @@ vspace_free_reservation_by_vaddr(vspace_t *vspace, void *vaddr)
 static inline seL4_CPtr
 vspace_get_cap(vspace_t *vspace, void *vaddr)
 {
-    assert(vspace);
-    assert(vaddr);
-    assert(vspace->get_cap);
+
+    if (vspace == NULL) {
+        ZF_LOGE("vspace is NULL");
+        return seL4_CapNull;
+    }
+
+    if (vaddr == NULL) {
+        ZF_LOGW("Warning: null address");
+    }
+
+    if (vspace->get_cap == NULL) {
+        ZF_LOGE("Not implemented\n");
+        return seL4_CapNull;
+    }
 
     return vspace->get_cap(vspace, vaddr);
 }
@@ -430,9 +541,20 @@ vspace_get_cap(vspace_t *vspace, void *vaddr)
 static inline uint32_t
 vspace_get_cookie(vspace_t *vspace, void *vaddr)
 {
-    assert(vspace);
-    assert(vaddr);
-    assert(vspace->get_cookie);
+    if (vspace == NULL) {
+        ZF_LOGE("vspace is NULL");
+        return 0;
+    }
+
+    if (vaddr == NULL) {
+        /* only warn as someone might do this intentionally? */
+        ZF_LOGW("Warning: null address");
+    }
+
+    if (vspace->get_cookie == NULL) {
+        ZF_LOGE("Not implemented");
+        return 0;
+    }
 
     return vspace->get_cookie(vspace, vaddr);
 }
@@ -443,9 +565,11 @@ vspace_get_cookie(vspace_t *vspace, void *vaddr)
 static inline void
 vspace_maybe_call_allocated_object(vspace_t *vspace, vka_object_t object)
 {
-    assert(vspace != NULL);
+    if (vspace == NULL) {
+        ZF_LOGF("vspace is NULL");
+    }
+
     if (vspace->allocated_object != NULL) {
-        assert(vspace->allocated_object != NULL);
         vspace->allocated_object(vspace->allocated_object_cookie, object);
     }
 }
@@ -453,7 +577,10 @@ vspace_maybe_call_allocated_object(vspace_t *vspace, vka_object_t object)
 static inline seL4_CPtr
 vspace_get_root(vspace_t *vspace)
 {
-    assert(vspace);
+    if (vspace == NULL) {
+        ZF_LOGE("vspace is NULL");
+        return seL4_CapNull;
+    }
     return vspace->get_root(vspace);
 }
 

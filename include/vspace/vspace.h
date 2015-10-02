@@ -279,8 +279,6 @@ typedef void (*vspace_free_reservation_fn)(vspace_t *vspace, reservation_t reser
  */
 typedef void (*vspace_free_reservation_by_vaddr_fn)(vspace_t *vspace, void *vaddr);
 
-
-
 /**
  * Get the capability mapped at a virtual address.
  *
@@ -301,7 +299,6 @@ typedef seL4_CPtr (*vspace_get_cap_fn)(vspace_t *vspace, void *vaddr);
  * @return the allocation cookie mapped to this virtual address, 0 otherwise.
  */
 typedef uint32_t (*vspace_get_cookie_fn)(vspace_t *vspace, void *vaddr);
-
 
 /**
  * Function that the vspace allocator will call if it allocates any memory.

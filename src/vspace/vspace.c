@@ -220,7 +220,7 @@ sel4utils_map_page_pd(vspace_t *vspace, seL4_CPtr cap, void *vaddr, seL4_CapRigh
                                    rights, cacheable, objects, &num);
     if (error) {
         /* everything has gone to hell. Do no clean up. */
-        LOG_ERROR("Error mapping pages, bailing: %d", error);
+        ZF_LOGE("Error mapping pages, bailing: %d", error);
         return -1;
     }
 
@@ -243,7 +243,7 @@ sel4utils_map_page_ept(vspace_t *vspace, seL4_CPtr cap, void *vaddr, seL4_CapRig
     int error = sel4utils_map_ept_page(data->vka, data->page_directory, cap,
                                        (seL4_Word) vaddr, rights, cacheable, size_bits, &pagetable, &pagedir);
     if (error) {
-        LOG_ERROR("Error mapping pages, bailing\n");
+        ZF_LOGE("Error mapping pages, bailing\n");
         return -1;
     }
 
@@ -274,7 +274,7 @@ sel4utils_map_page_iommu(vspace_t *vspace, seL4_CPtr cap, void *vaddr, seL4_CapR
     int error = sel4utils_map_iospace_page(data->vka, data->page_directory, cap,
                                            (seL4_Word) vaddr, rights, cacheable, size_bits, pts, &num_pts);
     if (error) {
-        LOG_ERROR("Error mapping pages, bailing");
+        ZF_LOGE("Error mapping pages, bailing");
         return -1;
     }
 
@@ -319,29 +319,33 @@ find_range(sel4utils_alloc_data_t *data, size_t num_pages, size_t size_bits)
     /* look for a contiguous range that is free.
      * We use first-fit with the optimisation that we store
      * a pointer to the last thing we freed/allocated */
-    int num_4k_pages = BYTES_TO_4K_PAGES(num_pages * (1 << size_bits));
     void *current = data->last_allocated;
     size_t contiguous = 0;
-    void *start = data->last_allocated;
-    while (contiguous < num_4k_pages) {
+    void *start = (void *) ALIGN_UP((uintptr_t) data->last_allocated, SIZE_BITS_TO_BYTES(size_bits));
 
-        if (is_available(data->top_level, current) && IS_ALIGNED((uint32_t)((seL4_Word)start), size_bits)) {
+    assert(IS_ALIGNED((uintptr_t) start, size_bits));
+    while (contiguous < num_pages) {
+
+        if (is_available(data->top_level, current)) {
             contiguous++;
         } else {
-            start = current + PAGE_SIZE_4K;
+            start = current + SIZE_BITS_TO_BYTES(size_bits);
             contiguous = 0;
         }
 
-        current += PAGE_SIZE_4K;
+        current += SIZE_BITS_TO_BYTES(size_bits);
 
         if (current >= (void *) KERNEL_RESERVED_START) {
-            LOG_ERROR("Out of virtual memory");
+            ZF_LOGE("Out of virtual memory");
             return NULL;
         }
 
     }
 
-    data->last_allocated = current;
+    /* only update last_allocated if we didn't leave a hole */
+    if (start == data->last_allocated) {
+        data->last_allocated = current;
+    }
 
     return start;
 }
@@ -380,7 +384,7 @@ new_pages_at_vaddr(vspace_t *vspace, void *vaddr, size_t num_pages, size_t size_
         vka_object_t object;
         if (vka_alloc_frame(data->vka, size_bits, &object) != 0) {
             /* abort! */
-            LOG_ERROR("Failed to allocate page");
+            ZF_LOGE("Failed to allocate page");
             break;
         }
 
@@ -440,26 +444,6 @@ sel4utils_get_cookie(vspace_t *vspace, void *vaddr)
     return get_cookie(data->top_level, vaddr);
 }
 
-void *
-sel4utils_map_pages(vspace_t *vspace, seL4_CPtr caps[], uint32_t cookies[], seL4_CapRights rights,
-                    size_t num_pages, size_t size_bits, int cacheable)
-{
-    struct sel4utils_alloc_data *data = get_alloc_data(vspace);
-    void *vaddr = find_range(data, num_pages, size_bits);
-
-    if (vaddr == NULL) {
-        return NULL;
-    }
-
-    int error = map_pages_at_vaddr(vspace, caps, cookies, vaddr, num_pages, size_bits, rights,
-                                   cacheable);
-    if (error == seL4_NoError) {
-        return vaddr;
-    } else {
-        return NULL;
-    }
-}
-
 void
 sel4utils_unmap_pages(vspace_t *vspace, void *vaddr, size_t num_pages, size_t size_bits, vka_t *vka)
 {
@@ -477,7 +461,7 @@ sel4utils_unmap_pages(vspace_t *vspace, void *vaddr, size_t num_pages, size_t si
         if (cap != 0) {
             int error = seL4_ARCH_Page_Unmap(get_cap(data->top_level, vaddr));
             if (error != seL4_NoError) {
-                LOG_ERROR("Failed to unmap page at vaddr %p", vaddr);
+                ZF_LOGE("Failed to unmap page at vaddr %p", vaddr);
             }
         }
 
@@ -508,38 +492,18 @@ sel4utils_new_pages_at_vaddr(vspace_t *vspace, void *vaddr, size_t num_pages,
     sel4utils_res_t *res = reservation_to_res(reservation);
 
     if (!check_reservation(data->top_level, res, vaddr, num_pages, size_bits)) {
-        LOG_ERROR("Range for vaddr %p with %"PRIuPTR" 4k pages not reserved!", vaddr, num_pages);
+        ZF_LOGE("Range for vaddr %p with %"PRIuPTR" 4k pages not reserved!", vaddr, num_pages);
         return -1;
     }
 
     return new_pages_at_vaddr(vspace, vaddr, num_pages, size_bits, res->rights, res->cacheable);
 }
 
-void *
-sel4utils_new_pages(vspace_t *vspace, seL4_CapRights rights, size_t num_pages,
-                    size_t size_bits)
-{
-    struct sel4utils_alloc_data *data = get_alloc_data(vspace);
-
-    void *vaddr = find_range(data, num_pages, size_bits);
-    if (vaddr == NULL) {
-        return NULL;
-    }
-
-    int error = new_pages_at_vaddr(vspace, vaddr, num_pages, size_bits, rights, 1);
-    if (error == seL4_NoError) {
-        return vaddr;
-    } else {
-        return NULL;
-    }
-}
-
-
-int sel4utils_reserve_range_no_alloc(vspace_t *vspace, sel4utils_res_t *reservation, size_t size,
-                                     seL4_CapRights rights, int cacheable, void **result)
+int sel4utils_reserve_range_no_alloc_aligned(vspace_t *vspace, sel4utils_res_t *reservation,
+                                             size_t size, size_t size_bits, seL4_CapRights rights, int cacheable, void **result)
 {
     sel4utils_alloc_data_t *data = get_alloc_data(vspace);
-    void *vaddr = find_range(data, BYTES_TO_4K_PAGES(size), seL4_PageBits);
+    void *vaddr = find_range(data, BYTES_TO_SIZE_BITS_PAGES(size, size_bits), size_bits);
 
     if (vaddr == NULL) {
         return -1;
@@ -551,15 +515,22 @@ int sel4utils_reserve_range_no_alloc(vspace_t *vspace, sel4utils_res_t *reservat
     return 0;
 }
 
+int sel4utils_reserve_range_no_alloc(vspace_t *vspace, sel4utils_res_t *reservation, size_t size,
+                                     seL4_CapRights rights, int cacheable, void **result)
+{
+    return sel4utils_reserve_range_no_alloc_aligned(vspace, reservation, size, seL4_PageBits,
+                                                    rights, cacheable, result);
+}
+
 reservation_t
-sel4utils_reserve_range(vspace_t *vspace, size_t size, seL4_CapRights rights,
-                        int cacheable, void **result)
+sel4utils_reserve_range_aligned(vspace_t *vspace, size_t bytes, size_t size_bits, seL4_CapRights rights,
+                                int cacheable, void **result)
 {
     reservation_t reservation;
     sel4utils_res_t *res = (sel4utils_res_t *) malloc(sizeof(sel4utils_res_t));
 
     if (res == NULL) {
-        LOG_ERROR("Malloc failed");
+        ZF_LOGE("Malloc failed");
         reservation.res = NULL;
         return reservation;
     }
@@ -567,7 +538,7 @@ sel4utils_reserve_range(vspace_t *vspace, size_t size, seL4_CapRights rights,
     reservation.res = res;
     res->malloced = 1;
 
-    int error = sel4utils_reserve_range_no_alloc(vspace, res, size, rights, cacheable, result);
+    int error = sel4utils_reserve_range_no_alloc_aligned(vspace, res, bytes, size_bits, rights, cacheable, result);
     if (error) {
         free(reservation.res);
         reservation.res = NULL;
@@ -582,7 +553,7 @@ int sel4utils_reserve_range_at_no_alloc(vspace_t *vspace, sel4utils_res_t *reser
     sel4utils_alloc_data_t *data = get_alloc_data(vspace);
     if (!check_empty_range(data->top_level, vaddr, BYTES_TO_4K_PAGES(size),
                            seL4_PageBits)) {
-        LOG_ERROR("Range not available at %p, size %p", vaddr, (void*)size);
+        ZF_LOGE("Range not available at %p, size %p", vaddr, (void*)size);
         return -1;
     }
     perform_reservation(vspace, reservation, vaddr, size, rights, cacheable);
@@ -597,7 +568,7 @@ sel4utils_reserve_range_at(vspace_t *vspace, void *vaddr, size_t size, seL4_CapR
     reservation.res = malloc(sizeof(sel4utils_res_t));
 
     if (reservation.res == NULL) {
-        LOG_ERROR("Malloc failed");
+        ZF_LOGE("Malloc failed");
         reservation.res = NULL;
         return reservation;
     }
@@ -721,7 +692,7 @@ sel4utils_tear_down(vspace_t *vspace, vka_t *vka)
     sel4utils_alloc_data_t *data = get_alloc_data(vspace);
 
     if (data->bootstrap == NULL) {
-        LOG_ERROR("Not implemented: sel4utils cannot currently tear down a self-bootstrapped vspace\n");
+        ZF_LOGE("Not implemented: sel4utils cannot currently tear down a self-bootstrapped vspace\n");
         return;
     }
 
@@ -771,6 +742,63 @@ sel4utils_tear_down(vspace_t *vspace, vka_t *vka)
 
 }
 
+int
+sel4utils_share_mem_at_vaddr(vspace_t *from, vspace_t *to, void *start, int num_pages,
+                             size_t size_bits, void *vaddr, reservation_t reservation)
+{
+    int error = 0; /* no error */
+    sel4utils_alloc_data_t *from_data = get_alloc_data(from);
+    sel4utils_alloc_data_t *to_data = get_alloc_data(to);
+    cspacepath_t from_path, to_path;
+    int page;
+    sel4utils_res_t *res = reservation_to_res(reservation);
 
+    /* go through, page by page, and duplicate the page cap into the to cspace and
+     * map it into the to vspace */
+    size_t size_bytes = 1 << size_bits;
+    for (page = 0; page < num_pages; page++) {
+        void *from_vaddr = start + page * size_bytes;
+        void *to_vaddr = vaddr + page * size_bytes;
+
+        /* get the frame cap to be copied */
+        seL4_CPtr cap = vspace_get_cap(from, from_vaddr);
+        if (cap == seL4_CapNull) {
+            ZF_LOGE("Cap not present in from vspace to copy, vaddr %p!", from_vaddr);
+            error = -1;
+            break;
+        }
+
+        /* create a path to the cap */
+        vka_cspace_make_path(from_data->vka, cap, &from_path);
+
+        /* allocate a path to put the copy in the destination */
+        error = vka_cspace_alloc_path(to_data->vka, &to_path);
+        if (error) {
+            ZF_LOGE("Failed to allocate slot in to cspace, error: %d", error);
+            break;
+        }
+
+        /* copy the frame cap into the to cspace */
+        error = vka_cnode_copy(&to_path, &from_path, res->rights);
+        if (error) {
+            ZF_LOGE("Failed to copy cap, error %d\n", error);
+            break;
+        }
+
+        /* now finally map the page */
+        error = map_page(to, to_path.capPtr, to_vaddr, res->rights, res->cacheable, size_bits);
+        if (error) {
+            ZF_LOGE("Failed to map page into target vspace at vaddr %p", to_vaddr);
+            break;
+        }
+    }
+
+    if (error) {
+        /* we didn't finish, undo any pages we did map */
+        vspace_unmap_pages(to, vaddr, page, size_bits, VSPACE_FREE);
+    }
+
+    return error;
+}
 
 #endif /* CONFIG_LIB_SEL4_VKA && CONFIG_LIB_SEL4_VSPACE */

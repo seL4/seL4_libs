@@ -102,14 +102,12 @@ common_init_post_bootstrap(vspace_t *vspace, sel4utils_map_page_fn map_page)
     data->map_page = map_page;
 
     /* initialise the rest of the functions now that they are useable */
-    vspace->new_pages = sel4utils_new_pages;
     vspace->new_pages_at_vaddr = sel4utils_new_pages_at_vaddr;
 
-    vspace->map_pages = sel4utils_map_pages;
     vspace->map_pages_at_vaddr = sel4utils_map_pages_at_vaddr;
     vspace->unmap_pages = sel4utils_unmap_pages;
 
-    vspace->reserve_range = sel4utils_reserve_range;
+    vspace->reserve_range_aligned = sel4utils_reserve_range_aligned;
     vspace->reserve_range_at = sel4utils_reserve_range_at;
     vspace->free_reservation = sel4utils_free_reservation;
     vspace->free_reservation_by_vaddr = sel4utils_free_reservation_by_vaddr;
@@ -119,6 +117,7 @@ common_init_post_bootstrap(vspace_t *vspace, sel4utils_map_page_fn map_page)
     vspace->get_root = sel4utils_get_root;
 
     vspace->tear_down = sel4utils_tear_down;
+    vspace->share_mem_at_vaddr = sel4utils_share_mem_at_vaddr;
 }
 
 static int

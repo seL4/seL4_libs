@@ -230,6 +230,8 @@ sel4utils_bootstrap_vspace_leaky(vspace_t *vspace, sel4utils_alloc_data_t *data,
  * used during bootstrapping where malloc has not yet been setup.
  * Reservations created with this function should *only* be freed with sel4utils_reserve_range_at_no_alloc
  *
+ * Result will be aligned to 4K.
+ *
  * @param vspace the virtual memory allocator to use.
  * @param reservation Allocated reservation struct to fill out
  * @param bytes the size in bytes to map.
@@ -241,6 +243,12 @@ sel4utils_bootstrap_vspace_leaky(vspace_t *vspace, sel4utils_alloc_data_t *data,
  */
 int sel4utils_reserve_range_no_alloc(vspace_t *vspace, sel4utils_res_t *reservation, size_t size,
                                      seL4_CapRights rights, int cacheable, void **result);
+
+/*
+ * @see sel4utils_reserve_range_no_alloc, however result is aligned to size_bits.
+ */
+int sel4utils_reserve_range_no_alloc_aligned(vspace_t *vspace, sel4utils_res_t *reservation,
+                                             size_t size, size_t size_bits, seL4_CapRights rights, int cacheable, void **result);
 
 /**
  * Attempts to create a new vspace reservation. Function behaves similarly to vspace_reserve_range_at

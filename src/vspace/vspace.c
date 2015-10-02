@@ -343,9 +343,7 @@ find_range(sel4utils_alloc_data_t *data, size_t num_pages, size_t size_bits)
     }
 
     /* only update last_allocated if we didn't leave a hole */
-    if (start == data->last_allocated) {
-        data->last_allocated = current;
-    }
+    data->last_allocated = current;
 
     return start;
 }

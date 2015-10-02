@@ -10,7 +10,6 @@
 #ifndef _SEL4UTILS_ARCH_MAPPING_H
 #define _SEL4UTILS_ARCH_MAPPING_H
 
-#define seL4_ARCH_Uncached_VMAttributes seL4_IA32_CacheDisabled
 
 #define seL4_ARCH_Page_Map             seL4_IA32_Page_Map
 #define seL4_ARCH_Page_Unmap           seL4_IA32_Page_Unmap
@@ -25,7 +24,7 @@
 #define seL4_ARCH_Default_VMAttributes seL4_IA32_Default_VMAttributes
 #define seL4_ARCH_VMAttributes         seL4_IA32_VMAttributes
 #define seL4_ARCH_4KPage               seL4_IA32_4K
-#define seL4_ARCH_Uncached_VMAttributes 0
+#define seL4_ARCH_Uncached_VMAttributes seL4_IA32_CacheDisabled
 /* Remap does not exist on all kernels */
 #define seL4_ARCH_Page_Remap           seL4_IA32_Page_Remap
 #define ARCHPageGetAddress             IA32PageGetAddress

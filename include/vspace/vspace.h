@@ -133,7 +133,7 @@ void *vspace_new_ipc_buffer(vspace_t *vspace, seL4_CPtr *page);
  */
 void vspace_free_ipc_buffer(vspace_t *vspace, void *addr);
 
-/* IMPLEMENTATION SPECIFIC FUNCTIONS -> function pointers of the vspace used */
+/* IMPLEMENTATION SPECIFIC FUNCTIONS - function pointers of the vspace used */
 
 /**
  * Create a virtually contiguous area of mapped pages, at the specified virtual address.

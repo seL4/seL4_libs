@@ -22,6 +22,21 @@ typedef struct reservation {
 } reservation_t;
 
 /**
+ * Reserve a range to map memory into later, aligned to 4K.
+ * Regions will be aligned to 4K boundaries.
+ *
+ * @param vspace the virtual memory allocator to use.
+ * @param bytes the size in bytes to map.
+ * @param rights the rights to map the pages in with in this reservation
+ * @param cacheable 1 if the pages should be mapped with cacheable attributes. 0 for DMA.
+ * @param vaddr the virtual address of the reserved range will be returned here.
+ *
+ * @return a reservation to use when mapping pages in the range.
+ */
+reservation_t vspace_reserve_range(vspace_t *vspace, size_t bytes,
+                                   seL4_CapRights rights, int cacheable, void **vaddr);
+
+/**
  * Create a stack. The determines stack size.
  *
  * @param vspace the virtual memory allocator used.
@@ -193,14 +208,15 @@ typedef void (*vspace_tear_down_fn)(vspace_t *vspace, vka_t *free);
  *
  * @param vspace the virtual memory allocator to use.
  * @param bytes the size in bytes to map.
+ * @param size_bits size to align the range to
  * @param rights the rights to map the pages in with in this reservation
  * @param cacheable 1 if the pages should be mapped with cacheable attributes. 0 for DMA.
  * @param vaddr the virtual address of the reserved range will be returned here.
  *
  * @return a reservation to use when mapping pages in the range.
  */
-typedef reservation_t (*vspace_reserve_range_fn)(vspace_t *vspace, size_t bytes,
-                                                 seL4_CapRights rights, int cacheable, void **vaddr);
+typedef reservation_t (*vspace_reserve_range_aligned_fn)(vspace_t *vspace, size_t bytes, size_t size_bits,
+                                                         seL4_CapRights rights, int cacheable, void **vaddr);
 
 /**
  * Reserve a range to map memory in to later at a specific address.
@@ -292,7 +308,7 @@ struct vspace {
     vspace_unmap_pages_fn unmap_pages;
     vspace_tear_down_fn tear_down;
 
-    vspace_reserve_range_fn reserve_range;
+    vspace_reserve_range_aligned_fn reserve_range_aligned;
     vspace_reserve_range_at_fn reserve_range_at;
     vspace_free_reservation_fn free_reservation;
     vspace_free_reservation_by_vaddr_fn free_reservation_by_vaddr;
@@ -377,15 +393,15 @@ vspace_tear_down(vspace_t *vspace, vka_t *vka)
 
 
 static inline reservation_t
-vspace_reserve_range(vspace_t *vspace, size_t bytes, seL4_CapRights rights,
-                     int cacheable, void **vaddr)
+vspace_reserve_range_aligned(vspace_t *vspace, size_t bytes, size_t size_bits,
+                             seL4_CapRights rights, int cacheable, void **vaddr)
 {
     assert(vspace);
     assert(bytes > 0);
     assert(vaddr != NULL);
     assert(vspace->reserve_range);
 
-    return vspace->reserve_range(vspace, bytes, rights, cacheable, vaddr);
+    return vspace->reserve_range_aligned(vspace, bytes, size_bits, rights, cacheable, vaddr);
 }
 
 static inline reservation_t

@@ -63,4 +63,12 @@ vspace_free_ipc_buffer(vspace_t *vspace, void *addr)
     vspace_unmap_pages(vspace, addr, 1, seL4_PageBits, VSPACE_FREE);
 }
 
+/* this function is for backwards compatibility after interface change */
+reservation_t
+vspace_reserve_range(vspace_t *vspace, size_t bytes,
+                     seL4_CapRights rights, int cacheable, void **vaddr)
+{
+    return vspace_reserve_range_aligned(vspace, bytes, seL4_PageBits, rights, cacheable, vaddr);
+}
+
 

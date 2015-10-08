@@ -221,7 +221,7 @@ sel4utils_spawn_process(sel4utils_process_t *process, vka_t *vka, vspace_t *vspa
         new_process_argv = stack_top;
     }
     /* Some architectures want stack to be double word aligned */
-    stack_top = ROUND_DOWN(stack_top, sizeof(int) * 2);
+    stack_top = ROUND_DOWN(stack_top, sizeof(void*) * 2);
 
     /* On arm we write the arguments to registers */
 #ifdef CONFIG_ARCH_IA32

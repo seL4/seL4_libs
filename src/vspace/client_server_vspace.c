@@ -167,7 +167,7 @@ static int cs_map_pages_at_vaddr(vspace_t *vspace, seL4_CPtr caps[], uint32_t co
     int result = vspace_map_pages_at_vaddr(cs_vspace->client, caps, cookies, vaddr, num_pages, size_bits, reservation);
     if (result) {
         LOG_ERROR("Error mapping pages into client vspace");
-        /* some error, propogate up */
+        /* some error, propagate up */
         return result;
     }
     /* now map them all into the server */
@@ -272,7 +272,7 @@ void *sel4utils_cs_vspace_translate(vspace_t *vspace, void *addr)
 
     seL4_CPtr translation_result = get_cap(cs_vspace->translation_data.top_level, addr);
 
-    /* the translation will through away any non aligned bits, if we got a successful
+    /* the translation will throw away any non aligned bits, if we got a successful
      * translation then add the offset back onto the result */
     return translation_result == 0 ? NULL : ((void*)translation_result) + OFFSET(addr);
 }

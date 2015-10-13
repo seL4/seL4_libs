@@ -40,14 +40,14 @@ static inline int vka_alloc_object(vka_t *vka, seL4_Word type, seL4_Word size_bi
     uint32_t ut;
     int error;
     cspacepath_t path;
-    assert(vka);
-    assert(result);
+
     if ( (error = vka_cspace_alloc(vka, &cptr)) != 0) {
         return error;
     }
+
     vka_cspace_make_path(vka, cptr, &path);
     if ( (error = vka_utspace_alloc(vka, &path, type, size_bits, &ut)) != 0) {
-        fprintf(stderr, "Failed to allocate object of size %lu, error %d\n", BIT(size_bits), error); 
+        ZF_LOGE("Failed to allocate object of size %lu, error %d\n", BIT(size_bits), error);
         vka_cspace_free(vka, cptr);
         return error;
     }

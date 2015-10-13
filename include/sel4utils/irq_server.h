@@ -95,7 +95,7 @@ typedef struct irq_server_node* irq_server_node_t;
 
 /**
  * Create a new IRQ server node.
- * @param[in] aep        An async endpoint that can be used for binding IRQ notification
+ * @param[in] notification        An notification object that can be used for binding IRQ notification
  * @param[in] badge_mask A mask for the available badge. Bits NOT set in the mask are
  *                       considered reserved and will not be used for IRQ identification.
  *                       This does, however, reduce the number of IRQs that this node can
@@ -103,7 +103,7 @@ typedef struct irq_server_node* irq_server_node_t;
  *                       identification of other notifications to the same endpoint.
  * @return               A handle to the created IRQ server node, or NULL on failure.
  */
-irq_server_node_t irq_server_node_new(seL4_CPtr aep, seL4_Word badge_mask);
+irq_server_node_t irq_server_node_new(seL4_CPtr notification, seL4_Word badge_mask);
 
 /**
  * Register an IRQ with a server node.

@@ -51,8 +51,8 @@ irq_data_ack_irq(struct irq_data* irq)
 struct irq_server_node {
 /// Information about the IRQ that is assigned to each badge bit
     struct irq_data irqs[NIRQS_PER_NODE];
-/// The async endpoint that IRQs arrive on
-    seL4_CPtr aep;
+/// The notification object that IRQs arrive on
+    seL4_CPtr notification;
 /// A mask for the badge. All set bits within the badge are treated as reserved.
     seL4_Word badge_mask;
 };
@@ -79,10 +79,10 @@ irq_server_node_handle_irq(struct irq_server_node *n, uint32_t badge)
 
 /* Binds and IRQ to an endpoint */
 static seL4_CPtr
-irq_bind(irq_t irq, seL4_CPtr aep_cap, int idx, vka_t* vka, simple_t *simple)
+irq_bind(irq_t irq, seL4_CPtr notification_cap, int idx, vka_t* vka, simple_t *simple)
 {
-    seL4_CPtr irq_cap, baep_cap;
-    cspacepath_t irq_path, aep_path, baep_path;
+    seL4_CPtr irq_cap, bnotification_cap;
+    cspacepath_t irq_path, notification_path, bnotification_path;
     seL4_CapData_t badge;
     int err;
 
@@ -101,28 +101,28 @@ irq_bind(irq_t irq, seL4_CPtr aep_cap, int idx, vka_t* vka, simple_t *simple)
     }
     /* Badge the provided endpoint. The bit position of the badge tells us the array
      * index of the associated IRQ data. */
-    err = vka_cspace_alloc(vka, &baep_cap);
+    err = vka_cspace_alloc(vka, &bnotification_cap);
     if (err != 0) {
         LOG_ERROR("Failed to allocate cslot for irq\n");
         vka_cspace_free(vka, irq_cap);
         return seL4_CapNull;
     }
-    vka_cspace_make_path(vka, aep_cap, &aep_path);
-    vka_cspace_make_path(vka, baep_cap, &baep_path);
+    vka_cspace_make_path(vka, notification_cap, &notification_path);
+    vka_cspace_make_path(vka, bnotification_cap, &bnotification_path);
     badge = seL4_CapData_Badge_new(BIT(idx));
-    err = vka_cnode_mint(&baep_path, &aep_path, seL4_AllRights, badge);
+    err = vka_cnode_mint(&bnotification_path, &notification_path, seL4_AllRights, badge);
     if (err != seL4_NoError) {
         LOG_ERROR("Failed to badge IRQ notification endpoint\n");
         vka_cspace_free(vka, irq_cap);
-        vka_cspace_free(vka, baep_cap);
+        vka_cspace_free(vka, bnotification_cap);
         return seL4_CapNull;
     }
     /* bind the IRQ cap to our badged endpoint */
-    err = seL4_IRQHandler_SetEndpoint(irq_cap, baep_cap);
+    err = seL4_IRQHandler_SetNotification(irq_cap, bnotification_cap);
     if (err != seL4_NoError) {
-        LOG_ERROR("Faild to bind IRQ handler to asynchronous endpoint\n");
+        LOG_ERROR("Faild to bind IRQ handler to notification\n");
         vka_cspace_free(vka, irq_cap);
-        vka_cspace_free(vka, baep_cap);
+        vka_cspace_free(vka, bnotification_cap);
         return seL4_CapNull;
     }
     /* Finally ACK any pending IRQ and enable the IRQ */
@@ -144,7 +144,7 @@ irq_server_node_register_irq(irq_server_node_t n, irq_t irq, irq_handler_fn cb,
     for (i = 0; i < NIRQS_PER_NODE; i++) {
         /* If a cap has not been registered and the bit in the mask is not set */
         if (irqs[i].cap == seL4_CapNull && (n->badge_mask & BIT(i))) {
-            irqs[i].cap = irq_bind(irq, n->aep, i, vka, simple);
+            irqs[i].cap = irq_bind(irq, n->notification, i, vka, simple);
             if (irqs[i].cap == seL4_CapNull) {
                 DIRQSERVER("Failed to bind IRQ\n");
                 return NULL;
@@ -160,11 +160,11 @@ irq_server_node_register_irq(irq_server_node_t n, irq_t irq, irq_handler_fn cb,
 
 /* Creates a new IRQ server node which contains Thread data and registered IRQ data. */
 struct irq_server_node*
-irq_server_node_new(seL4_CPtr aep, seL4_Word badge_mask) {
+irq_server_node_new(seL4_CPtr notification, seL4_Word badge_mask) {
     struct irq_server_node *n;
     n = (irq_server_node_t)malloc(sizeof(*n));
     if (n) {
-        n->aep = aep;
+        n->notification = notification;
         n->badge_mask = badge_mask;
         memset(n->irqs, 0, sizeof(n->irqs));
     }
@@ -184,33 +184,33 @@ struct irq_server_thread {
     seL4_Word label;
 /// Thread data
     sel4utils_thread_t thread;
-/// Asynchronous endpoint object data
-    vka_object_t aep;
+/// notification object data
+    vka_object_t notification;
 /// Linked list chain
     struct irq_server_thread* next;
 };
 
-/* IRQ handler thread. Wait on an async EP for IRQs. When one arrives, send a
+/* IRQ handler thread. Wait on a notification object for IRQs. When one arrives, send a
  * synchronous message to the registered endpoint. If no synchronous endpoint was
  * registered, call the appropriate handler function directly (must be thread safe) */
 static void
 _irq_thread_entry(struct irq_server_thread* st)
 {
     seL4_CPtr sep;
-    seL4_CPtr aep;
+    seL4_CPtr notification;
     uint32_t node_ptr;
     seL4_Word label;
 
     sep = st->delivery_sep;
-    aep = st->node->aep;
+    notification = st->node->notification;
     node_ptr = (uint32_t)st->node;
     label = st->label;
-    DIRQSERVER("thread started. Waiting on endpoint %d\n", aep);
+    DIRQSERVER("thread started. Waiting on endpoint %d\n", notification);
 
     while (1) {
         seL4_MessageInfo_t info;
         seL4_Word badge;
-        info = seL4_Wait(aep, &badge);
+        info = seL4_Wait(notification, &badge);
         assert(badge != 0);
         if (sep != seL4_CapNull) {
             /* Synchronous endpoint registered. Send IPC */
@@ -248,12 +248,12 @@ irq_server_thread_new(vspace_t* vspace, vka_t* vka, seL4_CPtr cspace, seL4_Word 
     st->label = label;
     st->next = NULL;
     /* Create an endpoint to listen on */
-    err = vka_alloc_async_endpoint(vka, &st->aep);
+    err = vka_alloc_notification(vka, &st->notification);
     if (err) {
         LOG_ERROR("Failed to alocate IRQ notification endpoint for IRQ server thread\n");
         return NULL;
     }
-    st->node->aep = st->aep.cptr;
+    st->node->notification = st->notification.cptr;
     /* Create the IRQ thread */
     err = sel4utils_configure_thread(vka, vspace, vspace, seL4_CapNull, priority,
                                      cspace, seL4_NilData, &st->thread);

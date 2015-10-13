@@ -95,9 +95,15 @@ static inline int vka_alloc_endpoint(vka_t *vka, vka_object_t *result)
 {
     return vka_alloc_object(vka, seL4_EndpointObject, seL4_EndpointBits, result);
 }
-static inline int vka_alloc_async_endpoint(vka_t *vka, vka_object_t *result)
+
+static inline int vka_alloc_notification(vka_t *vka, vka_object_t *result)
 {
-    return vka_alloc_object(vka, seL4_AsyncEndpointObject, seL4_EndpointBits, result);
+    return vka_alloc_object(vka, seL4_NotificationObject, seL4_NotificationBits, result);
+}
+/* @deprecated use vka_alloc_notification */
+static inline int DEPRECATED("Use vka_alloc_notification") vka_alloc_async_endpoint(vka_t *vka, vka_object_t *result)
+{
+    return vka_alloc_notification(vka, result);
 }
 static inline int vka_alloc_cnode_object(vka_t *vka, uint32_t slot_bits, vka_object_t *result)
 {
@@ -226,7 +232,7 @@ static inline int vka_alloc_kobject(vka_t *vka, kobject_t type, seL4_Word size_b
 
 LEAKY(tcb)
 LEAKY(endpoint)
-LEAKY(async_endpoint)
+LEAKY(notification)
 LEAKY(page_directory)
 LEAKY(page_table)
 #ifdef CONFIG_PAE_PAGING
@@ -251,6 +257,12 @@ LEAKY(io_page_table)
 #ifdef ARM_HYP
 LEAKY(vcpu)
 #endif
+
+static inline DEPRECATED("use vka_alloc_notification_leaky") seL4_CPtr 
+vka_alloc_async_endpoint_leaky(vka_t *vka)
+{
+    return vka_alloc_notification_leaky(vka);
+}
 
 
 #define LEAKY_SIZE_BITS(name) \
@@ -283,8 +295,8 @@ vka_get_object_size(seL4_Word objectType, seL4_Word objectSize)
         return seL4_TCBBits;
     case seL4_EndpointObject:
         return seL4_EndpointBits;
-    case seL4_AsyncEndpointObject:
-        return seL4_EndpointBits;
+    case seL4_NotificationObject:
+        return seL4_NotificationBits;
     case seL4_CapTableObject:
         return (seL4_SlotBits + objectSize);
 #ifdef CONFIG_CACHE_COLORING 

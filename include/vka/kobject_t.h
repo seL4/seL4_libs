@@ -14,6 +14,7 @@
 #include <sel4/types.h>
 #include <assert.h>
 #include <autoconf.h>
+#include <utils/util.h>
 
 /* Generic Kernel Object Type used by generic allocator */
 
@@ -22,8 +23,8 @@ typedef enum _kobject_type {
     KOBJECT_CNODE,
     KOBJECT_CSLOT,
     KOBJECT_UNTYPED,
-    KOBJECT_ENDPOINT_SYNC,
-    KOBJECT_ENDPOINT_ASYNC,
+    KOBJECT_ENDPOINT,
+    KOBJECT_NOTIFICATION,
     KOBJECT_FRAME,
     KOBJECT_PAGE_DIRECTORY,
     KOBJECT_PAGE_TABLE,
@@ -40,7 +41,8 @@ typedef enum _kobject_type {
     NUM_KOBJECT_TYPES
 
 } kobject_t;
-
+DEPRECATED("Use KOBJECT_NOTIFICATION") static const kobject_t KOBJECT_ASYNC_ENDPOINT = KOBJECT_NOTIFICATION;
+DEPRECATED("Use KOBJECT_ENDPOINT") static const kobject_t KOBJECT_SYNC_ENDPOINT  = KOBJECT_ENDPOINT;
 
 /*
  * Get the size (in bits) of the untyped memory required to
@@ -59,9 +61,9 @@ kobject_get_size(kobject_t type, seL4_Word objectSize)
         return 0;
     case KOBJECT_UNTYPED:
         return objectSize;
-    case KOBJECT_ENDPOINT_SYNC:
+    case KOBJECT_ENDPOINT:
         return seL4_EndpointBits;
-    case KOBJECT_ENDPOINT_ASYNC:
+    case KOBJECT_NOTIFICATION:
         return seL4_EndpointBits;
     case KOBJECT_PAGE_DIRECTORY:
         return seL4_PageDirBits;
@@ -127,10 +129,10 @@ kobject_get_type(kobject_t type, seL4_Word objectSize)
         return -1;
     case KOBJECT_UNTYPED:
         return seL4_UntypedObject;
-    case KOBJECT_ENDPOINT_SYNC:
+    case KOBJECT_ENDPOINT:
         return seL4_EndpointObject;
-    case KOBJECT_ENDPOINT_ASYNC:
-        return seL4_AsyncEndpointObject;
+    case KOBJECT_NOTIFICATION:
+        return seL4_NotificationObject;
 #ifdef CONFIG_CACHE_COLORING 
     case KOBJECT_KERNEL_IMAGE:
         return seL4_KernelImageObject;

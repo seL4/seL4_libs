@@ -109,45 +109,6 @@ static inline int vka_alloc_cnode_object(vka_t *vka, uint32_t slot_bits, vka_obj
 {
     return vka_alloc_object(vka, seL4_CapTableObject, slot_bits, result);
 }
-#ifdef CONFIG_EDF
-static inline int vka_alloc_sched_context(vka_t *vka, vka_object_t *result)
-{
-    return vka_alloc_object(vka, seL4_SchedContextObject, seL4_SchedContextBits, result);
-}
-#endif /* CONFIG_EDF */
-
-/*resource allocation interfaces for virtual machine extensions on x86*/
-#ifdef CONFIG_VTX
-static inline int vka_alloc_vcpu (vka_t *vka, vka_object_t *result) {
-    return vka_alloc_object(vka, seL4_IA32_VCPUObject, seL4_IA32_VCPUBits, result);
-}
-
-static inline int vka_alloc_ept_page_directory_pointer_table (vka_t *vka, vka_object_t *result) {
-    return vka_alloc_object(vka, seL4_IA32_EPTPageDirectoryPointerTableObject, seL4_IA32_EPTPageDirectoryPointerTableBits, result);
-}
-
-static inline int vka_alloc_ept_page_directory (vka_t *vka, vka_object_t *result) {
-    return vka_alloc_object(vka, seL4_IA32_EPTPageDirectoryObject, seL4_IA32_EPTPageDirectoryBits, result);
-}
-
-static inline int vka_alloc_ept_page_table (vka_t *vka, vka_object_t *result) {
-    return vka_alloc_object(vka, seL4_IA32_EPTPageTableObject, seL4_IA32_EPTPageTableBits, result);
-}
-#endif /* CONFIG_VTX */
-
-/*resource allocation interfaces for virtual machine extensions on ARM */
-#ifdef ARM_HYP
-static inline int vka_alloc_vcpu(vka_t *vka, vka_object_t *result) {
-    return vka_alloc_object(vka, seL4_ARM_VCPUObject, seL4_ARM_VCPUBits, result);
-}
-#endif /* ARM_HYP */
-
-
-#ifdef CONFIG_IOMMU
-static inline int vka_alloc_io_page_table(vka_t *vka, vka_object_t *result) {
-    return vka_alloc_object(vka, seL4_IA32_IOPageTableObject, seL4_IOPageTableBits, result);
-}
-#endif
 
 /* For arch specific allocations we call upon kobject to avoid code duplication */
 static inline int vka_alloc_frame(vka_t *vka, uint32_t size_bits, vka_object_t *result)
@@ -155,31 +116,10 @@ static inline int vka_alloc_frame(vka_t *vka, uint32_t size_bits, vka_object_t *
     return vka_alloc_object(vka, kobject_get_type(KOBJECT_FRAME, size_bits), size_bits, result);
 }
 
-#ifdef CONFIG_X86_64
-
-static inline int vka_alloc_page_map_level4(vka_t *vka, vka_object_t *result)
-{
-    return vka_alloc_object(vka, kobject_get_type(KOBJECT_PAGE_MAP_LEVEL4, 0), seL4_PageMapLevel4Bits, result);
-}
-
-static inline int vka_alloc_page_directory_pointer_table(vka_t *vka, vka_object_t *result)
-{
-    return vka_alloc_object(vka, kobject_get_type(KOBJECT_PAGE_DIRECTORY_POINTER_TABLE, 0), seL4_PageDirPointerTableBits, result);
-}
-
-#endif
-
 static inline int vka_alloc_page_directory(vka_t *vka, vka_object_t *result)
 {
     return vka_alloc_object(vka, kobject_get_type(KOBJECT_PAGE_DIRECTORY, 0), seL4_PageDirBits, result);
 }
-
-#ifdef CONFIG_PAE_PAGING
-static inline int vka_alloc_pdpt(vka_t *vka, vka_object_t *result)
-{
-    return vka_alloc_object(vka, seL4_IA32_PDPTObject, seL4_PDPTBits, result);
-}
-#endif
 
 static inline int vka_alloc_page_table(vka_t *vka, vka_object_t *result)
 {
@@ -235,28 +175,6 @@ LEAKY(endpoint)
 LEAKY(notification)
 LEAKY(page_directory)
 LEAKY(page_table)
-#ifdef CONFIG_PAE_PAGING
-LEAKY(pdpt)
-#endif
-#ifdef CONFIG_X86_64
-LEAKY(page_map_level4)
-LEAKY(page_directory_pointer_table)
-#endif
-#ifdef CONFIG_EDF
-LEAKY(sched_context)
-#endif /* CONFIG_EDF */
-#ifdef CONFIG_VTX
-LEAKY(vcpu)
-LEAKY(ept_page_directory_pointer_table)
-LEAKY(ept_page_directory)
-LEAKY(ept_page_table)
-#endif /* CONFIG_VTX */
-#ifdef CONFIG_IOMMU
-LEAKY(io_page_table)
-#endif
-#ifdef ARM_HYP
-LEAKY(vcpu)
-#endif
 
 static inline DEPRECATED("use vka_alloc_notification_leaky") seL4_CPtr 
 vka_alloc_async_endpoint_leaky(vka_t *vka)
@@ -280,6 +198,8 @@ LEAKY_SIZE_BITS(untyped)
 LEAKY_SIZE_BITS(frame)
 LEAKY_SIZE_BITS(cnode_object)
 
+#include <vka/arch/object.h>
+
 /*
  * Get the size (in bits) of the untyped memory required to create an object of
  * the given size.
@@ -302,96 +222,9 @@ vka_get_object_size(seL4_Word objectType, seL4_Word objectSize)
 #ifdef CONFIG_CACHE_COLORING 
     case seL4_KernelImageObject:
         return seL4_KernelImageBits;
-#endif 
-#ifdef CONFIG_EDF
-    case seL4_SchedContextObject:
-        return seL4_SchedContextBits;
-#endif /* CONFIG_EDF */
-#if defined(ARCH_ARM)
-        /* ARM-specific objects. */
-    case seL4_ARM_SmallPageObject:
-        return seL4_PageBits;
-    case seL4_ARM_LargePageObject:
-        return 16;
-#ifdef ARM_HYP
-    case seL4_ARM_SectionObject:
-        return 21;
-    case seL4_ARM_SuperSectionObject:
-        return 25;
-    case seL4_ARM_VCPUObject:
-        return seL4_ARM_VCPUBits;
-#else /* ARM_HYP */
-    case seL4_ARM_SectionObject:
-        return 20;
-    case seL4_ARM_SuperSectionObject:
-        return 24;
-#endif /* ARM_HYP */
-    case seL4_ARM_PageTableObject:
-        return seL4_PageTableBits;
-    case seL4_ARM_PageDirectoryObject:
-        return seL4_PageDirBits;
-#elif defined(ARCH_IA32) /* ARCH_ARM */
-#ifdef CONFIG_X86_64
-    case seL4_X64_4K:
-        return seL4_PageBits;
-    case seL4_X64_2M:
-        return 21;
-    case seL4_X64_PageTableObject:
-        return seL4_PageTableBits;
-    case seL4_X64_PageDirectoryObject:
-        return seL4_PageDirBits;
-    case seL4_X64_PageDirectoryPointerTableObject:
-        return seL4_PageDirPointerTableBits;
-    case seL4_X64_PageMapLevel4Object:
-        return seL4_PageMapLevel4Bits;
-
-#else /* X86_64 */
-        /* IA32specific objects. */
-    case seL4_IA32_4K:
-        return seL4_PageBits;
-    /* Use an #ifdef here to support any old kernels that might
-     * not have seL4_LargePageBits defined. This should be able
-     * to be dropped eventually */
-#ifdef CONFIG_PAE_PAGING
-    case seL4_IA32_LargePage:
-        return seL4_LargePageBits;
-#else
-    case seL4_IA32_4M:
-        return seL4_4MBits;
 #endif
-    case seL4_IA32_PageTableObject:
-        return seL4_PageTableBits;
-    case seL4_IA32_PageDirectoryObject:
-        return seL4_PageDirBits;
-#ifdef CONFIG_PAE_PAGING
-    case seL4_IA32_PDPTObject:
-        return seL4_PDPTBits;
-#endif
-
-#ifdef CONFIG_VTX
-    case seL4_IA32_VCPUObject:
-        return seL4_IA32_VCPUBits;
-    case seL4_IA32_EPTPageDirectoryPointerTableObject:
-        return seL4_IA32_EPTPageDirectoryPointerTableBits;
-    case seL4_IA32_EPTPageDirectoryObject:
-        return seL4_IA32_EPTPageDirectoryBits;
-    case seL4_IA32_EPTPageTableObject:
-        return seL4_IA32_EPTPageTableBits;
-#endif
-
-#ifdef CONFIG_IOMMU
-    case seL4_IA32_IOPageTableObject:
-        return seL4_IOPageTableBits;
-#endif
-
-#endif /* X86_64 */
-#else
-#error "Unknown arch."
-#endif /* ARCH_IA32 */
     default:
-        /* Unknown object type. */
-        assert(0);
-        return -1;
+        return vka_arch_get_object_size(objectType);
     }
 }
 

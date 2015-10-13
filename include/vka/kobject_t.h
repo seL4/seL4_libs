@@ -44,6 +44,7 @@ typedef enum _kobject_type {
 DEPRECATED("Use KOBJECT_NOTIFICATION") static const kobject_t KOBJECT_ASYNC_ENDPOINT = KOBJECT_NOTIFICATION;
 DEPRECATED("Use KOBJECT_ENDPOINT") static const kobject_t KOBJECT_SYNC_ENDPOINT  = KOBJECT_ENDPOINT;
 
+#include <vka/arch/kobject_t.h>
 /*
  * Get the size (in bits) of the untyped memory required to
  * create an object of the given size.
@@ -72,46 +73,9 @@ kobject_get_size(kobject_t type, seL4_Word objectSize)
 #ifdef CONFIG_CACHE_COLORING 
     case KOBJECT_KERNEL_IMAGE:
         return seL4_KernelImageBits;
-#endif 
-#if defined(CONFIG_ARCH_ARM)
-        /* ARM-specific frames. */
-    case KOBJECT_FRAME:
-        switch (objectSize) {
-        case seL4_PageBits:
-        case 16:
-        case 20:
-        case 24:
-            return objectSize;
-        default:
-            return 0;
-        }
-#elif defined(CONFIG_ARCH_IA32)
-        /* IA32-specific frames */
-    case KOBJECT_FRAME:
-        switch (objectSize) {
-        case seL4_PageBits:
-#ifdef CONFIG_X86_64
-        case 21:
-            return objectSize;
-#endif
-        case 22:
-            return objectSize;
-        default:
-            return 0;
-        }
-        return seL4_PageBits;
-        /* IA32-specific object */
-#ifdef CONFIG_IOMMU
-    case KOBJECT_IO_PAGETABLE:
-        return seL4_IOPageTableBits;
-#endif
-#else
-#error "Unknown arch."
 #endif
     default:
-        /* Unknown object type. */
-        assert(0);
-        return 0;
+        return arch_kobject_get_size(type, objectSize);
     }
 }
 
@@ -136,92 +100,9 @@ kobject_get_type(kobject_t type, seL4_Word objectSize)
 #ifdef CONFIG_CACHE_COLORING 
     case KOBJECT_KERNEL_IMAGE:
         return seL4_KernelImageObject;
-#endif 
-#if defined(CONFIG_ARCH_ARM)
-    case KOBJECT_PAGE_DIRECTORY:
-        return seL4_ARM_PageDirectoryObject;
-    case KOBJECT_PAGE_TABLE:
-        return seL4_ARM_PageTableObject;
-        /* ARM-specific frames. */
-    case KOBJECT_FRAME:
-        switch (objectSize) {
-        case seL4_PageBits:
-            return seL4_ARM_SmallPageObject;
-        case 16:
-            return seL4_ARM_LargePageObject;
-#if defined(ARM_HYP)
-        case 21:
-            return seL4_ARM_SectionObject;
-        case 25:
-            return seL4_ARM_SuperSectionObject;
-#else
-        case 20:
-            return seL4_ARM_SectionObject;
-        case 24:
-            return seL4_ARM_SuperSectionObject;
-#endif
-        default:
-            return -1;
-        }
-#elif defined(CONFIG_ARCH_IA32)
-#ifdef CONFIG_X86_64
-    case KOBJECT_PAGE_MAP_LEVEL4:
-        return seL4_X64_PageMapLevel4Object;
-    case KOBJECT_PAGE_DIRECTORY_POINTER_TABLE:
-        return seL4_X64_PageDirectoryPointerTableObject;
-    case KOBJECT_PAGE_DIRECTORY:
-        return seL4_X64_PageDirectoryObject;
-    case KOBJECT_PAGE_TABLE:
-        return seL4_X64_PageTableObject;
-    case KOBJECT_FRAME:
-        switch (objectSize) {
-            case seL4_PageBits:
-                return seL4_X64_4K;
-            case 21:
-                return seL4_X64_2M;
-            default:
-                return -1;
-        }
-#else
-        /* IA32-specific frames */
-    case KOBJECT_PAGE_DIRECTORY:
-        return seL4_IA32_PageDirectoryObject;
-    case KOBJECT_PAGE_TABLE:
-        return seL4_IA32_PageTableObject;
-    case KOBJECT_FRAME:
-        switch (objectSize) {
-        case seL4_PageBits:
-            return seL4_IA32_4K;
-        /* Use an #ifdef here to support any old kernels that might
-         * not have seL4_LargePageBits defined. This should be able
-         * to be dropped eventually */
-#ifdef CONFIG_PAE_PAGING
-        case seL4_LargePageBits:
-            return seL4_IA32_LargePage;
-#else
-        case 22:
-            return seL4_IA32_4M;
-#endif
-        default:
-            return -1;
-        }
-#endif
-        /* IA32-specific object */
-#ifdef CONFIG_IOMMU
-    case KOBJECT_IO_PAGETABLE:
-#ifdef CONFIG_X86_64
-        return seL4_X64_IOPageTableObject;
-#else
-        return seL4_IA32_IOPageTableObject;
-#endif
-#endif
-#else
-#error "Unknown arch."
 #endif
     default:
-        /* Unknown object type. */
-        assert(0);
-        return -1;
+        return arch_kobject_get_type(type, objectSize);
     }
 }
 

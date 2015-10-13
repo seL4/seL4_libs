@@ -21,7 +21,7 @@
 
 
 seL4_timer_t *
-sel4platsupport_get_gpt(vspace_t *vspace, simple_t *simple, vka_t *vka, seL4_CPtr aep,
+sel4platsupport_get_gpt(vspace_t *vspace, simple_t *simple, vka_t *vka, seL4_CPtr notification,
                         gpt_id_t gpt_id, uint32_t prescaler)
 {
 
@@ -41,7 +41,7 @@ sel4platsupport_get_gpt(vspace_t *vspace, simple_t *simple, vka_t *vka, seL4_CPt
     void *paddr = omap_get_gpt_paddr(gpt_id);
     uint32_t irq = omap_get_gpt_irq(gpt_id);
 
-    timer_common_data_t *data = timer_common_init(vspace, simple, vka, aep, irq, paddr);
+    timer_common_data_t *data = timer_common_init(vspace, simple, vka, notification, irq, paddr);
     timer->data = data;
 
     if (timer->data == NULL) {

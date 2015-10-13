@@ -38,7 +38,7 @@ hpet_handle_irq_ioapic(seL4_timer_t *timer, uint32_t irq)
 
 
 seL4_timer_t *sel4platsupport_get_hpet(vspace_t *vspace, simple_t *simple, acpi_t *acpi,
-                                       vka_t *vka, seL4_CPtr aep, uint32_t irq_number)
+                                       vka_t *vka, seL4_CPtr notification, uint32_t irq_number)
 {
     seL4_timer_t *hpet = NULL;
     timer_common_data_t *hpet_data = NULL;
@@ -89,7 +89,7 @@ seL4_timer_t *sel4platsupport_get_hpet(vspace_t *vspace, simple_t *simple, acpi_
         addr = (void*) (uint32_t) hpet_header->base_address.address;
     }
 
-    hpet_data = timer_common_init(vspace, simple, vka, aep, irq_number, addr);
+    hpet_data = timer_common_init(vspace, simple, vka, notification, irq_number, addr);
     if (hpet_data == NULL) {
         goto error;
     }

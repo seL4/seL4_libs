@@ -61,7 +61,7 @@ timer_common_cleanup_irq(vka_t *vka, seL4_CPtr irq)
 
 timer_common_data_t *
 timer_common_init(vspace_t *vspace, simple_t *simple,
-                  vka_t *vka, seL4_CPtr aep, uint32_t irq_number, void *paddr)
+                  vka_t *vka, seL4_CPtr notification, uint32_t irq_number, void *paddr)
 {
     int error;
     timer_common_data_t *timer_data = NULL;
@@ -102,9 +102,9 @@ timer_common_init(vspace_t *vspace, simple_t *simple,
     }
 
     /* set the end point */
-    error = seL4_IRQHandler_SetEndpoint(timer_data->irq, aep);
+    error = seL4_IRQHandler_SetNotification(timer_data->irq, notification);
     if (error != seL4_NoError) {
-        LOG_ERROR("seL4_IRQHandler_SetEndpoint failed with error %d\n", error);
+        LOG_ERROR("seL4_IRQHandler_SetNotification failed with error %d\n", error);
         goto error;
     }
 

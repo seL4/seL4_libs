@@ -40,7 +40,7 @@ pit_handle_irq(seL4_timer_t *timer, UNUSED uint32_t irq)
 }
 
 seL4_timer_t *
-sel4platsupport_get_pit(vka_t *vka, simple_t *simple, ps_io_port_ops_t *ops, seL4_CPtr aep)
+sel4platsupport_get_pit(vka_t *vka, simple_t *simple, ps_io_port_ops_t *ops, seL4_CPtr notification)
 {
 
     seL4_pit_data_t *data = malloc(sizeof(seL4_pit_data_t));
@@ -65,7 +65,7 @@ sel4platsupport_get_pit(vka_t *vka, simple_t *simple, ps_io_port_ops_t *ops, seL
     }
 
     /* bind to endpoint */
-    if (seL4_IRQHandler_SetEndpoint(data->irq, aep) != seL4_NoError) {
+    if (seL4_IRQHandler_SetNotification(data->irq, notification) != seL4_NoError) {
         LOG_ERROR("seL4_IRQHandler_SetEndpoint failed\n");
         goto error;
     }

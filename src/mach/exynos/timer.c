@@ -14,7 +14,7 @@
 #include <sel4platsupport/plat/timer.h>
 
 
-seL4_timer_t *sel4platsupport_get_default_timer(vka_t *vka, vspace_t *vspace, simple_t *simple, seL4_CPtr aep)
+seL4_timer_t *sel4platsupport_get_default_timer(vka_t *vka, vspace_t *vspace, simple_t *simple, seL4_CPtr notification)
 {
-    return sel4platsupport_get_pwm(vspace, simple, vka, aep);
+    return sel4platsupport_get_pwm(vspace, simple, vka, notification);
 }

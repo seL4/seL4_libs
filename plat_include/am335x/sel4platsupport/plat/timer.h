@@ -20,6 +20,6 @@ seL4_timer_t *sel4platsupport_get_timer(enum timer_id id,
                                         vka_t *vka,
                                         vspace_t *vspace,
                                         simple_t *simple,
-                                        seL4_CPtr aep);
+                                        seL4_CPtr notification);
 
 #endif /* _SEL4PLATSUPPORT_PLAT_TIMER_H */

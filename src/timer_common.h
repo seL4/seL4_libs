@@ -33,16 +33,16 @@ void timer_common_cleanup_irq(vka_t *vka, seL4_CPtr irq);
 void timer_common_handle_irq(seL4_timer_t *timer, uint32_t irq);
 /**
  *
- * Some of our timers require 1 irq, 1 frame and an aep.
+ * Some of our timers require 1 irq, 1 frame and an notification.
  *
  * If this is true, timers can do most of their sel4 based init with this function.
  *
  * @param irq_number the irq that the timer needs a cap for.
  * @param paddr the paddr that the timer needs mapped in.
- * @param aep the badged async endpoint that the irq should be delivered to.
+ * @param notification the badged notification object that the irq should be delivered to.
  */
 timer_common_data_t *timer_common_init(vspace_t *vspace, simple_t *simple,
-                                       vka_t *vka, seL4_CPtr aep, uint32_t irq_number, void *paddr);
+                                       vka_t *vka, seL4_CPtr notification, uint32_t irq_number, void *paddr);
 
 /*
  * Something went wrong, clean up everything we did in timer_common_init.

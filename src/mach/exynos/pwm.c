@@ -20,7 +20,7 @@
 #include "../../timer_common.h"
 
 seL4_timer_t *
-sel4platsupport_get_pwm(vspace_t *vspace, simple_t *simple, vka_t *vka, seL4_CPtr aep)
+sel4platsupport_get_pwm(vspace_t *vspace, simple_t *simple, vka_t *vka, seL4_CPtr notification)
 {
 
     seL4_timer_t *timer = calloc(1, sizeof(seL4_timer_t));
@@ -29,7 +29,7 @@ sel4platsupport_get_pwm(vspace_t *vspace, simple_t *simple, vka_t *vka, seL4_CPt
         goto error;
     }
 
-    timer_common_data_t *data = timer_common_init(vspace, simple, vka, aep, PWM_T4_INTERRUPT,
+    timer_common_data_t *data = timer_common_init(vspace, simple, vka, notification, PWM_T4_INTERRUPT,
                                                   (void *) PWM_TIMER_PADDR);
     timer->data = data;
 

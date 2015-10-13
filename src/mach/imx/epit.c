@@ -21,7 +21,7 @@
 
 
 seL4_timer_t *
-sel4platsupport_get_epit(vspace_t *vspace, simple_t *simple, vka_t *vka, seL4_CPtr aep,
+sel4platsupport_get_epit(vspace_t *vspace, simple_t *simple, vka_t *vka, seL4_CPtr notification,
                          uint32_t prescaler, epit_id_t epit_id)
 {
 
@@ -48,7 +48,7 @@ sel4platsupport_get_epit(vspace_t *vspace, simple_t *simple, vka_t *vka, seL4_CP
     void *paddr = (void *) (epit_id == EPIT1 ? EPIT1_DEVICE_PADDR : EPIT2_DEVICE_PADDR);
     uint32_t irq = (epit_id == EPIT1 ? EPIT1_INTERRUPT : EPIT2_INTERRUPT);
 
-    timer_common_data_t *data = timer_common_init(vspace, simple, vka, aep, irq, paddr);
+    timer_common_data_t *data = timer_common_init(vspace, simple, vka, notification, irq, paddr);
     timer->data = data;
 
     if (timer->data == NULL) {

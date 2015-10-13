@@ -23,11 +23,11 @@
 /**
  * Get an interface for an initialised gpt timer.
  *
- * @param aep async endpoint for the irq to come in on
+ * @param notification notification object for the irq to come in on
  * @param prescaler to scale time by. 0 = divide by 1. 1 = divide by 2, ...
  */
 seL4_timer_t *
-sel4platsupport_get_gpt(vspace_t *vspace, simple_t *simple, vka_t *vka, seL4_CPtr aep,
+sel4platsupport_get_gpt(vspace_t *vspace, simple_t *simple, vka_t *vka, seL4_CPtr notification,
                         uint32_t prescaler);
 void sel4platsupport_destroy_gpt(seL4_timer_t *timer, vka_t *vka, vspace_t *vspace);
 

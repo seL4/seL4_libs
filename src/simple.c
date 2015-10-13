@@ -95,9 +95,9 @@ void simple_make_vka(simple_t *simple, vka_t *vka) {
     vka->data = simple;
     vka->cspace_alloc = &simple_vka_cspace_alloc;
     vka->cspace_make_path = &simple_vka_cspace_make_path;
-    vka->utspace_alloc = &dummy_vka_utspace_alloc;
-    vka->cspace_free = &dummy_vka_cspace_free;
-    vka->utspace_free = &dummy_vka_utspace_free;
+    vka->utspace_alloc = NULL;
+    vka->cspace_free = NULL;
+    vka->utspace_free = NULL;
 }
 
 seL4_CPtr simple_last_valid_cap(simple_t *simple) {

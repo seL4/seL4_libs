@@ -34,7 +34,8 @@ typedef struct vka_object {
 /*
  * Generic object allocator used by functions below, can also be used directly
  */
-static inline int vka_alloc_object(vka_t *vka, seL4_Word type, seL4_Word size_bits, vka_object_t *result)
+static inline int
+vka_alloc_object(vka_t *vka, seL4_Word type, seL4_Word size_bits, vka_object_t *result)
 {
     seL4_CPtr cptr;
     uint32_t ut;
@@ -58,26 +59,36 @@ static inline int vka_alloc_object(vka_t *vka, seL4_Word type, seL4_Word size_bi
     return 0;
 }
 
+/* convenient wrapper that throws away the vka_object_t and just returns the cptr -
+ * note you cannot use this if you intend to free the object */
 static inline seL4_CPtr vka_alloc_object_leaky(vka_t *vka, seL4_Word type, seL4_Word size_bits) WARN_UNUSED_RESULT;
-static inline seL4_CPtr vka_alloc_object_leaky(vka_t *vka, seL4_Word type, seL4_Word size_bits)
+static inline seL4_CPtr
+vka_alloc_object_leaky(vka_t *vka, seL4_Word type, seL4_Word size_bits)
 {
     vka_object_t result = {.cptr = 0, .ut = 0, .type = 0, size_bits = 0};
     return vka_alloc_object(vka, type, size_bits, &result) == -1 ? 0 : result.cptr;
 }
 
-static inline void vka_free_object(vka_t *vka, vka_object_t *object)
+static inline void
+vka_free_object(vka_t *vka, vka_object_t *object)
 {
     cspacepath_t path;
-    assert(vka);
-    assert(object);
+
     vka_cspace_make_path(vka, object->cptr, &path);
+    if (path.capPtr == 0) {
+        ZF_LOGE("Failed to create cspace path to object");
+        return;
+    }
+
     /* ignore any errors */
     seL4_CNode_Delete(path.root, path.capPtr, path.capDepth);
+
     vka_cspace_free(vka, object->cptr);
     vka_utspace_free(vka, object->type, object->size_bits, object->ut);
 }
 
-static inline uintptr_t vka_object_paddr(vka_t *vka, vka_object_t *object)
+static inline uintptr_t
+vka_object_paddr(vka_t *vka, vka_object_t *object)
 {
     return vka_utspace_paddr(vka, object->ut, object->type, object->size_bits);
 }
@@ -100,8 +111,10 @@ static inline int vka_alloc_notification(vka_t *vka, vka_object_t *result)
 {
     return vka_alloc_object(vka, seL4_NotificationObject, seL4_NotificationBits, result);
 }
+
 /* @deprecated use vka_alloc_notification */
-static inline int DEPRECATED("Use vka_alloc_notification") vka_alloc_async_endpoint(vka_t *vka, vka_object_t *result)
+static inline int DEPRECATED("Use vka_alloc_notification") 
+vka_alloc_async_endpoint(vka_t *vka, vka_object_t *result)
 {
     return vka_alloc_notification(vka, result);
 }
@@ -138,7 +151,7 @@ static inline int vka_alloc_vspace_root(vka_t *vka, vka_object_t *result)
 #endif
 }
 
-#ifdef CONFIG_CACHE_COLORING 
+#ifdef CONFIG_CACHE_COLORING
 
 static inline int vka_alloc_kernel_image(vka_t *vka, vka_object_t *result)
 {
@@ -146,12 +159,12 @@ static inline int vka_alloc_kernel_image(vka_t *vka, vka_object_t *result)
 }
 
 
-#endif 
+#endif
 
 
 /* Implement a kobject interface */
 static inline int vka_alloc_kobject(vka_t *vka, kobject_t type, seL4_Word size_bits,
-        vka_object_t *result)
+                                    vka_object_t *result)
 {
     return vka_alloc_object(vka, kobject_get_type(type, size_bits), size_bits, result);
 }
@@ -176,7 +189,7 @@ LEAKY(notification)
 LEAKY(page_directory)
 LEAKY(page_table)
 
-static inline DEPRECATED("use vka_alloc_notification_leaky") seL4_CPtr 
+static inline DEPRECATED("use vka_alloc_notification_leaky") seL4_CPtr
 vka_alloc_async_endpoint_leaky(vka_t *vka)
 {
     return vka_alloc_notification_leaky(vka);
@@ -219,7 +232,7 @@ vka_get_object_size(seL4_Word objectType, seL4_Word objectSize)
         return seL4_NotificationBits;
     case seL4_CapTableObject:
         return (seL4_SlotBits + objectSize);
-#ifdef CONFIG_CACHE_COLORING 
+#ifdef CONFIG_CACHE_COLORING
     case seL4_KernelImageObject:
         return seL4_KernelImageBits;
 #endif

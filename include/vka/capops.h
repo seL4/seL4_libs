@@ -12,9 +12,9 @@
 #define VKA_CAPOPS_H
 
 /* This file provides convenient wrappers around seL4 invocations (on CNodes and Untypeds)
- * such that allocator operations are allocator independant. 
+ * such that allocator operations are allocator independant.
  *
- * Use these and you will never have 
+ * Use these and you will never have
  * to look at the cspacepath_t definition again!
  */
 #include <autoconf.h>
@@ -120,12 +120,12 @@ vka_cnode_revoke(const cspacepath_t* src)
 }
 
 inline static int
-vka_cnode_rotate(const cspacepath_t *dest, seL4_CapData_t dest_badge, const cspacepath_t *pivot, 
-        seL4_CapData_t pivot_badge, const cspacepath_t *src) 
+vka_cnode_rotate(const cspacepath_t *dest, seL4_CapData_t dest_badge, const cspacepath_t *pivot,
+                 seL4_CapData_t pivot_badge, const cspacepath_t *src)
 {
     return seL4_CNode_Rotate(dest->root, dest->capPtr, dest->capDepth, dest_badge,
-            pivot->root, pivot->capPtr, pivot->capDepth, pivot_badge,
-            src->root, src->capPtr, src->capDepth);
+                             pivot->root, pivot->capPtr, pivot->capDepth, pivot_badge,
+                             src->root, src->capPtr, src->capDepth);
 }
 
 //TODO: implement rotate
@@ -133,12 +133,12 @@ vka_cnode_rotate(const cspacepath_t *dest, seL4_CapData_t dest_badge, const cspa
 
 #ifdef CONFIG_KERNEL_STABLE
 inline static int
-vka_untyped_retypeAtOffset(vka_object_t *untyped, int type, int offset, int size_bits, 
-        int num_objects, const cspacepath_t *dest)
+vka_untyped_retypeAtOffset(vka_object_t *untyped, int type, int offset, int size_bits,
+                           int num_objects, const cspacepath_t *dest)
 {
     size_bits = vka_get_object_size(type, size_bits);
-    return seL4_Untyped_RetypeAtOffset(untyped->cptr, type, offset, size_bits, 
-            dest->root, dest->dest, dest->destDepth, dest->offset, num_objects);
+    return seL4_Untyped_RetypeAtOffset(untyped->cptr, type, offset, size_bits,
+                                       dest->root, dest->dest, dest->destDepth, dest->offset, num_objects);
 }
 
 #else
@@ -148,10 +148,10 @@ vka_untyped_retypeAtOffset(vka_object_t *untyped, int type, int offset, int size
  * size_bits is only relevant for dynamically sized objects - untypeds + captables
  */
 inline static int
-vka_untyped_retype(vka_object_t *untyped, int type, int size_bits, int num_objects, const cspacepath_t *dest) 
+vka_untyped_retype(vka_object_t *untyped, int type, int size_bits, int num_objects, const cspacepath_t *dest)
 {
-    size_bits = vka_get_object_size(type, size_bits); 
-    return seL4_Untyped_Retype(untyped->cptr, type, size_bits, dest->root, dest->dest, dest->destDepth, dest->offset, num_objects);       
+    size_bits = vka_get_object_size(type, size_bits);
+    return seL4_Untyped_Retype(untyped->cptr, type, size_bits, dest->root, dest->dest, dest->destDepth, dest->offset, num_objects);
 }
 #endif
 

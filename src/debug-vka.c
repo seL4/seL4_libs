@@ -19,10 +19,10 @@
 #include <vka/vka.h>
 
 #ifndef CONFIG_LIB_SEL4_VKA_DEBUG_LIVE_SLOTS_SZ
-    #define CONFIG_LIB_SEL4_VKA_DEBUG_LIVE_SLOTS_SZ 0
+#define CONFIG_LIB_SEL4_VKA_DEBUG_LIVE_SLOTS_SZ 0
 #endif
 #ifndef CONFIG_LIB_SEL4_VKA_DEBUG_LIVE_OBJS_SZ
-    #define CONFIG_LIB_SEL4_VKA_DEBUG_LIVE_SLOTS_SZ 0
+#define CONFIG_LIB_SEL4_VKA_DEBUG_LIVE_SLOTS_SZ 0
 #endif
 
 /* Kconfig-set sizes for buffers to track live slots and objects. */
@@ -72,7 +72,8 @@ typedef struct {
     } while (0)
 
 /* Track a slot that has just become live. */
-static void track_slot(state_t *state, seL4_CPtr slot) {
+static void track_slot(state_t *state, seL4_CPtr slot)
+{
     assert(state != NULL);
 
     if (state->live_slots_sz == 0) {
@@ -92,7 +93,7 @@ static void track_slot(state_t *state, seL4_CPtr slot) {
     for (unsigned int i = 0; i < state->live_slots_sz; i++) {
         if (state->live_slots[i] == slot) {
             fatal("allocator attempted to hand out slot %u that is currently "
-                "in use", slot);
+                  "in use", slot);
         } else if (available == i && state->live_slots[i] != 0) {
             available++;
         }
@@ -107,7 +108,8 @@ static void track_slot(state_t *state, seL4_CPtr slot) {
     }
 }
 
-static int cspace_alloc(void *data, seL4_CPtr *res) {
+static int cspace_alloc(void *data, seL4_CPtr *res)
+{
     assert(data != NULL);
 
     state_t *s = (state_t*)data;
@@ -120,7 +122,8 @@ static int cspace_alloc(void *data, seL4_CPtr *res) {
 }
 
 /* Stop tracking a slot that is now dead. */
-static void untrack_slot(state_t *state, seL4_CPtr slot) {
+static void untrack_slot(state_t *state, seL4_CPtr slot)
+{
     assert(state != NULL);
 
     for (unsigned int i = 0; i < state->live_slots_sz; i++) {
@@ -133,7 +136,8 @@ static void untrack_slot(state_t *state, seL4_CPtr slot) {
     fatal("attempt to free slot %u that was not live (double free?)", slot);
 }
 
-static void cspace_free(void *data, seL4_CPtr slot) {
+static void cspace_free(void *data, seL4_CPtr slot)
+{
     assert(data != NULL);
 
     state_t *s = (state_t*)data;
@@ -152,7 +156,8 @@ static void cspace_free(void *data, seL4_CPtr slot) {
 /* No instrumentation required for this one. Just invoke the underlying
  * allocator.
  */
-static void cspace_make_path(void *data, seL4_CPtr slot, cspacepath_t *res) {
+static void cspace_make_path(void *data, seL4_CPtr slot, cspacepath_t *res)
+{
     assert(data != NULL);
 
     state_t *s = (state_t*)data;
@@ -164,7 +169,8 @@ static void cspace_make_path(void *data, seL4_CPtr slot, cspacepath_t *res) {
  * track_slot. Refer to the comments in it for explanations.
  */
 static void track_obj(state_t *state, seL4_Word type, seL4_Word size_bits,
-        uint32_t cookie) {
+                      uint32_t cookie)
+{
     assert(state != NULL);
 
     if (state->live_objs_sz == 0) {
@@ -179,7 +185,7 @@ static void track_obj(state_t *state, seL4_Word type, seL4_Word size_bits,
     for (unsigned int i = 0; i < state->live_objs_sz; i++) {
         if (state->live_objs[i].cookie == cookie) {
             fatal("allocator attempted to hand out an object with a cookie %u "
-                "that is currently in use", cookie);
+                  "that is currently in use", cookie);
         } else if (available == i && state->live_objs[i].cookie != 0) {
             available++;
         }
@@ -196,7 +202,8 @@ static void track_obj(state_t *state, seL4_Word type, seL4_Word size_bits,
 }
 
 static int utspace_alloc(void *data, const cspacepath_t *dest, seL4_Word type,
-        seL4_Word size_bits, uint32_t *res) {
+                         seL4_Word size_bits, uint32_t *res)
+{
     assert(data != NULL);
 
     state_t *s = (state_t*)data;
@@ -217,29 +224,31 @@ static int utspace_alloc(void *data, const cspacepath_t *dest, seL4_Word type,
 
 /* Stop tracking an object that is now dead. */
 static void untrack_obj(state_t *state, seL4_Word type, seL4_Word size_bits,
-        uint32_t cookie) {
+                        uint32_t cookie)
+{
     assert(state != NULL);
 
     for (unsigned int i = 0; i < state->live_objs_sz; i++) {
         if (state->live_objs[i].cookie == cookie) {
             if (state->live_objs[i].type != type) {
                 fatal("attempt to free object with type %u that was allocated "
-                    "with type %u", type, state->live_objs[i].type);
+                      "with type %u", type, state->live_objs[i].type);
             }
             if (state->live_objs[i].size_bits != size_bits) {
                 fatal("attempt to free object with size %u that was allocated "
-                    "with size %u", size_bits, state->live_objs[i].size_bits);
+                      "with size %u", size_bits, state->live_objs[i].size_bits);
             }
             state->live_objs[i].cookie = 0;
             return;
         }
     }
     fatal("attempt to free object %u that was not live (double free?)",
-        cookie);
+          cookie);
 }
 
 static void utspace_free(void *data, seL4_Word type, seL4_Word size_bits,
-        uint32_t target) {
+                         uint32_t target)
+{
     assert(data != NULL);
 
     state_t *s = (state_t*)data;
@@ -251,7 +260,8 @@ static void utspace_free(void *data, seL4_Word type, seL4_Word size_bits,
     v->utspace_free(v->data, type, size_bits, target);
 }
 
-int vka_init_debugvka(vka_t *vka, vka_t *tracee) {
+int vka_init_debugvka(vka_t *vka, vka_t *tracee)
+{
     assert(vka != NULL);
 
     state_t *s = (state_t*)malloc(sizeof(state_t));

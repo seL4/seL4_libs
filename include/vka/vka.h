@@ -153,7 +153,8 @@ vka_cspace_alloc_path(vka_t *vka, cspacepath_t *res)
 }
 
 
-static inline void vka_cspace_free(vka_t *vka, seL4_CPtr slot)
+static inline void
+vka_cspace_free(vka_t *vka, seL4_CPtr slot)
 {
 #ifdef CONFIG_DEBUG_BUILD
     if (seL4_DebugCapIdentify(slot) != 0) {
@@ -171,12 +172,14 @@ static inline void vka_cspace_free(vka_t *vka, seL4_CPtr slot)
     vka->cspace_free(vka->data, slot);
 }
 
-static inline void vka_cspace_free_path(vka_t *vka, cspacepath_t path) 
+static inline void
+vka_cspace_free_path(vka_t *vka, cspacepath_t path)
 {
     vka_cspace_free(vka, path.capPtr);
 }
 
-static inline int vka_utspace_alloc(vka_t *vka, const cspacepath_t *dest, seL4_Word type, seL4_Word size_bits, uint32_t *res)
+static inline int
+vka_utspace_alloc(vka_t *vka, const cspacepath_t *dest, seL4_Word type, seL4_Word size_bits, uint32_t *res)
 {
     if (!vka) {
         ZF_LOGE("vka is NULL");
@@ -195,7 +198,8 @@ static inline int vka_utspace_alloc(vka_t *vka, const cspacepath_t *dest, seL4_W
     return vka->utspace_alloc(vka->data, dest, type, size_bits, res);
 }
 
-static inline void vka_utspace_free(vka_t *vka, seL4_Word type, seL4_Word size_bits, uint32_t target)
+static inline void
+vka_utspace_free(vka_t *vka, seL4_Word type, seL4_Word size_bits, uint32_t target)
 {
     if (!vka) {
         ZF_LOGE("vka is NULL");
@@ -213,7 +217,8 @@ static inline void vka_utspace_free(vka_t *vka, seL4_Word type, seL4_Word size_b
     vka->utspace_free(vka->data, type, size_bits, target);
 }
 
-static inline uintptr_t vka_utspace_paddr(vka_t *vka, uint32_t target, seL4_Word type, seL4_Word size_bits)
+static inline uintptr_t
+vka_utspace_paddr(vka_t *vka, uint32_t target, seL4_Word type, seL4_Word size_bits)
 {
 
     if (!vka) {

@@ -35,9 +35,9 @@ typedef enum _kobject_type {
 #ifdef CONFIG_IOMMU
     KOBJECT_IO_PAGETABLE,
 #endif
-#ifdef CONFIG_CACHE_COLORING 
+#ifdef CONFIG_CACHE_COLORING
     KOBJECT_KERNEL_IMAGE,
-#endif 
+#endif
     NUM_KOBJECT_TYPES
 
 } kobject_t;
@@ -70,7 +70,7 @@ kobject_get_size(kobject_t type, seL4_Word objectSize)
         return seL4_PageDirBits;
     case KOBJECT_PAGE_TABLE:
         return seL4_PageTableBits;
-#ifdef CONFIG_CACHE_COLORING 
+#ifdef CONFIG_CACHE_COLORING
     case KOBJECT_KERNEL_IMAGE:
         return seL4_KernelImageBits;
 #endif
@@ -97,7 +97,7 @@ kobject_get_type(kobject_t type, seL4_Word objectSize)
         return seL4_EndpointObject;
     case KOBJECT_NOTIFICATION:
         return seL4_NotificationObject;
-#ifdef CONFIG_CACHE_COLORING 
+#ifdef CONFIG_CACHE_COLORING
     case KOBJECT_KERNEL_IMAGE:
         return seL4_KernelImageObject;
 #endif

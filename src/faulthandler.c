@@ -105,14 +105,6 @@ int debug_fault_handler(seL4_CPtr faultep,
             break;
         }
 
-#ifndef CONFIG_AEP_BINDING
-        case seL4_Interrupt: {
-            printf("debug: Fault handler unexpectedly received an "
-                   "interrupt from %s\n", sender_name);
-            break;
-        }
-#endif /* CONFIG_AEP_BINDING */
-
         default: {
             printf("debug: Unexpected fault %p from %s\n", (void*)label,
                    sender_name);

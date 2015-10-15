@@ -17,7 +17,9 @@
 #include <sel4/types.h>
 #include <assert.h>
 #include <stdint.h>
+#include <utils/util.h>
 #include <vka/cspacepath_t.h>
+
 
 /**
  * Allocate a slot in a cspace.
@@ -100,83 +102,46 @@ typedef struct vka {
     vka_utspace_paddr_fn utspace_paddr;
 } vka_t;
 
-/*
- * Dummy implementations of all different allocation functions that
- * fail if they are called
- */
-static inline int dummy_vka_cspace_alloc(void *self __attribute__((unused)),
-        seL4_CPtr *res __attribute__((unused)))
+static inline int
+vka_cspace_alloc(vka_t *vka, seL4_CPtr *res)
 {
-    assert(!"Not implemented");
-    return -1;
-}
+    if (!vka) {
+        ZF_LOGE("vka is NULL");
+        return -1;
+    }
 
-static inline void dummy_vka_cspace_make_path(void *self __attribute__((unused)),
-        seL4_CPtr slot __attribute__((unused)),
-        cspacepath_t *res __attribute__((unused)))
-{
-    assert(!"Not implemented");
-}
+    if (!res) {
+        ZF_LOGE("res is NULL");
+        return -1;
+    }
 
-static inline void dummy_vka_cspace_free(void *self __attribute__((unused)),
-        seL4_CPtr slot __attribute__((unused)))
-{
-#ifndef CONFIG_LIB_VKA_ALLOW_MEMORY_LEAKS
-    assert(!"Not implemented");
-#endif
-}
-
-static inline int dummy_vka_utspace_alloc(void *self __attribute__((unused)),
-        const cspacepath_t *dest __attribute__((unused)),
-        seL4_Word type __attribute__((unused)),
-        seL4_Word size_bits __attribute__((unused)),
-        uint32_t *res __attribute__((unused)))
-{
-    assert(!"Not implemented");
-    return -1;
-}
-
-static inline void dummy_vka_utspace_free(void *self __attribute__((unused)),
-        seL4_Word type __attribute__((unused)),
-        seL4_Word size_bits __attribute__((unused)),
-        uint32_t target __attribute__((unused)))
-{
-#ifndef CONFIG_LIB_VKA_ALLOW_MEMORY_LEAKS
-    assert(!"Not implemented");
-#endif
-}
-
-static inline uintptr_t dummy_vka_utspace_paddr(void *self __attribute__((unused)),
-        uint32_t target __attribute__((unused)),
-        seL4_Word type __attribute__((unused)),
-        seL4_Word size_bits __attribute__((unused)))
-{
-    assert(!"Not implemented");
-    return 0;
-}
-
-static inline int vka_cspace_alloc(vka_t *vka, seL4_CPtr *res)
-{
-    assert(vka);
-    assert(res);
     return vka->cspace_alloc(vka->data, res);
 }
 
-static inline void vka_cspace_make_path(vka_t *vka, seL4_CPtr slot, cspacepath_t *res)
+static inline void
+vka_cspace_make_path(vka_t *vka, seL4_CPtr slot, cspacepath_t *res)
 {
-    assert(vka);
-    assert(res);
+
+    if (!res) {
+        ZF_LOGE("res is NULL");
+        return;
+    }
+
+    if (!vka) {
+        ZF_LOGE("vka is NULL");
+        res->capPtr = 0;
+        return;
+    }
+
     vka->cspace_make_path(vka->data, slot, res);
 }
 
 /*
  * Wrapper functions to make calls more convenient
  */
-static inline int vka_cspace_alloc_path(vka_t *vka, cspacepath_t *res)
+static inline int
+vka_cspace_alloc_path(vka_t *vka, cspacepath_t *res)
 {
-    assert(vka);
-    assert(res);
-
     seL4_CPtr slot;
     int error = vka->cspace_alloc(vka->data, &slot);
 
@@ -188,37 +153,84 @@ static inline int vka_cspace_alloc_path(vka_t *vka, cspacepath_t *res)
 }
 
 
-static inline void vka_cspace_free(vka_t *vka, seL4_CPtr slot)
+static inline void
+vka_cspace_free(vka_t *vka, seL4_CPtr slot)
 {
-    assert(vka);
 #ifdef CONFIG_DEBUG_BUILD
-    assert(seL4_DebugCapIdentify(slot) == 0);
+    if (seL4_DebugCapIdentify(slot) != 0) {
+        ZF_LOGF("slot is not free: call vka_cnode_delete first");
+        /* this terminates the system */
+    }
 #endif
+
+    if (!vka->cspace_free) {
+        ZF_LOGE("Not implemented");
+        return;
+    }
+
+
     vka->cspace_free(vka->data, slot);
 }
 
-static inline void vka_cspace_free_path(vka_t *vka, cspacepath_t path) 
+static inline void
+vka_cspace_free_path(vka_t *vka, cspacepath_t path)
 {
     vka_cspace_free(vka, path.capPtr);
 }
 
-static inline int vka_utspace_alloc(vka_t *vka, const cspacepath_t *dest, seL4_Word type, seL4_Word size_bits, uint32_t *res)
+static inline int
+vka_utspace_alloc(vka_t *vka, const cspacepath_t *dest, seL4_Word type, seL4_Word size_bits, uint32_t *res)
 {
-    assert(vka);
-    assert(res);
+    if (!vka) {
+        ZF_LOGE("vka is NULL");
+        return -1;
+    }
+
+    if (!res) {
+        ZF_LOGE("res is NULL");
+        return -1;
+    }
+
+    if (!vka->utspace_alloc) {
+        ZF_LOGE("Not implemented");
+    }
+
     return vka->utspace_alloc(vka->data, dest, type, size_bits, res);
 }
 
-static inline void vka_utspace_free(vka_t *vka, seL4_Word type, seL4_Word size_bits, uint32_t target)
+static inline void
+vka_utspace_free(vka_t *vka, seL4_Word type, seL4_Word size_bits, uint32_t target)
 {
-    assert(vka);
+    if (!vka) {
+        ZF_LOGE("vka is NULL");
+        return ;
+    }
+
+    if (!vka->utspace_free) {
+#ifndef CONFIG_LIB_VKA_ALLOW_MEMORY_LEAKS
+        ZF_LOGF("Not implemented");
+        /* This terminates the system */
+#endif
+        return;
+    }
+
     vka->utspace_free(vka->data, type, size_bits, target);
 }
 
-static inline uintptr_t vka_utspace_paddr(vka_t *vka, uint32_t target, seL4_Word type, seL4_Word size_bits)
+static inline uintptr_t
+vka_utspace_paddr(vka_t *vka, uint32_t target, seL4_Word type, seL4_Word size_bits)
 {
-    assert(vka);
-    assert(vka->utspace_paddr);
+
+    if (!vka) {
+        ZF_LOGE("vka is NULL");
+        return -1;
+    }
+
+    if (!vka->utspace_paddr) {
+        ZF_LOGE("Not implemented");
+        return -1;
+    }
+
     return vka->utspace_paddr(vka->data, target, type, size_bits);
 }
 

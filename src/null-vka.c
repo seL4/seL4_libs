@@ -16,26 +16,32 @@
 #include <vka/null-vka.h>
 #include <vka/vka.h>
 
-static int cspace_alloc(void *data, seL4_CPtr *res) {
+static int cspace_alloc(void *data, seL4_CPtr *res)
+{
     return -1;
 }
 
-static void cspace_make_path(void *data, seL4_CPtr slot, cspacepath_t *res) {
+static void cspace_make_path(void *data, seL4_CPtr slot, cspacepath_t *res)
+{
 }
 
-static void cspace_free(void *data, seL4_CPtr slot) {
+static void cspace_free(void *data, seL4_CPtr slot)
+{
 }
 
 static int utspace_alloc(void *data, const cspacepath_t *dest, seL4_Word type,
-        seL4_Word size_bits, uint32_t *res) {
+                         seL4_Word size_bits, uint32_t *res)
+{
     return -1;
 }
 
 static void utspace_free(void *data, seL4_Word type, seL4_Word size_bits,
-        uint32_t target) {
+                         uint32_t target)
+{
 }
 
-void vka_init_nullvka(vka_t *vka) {
+void vka_init_nullvka(vka_t *vka)
+{
     assert(vka != NULL);
     vka->data = NULL; /* not required */
     vka->cspace_alloc = cspace_alloc;

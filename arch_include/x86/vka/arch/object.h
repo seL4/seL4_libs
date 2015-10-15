@@ -8,8 +8,8 @@
  * @TAG(NICTA_BSD)
  */
 
-#ifndef __VKA_ARCH_OBJECT_H__
-#define __VKA_ARCH_OBJECT_H__
+#ifndef _VKA_ARCH_OBJECT_H__
+#define _VKA_ARCH_OBJECT_H__
 
 #include <vka/vka.h>
 #include <vka/kobject_t.h>
@@ -113,4 +113,4 @@ vka_arch_get_object_size(seL4_Word objectType)
     }
 }
 
-#endif /* __VKA_ARCH_OBJECT_H__ */
+#endif /* _VKA_ARCH_OBJECT_H__ */

@@ -50,11 +50,9 @@ static inline int vka_alloc_pdpt(vka_t *vka, vka_object_t *result)
 {
     return vka_alloc_object(vka, seL4_IA32_PDPTObject, seL4_PDPTBits, result);
 }
-#endif
-
-#ifdef CONFIG_PAE_PAGING
 LEAKY(pdpt)
 #endif
+
 #ifdef CONFIG_VTX
 LEAKY(vcpu)
 LEAKY(ept_page_directory_pointer_table)

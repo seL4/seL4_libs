@@ -139,18 +139,6 @@ static inline int vka_alloc_page_table(vka_t *vka, vka_object_t *result)
     return vka_alloc_object(vka, kobject_get_type(KOBJECT_PAGE_TABLE, 0), seL4_PageTableBits, result);
 }
 
-/* The name of the object that defines a vspace root can vary, this provides
- * an abstraction for code that doesn't want to care about the type and
- * just wants whatever object fills this role */
-static inline int vka_alloc_vspace_root(vka_t *vka, vka_object_t *result)
-{
-#ifdef CONFIG_PAE_PAGING
-    return vka_alloc_pdpt(vka, result);
-#else
-    return vka_alloc_page_directory(vka, result);
-#endif
-}
-
 #ifdef CONFIG_CACHE_COLORING
 
 static inline int vka_alloc_kernel_image(vka_t *vka, vka_object_t *result)
@@ -212,6 +200,18 @@ LEAKY_SIZE_BITS(frame)
 LEAKY_SIZE_BITS(cnode_object)
 
 #include <vka/arch/object.h>
+
+/* The name of the object that defines a vspace root can vary, this provides
+ * an abstraction for code that doesn't want to care about the type and
+ * just wants whatever object fills this role */
+static inline int vka_alloc_vspace_root(vka_t *vka, vka_object_t *result)
+{
+#ifdef CONFIG_PAE_PAGING
+    return vka_alloc_pdpt(vka, result);
+#else
+    return vka_alloc_page_directory(vka, result);
+#endif
+}
 
 /*
  * Get the size (in bits) of the untyped memory required to create an object of

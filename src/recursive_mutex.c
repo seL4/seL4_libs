@@ -31,7 +31,7 @@ int sync_recursive_mutex_init(sync_recursive_mutex_t *mutex, seL4_CPtr aep) {
     mutex->held = 0;
 
     /* Prime the endpoint. */
-    seL4_Notify(mutex->aep, 1);
+    seL4_Signal(mutex->aep);
     return 0;
 }
 
@@ -64,7 +64,7 @@ int sync_recursive_mutex_unlock(sync_recursive_mutex_t *mutex) {
     if (mutex->held == 0) {
         /* This was the outermost lock we held. Wake the next person up. */
         __atomic_store_n(&mutex->owner, NULL, __ATOMIC_RELEASE);
-        seL4_Notify(mutex->aep, 1);
+        seL4_Signal(mutex->aep);
     }
     return 0;
 }

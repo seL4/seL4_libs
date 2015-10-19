@@ -38,7 +38,7 @@ int sync_bin_sem_bare_post(seL4_CPtr aep, volatile int *value) {
     int val = sync_atomic_increment(value, __ATOMIC_RELEASE);
     assert(*value <= 1);
     if (val <= 0) {
-        seL4_Notify(aep, 0);
+        seL4_Signal(aep);
     }
     return 0;
 }

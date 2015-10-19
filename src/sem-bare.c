@@ -64,7 +64,7 @@ int sync_sem_bare_post(seL4_CPtr ep, volatile int *value) {
     assert(*value < INT_MAX);
     int v = sync_atomic_increment(value, __ATOMIC_RELEASE);
     if (v <= 0) {
-        seL4_Notify(ep, 0);
+        seL4_Signal(ep);
     }
     return 0;
 }

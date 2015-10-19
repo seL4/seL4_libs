@@ -156,7 +156,7 @@ void vmm_run(vmm_t *vmm) {
 
     /* Get our interrupt pending callback happening */
     seL4_CPtr aep = vmm->plat_callbacks.get_async_event_aep();
-    error = seL4_TCB_BindAEP(simple_get_init_cap(&vmm->host_simple, seL4_CapInitThreadTCB), vmm->plat_callbacks.get_async_event_aep());
+    error = seL4_TCB_BindNotification(simple_get_init_cap(&vmm->host_simple, seL4_CapInitThreadTCB), vmm->plat_callbacks.get_async_event_aep());
     assert(error == seL4_NoError);
 
     while (1) {

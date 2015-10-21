@@ -47,7 +47,7 @@ arch_kobject_get_size(kobject_t type, seL4_Word objectSize)
 }
 
 static inline seL4_Word
-kobject_get_type(kobject_t type, seL4_Word objectSize)
+arch_kobject_get_type(kobject_t type, seL4_Word objectSize)
 {
     switch (type) {
     case KOBJECT_PAGE_MAP_LEVEL4:

@@ -1,0 +1,64 @@
+#
+# Copyright 2014, NICTA
+#
+# This software may be distributed and modified according to the terms of
+# the BSD 2-Clause license. Note that NO WARRANTY is provided.
+# See "LICENSE_BSD2.txt" for details.
+#
+# @TAG(NICTA_BSD)
+#
+
+menuconfig LIB_SEL4_DEBUG
+    bool "libsel4debug"
+    depends on HAVE_LIB_SEL4 && HAVE_LIBC && HAVE_LIB_SEL4_UTILS
+    select HAVE_LIB_SEL4_DEBUG
+    default y
+    help
+        A user level debugging library for seL4
+
+    config LIBSEL4DEBUG_ALLOC_BUFFER_ENTRIES
+    int "Pointer tracking buffer entries"
+    depends on LIB_SEL4_DEBUG
+    default 128
+    help
+        Size of buffer to use for tracking memory allocations within
+        instrumentation. This setting has no effect if you are not using the
+        allocation instrumentation. Setting this value to 0 disables pointer
+        tracking.
+
+    choice
+    prompt "Function instrumentation"
+    default LIBSEL4DEBUG_FUNCTION_INSTRUMENTATION_NONE
+    depends on LIB_SEL4_DEBUG
+    help
+        Instrumentation to apply to function calls. This setting will only have
+        an effect when your CFLAGS include -finstrument-functions, in which
+        case __cyg_profile_func_enter will be called on every function entry
+        and __cyg_profile_func_exit will be called on every function exit. The
+        value of this setting determines the implementation of
+        __cyg_profile_func_enter and __cyg_profile_func_exit supplied by this
+        library. Regardless of the option you select, you can always override
+        the implementation by providing your own in your application.
+
+    config LIBSEL4DEBUG_FUNCTION_INSTRUMENTATION_NONE
+    bool "none"
+    help
+        No implementation of __cyg_profile_func_enter and
+        __cyg_profile_func_exit are provided.
+
+    config LIBSEL4DEBUG_FUNCTION_INSTRUMENTATION_TRACE
+    bool "printf trace"
+    help
+        Print entry and exit of every function call. This option is useful for
+        a very coarse and noisy description of what your code is doing.
+
+    config LIBSEL4DEBUG_FUNCTION_INSTRUMENTATION_BACKTRACE
+    bool "backtrace"
+    help
+        Track function calls for the purposes of a backtrace. You will need to
+        enable this option if you want to retrieve programmatic backtraces.
+
+    endchoice
+
+config HAVE_LIB_SEL4_DEBUG
+    bool

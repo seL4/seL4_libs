@@ -1,0 +1,70 @@
+#
+# Copyright 2014, NICTA
+#
+# This software may be distributed and modified according to the terms of
+# the GNU General Public License version 2. Note that NO WARRANTY is provided.
+# See "LICENSE_GPLv2.txt" for details.
+#
+# @TAG(NICTA_GPL)
+#
+
+menuconfig LIB_SEL4_VMM
+    bool "seL4 VMM Library"
+    depends on LIB_SEL4 && HAVE_LIBC && LIB_PCI && LIB_CPIO
+    select HAVE_SEL4_LIBS
+    default y
+    help
+        VMM library on sel4.
+
+config VMM_VESA_FRAMEBUFFER
+    bool "Expose VESA Frame Buffer"
+    depends on LIB_SEL4_VMM
+    default y
+    help
+        Support for mapping the VESA frame buffer frames into the guest OS.
+        This option is useful for working around non-working video drivers otherwise,
+        due to missing features or such.
+
+config LIB_VMM_DEBUG
+    bool "Enable VMM debug output"
+    depends on LIB_SEL4_VMM
+    default true
+
+config LIB_VMM_DEBUG_LEVEL
+    int "VMM Debug Output"
+    depends on LIB_VMM_DEBUG
+    default 3
+    help
+        Debug verbosity level.
+        5 levels for debug messages:
+           0: Always printout 
+           1: Main entry point in a module
+           2: 2nd level entry point in a module
+           3: Main entry point of a function 
+           4: Details inside a function
+
+config LIB_VMM_VMX_TIMER_DEBUG
+    bool "Use VMX Pre-Emption timer for debugging"
+    depends on LIB_VMM_DEBUG
+    default false
+    help
+        Will cause a regular vmexit to happen based on VMX pre-emption
+        timer. At each exit the guest state will be printed out. This
+        can be used to aid debugging when running a guest causes nothing
+        to appear to happen
+
+config LIB_VMM_VMX_TIMER_TIMEOUT
+    int "Cycles between VMX timer pre-emptions"
+    depends on LIB_VMM_VMX_TIMER_DEBUG
+    default 4000
+    help
+        Cycles between timer exits. Time spent loading the VMCS context
+        count, so setting this too low may result in the guest making
+        no progress
+
+config VMM_IGNORE_EPT_VIOLATION
+    bool "Ignore EPT Violations"
+    depends on LIB_SEL4_VMM
+    default n
+    help
+        If set then EPT faults will be ignored and the guest will be resumed

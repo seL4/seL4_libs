@@ -1,0 +1,44 @@
+#
+# Copyright 2014, NICTA
+#
+# This software may be distributed and modified according to the terms of
+# the BSD 2-Clause license. Note that NO WARRANTY is provided.
+# See "LICENSE_BSD2.txt" for details.
+#
+# @TAG(NICTA_BSD)
+#
+
+menuconfig LIB_SEL4_PLAT_SUPPORT
+    bool libsel4platsupport
+    depends on HAVE_LIB_SEL4_UTILS && HAVE_LIB_SEL4 && HAVE_LIBC && HAVE_LIB_SEL4_VSPACE && \
+               HAVE_LIB_SEL4_SIMPLE && HAVE_LIB_PLATSUPPORT && HAVE_LIB_UTILS && HAVE_LIB_SEL4_VKA
+    select HAVE_LIB_SEL4_PLAT_SUPPORT
+    default y
+    help
+        seL4 dependent driver and platform library
+
+config LIB_SEL4_PLAT_SUPPORT_USE_SEL4_DEBUG_PUTCHAR
+    bool "Redirect putchar() to seL4_DebugPutchar()"
+    depends on LIB_SEL4_PLAT_SUPPORT && DEBUG_BUILD
+    default y
+    help
+        Direct putchar() to seL4_DebugPutchar() instead of writing directly to the COM port.
+
+config LIB_SEL4_PLAT_SUPPORT_START
+    bool "Supply _start entry point"
+    depends on LIB_SEL4_PLAT_SUPPORT
+    default y if !HAVE_CRT
+    help
+        Emit _start with a default definition that sets up a stack and does
+        what's required to enter main().
+
+config LIB_SEL4_PLAT_SUPPORT_SEL4_START
+    bool "Supply _sel4_start entry point"
+    depends on LIB_SEL4_PLAT_SUPPORT
+    default y if HAVE_CRT
+    help
+        Emit a _sel4_start that sets up a stack and does
+        what's required to enter a regular _start routine
+
+config HAVE_LIB_SEL4_PLAT_SUPPORT
+    bool

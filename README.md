@@ -1,5 +1,8 @@
 # seL4_libs
 
+seL4 Libraries
+==============
+
 A collection of libraries for working on seL4.
 
 * libsel4allocman: an allocator for managing virtual memory, malloc memory and cspaces.
@@ -16,3 +19,8 @@ A collection of libraries for working on seL4.
 * libsel4vka: an allocation interface for seL4. 
 * libsel4vspace: a virtual memory management interface for seL4.
 
+License
+========
+
+The files in this repository are release under standard open source licenses.
+Please see individual file headers and the `LICENSE_BSD2`.txt file for details.

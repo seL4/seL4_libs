@@ -1,0 +1,94 @@
+(*
+ * Copyright 2014, NICTA
+ *
+ * This software may be distributed and modified according to the terms of
+ * the BSD 2-Clause license. Note that NO WARRANTY is provided.
+ * See "LICENSE_BSD2.txt" for details.
+ *
+ * @TAG(NICTA_BSD)
+ *)
+
+This library is for running tests and generating test output in either
+human readable or xml format. 
+
+SETTING UP LIBSEL4TEST WITH YOUR PROJECT
+
+Choose the appropriate options for your build. If you are testing as
+a human, you probably want both of those options disabled. If you are
+testing as bamboo, you definitely want both turned on.
+
+CONFIG_PRINT_XML
+
+Bamboo requires XML. Humans can choose. 
+
+CONFIG_BUFFER_OUTPUT
+
+JUnit output requires that stdout be wrapped in an xml element, which is
+what the above option does. Turn that option off (in Kconfig) whilst
+debugging your test suite. This buffering will currently only apply to
+printf.
+
+USING LIBSEL4TEST
+
+To use libsel4test:
+
+1. Provide a definition for struct env before including <sel4test/test.h>. 
+2. Write tests with the prototype int (*test)(env_t env, void *args). Follow each test with the DEFINE_TEST macro.
+3. Provide a run_test function int (*run_test)(struct test_case *t) and call sel4test_run_tests.
+4. That's it. Each test will run in alphabetical order based on the test name. Tests will run forward and backward. 
+
+Example code:
+
+struct env  {
+    vka_t *vka;
+}
+
+#include <sel4test/test.h>
+
+static env_t env;
+
+env_t sel4test_get_env(void) {
+    return env;
+}
+
+static int
+a_test(env_t env, void *args)
+{
+    printf("Hello world");
+    test_check(0 == 0);
+}
+DEFINE_TEST(TEST000, "An example test", a_test)
+
+
+int main(void) {
+
+    /* allocator set up */
+    env->vka = init_allocator();
+
+
+    /* sel4test_basic_run_test just runs each test and passes in 
+       env returned by sel4test_get_env.
+       You can define your own version of this if you need custom
+       setup/teardown
+    */
+    sel4test_run_tests("my test name", sel4test_basic_run_test);
+
+}
+
+
+CAVEATS
+
+There is a tool for sanitizing the xml in tools/extract_results.py. 
+
+A NOTE ON ASSERT
+
+When writing tests with this library you should usually avoid using assert and
+always use 'sel4test_check' etc, which will test the case and report a test failure
+without crashing the build. This permits other tests to keep running.
+
+Use test_assert_fatal if your tests have reached a state where continuing the
+test run is useless and you do not want to parse any test results from
+the build at all.
+
+It is good practice for failing tests to not break the build, but sometimes
+it is necessary.

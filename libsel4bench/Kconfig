@@ -1,0 +1,20 @@
+#
+# Copyright 2014, NICTA
+#
+# This software may be distributed and modified according to the terms of
+# the BSD 2-Clause license. Note that NO WARRANTY is provided.
+# See "LICENSE_BSD2.txt" for details.
+#
+# @TAG(NICTA_BSD)
+#
+
+config LIB_SEL4_BENCH
+    bool "libsel4bench"
+    default y
+    depends on HAVE_LIB_SEL4 && HAVE_LIBC
+    select HAVE_LIB_SEL4_BENCH
+    help
+        Benchmarking library and functionality for various platforms
+
+config HAVE_LIB_SEL4_BENCH
+    bool

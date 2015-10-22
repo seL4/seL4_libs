@@ -319,9 +319,9 @@ find_range(sel4utils_alloc_data_t *data, size_t num_pages, size_t size_bits)
     /* look for a contiguous range that is free.
      * We use first-fit with the optimisation that we store
      * a pointer to the last thing we freed/allocated */
-    void *current = data->last_allocated;
     size_t contiguous = 0;
     void *start = (void *) ALIGN_UP((uintptr_t) data->last_allocated, SIZE_BITS_TO_BYTES(size_bits));
+    void *current = start;
 
     assert(IS_ALIGNED((uintptr_t) start, size_bits));
     while (contiguous < num_pages) {
@@ -329,7 +329,8 @@ find_range(sel4utils_alloc_data_t *data, size_t num_pages, size_t size_bits)
         if (is_available(data->top_level, current, size_bits)) {
             contiguous++;
         } else {
-            start = current + SIZE_BITS_TO_BYTES(size_bits);
+            start += SIZE_BITS_TO_BYTES(size_bits);
+            current = start;
             contiguous = 0;
         }
 

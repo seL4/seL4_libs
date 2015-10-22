@@ -77,7 +77,7 @@ check_empty_range(bottom_level_t *top_level[], void *vaddr, size_t num_pages, si
     int num_4k_pages = BYTES_TO_4K_PAGES(num_pages * (1 << size_bits));
     for (int i = 0; i < num_4k_pages && result; i++) {
         /* a range is empty if it does not have a mapped cap and it isn't reserved */
-        result = is_available(top_level, vaddr + (i * PAGE_SIZE_4K))
+        result = is_available_4k(top_level, vaddr + (i * PAGE_SIZE_4K))
                  && !is_reserved(top_level, vaddr + (i * PAGE_SIZE_4K));
     }
 
@@ -326,7 +326,7 @@ find_range(sel4utils_alloc_data_t *data, size_t num_pages, size_t size_bits)
     assert(IS_ALIGNED((uintptr_t) start, size_bits));
     while (contiguous < num_pages) {
 
-        if (is_available(data->top_level, current)) {
+        if (is_available(data->top_level, current, size_bits)) {
             contiguous++;
         } else {
             start = current + SIZE_BITS_TO_BYTES(size_bits);

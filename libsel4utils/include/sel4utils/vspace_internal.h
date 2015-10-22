@@ -171,7 +171,7 @@ clear_entries(vspace_t *vspace, void *vaddr, size_t size_bits)
 }
 
 static inline int
-is_available(bottom_level_t *top_level[VSPACE_LEVEL_SIZE], void *vaddr)
+is_available_4k(bottom_level_t *top_level[VSPACE_LEVEL_SIZE], void *vaddr)
 {
     /* if there is no bottom level page table then this entry is available */
     if (top_level[TOP_LEVEL_INDEX(vaddr)] == NULL) {
@@ -182,6 +182,17 @@ is_available(bottom_level_t *top_level[VSPACE_LEVEL_SIZE], void *vaddr)
     }
 
     return top_level[TOP_LEVEL_INDEX(vaddr)]->bottom_level[BOTTOM_LEVEL_INDEX(vaddr)] == 0;
+}
+
+static inline int
+is_available(bottom_level_t *top_level[VSPACE_LEVEL_SIZE], void *vaddr, size_t size_bits)
+{
+    bool available = true;
+    for (uint32_t offset = 0; offset < SIZE_BITS_TO_BYTES(size_bits) && available; offset += PAGE_SIZE_4K) {
+        available = is_available_4k(top_level, vaddr + offset);
+    }
+
+    return available;
 }
 
 static inline int

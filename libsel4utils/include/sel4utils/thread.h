@@ -24,7 +24,7 @@
 #ifdef CONFIG_LIB_SEL4_VSPACE
 
 #include <sel4/sel4.h>
-
+#include <stdbool.h>
 #include <vka/vka.h>
 
 #include <vspace/vspace.h>
@@ -46,6 +46,12 @@ typedef struct sel4utils_thread_config {
     /* data for cspace access */
     seL4_CapData_t cspace_root_data;
 } sel4utils_thread_config_t;
+
+typedef struct sel4utils_checkpoint {
+    void *stack;
+    seL4_UserContext regs;
+    sel4utils_thread_t *thread;
+} sel4utils_checkpoint_t;
 
 /**
  * Configure a thread, allocating any resources required.
@@ -129,6 +135,43 @@ int sel4utils_start_thread(sel4utils_thread_t *thread, void *entry_point, void *
  * @param thread the thread structure that was returned when the thread started
  */
 void sel4utils_clean_up_thread(vka_t *vka, vspace_t *alloc, sel4utils_thread_t *thread);
+
+/**
+ * Checkpoint a thread at its current state, storing its current register set and stack.
+ *
+ * Note that the heap state is not saved, so threads intending to use this functionality
+ * should not mutate the heap or other state beyond the checkpoint, unless extra functionality
+ * is included to roll these back.
+ *
+ * This should not be called on a currently running thread.
+ *
+ * @param thread     the thread to checkpoint
+ * @param checkpoint pointer to uninitialised checkpoint struct
+ * @param suspend    true if the thread should be suspended 
+ * 
+ * @return 0 on success.
+ */
+int sel4utils_checkpoint_thread(sel4utils_thread_t *thread, sel4utils_checkpoint_t *checkpoint, bool suspend);
+
+/**
+ * Rollback a thread to a previous checkpoint, restoring its register set and stack. 
+ *
+ * This is not atomic and callers should make sure the target thread is stopped or that the 
+ * caller is higher priority such that the target is not switched to by the kernel mid-restore. 
+ *
+ * @param checkpoint the previously saved checkpoint to restore.
+ * @param free       true if this checkpoint should free all memory allocated, i.e if the checkpoint
+ *                   will not be used again.
+ * @param resume     true if the thread should be resumed immediately. 
+ *
+ * @return 0 on success.
+ */
+int sel4utils_checkpoint_restore(sel4utils_checkpoint_t *checkpoint, bool free, bool resume);
+
+/**
+ * Clean up a previously allocated checkpoint.
+ */
+void sel4utils_free_checkpoint(sel4utils_checkpoint_t *checkpoint);
 
 /**
  * Start a fault handling thread that will print the name of the thread that faulted

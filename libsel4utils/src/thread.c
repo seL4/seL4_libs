@@ -272,4 +272,67 @@ sel4utils_start_fault_handler(seL4_CPtr fault_endpoint, vka_t *vka, vspace_t *vs
                                   (void *) fault_endpoint, 1);
 }
 
+int
+sel4utils_checkpoint_thread(sel4utils_thread_t *thread, sel4utils_checkpoint_t *checkpoint, bool suspend) 
+{
+
+    int error;
+    size_t stack_size;
+    
+    assert(checkpoint != NULL);
+
+    error = seL4_TCB_ReadRegisters(thread->tcb.cptr, suspend, 0, sizeof(seL4_UserContext) / sizeof(seL4_Word), 
+            &checkpoint->regs);
+    if (error) {
+        LOG_ERROR("Failed to read registers of tcb while checkpointing\n");
+        return error;
+    }
+    
+    stack_size = (uintptr_t) thread->stack_top - (uintptr_t) sel4utils_get_sp(checkpoint->regs);
+    
+    checkpoint->stack = (void *) malloc(stack_size);
+    if (checkpoint->stack == NULL) {
+        LOG_ERROR("Failed to malloc stack of size %u\n", stack_size);
+        return -1;
+    }
+
+    memcpy(checkpoint->stack, (void *) sel4utils_get_sp(checkpoint->regs), stack_size);
+    checkpoint->thread = thread;
+
+    return error;
+}
+
+int 
+sel4utils_checkpoint_restore(sel4utils_checkpoint_t *checkpoint, bool free_memory, bool resume)
+{
+    int error;
+    size_t stack_size;
+
+    assert(checkpoint != NULL);
+
+    stack_size = (uintptr_t) checkpoint->thread->stack_top - (uintptr_t) sel4utils_get_sp(checkpoint->regs);
+    memcpy((void *) sel4utils_get_sp(checkpoint->regs), checkpoint->stack, stack_size);
+    
+    error = seL4_TCB_WriteRegisters(checkpoint->thread->tcb.cptr, resume, 0,
+            sizeof(seL4_UserContext) / sizeof (seL4_Word), 
+            &checkpoint->regs);
+    if (error) {
+        LOG_ERROR("Failed to restore registers of tcb while restoring checkpoint\n");
+        return error;
+    }
+
+    if (free_memory) {
+       sel4utils_free_checkpoint(checkpoint);
+    }
+
+    return error;
+}
+
+void
+sel4utils_free_checkpoint(sel4utils_checkpoint_t *checkpoint)
+{
+    free(checkpoint->stack);
+}
+
+
 #endif /* CONFIG_LIB_SEL4_VSPACE */

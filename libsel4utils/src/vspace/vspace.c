@@ -326,15 +326,17 @@ find_range(sel4utils_alloc_data_t *data, size_t num_pages, size_t size_bits)
     assert(IS_ALIGNED((uintptr_t) start, size_bits));
     while (contiguous < num_pages) {
 
-        if (is_available(data->top_level, current, size_bits)) {
+        bool available = is_available(data->top_level, current, size_bits);
+        current += SIZE_BITS_TO_BYTES(size_bits);
+
+        if (available) {
+            /* keep going! */
             contiguous++;
         } else {
-            start += SIZE_BITS_TO_BYTES(size_bits);
-            current = start;
+            /* reset start and try again */
+            start = current;
             contiguous = 0;
         }
-
-        current += SIZE_BITS_TO_BYTES(size_bits);
 
         if (current >= (void *) KERNEL_RESERVED_START) {
             ZF_LOGE("Out of virtual memory");
@@ -343,7 +345,6 @@ find_range(sel4utils_alloc_data_t *data, size_t num_pages, size_t size_bits)
 
     }
 
-    /* only update last_allocated if we didn't leave a hole */
     data->last_allocated = current;
 
     return start;

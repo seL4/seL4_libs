@@ -81,6 +81,14 @@ typedef struct {
     size_t size;
 } __attribute__((aligned(MAX_ALIGNMENT))) metadata_t;
 
+/* A `uintptr_t` that is not naturally aligned. It is necessary to explicitly
+ * tag unaligned pointers because, e.g., on ARM the compiler is free to
+ * transform `memcpy` calls into a variant that assumes its inputs are aligned
+ * and performs word-sized accesses. See the following for more information:
+ *   http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.faqs/4972.html
+ */
+typedef uintptr_t unaligned_uintptr_t __attribute__((aligned(1)));
+
 /* Whether we've already encountered heap corruption. See uses of this below,
  * where we abandon all instrumentation if we've hit an error. The reasoning
  * behind this is that error reporting functions may call malloc.
@@ -104,7 +112,7 @@ static void *box(void *ptr, size_t size)
 
     metadata_t *pre = (metadata_t*)ptr;
     ptr += sizeof(*pre);
-    metadata_t *post = (metadata_t*)(ptr + size);
+    unaligned_uintptr_t *post = ptr + size;
 
     /* Write the leading canary. */
     pre->canary = pre_canary(ptr);
@@ -114,7 +122,7 @@ static void *box(void *ptr, size_t size)
      * alignment.
      */
     uintptr_t canary = post_canary(ptr);
-    memcpy(&post->canary, &canary, sizeof(canary));
+    memcpy(post, &canary, sizeof(canary));
 
     return ptr;
 }
@@ -135,7 +143,7 @@ static void *unbox(void *ptr, void *ret_addr)
     }
 
     metadata_t *pre = (metadata_t*)(ptr - sizeof(*pre));
-    metadata_t *post = (metadata_t*)(ptr + pre->size);
+    unaligned_uintptr_t *post = ptr + pre->size;
 
     /* Check the leading canary (underflow). */
     if (pre->canary != pre_canary(ptr)) {
@@ -149,7 +157,7 @@ static void *unbox(void *ptr, void *ret_addr)
      * derive an incorrect 'post' pointer.
      */
     uintptr_t canary = post_canary(ptr);
-    if (memcmp(&post->canary, &canary, sizeof(post->canary)) != 0) {
+    if (memcmp(post, &canary, sizeof(canary)) != 0) {
         error("Buffer overflow in heap memory pointed to by %p (called prior "
               "to %p)\n", ptr, ret_addr);
     }

@@ -52,7 +52,7 @@
 /* Maximum alignment of a data type. The malloc spec requires that returned
  * pointers are aligned to this.
  */
-#define MAX_ALIGNMENT 8 /* bytes */
+#define MAX_ALIGNMENT (sizeof(void*) * 2) /* bytes */
 
 /* Random bits to OR into the pre- and post-canary values so we're not storing
  * an exact pointer value. Note that these should be less than MAX_ALIGNMENT so

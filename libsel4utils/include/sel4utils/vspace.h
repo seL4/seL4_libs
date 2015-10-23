@@ -56,8 +56,8 @@ typedef struct bottom_level {
 typedef int(*sel4utils_map_page_fn)(vspace_t *vspace, seL4_CPtr cap, void *vaddr, seL4_CapRights rights, int cacheable, size_t size_bits);
 
 struct sel4utils_res {
-    void *start;
-    void *end;
+    uintptr_t start;
+    uintptr_t end;
     seL4_CapRights rights;
     int cacheable;
     int malloced;
@@ -70,8 +70,8 @@ typedef struct sel4utils_alloc_data {
     seL4_CPtr page_directory;
     vka_t *vka;
     bottom_level_t **top_level;
-    void *next_bottom_level_vaddr;
-    void *last_allocated;
+    uintptr_t next_bottom_level_vaddr;
+    uintptr_t last_allocated;
     vspace_t *bootstrap;
     sel4utils_map_page_fn map_page;
     sel4utils_res_t *reservation_head;

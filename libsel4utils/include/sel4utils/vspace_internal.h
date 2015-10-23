@@ -51,11 +51,11 @@
 
 #define LEVEL_MASK MASK_UNSAFE(VSPACE_LEVEL_BITS)
 
-#define BOTTOM_LEVEL_INDEX(x) ((((uint32_t) ((seL4_Word)(x))) >> BOTTOM_LEVEL_BITS_OFFSET) & LEVEL_MASK)
-#define TOP_LEVEL_INDEX(x) ((((uint32_t) ((seL4_Word)(x))) >> TOP_LEVEL_BITS_OFFSET)  & LEVEL_MASK)
+#define BOTTOM_LEVEL_INDEX(x) (((x) >> BOTTOM_LEVEL_BITS_OFFSET) & LEVEL_MASK)
+#define TOP_LEVEL_INDEX(x) (((x) >> TOP_LEVEL_BITS_OFFSET)  & LEVEL_MASK)
 
-int assure_level(vspace_t *vspace, void *vaddr);
-int bootstrap_create_level(vspace_t *vspace, void *vaddr);
+int assure_level(vspace_t *vspace, uintptr_t vaddr);
+int bootstrap_create_level(vspace_t *vspace, uintptr_t vaddr);
 
 static inline sel4utils_alloc_data_t *
 get_alloc_data(vspace_t *vspace)
@@ -64,7 +64,7 @@ get_alloc_data(vspace_t *vspace)
 }
 
 static inline int
-update_entry(vspace_t *vspace, void *vaddr, seL4_CPtr page, uint32_t cookie)
+update_entry(vspace_t *vspace, uintptr_t vaddr, seL4_CPtr page, uint32_t cookie)
 {
     sel4utils_alloc_data_t *data = get_alloc_data(vspace);
 
@@ -81,7 +81,7 @@ update_entry(vspace_t *vspace, void *vaddr, seL4_CPtr page, uint32_t cookie)
 }
 
 static inline int
-update(vspace_t *vspace, void *vaddr, seL4_CPtr page, uint32_t cookie)
+update(vspace_t *vspace, uintptr_t vaddr, seL4_CPtr page, uint32_t cookie)
 {
 
     if (page == RESERVED) {
@@ -95,14 +95,14 @@ update(vspace_t *vspace, void *vaddr, seL4_CPtr page, uint32_t cookie)
 }
 
 static inline int
-reserve(vspace_t *vspace, void *vaddr)
+reserve(vspace_t *vspace, uintptr_t vaddr)
 {
     assert(get_alloc_data(vspace)->top_level[TOP_LEVEL_INDEX(vaddr)] != (void *) RESERVED);
     return update_entry(vspace, vaddr, RESERVED, 0);
 }
 
 static inline void
-clear(vspace_t *vspace, void *vaddr)
+clear(vspace_t *vspace, uintptr_t vaddr)
 {
     /* if we are clearing an entry it should have been allocated before */
     sel4utils_alloc_data_t *data = get_alloc_data(vspace);
@@ -116,7 +116,7 @@ clear(vspace_t *vspace, void *vaddr)
 }
 
 static inline seL4_CPtr
-get_cap(bottom_level_t *top[], void *vaddr)
+get_cap(bottom_level_t *top[], uintptr_t vaddr)
 {
     if (top[TOP_LEVEL_INDEX(vaddr)] == NULL) {
         return 0;
@@ -126,7 +126,7 @@ get_cap(bottom_level_t *top[], void *vaddr)
 }
 
 static inline uint32_t
-get_cookie(bottom_level_t *top[], void *vaddr)
+get_cookie(bottom_level_t *top[], uintptr_t vaddr)
 {
 
     if (top[TOP_LEVEL_INDEX(vaddr)] == NULL) {
@@ -138,7 +138,7 @@ get_cookie(bottom_level_t *top[], void *vaddr)
 
 /* update entry in page table and handle large pages */
 static inline int
-update_entries(vspace_t *vspace, void *vaddr, seL4_CPtr cap, size_t size_bits, uint32_t cookie)
+update_entries(vspace_t *vspace, uintptr_t vaddr, seL4_CPtr cap, size_t size_bits, uint32_t cookie)
 {
     int error = seL4_NoError;
     for (int i = 0; i < (1 << size_bits) && error == seL4_NoError; i += PAGE_SIZE_4K) {
@@ -150,7 +150,7 @@ update_entries(vspace_t *vspace, void *vaddr, seL4_CPtr cap, size_t size_bits, u
 
 /* reserve entry in page table and handle large pages */
 static inline int
-reserve_entries(vspace_t *vspace, void *vaddr, size_t size_bits)
+reserve_entries(vspace_t *vspace, uintptr_t vaddr, size_t size_bits)
 {
     int error = seL4_NoError;
     for (int i = 0; i < (1 << size_bits) && error == seL4_NoError; i += PAGE_SIZE_4K) {
@@ -162,16 +162,16 @@ reserve_entries(vspace_t *vspace, void *vaddr, size_t size_bits)
 
 /* clear an entry in the page table and handle large pages */
 static inline void
-clear_entries(vspace_t *vspace, void *vaddr, size_t size_bits)
+clear_entries(vspace_t *vspace, uintptr_t vaddr, size_t size_bits)
 {
-    assert( ((uintptr_t)vaddr & ((1 << size_bits) - 1)) == 0);
+    assert((vaddr & ((1 << size_bits) - 1)) == 0);
     for (int i = 0; i < (1 << size_bits); i += PAGE_SIZE_4K) {
         clear(vspace, vaddr + i);
     }
 }
 
 static inline int
-is_available_4k(bottom_level_t *top_level[VSPACE_LEVEL_SIZE], void *vaddr)
+is_available_4k(bottom_level_t *top_level[VSPACE_LEVEL_SIZE], uintptr_t vaddr)
 {
     /* if there is no bottom level page table then this entry is available */
     if (top_level[TOP_LEVEL_INDEX(vaddr)] == NULL) {
@@ -185,10 +185,10 @@ is_available_4k(bottom_level_t *top_level[VSPACE_LEVEL_SIZE], void *vaddr)
 }
 
 static inline int
-is_available(bottom_level_t *top_level[VSPACE_LEVEL_SIZE], void *vaddr, size_t size_bits)
+is_available(bottom_level_t *top_level[VSPACE_LEVEL_SIZE], uintptr_t vaddr, size_t size_bits)
 {
     bool available = true;
-    for (uint32_t offset = 0; offset < SIZE_BITS_TO_BYTES(size_bits) && available; offset += PAGE_SIZE_4K) {
+    for (uintptr_t offset = 0; offset < SIZE_BITS_TO_BYTES(size_bits) && available; offset += PAGE_SIZE_4K) {
         available = is_available_4k(top_level, vaddr + offset);
     }
 
@@ -196,7 +196,7 @@ is_available(bottom_level_t *top_level[VSPACE_LEVEL_SIZE], void *vaddr, size_t s
 }
 
 static inline int
-is_reserved(bottom_level_t *top_level[VSPACE_LEVEL_SIZE], void *vaddr)
+is_reserved(bottom_level_t *top_level[VSPACE_LEVEL_SIZE], uintptr_t vaddr)
 {
     if (top_level[TOP_LEVEL_INDEX(vaddr)] == (void *)  RESERVED) {
         return 1;

@@ -20,8 +20,8 @@
 #include <sel4utils/vspace.h>
 #include <sel4utils/vspace_internal.h>
 
-#define OFFSET(x) ( ((uint32_t)((seL4_Word)(x))) & MASK(BOTTOM_LEVEL_BITS_OFFSET) )
-#define ADDR(start, page) ( (start) + (page) * PAGE_SIZE_4K )
+#define OFFSET(x)  ((uintptr_t)(x) & MASK(BOTTOM_LEVEL_BITS_OFFSET) )
+#define ADDR(start, page) ( ((uintptr_t) start) + (page) * PAGE_SIZE_4K )
 
 typedef struct client_server_vspace {
     /* vspace of the server. we also use this to request memory for metadata */
@@ -37,7 +37,7 @@ typedef struct client_server_vspace {
 static void unmap(client_server_vspace_t *cs_vspace, void *caddr, size_t size_bits)
 {
     /* determine the virtual address of the start */
-    void *saddr = (void*)get_cap(cs_vspace->translation_data.top_level, caddr);
+    void *saddr = (void*)get_cap(cs_vspace->translation_data.top_level, (uintptr_t) caddr);
     assert(saddr);
     /* get the cap from the server vspace */
     seL4_CPtr cap = vspace_get_cap(cs_vspace->server, saddr);
@@ -50,7 +50,7 @@ static void unmap(client_server_vspace_t *cs_vspace, void *caddr, size_t size_bi
     vka_cnode_delete(&cap_path);
     vka_cspace_free(cs_vspace->vka, cap);
     /* remove our translation */
-    clear_entries(&cs_vspace->translation, caddr, size_bits);
+    clear_entries(&cs_vspace->translation, (uintptr_t) caddr, size_bits);
 }
 
 static void unmap_many(client_server_vspace_t *cs_vspace, void *caddr, size_t num_pages, size_t size_bits)
@@ -270,25 +270,25 @@ void *sel4utils_cs_vspace_translate(vspace_t *vspace, void *addr)
 {
     client_server_vspace_t *cs_vspace = (client_server_vspace_t*)vspace->data;
 
-    seL4_CPtr translation_result = get_cap(cs_vspace->translation_data.top_level, addr);
+    seL4_CPtr translation_result = get_cap(cs_vspace->translation_data.top_level, (uintptr_t) addr);
 
     /* the translation will throw away any non aligned bits, if we got a successful
      * translation then add the offset back onto the result */
-    return translation_result == 0 ? NULL : ((void*)translation_result) + OFFSET(addr);
+    return translation_result == 0 ? NULL : (void *)(translation_result + OFFSET((uintptr_t) addr));
 }
 
 int sel4utils_cs_vspace_for_each(vspace_t *vspace, void *addr, uint32_t len,
                                  int (*proc)(void* addr, uint32_t len, void *cookie),
                                  void *cookie)
 {
-    uint32_t current_addr;
-    uint32_t next_addr;
-    uint32_t end_addr = (uint32_t)(addr + len);
-    for (current_addr = (uint32_t)addr; current_addr < end_addr; current_addr = next_addr) {
-        uint32_t current_aligned = PAGE_ALIGN_4K(current_addr);
-        uint32_t next_page_start = current_aligned + PAGE_SIZE_4K;
+    uintptr_t current_addr;
+    uintptr_t next_addr;
+    uintptr_t end_addr = (uintptr_t) addr + len;
+    for (current_addr = (uintptr_t) addr; current_addr < end_addr; current_addr = next_addr) {
+        uintptr_t current_aligned = PAGE_ALIGN_4K(current_addr);
+        uintptr_t next_page_start = current_aligned + PAGE_SIZE_4K;
         next_addr = MIN(end_addr, next_page_start);
-        void *saddr = sel4utils_cs_vspace_translate(vspace, (void*)current_aligned);
+        uintptr_t saddr = (uintptr_t) sel4utils_cs_vspace_translate(vspace, (void *) current_aligned);
         if (!saddr) {
             return -1;
         }

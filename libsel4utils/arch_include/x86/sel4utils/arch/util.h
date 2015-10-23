@@ -38,6 +38,12 @@ sel4utils_get_instruction_pointer(seL4_UserContext regs)
     return regs.eip;
 }
 
+static inline seL4_Word
+sel4utils_get_sp(seL4_UserContext regs)
+{
+    return regs.esp;
+}
+
 static inline void
 sel4utils_set_stack_pointer(seL4_UserContext *regs, seL4_Word value)
 {

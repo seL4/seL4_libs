@@ -51,6 +51,13 @@ sel4utils_set_arg0(seL4_UserContext *regs, seL4_Word value)
 {
     regs->r0 = value;
 }
+
+static inline seL4_Word
+sel4utils_get_sp(seL4_UserContext regs)
+{
+    return regs.sp;
+}
+
 #endif /* _SEL4UTILS_ARCH_UTIL_H */
 
 

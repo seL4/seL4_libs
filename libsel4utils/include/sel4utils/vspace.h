@@ -269,15 +269,6 @@ int sel4utils_reserve_range_at_no_alloc(vspace_t *vspace, sel4utils_res_t *reser
                                         size_t size, seL4_CapRights rights, int cacheable);
 
 /**
- * Frees a reservation. Function behaves similarly to vspace_free_reservation, except
- * it should only be called on reservations that were created with sel4utils_reserve_range_no_alloc
- * and sel4utils_reserve_range_at_no_alloc
- * @param vspace the virtual memory allocator to use.
- * @param reservation the reservation to free.
- */
-void sel4utils_free_reservation_no_alloc(vspace_t *vspace, sel4utils_res_t *reservation);
-
-/**
  * Move and/or resizes a reservation in any direction, allowing for both start and/or end address to
  * be changed. Any overlapping region will keep their reservation, any non-overlapping regions will
  * be unreserved. Does not make any mapping changes.

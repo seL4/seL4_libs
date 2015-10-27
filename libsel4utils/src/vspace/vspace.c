@@ -538,7 +538,6 @@ sel4utils_reserve_range_aligned(vspace_t *vspace, size_t bytes, size_t size_bits
     }
 
     reservation.res = res;
-    res->malloced = 1;
 
     int error = sel4utils_reserve_range_no_alloc_aligned(vspace, res, bytes, size_bits, rights, cacheable, result);
     if (error) {
@@ -546,6 +545,7 @@ sel4utils_reserve_range_aligned(vspace_t *vspace, size_t bytes, size_t size_bits
         reservation.res = NULL;
     }
 
+    res->malloced = 1;
     return reservation;
 }
 
@@ -558,6 +558,7 @@ int sel4utils_reserve_range_at_no_alloc(vspace_t *vspace, sel4utils_res_t *reser
         ZF_LOGE("Range not available at %p, size %p", vaddr, (void*)size);
         return -1;
     }
+    reservation->malloced = 0;
     perform_reservation(vspace, reservation, (uintptr_t) vaddr, size, rights, cacheable);
     return 0;
 }
@@ -571,35 +572,35 @@ sel4utils_reserve_range_at(vspace_t *vspace, void *vaddr, size_t size, seL4_CapR
 
     if (reservation.res == NULL) {
         ZF_LOGE("Malloc failed");
-        reservation.res = NULL;
         return reservation;
     }
 
     int error = sel4utils_reserve_range_at_no_alloc(vspace, reservation.res, vaddr, size, rights, cacheable);
+    
     if (error) {
         free(reservation.res);
         reservation.res = NULL;
+    } else {
+        ((sel4utils_res_t *)reservation.res)->malloced = 1;
     }
+
     return reservation;
 }
 
-void sel4utils_free_reservation_no_alloc(vspace_t *vspace, sel4utils_res_t *res)
+void
+sel4utils_free_reservation(vspace_t *vspace, reservation_t reservation)
 {
     sel4utils_alloc_data_t *data = get_alloc_data(vspace);
-
+    sel4utils_res_t *res = (sel4utils_res_t *)reservation.res;
     for (uintptr_t current = res->start; current < res->end; current += PAGE_SIZE_4K) {
         if (get_cap(data->top_level, current) == RESERVED) {
             clear(vspace, current);
         }
     }
     remove_reservation(data, res);
-}
-
-void
-sel4utils_free_reservation(vspace_t *vspace, reservation_t reservation)
-{
-    sel4utils_free_reservation_no_alloc(vspace, reservation.res);
-    free(reservation.res);
+    if (res->malloced) {
+        free(reservation.res);
+    }
 }
 
 void
@@ -703,11 +704,8 @@ sel4utils_tear_down(vspace_t *vspace, vka_t *vka)
 
     /* free all the reservations */
     while (data->reservation_head != NULL) {
-        sel4utils_res_t *res = data->reservation_head;
-        sel4utils_free_reservation_no_alloc(vspace, res);
-        if (res->malloced) {
-            free(res);
-        }
+        reservation_t res = { .res = data->reservation_head };
+        sel4utils_free_reservation(vspace, res);
     }
 
     /* now clear all the pages in the vspace (not the page tables) */

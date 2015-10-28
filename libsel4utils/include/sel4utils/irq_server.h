@@ -130,7 +130,7 @@ typedef struct irq_server* irq_server_t;
 /**
  * Initialises an IRQ server.
  * The server will spawn threads to handle incoming IRQs. The function of the
- * threads is to IPC the provided synchronous enpoint with IRQ information. When the IPC
+ * threads is to IPC the provided synchronous endpoint with IRQ information. When the IPC
  * arrives, the application should call \ref{irq_server_handle_irq_ipc} while IPC
  * registers are still valid. \ref{irq_server_handle_irq_ipc} will decode the provided
  * information and redirect control to the appropriate IRQ handler.
@@ -146,7 +146,7 @@ typedef struct irq_server* irq_server_t;
  * @param[in] label        A label to use when sending a synchronous IPC
  * @param[in] nirqs        The maximum number of irqs to support.
  *                         -1 will set up a dynamic system, however, the
- *                         approriate resource managers must remain valid for
+ *                         appropriate resource managers must remain valid for
  *                         the life of the server.
  * @param[out] irq_server  An IRQ server structure to initialise.
  * @return                 0 on success

@@ -17,7 +17,7 @@
  *
  * Stack size is constant and be configured in menuconfig.
  *
- * Stacks are allocated with 1 guard page between them, but they are continguous in the vmem
+ * Stacks are allocated with 1 guard page between them, but they are contiguous in the vmem
  * region.
  *
  * Allocation starts at 0x00001000.

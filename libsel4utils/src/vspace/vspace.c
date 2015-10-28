@@ -1,5 +1,5 @@
 /*
- * Copyright 014, NICTA
+ * Copyright 2014, NICTA
  *
  * This software may be distributed and modified according to the terms of
  * the BSD 2-Clause license. Note that NO WARRANTY is provided.
@@ -199,7 +199,7 @@ perform_reservation(vspace_t *vspace, sel4utils_res_t *reservation, uintptr_t va
         error = reserve(vspace, v);
     }
 
-    /* return the amount we sucessfully reserved */
+    /* return the amount we successfully reserved */
     reservation->end = v;
 
     /* insert the reservation ordered */
@@ -266,7 +266,7 @@ sel4utils_map_page_iommu(vspace_t *vspace, seL4_CPtr cap, void *vaddr, seL4_CapR
 {
     struct sel4utils_alloc_data *data = get_alloc_data(vspace);
     int num_pts = 0;
-    /* The maximum number of page table levels current intel hardware implements is 6 */
+    /* The maximum number of page table levels current Intel hardware implements is 6 */
     vka_object_t pts[7];
 
     int error = sel4utils_map_iospace_page(data->vka, data->page_directory, cap,

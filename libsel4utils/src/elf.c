@@ -299,7 +299,7 @@ uintptr_t sel4utils_elf_get_vsyscall(char *image_name)
     /* See if we can find the __vsyscall section */
     void *addr = elf_getSectionNamed(elf_file, "__vsyscall");
     if (addr) {
-        /* Hope everyting is good and just dereference it */
+        /* Hope everything is good and just dereference it */
         return *(uintptr_t*)addr;
     } else {
         return 0;

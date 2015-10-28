@@ -65,7 +65,7 @@ page_map_retry:
             error = seL4_ARCH_PageDirectory_Map(pagetable->cptr, pd, (seL4_Word)vaddr,
                                                 seL4_ARCH_Default_VMAttributes);
         } else {
-            LOG_ERROR("Page direcotry allocation failed %d\n", error);
+            LOG_ERROR("Page directory allocation failed %d\n", error);
         }
 
         if (!error) {
@@ -320,7 +320,7 @@ sel4utils_dup_and_map(vka_t *vka, vspace_t *vspace, seL4_CPtr page, size_t size_
 void
 sel4utils_unmap_dup(vka_t *vka, vspace_t *vspace, void *mapping, size_t size_bits)
 {
-    /* Grap a copy of the cap */
+    /* Grab a copy of the cap */
     seL4_CPtr copy = vspace_get_cap(vspace, mapping);
     cspacepath_t copy_path;
     assert(copy);

@@ -120,7 +120,7 @@ irq_bind(irq_t irq, seL4_CPtr notification_cap, int idx, vka_t* vka, simple_t *s
     /* bind the IRQ cap to our badged endpoint */
     err = seL4_IRQHandler_SetNotification(irq_cap, bnotification_cap);
     if (err != seL4_NoError) {
-        LOG_ERROR("Faild to bind IRQ handler to notification\n");
+        LOG_ERROR("Failed to bind IRQ handler to notification\n");
         vka_cspace_free(vka, irq_cap);
         vka_cspace_free(vka, bnotification_cap);
         return seL4_CapNull;
@@ -128,7 +128,7 @@ irq_bind(irq_t irq, seL4_CPtr notification_cap, int idx, vka_t* vka, simple_t *s
     /* Finally ACK any pending IRQ and enable the IRQ */
     seL4_IRQHandler_Ack(irq_cap);
 
-    DIRQSERVER("Regestered IRQ %d with badge 0x%lx\n", irq, BIT(idx));
+    DIRQSERVER("Registered IRQ %d with badge 0x%lx\n", irq, BIT(idx));
     return irq_cap;
 }
 
@@ -250,7 +250,7 @@ irq_server_thread_new(vspace_t* vspace, vka_t* vka, seL4_CPtr cspace, seL4_Word 
     /* Create an endpoint to listen on */
     err = vka_alloc_notification(vka, &st->notification);
     if (err) {
-        LOG_ERROR("Failed to alocate IRQ notification endpoint for IRQ server thread\n");
+        LOG_ERROR("Failed to allocate IRQ notification endpoint for IRQ server thread\n");
         return NULL;
     }
     st->node->notification = st->notification.cptr;
@@ -354,7 +354,7 @@ irq_server_new(vspace_t* vspace, vka_t* vka, seL4_CPtr cspace, seL4_Word priorit
 {
     struct irq_server* irq_server;
 
-    /* Structure allcoation and initialisation */
+    /* Structure allocation and initialisation */
     irq_server = (struct irq_server*)malloc(sizeof(*irq_server));
     if (irq_server == NULL) {
         LOG_ERROR("malloc failed on irq server memory allocation");

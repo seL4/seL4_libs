@@ -101,7 +101,7 @@ common_init_post_bootstrap(vspace_t *vspace, sel4utils_map_page_fn map_page)
 
     data->map_page = map_page;
 
-    /* initialise the rest of the functions now that they are useable */
+    /* initialise the rest of the functions now that they are usable */
     vspace->new_pages_at_vaddr = sel4utils_new_pages_at_vaddr;
 
     vspace->map_pages_at_vaddr = sel4utils_map_pages_at_vaddr;

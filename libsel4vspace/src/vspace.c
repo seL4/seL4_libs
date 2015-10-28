@@ -30,7 +30,7 @@ vspace_new_stack(vspace_t *vspace)
         return NULL;
     }
 
-    return stack_bottom + CONFIG_SEL4UTILS_STACK_SIZE;
+    return (void *) (stack_bottom + CONFIG_SEL4UTILS_STACK_SIZE);
 }
 
 void
@@ -39,7 +39,7 @@ vspace_free_stack(vspace_t *vspace, void *stack_top)
     uintptr_t stack_bottom = (uintptr_t) stack_top - CONFIG_SEL4UTILS_STACK_SIZE;
     vspace_unmap_pages(vspace, (void *) stack_bottom, STACK_PAGES,
                        seL4_PageBits, (vka_t *) VSPACE_FREE);
-    vspace_free_reservation_by_vaddr(vspace, stack_bottom - PAGE_SIZE_4K);
+    vspace_free_reservation_by_vaddr(vspace, (void *) (stack_bottom - PAGE_SIZE_4K));
 }
 
 void *

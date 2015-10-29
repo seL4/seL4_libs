@@ -48,6 +48,7 @@ int sel4utils_configure_thread(vka_t *vka, vspace_t *parent, vspace_t *alloc, se
     sel4utils_thread_config_t config = {
         .fault_endpoint = fault_endpoint,
         .priority = priority,
+        .max_priority = priority,
         .cspace = cspace,
         .cspace_root_data = cspace_root_data,
     };
@@ -82,8 +83,8 @@ sel4utils_configure_thread_config(vka_t *vka, vspace_t *parent, vspace_t *alloc,
     }
 
     seL4_CapData_t null_cap_data = {{0}};
-    error = seL4_TCB_Configure(res->tcb.cptr, config.fault_endpoint, config.priority, config.cspace,
-                               config.cspace_root_data, vspace_get_root(alloc), null_cap_data, res->ipc_buffer_addr, res->ipc_buffer);
+    seL4_Prio_t prio = seL4_Prio_new(config.priority, config.max_priority);
+    error = seL4_TCB_Configure(res->tcb.cptr, config.fault_endpoint, prio, config.cspace, config.cspace_root_data, vspace_get_root(alloc), null_cap_data, res->ipc_buffer_addr, res->ipc_buffer);
 
     if (error != seL4_NoError) {
         LOG_ERROR("TCB configure failed with seL4 error code %d", error);

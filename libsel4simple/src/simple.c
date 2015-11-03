@@ -58,18 +58,18 @@ int simple_vka_cspace_alloc(void *data, seL4_CPtr *slot) {
     int i = 0;
 
     /* Keep trying to find the next free slot by seeing if we can copy something there */
-    seL4_Error error = seL4_CNode_Copy(cnode, simple_get_cap_count(simple) + i, 32, cnode, cnode, 32, seL4_AllRights);
+    seL4_Error error = seL4_CNode_Copy(cnode, simple_get_cap_count(simple) + i, seL4_WordBits, cnode, cnode, seL4_WordBits, seL4_AllRights);
     while(error == seL4_DeleteFirst) {
         i++;
-        error = seL4_CNode_Copy(cnode, simple_get_cap_count(simple) + i, 32, cnode, cnode, 32, seL4_AllRights);
+        error = seL4_CNode_Copy(cnode, simple_get_cap_count(simple) + i, seL4_WordBits, cnode, cnode, seL4_WordBits, seL4_AllRights);
     }
 
     if(error != seL4_NoError) {
-        error = seL4_CNode_Delete(cnode, simple_get_cap_count(simple) + i, 32);
+        error = seL4_CNode_Delete(cnode, simple_get_cap_count(simple) + i, seL4_WordBits);
         return error;
     }
 
-    error = seL4_CNode_Delete(cnode, simple_get_cap_count(simple) + i, 32);
+    error = seL4_CNode_Delete(cnode, simple_get_cap_count(simple) + i, seL4_WordBits);
     if(error != seL4_NoError) {
         return error;
     }
@@ -84,11 +84,11 @@ void simple_vka_cspace_make_path(void *data, seL4_CPtr slot, cspacepath_t *path)
     simple_t *simple = (simple_t *) data;
 
     path->capPtr = slot;
-    path->capDepth = 32;
+    path->capDepth = seL4_WordBits;
     path->root = simple_get_cnode(simple);
     path->dest = simple_get_cnode(simple);
     path->offset = slot;
-    path->destDepth = 32;
+    path->destDepth = seL4_WordBits;
 }
 
 void simple_make_vka(simple_t *simple, vka_t *vka) {

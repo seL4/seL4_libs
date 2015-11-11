@@ -34,6 +34,11 @@ if LIB_SEL4_UTILS
     help
         Enables the functionality of a set of profiling tools. When disabled these profiling tools
         will compile down to nothing.
+
+    config SEL4UTILS_TIMESLICE
+    int "Timeslice for sel4utils threads in ticks"
+    default 10
+
 endif
 
 config HAVE_LIB_SEL4_UTILS

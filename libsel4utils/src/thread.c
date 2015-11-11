@@ -41,8 +41,10 @@ write_ipc_buffer_user_data(vka_t *vka, vspace_t *vspace, seL4_CPtr ipc_buf, uint
     return 0;
 }
 
-int sel4utils_configure_thread(vka_t *vka, vspace_t *parent, vspace_t *alloc, seL4_CPtr fault_endpoint,
-                               uint8_t priority, seL4_CNode cspace, seL4_CapData_t cspace_root_data, sel4utils_thread_t *res)
+int sel4utils_configure_thread(simple_t *simple, vka_t *vka, vspace_t *parent, vspace_t *alloc, 
+                               seL4_CPtr fault_endpoint,
+                               uint8_t priority, seL4_CNode cspace, 
+                               seL4_CapData_t cspace_root_data, sel4utils_thread_t *res)
 {
 
     sel4utils_thread_config_t config = {
@@ -51,14 +53,15 @@ int sel4utils_configure_thread(vka_t *vka, vspace_t *parent, vspace_t *alloc, se
         .max_priority = priority,
         .cspace = cspace,
         .cspace_root_data = cspace_root_data,
+        .create_sc = true,
     };
 
-    return sel4utils_configure_thread_config(vka, parent, alloc, config, res);
+    return sel4utils_configure_thread_config(simple, vka, parent, alloc, config, res);
 }
 
 
 int
-sel4utils_configure_thread_config(vka_t *vka, vspace_t *parent, vspace_t *alloc,
+sel4utils_configure_thread_config(simple_t *simple, vka_t *vka, vspace_t *parent, vspace_t *alloc,
                                   sel4utils_thread_config_t config, sel4utils_thread_t *res)
 {
     memset(res, 0, sizeof(sel4utils_thread_t));
@@ -81,8 +84,29 @@ sel4utils_configure_thread_config(vka_t *vka, vspace_t *parent, vspace_t *alloc,
         LOG_ERROR("failed to set user data word in IPC buffer");
         return -1;
     }
+
+    if (config.create_sc) {
+        error = vka_alloc_sched_context(vka, &res->sched_context);
+        if (error) {
+            ZF_LOGE("Failed to allocate sched context");
+            sel4utils_clean_up_thread(vka, alloc, res);
+            return -1;
+        }
+
+        seL4_Time budget = config.custom_budget;
+        if (!config.custom_sched_params) {
+            budget = CONFIG_SEL4UTILS_TIMESLICE;
+        }
+
+        error = seL4_SchedControl_Configure(simple_get_sched_ctrl(simple), 
+                                            res->sched_context.cptr, budget);
     
-    error = vka_alloc_sched_context(vka, &res->sched_context);
+        if (error) {
+            ZF_LOGE("Failed to configure sched context");
+            sel4utils_clean_up_thread(vka, alloc, res);
+            return -1;
+        }
+    }
 
     seL4_CapData_t null_cap_data = {{0}};
     seL4_Prio_t prio = seL4_Prio_new(config.priority, config.max_priority);
@@ -203,11 +227,11 @@ fault_handler(char *name, seL4_CPtr endpoint)
 }
 
 int
-sel4utils_start_fault_handler(seL4_CPtr fault_endpoint, vka_t *vka, vspace_t *vspace,
+sel4utils_start_fault_handler(seL4_CPtr fault_endpoint, simple_t *simple, vka_t *vka, vspace_t *vspace,
                               uint8_t prio, seL4_CPtr cspace, seL4_CapData_t cap_data, char *name,
                               sel4utils_thread_t *res)
 {
-    int error = sel4utils_configure_thread(vka, vspace, vspace, 0, prio, cspace,
+    int error = sel4utils_configure_thread(simple, vka, vspace, vspace, 0, prio, cspace,
                                            cap_data, res);
 
     if (error) {

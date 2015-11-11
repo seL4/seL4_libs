@@ -302,6 +302,12 @@ static inline seL4_CPtr simple_get_irq_ctrl(simple_t *simple) {
     return simple->init_cap(simple->data,seL4_CapIRQControl);
 }
 
+static inline seL4_CPtr simple_get_sched_ctrl(simple_t *simple) {
+    assert(simple);
+    assert(simple->init_cap);
+    return simple->init_cap(simple->data, seL4_CapSchedControl);
+}
+
 static inline seL4_CPtr simple_get_init_cap(simple_t *simple, seL4_CPtr cap) {
     assert(simple);
     assert(simple->init_cap);

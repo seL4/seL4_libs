@@ -254,7 +254,7 @@ irq_server_thread_new(vspace_t* vspace, vka_t* vka, seL4_CPtr cspace, seL4_Word 
     }
     st->node->notification = st->notification.cptr;
     /* Create the IRQ thread */
-    err = sel4utils_configure_thread(vka, vspace, vspace, seL4_CapNull, priority,
+    err = sel4utils_configure_thread(simple, vka, vspace, vspace, seL4_CapNull, priority,
                                      cspace, seL4_NilData, &st->thread);
     if (err) {
         LOG_ERROR("Failed to configure IRQ server thread\n");

@@ -336,7 +336,7 @@ sel4utils_spawn_process_v(sel4utils_process_t *process, vka_t *vka, vspace_t *vs
 }
 
 int
-sel4utils_configure_process(sel4utils_process_t *process, vka_t *vka,
+sel4utils_configure_process(sel4utils_process_t *process, simple_t *simple, vka_t *vka,
                             vspace_t *vspace, uint8_t priority, char *image_name)
 {
     sel4utils_process_config_t config = {
@@ -353,7 +353,7 @@ sel4utils_configure_process(sel4utils_process_t *process, vka_t *vka,
 #endif
     };
 
-    return sel4utils_configure_process_custom(process, vka, vspace, config);
+    return sel4utils_configure_process_custom(process, simple, vka, vspace, config);
 }
 
 static int
@@ -446,7 +446,7 @@ create_fault_endpoint(vka_t *vka, sel4utils_process_t *process)
 }
 
 
-int sel4utils_configure_process_custom(sel4utils_process_t *process, vka_t *vka,
+int sel4utils_configure_process_custom(sel4utils_process_t *process, simple_t *simple,  vka_t *vka,
                                        vspace_t *spawner_vspace, sel4utils_process_config_t config)
 {
     int error;
@@ -535,7 +535,7 @@ int sel4utils_configure_process_custom(sel4utils_process_t *process, vka_t *vka,
 
     /* create the thread, do this *after* elf-loading so that we don't clobber
      * the required virtual memory*/
-    error = sel4utils_configure_thread(vka, spawner_vspace, &process->vspace, SEL4UTILS_ENDPOINT_SLOT,
+    error = sel4utils_configure_thread(simple, vka, spawner_vspace, &process->vspace, SEL4UTILS_ENDPOINT_SLOT,
                                        config.priority, process->cspace.cptr, cspace_root_data, &process->thread);
 
     if (error) {

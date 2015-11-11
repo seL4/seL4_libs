@@ -24,6 +24,7 @@
 #ifdef CONFIG_LIB_SEL4_VSPACE
 
 #include <sel4/sel4.h>
+#include <simple/simple.h>
 #include <stdbool.h>
 #include <vka/vka.h>
 
@@ -48,6 +49,13 @@ typedef struct sel4utils_thread_config {
     seL4_CNode cspace;
     /* data for cspace access */
     seL4_CapData_t cspace_root_data;
+    /* true if configure should allocate a sched context */
+    bool create_sc;
+    /* true if that sched context should use custom params */
+    bool custom_sched_params;
+    /* the custom params */
+    seL4_Time custom_budget;
+
 } sel4utils_thread_config_t;
 
 typedef struct sel4utils_checkpoint {
@@ -71,7 +79,8 @@ typedef struct sel4utils_checkpoint {
  *
  * @return 0 on success, -1 on failure. Use CONFIG_DEBUG to see error messages.
  */
-int sel4utils_configure_thread(vka_t *vka, vspace_t *parent, vspace_t *alloc, seL4_CPtr fault_endpoint,
+int sel4utils_configure_thread(simple_t *simple, vka_t *vka, vspace_t *parent, vspace_t *alloc, 
+                               seL4_CPtr fault_endpoint,
                                uint8_t priority, seL4_CNode cspace, seL4_CapData_t cspace_root_data,
                                sel4utils_thread_t *res);
 
@@ -79,7 +88,7 @@ int sel4utils_configure_thread(vka_t *vka, vspace_t *parent, vspace_t *alloc, se
 /**
  * As per sel4utils_configure_thread, but using a config struct.
  */
-int sel4utils_configure_thread_config(vka_t *vka, vspace_t *parent, vspace_t *alloc,
+int sel4utils_configure_thread_config(simple_t *simple, vka_t *vka, vspace_t *parent, vspace_t *alloc,
                                       sel4utils_thread_config_t config, sel4utils_thread_t *res);
 
 /**
@@ -191,7 +200,7 @@ void sel4utils_free_checkpoint(sel4utils_checkpoint_t *checkpoint);
  *
  * @return 0 on success.
  */
-int sel4utils_start_fault_handler(seL4_CPtr fault_endpoint, vka_t *vka, vspace_t *vspace,
+int sel4utils_start_fault_handler(seL4_CPtr fault_endpoint, simple_t *simple, vka_t *vka, vspace_t *vspace,
                                   uint8_t prio, seL4_CPtr cspace, seL4_CapData_t data, char *name, sel4utils_thread_t *res);
 
 

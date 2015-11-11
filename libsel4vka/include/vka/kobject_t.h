@@ -28,6 +28,7 @@ typedef enum _kobject_type {
     KOBJECT_FRAME,
     KOBJECT_PAGE_DIRECTORY,
     KOBJECT_PAGE_TABLE,
+    KOBJECT_SCHED_CONTEXT,
 #ifdef CONFIG_X86_64
     KOBJECT_PAGE_MAP_LEVEL4,
     KOBJECT_PAGE_DIRECTORY_POINTER_TABLE,
@@ -70,6 +71,8 @@ kobject_get_size(kobject_t type, seL4_Word objectSize)
         return seL4_PageDirBits;
     case KOBJECT_PAGE_TABLE:
         return seL4_PageTableBits;
+    case KOBJECT_SCHED_CONTEXT:
+        return seL4_SchedContextBits;
 #ifdef CONFIG_CACHE_COLORING
     case KOBJECT_KERNEL_IMAGE:
         return seL4_KernelImageBits;
@@ -97,6 +100,8 @@ kobject_get_type(kobject_t type, seL4_Word objectSize)
         return seL4_EndpointObject;
     case KOBJECT_NOTIFICATION:
         return seL4_NotificationObject;
+    case KOBJECT_SCHED_CONTEXT:
+        return seL4_SchedContextObject;
 #ifdef CONFIG_CACHE_COLORING
     case KOBJECT_KERNEL_IMAGE:
         return seL4_KernelImageObject;

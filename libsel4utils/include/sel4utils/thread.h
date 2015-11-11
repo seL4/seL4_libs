@@ -34,6 +34,7 @@ typedef struct sel4utils_thread {
     void *stack_top;
     seL4_CPtr ipc_buffer;
     seL4_Word ipc_buffer_addr;
+    vka_object_t sched_context;
 } sel4utils_thread_t;
 
 typedef struct sel4utils_thread_config {

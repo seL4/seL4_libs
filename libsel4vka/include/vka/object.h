@@ -102,6 +102,11 @@ static inline int vka_alloc_tcb(vka_t *vka, vka_object_t *result)
 {
     return vka_alloc_object(vka, seL4_TCBObject, seL4_TCBBits, result);
 }
+
+static inline int vka_alloc_sched_context(vka_t *vka, vka_object_t *result) {
+    return vka_alloc_object(vka, seL4_SchedContextObject, seL4_SchedContextBits, result);
+}
+
 static inline int vka_alloc_endpoint(vka_t *vka, vka_object_t *result)
 {
     return vka_alloc_object(vka, seL4_EndpointObject, seL4_EndpointBits, result);
@@ -176,6 +181,7 @@ LEAKY(endpoint)
 LEAKY(notification)
 LEAKY(page_directory)
 LEAKY(page_table)
+LEAKY(sched_context)
 
 static inline DEPRECATED("use vka_alloc_notification_leaky") seL4_CPtr
 vka_alloc_async_endpoint_leaky(vka_t *vka)
@@ -230,6 +236,8 @@ vka_get_object_size(seL4_Word objectType, seL4_Word objectSize)
         return seL4_EndpointBits;
     case seL4_NotificationObject:
         return seL4_NotificationBits;
+    case seL4_SchedContextObject:
+        return seL4_SchedContextBits;
     case seL4_CapTableObject:
         return (seL4_SlotBits + objectSize);
 #ifdef CONFIG_CACHE_COLORING

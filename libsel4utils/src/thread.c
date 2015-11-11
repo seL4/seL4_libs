@@ -81,10 +81,12 @@ sel4utils_configure_thread_config(vka_t *vka, vspace_t *parent, vspace_t *alloc,
         LOG_ERROR("failed to set user data word in IPC buffer");
         return -1;
     }
+    
+    error = vka_alloc_sched_context(vka, &res->sched_context);
 
     seL4_CapData_t null_cap_data = {{0}};
     seL4_Prio_t prio = seL4_Prio_new(config.priority, config.max_priority);
-    error = seL4_TCB_Configure(res->tcb.cptr, config.fault_endpoint, prio, config.cspace, config.cspace_root_data, vspace_get_root(alloc), null_cap_data, res->ipc_buffer_addr, res->ipc_buffer);
+    error = seL4_TCB_Configure(res->tcb.cptr, config.fault_endpoint, prio, res->sched_context.cptr, config.cspace, config.cspace_root_data, vspace_get_root(alloc), null_cap_data, res->ipc_buffer_addr, res->ipc_buffer);
 
     if (error != seL4_NoError) {
         LOG_ERROR("TCB configure failed with seL4 error code %d", error);

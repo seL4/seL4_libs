@@ -19,7 +19,7 @@
 cspacepath_t _cspace_two_level_make_path(void *_cspace, seL4_CPtr slot)
 {
     cspacepath_t l1_path, l2_path;
-    uint32_t l1slot, l2slot;
+    size_t l1slot, l2slot;
     cspace_two_level_t *cspace = (cspace_two_level_t*)_cspace;
     l1slot = slot >> cspace->config.level_two_bits;
     l2slot = slot & MASK(cspace->config.level_two_bits);
@@ -49,7 +49,7 @@ cspacepath_t _cspace_two_level_make_path(void *_cspace, seL4_CPtr slot)
     path->cnode_offset = l2slot;*/
 }
 
-static int _create_second_level(allocman_t *alloc, cspace_two_level_t *cspace, uint32_t index, int alloc_node)
+static int _create_second_level(allocman_t *alloc, cspace_two_level_t *cspace, size_t index, int alloc_node)
 {
     int error;
     struct cspace_single_level_config single_config = {
@@ -91,7 +91,7 @@ static int _create_second_level(allocman_t *alloc, cspace_two_level_t *cspace, u
 int cspace_two_level_create(allocman_t *alloc, cspace_two_level_t *cspace, struct cspace_two_level_config config)
 {
     int error;
-    uint32_t i;
+    size_t i;
     struct cspace_single_level_config single_config = {
         .cnode = config.cnode,
         .cnode_size_bits = config.cnode_size_bits,
@@ -138,8 +138,8 @@ int cspace_two_level_create(allocman_t *alloc, cspace_two_level_t *cspace, struc
 
 int _cspace_two_level_alloc_at(allocman_t *alloc, void *_cspace, seL4_CPtr slot) {
     cspace_two_level_t *cspace = (cspace_two_level_t*)_cspace;
-    uint32_t l1slot;
-    uint32_t l2slot;
+    size_t l1slot;
+    size_t l2slot;
     int error;
     l1slot = slot >> cspace->config.level_two_bits;
     l2slot = slot & MASK(cspace->config.level_two_bits);
@@ -166,7 +166,7 @@ int _cspace_two_level_alloc_at(allocman_t *alloc, void *_cspace, seL4_CPtr slot)
 int _cspace_two_level_alloc(allocman_t *alloc, void *_cspace, cspacepath_t *slot)
 {
     cspace_two_level_t *cspace = (cspace_two_level_t*)_cspace;
-    uint32_t i;
+    size_t i;
     int found;
     int first;
     int error;
@@ -209,7 +209,7 @@ int _cspace_two_level_alloc(allocman_t *alloc, void *_cspace, cspacepath_t *slot
     return 0;
 }
 
-static void _destroy_second_level(allocman_t *alloc, cspace_two_level_t *cspace, uint32_t index)
+static void _destroy_second_level(allocman_t *alloc, cspace_two_level_t *cspace, size_t index)
 {
     cspacepath_t path;
     cspace_single_level_destroy(alloc, &cspace->second_levels[index]->second_level);
@@ -226,8 +226,8 @@ static void _destroy_second_level(allocman_t *alloc, cspace_two_level_t *cspace,
 
 void _cspace_two_level_free(struct allocman *alloc, void *_cspace, const cspacepath_t *slot)
 {
-    uint32_t l1slot;
-    uint32_t l2slot;
+    size_t l1slot;
+    size_t l2slot;
     seL4_CPtr cptr = slot->capPtr;
     cspacepath_t path;
     cspace_two_level_t *cspace = (cspace_two_level_t*)_cspace;
@@ -244,7 +244,7 @@ void _cspace_two_level_free(struct allocman *alloc, void *_cspace, const cspacep
 
 void cspace_two_level_destroy(struct allocman *alloc, cspace_two_level_t *cspace)
 {
-    uint32_t i;
+    size_t i;
     for (i = 0; i < BIT(cspace->config.cnode_size_bits); i++) {
         if (cspace->second_levels[i]) {
             _destroy_second_level(alloc, cspace, i);

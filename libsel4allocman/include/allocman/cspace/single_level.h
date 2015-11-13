@@ -19,20 +19,20 @@ struct cspace_single_level_config {
     /* A cptr to the cnode that we are managing slots in */
     seL4_CPtr cnode;
     /* Size in bits of the cnode */
-    uint32_t cnode_size_bits;
+    size_t cnode_size_bits;
     /* Guard depth added to this cspace. */
-    uint32_t cnode_guard_bits;
+    size_t cnode_guard_bits;
     /* First valid slot (as an index) */
-    uint32_t first_slot;
+    size_t first_slot;
     /* Last valid slot + 1 (as an index) */
-    uint32_t end_slot;
+    size_t end_slot;
 };
 
 typedef struct cspace_single_level {
     struct cspace_single_level_config config;
-    uint32_t *bitmap;
-    uint32_t bitmap_length;
-    uint32_t last_entry;
+    size_t *bitmap;
+    size_t bitmap_length;
+    size_t last_entry;
 } cspace_single_level_t;
 
 int cspace_single_level_create(struct allocman *alloc, cspace_single_level_t *cspace, struct cspace_single_level_config config);

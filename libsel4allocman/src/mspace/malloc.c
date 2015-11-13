@@ -13,14 +13,14 @@
 #include <allocman/util.h>
 #include <stdlib.h>
 
-void *_mspace_malloc_alloc(allocman_t *alloc, void *unused, uint32_t bytes, int *error)
+void *_mspace_malloc_alloc(allocman_t *alloc, void *unused, size_t bytes, int *error)
 {
     void *result = malloc(bytes);
     SET_ERROR(error, result == NULL ? 1 : 0);
     return result;
 }
 
-void _mspace_malloc_free(allocman_t *alloc, void *unsued, void *ptr, uint32_t bytes)
+void _mspace_malloc_free(allocman_t *alloc, void *unsued, void *ptr, size_t bytes)
 {
     free(ptr);
 }

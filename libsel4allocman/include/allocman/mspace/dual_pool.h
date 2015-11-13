@@ -12,7 +12,7 @@
 #define _ALLOCMAN_MSPACE_DUAL_POOL_H_
 
 #include <autoconf.h>
-#include <stdint.h>
+#include <stdlib.h>
 #include <sel4/types.h>
 #include <allocman/mspace/mspace.h>
 #include <allocman/mspace/k_r_malloc.h>
@@ -23,8 +23,8 @@
  * virtual pool that can be attached while running. */
 
 typedef struct mspace_dual_pool {
-    uint32_t fixed_pool_start;
-    uint32_t fixed_pool_end;
+    size_t fixed_pool_start;
+    size_t fixed_pool_end;
     mspace_fixed_pool_t fixed_pool;
     int have_virtual_pool;
     mspace_virtual_pool_t virtual_pool;
@@ -33,8 +33,8 @@ typedef struct mspace_dual_pool {
 void mspace_dual_pool_create(mspace_dual_pool_t *dual_pool, struct mspace_fixed_pool_config config);
 void mspace_dual_pool_attach_virtual(mspace_dual_pool_t *dual_pool, struct mspace_virtual_pool_config config);
 
-void *_mspace_dual_pool_alloc(struct allocman *alloc, void *_dual_pool, uint32_t bytes, int *error);
-void _mspace_dual_pool_free(struct allocman *alloc, void *_dual_pool, void *ptr, uint32_t bytes);
+void *_mspace_dual_pool_alloc(struct allocman *alloc, void *_dual_pool, size_t bytes, int *error);
+void _mspace_dual_pool_free(struct allocman *alloc, void *_dual_pool, void *ptr, size_t bytes);
 
 static inline struct mspace_interface mspace_dual_pool_make_interface(mspace_dual_pool_t *dual_pool) {
     return (struct mspace_interface){

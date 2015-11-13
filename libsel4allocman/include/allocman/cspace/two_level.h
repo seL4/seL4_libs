@@ -20,23 +20,23 @@ struct cspace_two_level_config {
     /* A cptr to the first level cnode that we are managing slots in */
     seL4_CPtr cnode;
     /* Size in bits of the cnode */
-    uint32_t cnode_size_bits;
+    size_t cnode_size_bits;
     /* Guard depth added to this cspace. */
-    uint32_t cnode_guard_bits;
+    size_t cnode_guard_bits;
     /* First valid slot (as an index) */
-    uint32_t first_slot;
+    size_t first_slot;
     /* Last valid slot + 1 (as an index) */
-    uint32_t end_slot;
+    size_t end_slot;
     /* Size of the second level nodes
        cnode_size_bits + cnode_guard_bits + level_two_bits <= 32 */
-    uint32_t level_two_bits;
+    size_t level_two_bits;
     /* if any of the second level cnodes are already created we can describe them here.
      * up to the user to have put the cspace together in a way that is compatible with
      * this allocator. The slot range is usual 'valid slot' to 'valid slot +1', with
      * the cptr range describing a used cap range which can start and stop partially in
      * any of the level 2 cnodes */
-    uint32_t start_existing_index;
-    uint32_t end_existing_index;
+    size_t start_existing_index;
+    size_t end_existing_index;
     seL4_CPtr start_existing_slot;
     seL4_CPtr end_existing_slot;
 };
@@ -45,13 +45,13 @@ struct cspace_two_level_node {
     /* We count how many things we have allocated in each level two cnode.
        This allows us to quickly know whether it is already full, or of it is
        empty and we can free it */
-    uint32_t count;
+    size_t count;
     /* The cspace representing the second level */
     cspace_single_level_t second_level;
     /* Cookie representing the untyped object used to create the cnode for this
        second level. This is only valid if we allocated this node, it may have
        been given to us in bootstrapping */
-    uint32_t cookie;
+    seL4_Word cookie;
     int cookie_valid;
 };
 
@@ -63,7 +63,7 @@ typedef struct cspace_two_level {
     /* Our second level cspaces */
     struct cspace_two_level_node **second_levels;
     /* Remember which second level we last tried to allocate a slot from */
-    uint32_t last_second_level;
+    size_t last_second_level;
 } cspace_two_level_t;
 
 int cspace_two_level_create(struct allocman *alloc, cspace_two_level_t *cspace, struct cspace_two_level_config config);

@@ -84,7 +84,7 @@ static void am_vka_cspace_free (void *data, seL4_CPtr slot)
  * @param res pointer to a location to store the cookie representing this allocation
  * @return 0 on success
  */
-static int am_vka_utspace_alloc (void *data, const cspacepath_t *dest, seL4_Word type, seL4_Word size_bits, uint32_t *res)
+static int am_vka_utspace_alloc (void *data, const cspacepath_t *dest, seL4_Word type, seL4_Word size_bits, seL4_Word *res)
 {
     int error;
 
@@ -110,7 +110,7 @@ static int am_vka_utspace_alloc (void *data, const cspacepath_t *dest, seL4_Word
  * @param size_bits the size of the object that was allocated (as passed to Untyped_Retype)
  * @param target cookie to the allocation as given by the utspace alloc function
  */
-static void am_vka_utspace_free (void *data, seL4_Word type, seL4_Word size_bits, uint32_t target)
+static void am_vka_utspace_free (void *data, seL4_Word type, seL4_Word size_bits, seL4_Word target)
 {
     assert(data);
 
@@ -121,7 +121,7 @@ static void am_vka_utspace_free (void *data, seL4_Word type, seL4_Word size_bits
     allocman_utspace_free((allocman_t *)data, target, size_bits);
 }
 
-static uintptr_t am_vka_utspace_paddr (void *data, uint32_t target, seL4_Word type, seL4_Word size_bits)
+static uintptr_t am_vka_utspace_paddr (void *data, seL4_Word target, seL4_Word type, seL4_Word size_bits)
 {
     assert(data);
 

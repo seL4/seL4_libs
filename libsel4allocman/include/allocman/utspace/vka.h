@@ -23,14 +23,14 @@
  * We also need to do some extra book keeping work */
 
 typedef struct utspace_vka_cookie {
-    uint32_t original_cookie;
+    seL4_Word original_cookie;
     seL4_Word type;
 } utspace_vka_cookie_t;
 
-static inline uint32_t _utspace_vka_alloc(struct allocman *alloc, void *_vka, uint32_t size_bits, seL4_Word type, const cspacepath_t *slot, int *error)
+static inline seL4_Word _utspace_vka_alloc(struct allocman *alloc, void *_vka, size_t size_bits, seL4_Word type, const cspacepath_t *slot, int *error)
 {
     vka_t *vka = (vka_t *)_vka;
-    int sel4_size_bits = get_sel4_object_size(type, size_bits);
+    size_t sel4_size_bits = get_sel4_object_size(type, size_bits);
     utspace_vka_cookie_t *cookie = (utspace_vka_cookie_t*)malloc(sizeof(*cookie));
     if (!cookie) {
         SET_ERROR(error, 1);
@@ -44,24 +44,24 @@ static inline uint32_t _utspace_vka_alloc(struct allocman *alloc, void *_vka, ui
         free(cookie);
         cookie = NULL;
     }
-    return (uint32_t)cookie;
+    return (seL4_Word)cookie;
 }
 
-static inline void _utspace_vka_free(struct allocman *alloc, void *_vka, uint32_t _cookie, uint32_t size_bits)
+static inline void _utspace_vka_free(struct allocman *alloc, void *_vka, seL4_Word _cookie, size_t size_bits)
 {
     vka_t *vka = (vka_t *)_vka;
     utspace_vka_cookie_t *cookie = (utspace_vka_cookie_t*)_cookie;
     vka_utspace_free(vka, cookie->original_cookie, cookie->type, get_sel4_object_size(cookie->type, size_bits));
 }
 
-static inline uint32_t _utspace_vka_paddr(void *_vka, uint32_t _cookie, uint32_t size_bits)
+static inline uintptr_t _utspace_vka_paddr(void *_vka, seL4_Word _cookie, size_t size_bits)
 {
     vka_t *vka = (vka_t *)_vka;
     utspace_vka_cookie_t *cookie = (utspace_vka_cookie_t*)_cookie;
     return vka_utspace_paddr(vka, cookie->original_cookie, cookie->type, get_sel4_object_size(cookie->type, size_bits));
 }
 
-static inline int _utspace_vka_add_uts(struct allocman *alloc, void *_trickle, uint32_t num, const cspacepath_t *uts, uint32_t *size_bits, uint32_t *paddr)
+static inline int _utspace_vka_add_uts(struct allocman *alloc, void *_trickle, size_t num, const cspacepath_t *uts, size_t *size_bits, uintptr_t *paddr)
 {
     assert(!"VKA interface does not support adding untypeds after creation");
     return -1;

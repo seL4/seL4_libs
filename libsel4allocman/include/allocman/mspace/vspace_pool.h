@@ -27,14 +27,14 @@
  */
 
 struct mspace_vspace_pool_config {
-    uint32_t vstart;
+    uintptr_t vstart;
     reservation_t reservation;
     vspace_t vspace;
 };
 
 typedef struct mspace_vspace_pool {
-    uint32_t pool_ptr;
-    uint32_t pool_top;
+    uintptr_t pool_ptr;
+    uintptr_t pool_top;
     /* reservation inside the vspace_t */
     reservation_t reservation;
     vspace_t vspace;
@@ -44,8 +44,8 @@ typedef struct mspace_vspace_pool {
 
 void mspace_vspace_pool_create(mspace_vspace_pool_t *vspace_pool, struct mspace_vspace_pool_config config);
 
-void *_mspace_vspace_pool_alloc(struct allocman *alloc, void *_vspace_pool, uint32_t bytes, int *error);
-void _mspace_vspace_pool_free(struct allocman *alloc, void *_vspace_pool, void *ptr, uint32_t bytes);
+void *_mspace_vspace_pool_alloc(struct allocman *alloc, void *_vspace_pool, size_t bytes, int *error);
+void _mspace_vspace_pool_free(struct allocman *alloc, void *_vspace_pool, void *ptr, size_t bytes);
 
 static inline struct mspace_interface mspace_vspace_pool_make_interface(mspace_vspace_pool_t *vspace_pool) {
     return (struct mspace_interface){

@@ -19,9 +19,9 @@
  */
 #define PAGE_SIZE_BITS 12
 
-static k_r_malloc_header_t *_morecore(uint32_t cookie, mspace_k_r_malloc_t *k_r_malloc, uint32_t new_units)
+static k_r_malloc_header_t *_morecore(size_t cookie, mspace_k_r_malloc_t *k_r_malloc, size_t new_units)
 {
-    uint32_t new_size;
+    size_t new_size;
     k_r_malloc_header_t *new_header;
     mspace_vspace_pool_t *vspace_pool = (mspace_vspace_pool_t*)cookie;
     new_size = new_units * sizeof(k_r_malloc_header_t);
@@ -46,10 +46,10 @@ void mspace_vspace_pool_create(mspace_vspace_pool_t *vspace_pool, struct mspace_
     vspace_pool->vspace = config.vspace;
     vspace_pool->morecore_alloc = NULL;
 
-    mspace_k_r_malloc_init(&vspace_pool->k_r_malloc, (uint32_t)vspace_pool, _morecore);
+    mspace_k_r_malloc_init(&vspace_pool->k_r_malloc, (size_t)vspace_pool, _morecore);
 }
 
-void *_mspace_vspace_pool_alloc(struct allocman *alloc, void *_vspace_pool, uint32_t bytes, int *error)
+void *_mspace_vspace_pool_alloc(struct allocman *alloc, void *_vspace_pool, size_t bytes, int *error)
 {
     void *ret;
     mspace_vspace_pool_t *vspace_pool = (mspace_vspace_pool_t*)_vspace_pool;
@@ -60,7 +60,7 @@ void *_mspace_vspace_pool_alloc(struct allocman *alloc, void *_vspace_pool, uint
     return ret;
 }
 
-void _mspace_vspace_pool_free(struct allocman *alloc, void *_vspace_pool, void *ptr, uint32_t bytes)
+void _mspace_vspace_pool_free(struct allocman *alloc, void *_vspace_pool, void *ptr, size_t bytes)
 {
     mspace_vspace_pool_t *vspace_pool = (mspace_vspace_pool_t*)_vspace_pool;
     vspace_pool->morecore_alloc = alloc;

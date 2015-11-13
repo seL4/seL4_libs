@@ -22,7 +22,7 @@
 static int _add_page(allocman_t *alloc, seL4_CPtr pd, void *vaddr)
 {
     cspacepath_t frame_path;
-    uint32_t frame_cookie;
+    seL4_Word frame_cookie;
     int error;
     error = allocman_cspace_alloc(alloc, &frame_path);
     if (error) {
@@ -33,11 +33,11 @@ static int _add_page(allocman_t *alloc, seL4_CPtr pd, void *vaddr)
         allocman_cspace_free(alloc, &frame_path);
         return error;
     }
-    error = seL4_ARCH_Page_Map(frame_path.capPtr, pd, (seL4_Word) vaddr, seL4_AllRights, 
+    error = seL4_ARCH_Page_Map(frame_path.capPtr, pd, (seL4_Word) vaddr, seL4_AllRights,
                 seL4_ARCH_Default_VMAttributes);
     if (error == seL4_FailedLookup) {
         cspacepath_t pt_path;
-        uint32_t pt_cookie;
+        seL4_Word pt_cookie;
         error = allocman_cspace_alloc(alloc, &pt_path);
         if (error) {
             allocman_cspace_free(alloc, &frame_path);
@@ -51,7 +51,7 @@ static int _add_page(allocman_t *alloc, seL4_CPtr pd, void *vaddr)
             allocman_cspace_free(alloc, &pt_path);
             return error;
         }
-        error = seL4_ARCH_PageTable_Map(pt_path.capPtr, pd, (seL4_Word) vaddr, 
+        error = seL4_ARCH_PageTable_Map(pt_path.capPtr, pd, (seL4_Word) vaddr,
                     seL4_ARCH_Default_VMAttributes);
         if (error != seL4_NoError) {
             allocman_cspace_free(alloc, &frame_path);
@@ -60,7 +60,7 @@ static int _add_page(allocman_t *alloc, seL4_CPtr pd, void *vaddr)
             allocman_utspace_free(alloc, pt_cookie, seL4_PageTableBits);
             return error;
         }
-        error = seL4_ARCH_Page_Map(frame_path.capPtr, pd, (seL4_Word) vaddr, seL4_AllRights, 
+        error = seL4_ARCH_Page_Map(frame_path.capPtr, pd, (seL4_Word) vaddr, seL4_AllRights,
                     seL4_ARCH_Default_VMAttributes);
         if (error != seL4_NoError) {
             allocman_cspace_free(alloc, &frame_path);
@@ -77,13 +77,13 @@ static int _add_page(allocman_t *alloc, seL4_CPtr pd, void *vaddr)
     return 0;
 }
 
-static k_r_malloc_header_t *_morecore(uint32_t cookie, mspace_k_r_malloc_t *k_r_malloc, uint32_t new_units)
+static k_r_malloc_header_t *_morecore(size_t cookie, mspace_k_r_malloc_t *k_r_malloc, size_t new_units)
 {
-    uint32_t new_size;
+    size_t new_size;
     k_r_malloc_header_t *new_header;
     mspace_virtual_pool_t *virtual_pool = (mspace_virtual_pool_t*)cookie;
     new_size = new_units * sizeof(k_r_malloc_header_t);
-    
+
     if (virtual_pool->pool_ptr + new_size > virtual_pool->pool_limit) {
         return NULL;
     }
@@ -107,10 +107,10 @@ void mspace_virtual_pool_create(mspace_virtual_pool_t *virtual_pool, struct mspa
     virtual_pool->pool_limit = config.vstart + config.size;
     virtual_pool->morecore_alloc = NULL;
     virtual_pool->pd = config.pd;
-    mspace_k_r_malloc_init(&virtual_pool->k_r_malloc, (uint32_t)virtual_pool, _morecore);
+    mspace_k_r_malloc_init(&virtual_pool->k_r_malloc, (size_t)virtual_pool, _morecore);
 }
 
-void *_mspace_virtual_pool_alloc(struct allocman *alloc, void *_virtual_pool, uint32_t bytes, int *error)
+void *_mspace_virtual_pool_alloc(struct allocman *alloc, void *_virtual_pool, size_t bytes, int *error)
 {
     void *ret;
     mspace_virtual_pool_t *virtual_pool = (mspace_virtual_pool_t*)_virtual_pool;
@@ -121,7 +121,7 @@ void *_mspace_virtual_pool_alloc(struct allocman *alloc, void *_virtual_pool, ui
     return ret;
 }
 
-void _mspace_virtual_pool_free(struct allocman *alloc, void *_virtual_pool, void *ptr, uint32_t bytes)
+void _mspace_virtual_pool_free(struct allocman *alloc, void *_virtual_pool, void *ptr, size_t bytes)
 {
     mspace_virtual_pool_t *virtual_pool = (mspace_virtual_pool_t*)_virtual_pool;
     virtual_pool->morecore_alloc = alloc;

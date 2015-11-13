@@ -19,14 +19,14 @@
 
 static int _refill_watermark(allocman_t *alloc);
 
-static inline int _can_alloc(struct allocman_properties properties, int alloc_depth, int free_depth)
+static inline int _can_alloc(struct allocman_properties properties, size_t alloc_depth, size_t free_depth)
 {
     int in_alloc = alloc_depth > 0;
     int in_free = free_depth > 0;
     return (properties.alloc_can_alloc || !in_alloc) && (properties.free_can_alloc || !in_free);
 }
 
-static inline int _can_free(struct allocman_properties properties, int alloc_depth, int free_depth)
+static inline int _can_free(struct allocman_properties properties, size_t alloc_depth, size_t free_depth)
 {
     int in_alloc = alloc_depth > 0;
     int in_free = free_depth > 0;
@@ -52,7 +52,7 @@ static inline void _end_operation(allocman_t *alloc, int root)
     }
 }
 
-static void allocman_mspace_queue_for_free(allocman_t *alloc, void *ptr, uint32_t bytes) {
+static void allocman_mspace_queue_for_free(allocman_t *alloc, void *ptr, size_t bytes) {
     if (alloc->num_freed_mspace_chunks == alloc->desired_freed_mspace_chunks) {
         assert(!"Out of space to store free'd objects. Leaking memory");
         return;
@@ -71,7 +71,7 @@ static void allocman_cspace_queue_for_free(allocman_t *alloc, const cspacepath_t
     alloc->num_freed_slots++;
 }
 
-static void allocman_utspace_queue_for_free(allocman_t *alloc, uint32_t cookie, uint32_t size_bits) {
+static void allocman_utspace_queue_for_free(allocman_t *alloc, seL4_Word cookie, size_t size_bits) {
     if (alloc->num_freed_utspace_chunks == alloc->desired_freed_utspace_chunks) {
         assert(!"Out of space to store free'd objects. Leaking memory");
         return;
@@ -102,19 +102,19 @@ void allocman_cspace_free(allocman_t *alloc, const cspacepath_t *slot)
     ALLOCMAN_FREE(alloc, cspace, slot);
 }
 
-void allocman_mspace_free(allocman_t *alloc, void *ptr, uint32_t bytes)
+void allocman_mspace_free(allocman_t *alloc, void *ptr, size_t bytes)
 {
     ALLOCMAN_FREE(alloc, mspace, ptr, bytes);
 }
 
-void allocman_utspace_free(allocman_t *alloc, uint32_t cookie, uint32_t size_bits)
+void allocman_utspace_free(allocman_t *alloc, seL4_Word cookie, size_t size_bits)
 {
     ALLOCMAN_FREE(alloc, utspace, cookie, size_bits);
 }
 
-static void *_try_watermark_mspace(allocman_t *alloc, uint32_t size, int *_error)
+static void *_try_watermark_mspace(allocman_t *alloc, size_t size, int *_error)
 {
-    uint32_t i;
+    size_t i;
     for (i = 0; i < alloc->num_mspace_chunks; i++) {
         if (alloc->mspace_chunk[i].size == size) {
             if (alloc->mspace_chunk_count[i] > 0) {
@@ -139,9 +139,9 @@ static int _try_watermark_cspace(allocman_t *alloc, cspacepath_t *slot)
     return 0;
 }
 
-static uint32_t _try_watermark_utspace(allocman_t *alloc, uint32_t size_bits, seL4_Word type, const cspacepath_t *path, int *_error)
+static seL4_Word _try_watermark_utspace(allocman_t *alloc, size_t size_bits, seL4_Word type, const cspacepath_t *path, int *_error)
 {
-    uint32_t i;
+    size_t i;
 
     for (i = 0; i < alloc->num_utspace_chunks; i++) {
         if (alloc->utspace_chunk[i].size_bits == size_bits && alloc->utspace_chunk[i].type == type) {
@@ -166,7 +166,7 @@ static uint32_t _try_watermark_utspace(allocman_t *alloc, uint32_t size_bits, se
     return 0;
 }
 
-static void *_allocman_mspace_alloc(allocman_t *alloc, uint32_t size, int *_error, int use_watermark)
+static void *_allocman_mspace_alloc(allocman_t *alloc, size_t size, int *_error, int use_watermark)
 {
     int root_op;
     void *ret;
@@ -181,7 +181,7 @@ static void *_allocman_mspace_alloc(allocman_t *alloc, uint32_t size, int *_erro
         if (use_watermark) {
             ret = _try_watermark_mspace(alloc, size, _error);
             if (!ret) {
-                LOG_INFO("Failed to fullfill recursive allocation from watermark, size %d\n", size);
+                LOG_INFO("Failed to fullfill recursive allocation from watermark, size %zu\n", size);
             }
             return ret;
         } else {
@@ -204,7 +204,7 @@ static void *_allocman_mspace_alloc(allocman_t *alloc, uint32_t size, int *_erro
     if (use_watermark) {
         ret = _try_watermark_mspace(alloc, size, _error);
         if (!ret) {
-            LOG_INFO("Regular mspace alloc failed, and watermark also failed. for size %d\n", size);
+            LOG_INFO("Regular mspace alloc failed, and watermark also failed. for size %zu\n", size);
         }
         _end_operation(alloc, root_op);
         return ret;
@@ -259,11 +259,11 @@ static int _allocman_cspace_alloc(allocman_t *alloc, cspacepath_t *slot, int use
     }
 }
 
-static uint32_t _allocman_utspace_alloc(allocman_t *alloc, uint32_t size_bits, seL4_Word type, const cspacepath_t *path, int *_error, int use_watermark)
+static seL4_Word _allocman_utspace_alloc(allocman_t *alloc, size_t size_bits, seL4_Word type, const cspacepath_t *path, int *_error, int use_watermark)
 {
     int root_op;
     int error;
-    uint32_t ret;
+    seL4_Word ret;
     /* see if we have an allocator installed yet*/
     if (!alloc->have_utspace) {
         SET_ERROR(_error,1);
@@ -274,7 +274,7 @@ static uint32_t _allocman_utspace_alloc(allocman_t *alloc, uint32_t size_bits, s
         if (use_watermark) {
             ret = _try_watermark_utspace(alloc, size_bits, type, path, _error);
             if (ret == 0) {
-                LOG_INFO("Failed to allocate utspace from watermark. size %d type %d\n", size_bits, type);
+                LOG_INFO("Failed to allocate utspace from watermark. size %zu type %ld\n", size_bits, (long)type);
             }
             return ret;
         } else {
@@ -298,7 +298,7 @@ static uint32_t _allocman_utspace_alloc(allocman_t *alloc, uint32_t size_bits, s
         ret = _try_watermark_utspace(alloc, size_bits, type, path, _error);
         _end_operation(alloc, root_op);
         if (ret == 0) {
-            LOG_INFO("Regular utspace alloc failed and not watermark for size %d type %d\n", size_bits, type);
+            LOG_INFO("Regular utspace alloc failed and not watermark for size %zu type %ld\n", size_bits, (long)type);
         }
         return ret;
     } else {
@@ -308,7 +308,7 @@ static uint32_t _allocman_utspace_alloc(allocman_t *alloc, uint32_t size_bits, s
     }
 }
 
-void *allocman_mspace_alloc(allocman_t *alloc, uint32_t size, int *_error)
+void *allocman_mspace_alloc(allocman_t *alloc, size_t size, int *_error)
 {
     return _allocman_mspace_alloc(alloc, size, _error, 1);
 }
@@ -318,7 +318,7 @@ int allocman_cspace_alloc(allocman_t *alloc, cspacepath_t *slot)
     return _allocman_cspace_alloc(alloc, slot, 1);
 }
 
-uint32_t allocman_utspace_alloc(allocman_t *alloc, uint32_t size_bits, seL4_Word type, const cspacepath_t *path, int *_error)
+seL4_Word allocman_utspace_alloc(allocman_t *alloc, size_t size_bits, seL4_Word type, const cspacepath_t *path, int *_error)
 {
     return _allocman_utspace_alloc(alloc, size_bits, type, path, _error, 1);
 }
@@ -327,7 +327,7 @@ static int _refill_watermark(allocman_t *alloc)
 {
     int found_empty_pool;
     int did_allocation;
-    uint32_t i;
+    size_t i;
     if (alloc->refilling_watermark || !alloc->used_watermark) {
         return 0;
     }
@@ -376,7 +376,7 @@ static int _refill_watermark(allocman_t *alloc)
         for (i = 0; i < alloc->num_utspace_chunks; i++) {
             if (alloc->utspace_chunk_count[i] < alloc->utspace_chunk[i].count) {
                 cspacepath_t slot;
-                uint32_t cookie;
+                seL4_Word cookie;
                 int error;
                 /* First grab a slot */
                 found_empty_pool = 1;
@@ -461,7 +461,7 @@ int allocman_attach_cspace(allocman_t *alloc, struct cspace_interface cspace) {
     ALLOCMAN_ATTACH(alloc, cspace, cspace);
 }
 
-static int resize_array(allocman_t *alloc, uint32_t num, void **array, uint32_t *size, uint32_t *count, uint32_t item_size) {
+static int resize_array(allocman_t *alloc, size_t num, void **array, size_t *size, size_t *count, size_t item_size) {
     int root = _start_operation(alloc);
     void *new_array;
     int error;
@@ -494,31 +494,31 @@ static int resize_array(allocman_t *alloc, uint32_t num, void **array, uint32_t 
     return error;
 }
 
-static int resize_slots_array(allocman_t *alloc, uint32_t num, cspacepath_t **slots, uint32_t *size, uint32_t *count) {
+static int resize_slots_array(allocman_t *alloc, size_t num, cspacepath_t **slots, size_t *size, size_t *count) {
     return resize_array(alloc, num, (void**)slots, size, count, sizeof(cspacepath_t));
 }
 
-int allocman_configure_cspace_reserve(allocman_t *alloc, uint32_t num) {
+int allocman_configure_cspace_reserve(allocman_t *alloc, size_t num) {
     return resize_slots_array(alloc, num, &alloc->cspace_slots, &alloc->desired_cspace_slots, &alloc->num_cspace_slots);
 }
 
-int allocman_configure_max_freed_slots(allocman_t *alloc, uint32_t num) {
+int allocman_configure_max_freed_slots(allocman_t *alloc, size_t num) {
     return resize_slots_array(alloc, num, &alloc->freed_slots, &alloc->desired_freed_slots, &alloc->num_freed_slots);
 }
 
-int  allocman_configure_max_freed_memory_chunks(allocman_t *alloc, uint32_t num) {
+int  allocman_configure_max_freed_memory_chunks(allocman_t *alloc, size_t num) {
     return resize_array(alloc, num, (void**)&alloc->freed_mspace_chunks, &alloc->desired_freed_mspace_chunks, &alloc->num_freed_mspace_chunks, sizeof(struct allocman_freed_mspace_chunk));
 }
 
-int  allocman_configure_max_freed_untyped_chunks(allocman_t *alloc, uint32_t num) {
+int  allocman_configure_max_freed_untyped_chunks(allocman_t *alloc, size_t num) {
     return resize_array(alloc, num, (void**)&alloc->freed_utspace_chunks, &alloc->desired_freed_utspace_chunks, &alloc->num_freed_utspace_chunks, sizeof(struct allocman_freed_utspace_chunk));
 }
 
 int allocman_configure_utspace_reserve(allocman_t *alloc, struct allocman_utspace_chunk chunk) {
     int root = _start_operation(alloc);
-    uint32_t i;
+    size_t i;
     struct allocman_utspace_chunk *new_chunk;
-    uint32_t *new_counts;
+    size_t *new_counts;
     struct allocman_utspace_allocation **new_chunks;
     struct allocman_utspace_allocation *new_alloc;
     int error;
@@ -534,7 +534,7 @@ int allocman_configure_utspace_reserve(allocman_t *alloc, struct allocman_utspac
     if (error) {
         return error;
     }
-    new_counts = allocman_mspace_alloc(alloc, sizeof(uint32_t) * (alloc->num_utspace_chunks + 1), &error);
+    new_counts = allocman_mspace_alloc(alloc, sizeof(size_t) * (alloc->num_utspace_chunks + 1), &error);
     if (error) {
         allocman_mspace_free(alloc, new_chunk, sizeof(struct allocman_utspace_chunk) * (alloc->num_utspace_chunks + 1));
         return error;
@@ -542,22 +542,22 @@ int allocman_configure_utspace_reserve(allocman_t *alloc, struct allocman_utspac
     new_chunks = allocman_mspace_alloc(alloc, sizeof(struct allocman_utspace_allocation *) * (alloc->num_utspace_chunks + 1), &error);
     if (error) {
         allocman_mspace_free(alloc, new_chunk, sizeof(struct allocman_utspace_chunk) * (alloc->num_utspace_chunks + 1));
-        allocman_mspace_free(alloc, new_counts, sizeof(uint32_t) * (alloc->num_utspace_chunks + 1));
+        allocman_mspace_free(alloc, new_counts, sizeof(size_t) * (alloc->num_utspace_chunks + 1));
         return error;
     }
     new_alloc = allocman_mspace_alloc(alloc, sizeof(struct allocman_utspace_allocation) * chunk.count, &error);
     if (error) {
         allocman_mspace_free(alloc, new_chunk, sizeof(struct allocman_utspace_chunk) * (alloc->num_utspace_chunks + 1));
-        allocman_mspace_free(alloc, new_counts, sizeof(uint32_t) * (alloc->num_utspace_chunks + 1));
+        allocman_mspace_free(alloc, new_counts, sizeof(size_t) * (alloc->num_utspace_chunks + 1));
         allocman_mspace_free(alloc, new_chunks, sizeof(struct allocman_utspace_allocation *) * (alloc->num_utspace_chunks + 1));
         return error;
     }
     if (alloc->num_utspace_chunks > 0) {
         memcpy(new_chunk, alloc->utspace_chunk, sizeof(struct allocman_utspace_chunk) * alloc->num_utspace_chunks);
-        memcpy(new_counts, alloc->utspace_chunk_count, sizeof(uint32_t) * alloc->num_utspace_chunks);
+        memcpy(new_counts, alloc->utspace_chunk_count, sizeof(size_t) * alloc->num_utspace_chunks);
         memcpy(new_chunks, alloc->utspace_chunks, sizeof(struct allocman_utspace_allocation *) * alloc->num_utspace_chunks);
         allocman_mspace_free(alloc, alloc->utspace_chunk, sizeof(struct allocman_utspace_chunk) * alloc->num_utspace_chunks);
-        allocman_mspace_free(alloc, alloc->utspace_chunk_count, sizeof(uint32_t) * alloc->num_utspace_chunks);
+        allocman_mspace_free(alloc, alloc->utspace_chunk_count, sizeof(size_t) * alloc->num_utspace_chunks);
         allocman_mspace_free(alloc, alloc->utspace_chunks, sizeof(struct allocman_utspace_allocation *) * alloc->num_utspace_chunks);
     }
     new_chunk[alloc->num_utspace_chunks] = chunk;
@@ -574,9 +574,9 @@ int allocman_configure_utspace_reserve(allocman_t *alloc, struct allocman_utspac
 
 int allocman_configure_mspace_reserve(allocman_t *alloc, struct allocman_mspace_chunk chunk) {
     int root = _start_operation(alloc);
-    uint32_t i;
+    size_t i;
     struct allocman_mspace_chunk *new_chunk;
-    uint32_t *new_counts;
+    size_t *new_counts;
     void ***new_chunks;
     void **new_alloc;
     int error;
@@ -592,7 +592,7 @@ int allocman_configure_mspace_reserve(allocman_t *alloc, struct allocman_mspace_
     if (error) {
         return error;
     }
-    new_counts = allocman_mspace_alloc(alloc, sizeof(uint32_t) * (alloc->num_mspace_chunks + 1), &error);
+    new_counts = allocman_mspace_alloc(alloc, sizeof(size_t) * (alloc->num_mspace_chunks + 1), &error);
     if (error) {
         allocman_mspace_free(alloc, new_chunk, sizeof(struct allocman_mspace_chunk) * (alloc->num_mspace_chunks + 1));
         return error;
@@ -600,22 +600,22 @@ int allocman_configure_mspace_reserve(allocman_t *alloc, struct allocman_mspace_
     new_chunks = allocman_mspace_alloc(alloc, sizeof(void **) * (alloc->num_mspace_chunks + 1), &error);
     if (error) {
         allocman_mspace_free(alloc, new_chunk, sizeof(struct allocman_mspace_chunk) * (alloc->num_mspace_chunks + 1));
-        allocman_mspace_free(alloc, new_counts, sizeof(uint32_t) * (alloc->num_mspace_chunks + 1));
+        allocman_mspace_free(alloc, new_counts, sizeof(size_t) * (alloc->num_mspace_chunks + 1));
         return error;
     }
     new_alloc = allocman_mspace_alloc(alloc, sizeof(void *) * chunk.count, &error);
     if (error) {
         allocman_mspace_free(alloc, new_chunk, sizeof(struct allocman_mspace_chunk) * (alloc->num_mspace_chunks + 1));
-        allocman_mspace_free(alloc, new_counts, sizeof(uint32_t) * (alloc->num_mspace_chunks + 1));
+        allocman_mspace_free(alloc, new_counts, sizeof(size_t) * (alloc->num_mspace_chunks + 1));
         allocman_mspace_free(alloc, new_chunks, sizeof(void **) * (alloc->num_mspace_chunks + 1));
         return error;
     }
     if (alloc->num_mspace_chunks > 0) {
         memcpy(new_chunk, alloc->mspace_chunk, sizeof(struct allocman_mspace_chunk) * alloc->num_mspace_chunks);
-        memcpy(new_counts, alloc->mspace_chunk_count, sizeof(uint32_t) * alloc->num_mspace_chunks);
+        memcpy(new_counts, alloc->mspace_chunk_count, sizeof(size_t) * alloc->num_mspace_chunks);
         memcpy(new_chunks, alloc->mspace_chunks, sizeof(void **) * alloc->num_mspace_chunks);
         allocman_mspace_free(alloc, alloc->mspace_chunk, sizeof(struct allocman_mspace_chunk) * alloc->num_mspace_chunks);
-        allocman_mspace_free(alloc, alloc->mspace_chunk_count, sizeof(uint32_t) * alloc->num_mspace_chunks);
+        allocman_mspace_free(alloc, alloc->mspace_chunk_count, sizeof(size_t) * alloc->num_mspace_chunks);
         allocman_mspace_free(alloc, alloc->mspace_chunks, sizeof(void **) * alloc->num_mspace_chunks);
     }
     new_chunk[alloc->num_mspace_chunks] = chunk;

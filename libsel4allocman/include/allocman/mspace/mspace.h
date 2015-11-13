@@ -11,13 +11,14 @@
 #ifndef _ALLOCMAN_MSPACE_H_
 #define _ALLOCMAN_MSPACE_H_
 
+#include <stdlib.h>
 #include <allocman/properties.h>
 
 struct allocman;
 
 struct mspace_interface {
-    void *(*alloc)(struct allocman *alloc, void *cookie, uint32_t bytes, int *error);
-    void (*free)(struct allocman *alloc, void *cookie, void *ptr, uint32_t bytes);
+    void *(*alloc)(struct allocman *alloc, void *cookie, size_t bytes, int *error);
+    void (*free)(struct allocman *alloc, void *cookie, void *ptr, size_t bytes);
     struct allocman_properties properties;
     void *mspace;
 };

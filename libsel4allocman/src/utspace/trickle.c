@@ -18,13 +18,13 @@
 
 #ifdef CONFIG_KERNEL_STABLE
 
-static inline uint32_t _make_bitmap(int bits) {
-    /* avoid shift by 32 in BIT/MASK code */
-    if (bits == 6) {
+static inline size_t _make_bitmap(size_t bits) {
+    /* avoid shift by int max in BIT/MASK code */
+    if (BIT(bits) == sizeof(size_t)) {
         return -1;
     } else {
         /* shift the result up so that the high bits are set */
-        return MASK(BIT(bits - 1)) << (32 - BIT(bits - 1));
+        return MASK(BIT(bits - 1)) << (CONFIG_WORD_SIZE - BIT(bits - 1));
     }
 }
 
@@ -50,48 +50,46 @@ static inline void _remove_node(struct utspace_trickle_node **head, struct utspa
     }
 }
 
-static inline uint32_t _make_cookie(struct utspace_trickle_node *node, uint32_t offset)
+static inline seL4_Word _make_cookie(struct utspace_trickle_node *node, size_t offset)
 {
-    uint32_t int_node = (uint32_t) node;
-    assert( (int_node & MASK(5)) == 0);
-    assert(offset < BIT(5));
+    size_t int_node = (size_t) node;
+    assert( (int_node % (CONFIG_WORD_SIZE)) == 0);
+    assert(offset < CONFIG_WORD_SIZE);
     return int_node | offset;
 }
 
-static inline struct utspace_trickle_node *_cookie_to_node(uint32_t cookie) {
-    return (struct utspace_trickle_node*)(cookie & (uint32_t)(~MASK(5)));
+static inline struct utspace_trickle_node *_cookie_to_node(seL4_Word cookie) {
+    cookie -= cookie % (CONFIG_WORD_SIZE);
+    return (struct utspace_trickle_node*)cookie;
 }
 
-static inline uint32_t _cookie_to_offset(uint32_t cookie)
+static inline size_t _cookie_to_offset(seL4_Word cookie)
 {
-    return cookie & MASK(5);
+    return cookie % (CONFIG_WORD_SIZE);
 }
 
 static inline struct utspace_trickle_node *_make_node(struct allocman *alloc, int *error) {
-    compile_time_assert(trickle_struct_size, sizeof(struct utspace_trickle_node) == 36);
-    uint32_t addr = (uint32_t)allocman_mspace_alloc(alloc, 68, error);
-    uint32_t ret;
+    uintptr_t addr = (uintptr_t)allocman_mspace_alloc(alloc, sizeof(utspace_trickle_node) * 2 - sizeof(size_t), error);
     struct utspace_trickle_node *node;
     if (*error) {
         return NULL;
     }
-    ret = (addr + 32) & ((uint32_t)~MASK(5));
-    node = (struct utspace_trickle_node*)ret;
+    node = _cookie_to_node(addr + CONFIG_WORD_SIZE);
     node->padding = addr;
     return node;
 }
 
 static inline void _free_node(struct allocman *alloc, struct utspace_trickle_node *node)
 {
-    allocman_mspace_free(alloc, (void*)node->padding, 68);
+    allocman_mspace_free(alloc, (void*)node->padding, sizeof(utspace_trickle_node) * 2 - sizeof(size_t));
 }
 
-int _utspace_trickle_add_uts(allocman_t *alloc, void *_trickle, uint32_t num, const cspacepath_t *uts, uint32_t *size_bits, uint32_t *paddr) {
+int _utspace_trickle_add_uts(allocman_t *alloc, void *_trickle, size_t num, const cspacepath_t *uts, size_t *size_bits, uintptr_t *paddr) {
     utspace_trickle_t *trickle = (utspace_trickle_t*) _trickle;
     struct utspace_trickle_node *nodes[num];
     cspacepath_t *uts_copy[num];
     int error;
-    int i;
+    size_t i;
     for (i = 0; i < num; i++) {
         nodes[i] = _make_node(alloc, &error);
         if (error) {
@@ -128,31 +126,31 @@ int _utspace_trickle_add_uts(allocman_t *alloc, void *_trickle, uint32_t num, co
 void utspace_trickle_create(utspace_trickle_t *trickle)
 {
     uint32_t i;
-    for (i = 0; i < 32; i++) {
+    for (i = 0; i < CONFIG_WORD_SIZE; i++) {
         trickle->heads[i] = NULL;
     }
 }
 
-static int _refill_pool(struct allocman *alloc, utspace_trickle_t *trickle, uint32_t size_bits)
+static int _refill_pool(struct allocman *alloc, utspace_trickle_t *trickle, size_t size_bits)
 {
-    uint32_t i;
+    size_t i;
     int error;
     struct utspace_trickle_node *node;
-    uint32_t cookie;
+    seL4_Word cookie;
     node = _make_node(alloc, &error);
     if (error) {
         return error;
     }
     /* Check if there are untypeds >= 5 size_bits from us */
-    for (i = size_bits + 5 > 31 ? 31 : size_bits + 5; i < 32; i++) {
+    for (i = size_bits + 5 > CONFIG_WORD_SIZE - 1 ? CONFIG_WORD_SIZE - 1 : size_bits + 5; i < CONFIG_WORD_SIZE; i++) {
         if (trickle->heads[i]) {
             i = size_bits + 5;
             break;
         }
     }
-    if (i == 32) {
+    if (i == CONGIG_WORD_SIZE) {
         /* Search for the biggest one near us */
-        for (i = size_bits + 5 > 31 ? 31 : size_bits + 5; i > size_bits; i--) {
+        for (i = size_bits + 5 > CONFIG_WORD_SIZE - 1 ? CONFIG_WORD_SIZE : size_bits + 5; i > size_bits; i--) {
             if (trickle->heads[i]) {
                 break;
             }
@@ -162,7 +160,7 @@ static int _refill_pool(struct allocman *alloc, utspace_trickle_t *trickle, uint
         cookie = _utspace_trickle_alloc(alloc, trickle, i, seL4_UntypedObject, NULL, &error);
         if (!error) {
             struct utspace_trickle_node *parent = _cookie_to_node(cookie);
-            uint32_t offset = _cookie_to_offset(cookie);
+            size_t offset = _cookie_to_offset(cookie);
             node->ut = parent->ut;
             node->offset = parent->offset + (offset << (i));
             if (parent->paddr) {
@@ -182,21 +180,21 @@ static int _refill_pool(struct allocman *alloc, utspace_trickle_t *trickle, uint
     return 1;
 }
 
-uint32_t _utspace_trickle_alloc(struct allocman *alloc, void *_trickle, uint32_t size_bits, seL4_Word type, const cspacepath_t *slot, int *error)
+seL4_Word _utspace_trickle_alloc(struct allocman *alloc, void *_trickle, size_t size_bits, seL4_Word type, const cspacepath_t *slot, int *error)
 {
-    uint32_t sel4_size_bits;
+    size_t sel4_size_bits;
     int _error;
     utspace_trickle_t *trickle = (utspace_trickle_t*)_trickle;
     struct utspace_trickle_node *node;
-    uint32_t offset;
-    uint32_t mem_offset;
+    size_t offset;
+    size_t mem_offset;
     /* get size of untyped call */
     sel4_size_bits = get_sel4_object_size(type, size_bits);
     if (size_bits != vka_get_object_size(type, sel4_size_bits) || size_bits == 0) {
         SET_ERROR(error, 1);
         return 0;
     }
-    assert(size_bits < 32);
+    assert(size_bits < CONFIG_WORD_SIZE);
     if (!trickle->heads[size_bits]) {
         _error = _refill_pool(alloc, trickle, size_bits);
         if (_error) {
@@ -205,7 +203,7 @@ uint32_t _utspace_trickle_alloc(struct allocman *alloc, void *_trickle, uint32_t
         }
     }
     node = trickle->heads[size_bits];
-    offset = CLZ(node->bitmap);
+    offset = CLZL(node->bitmap);
     mem_offset = node->offset + (offset << size_bits);
     if (slot) {
         _error = seL4_Untyped_RetypeAtOffset(node->ut->capPtr, type, mem_offset, sel4_size_bits, slot->root, slot->dest, slot->destDepth, slot->offset, 1);
@@ -214,7 +212,7 @@ uint32_t _utspace_trickle_alloc(struct allocman *alloc, void *_trickle, uint32_t
             return 0;
         }
     }
-    node->bitmap &= ~BIT(31 - offset);
+    node->bitmap &= ~BIT(CONFIG_WORD_SIZE - 1 - offset);
     if (node->bitmap == 0) {
         _remove_node(&trickle->heads[size_bits], node);
     }
@@ -222,13 +220,13 @@ uint32_t _utspace_trickle_alloc(struct allocman *alloc, void *_trickle, uint32_t
     return _make_cookie(node, offset);
 }
 
-void _utspace_trickle_free(struct allocman *alloc, void *_trickle, uint32_t cookie, uint32_t size_bits)
+void _utspace_trickle_free(struct allocman *alloc, void *_trickle, seL4_Word cookie, size_t size_bits)
 {
     utspace_trickle_t *trickle = (utspace_trickle_t*)_trickle;
     struct utspace_trickle_node *node = _cookie_to_node(cookie);
-    uint32_t offset = _cookie_to_offset(cookie);
+    size_t offset = _cookie_to_offset(cookie);
     int in_list = !(node->bitmap == 0);
-    node->bitmap |= BIT(31 - offset);
+    node->bitmap |= BIT(CONFIG_WORD_SIZE - 1 - offset);
     if (node->bitmap == _make_bitmap(node->bitmap_bits)) {
         if (node->parent_cookie) {
             if (in_list) {
@@ -244,9 +242,9 @@ void _utspace_trickle_free(struct allocman *alloc, void *_trickle, uint32_t cook
     }
 }
 
-uint32_t _utspace_trickle_paddr(void *_trickle, uint32_t cookie, uint32_t size_bits) {
+uintptr_t _utspace_trickle_paddr(void *_trickle, seL4_Word cookie, size_t size_bits) {
     struct utspace_trickle_node *node = _cookie_to_node(cookie);
-    uint32_t offset = _cookie_to_offset(cookie);
+    size_t offset = _cookie_to_offset(cookie);
     return node->paddr + (offset << size_bits);
 }
 

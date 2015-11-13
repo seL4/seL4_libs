@@ -85,7 +85,7 @@ typedef struct bootstrap_info bootstrap_info_t;
  * @param vsize Size of the virtual address range
  * @param pd Page directory to invoke when mapping frames/page tables
  */
-void bootstrap_configure_virtual_pool(allocman_t *alloc, void *vstart, uint32_t vsize,
+void bootstrap_configure_virtual_pool(allocman_t *alloc, void *vstart, size_t vsize,
         seL4_CPtr pd);
 
 /**
@@ -98,7 +98,7 @@ void bootstrap_configure_virtual_pool(allocman_t *alloc, void *vstart, uint32_t 
  *
  * @return returns NULL on error
  */
-allocman_t *bootstrap_use_bootinfo(seL4_BootInfo *bi, uint32_t pool_size, char *pool);
+allocman_t *bootstrap_use_bootinfo(seL4_BootInfo *bi, size_t pool_size, void *pool);
 
 /**
  * Bootstraps using all the information in bootinfo, but switches to a new single
@@ -116,7 +116,7 @@ allocman_t *bootstrap_use_bootinfo(seL4_BootInfo *bi, uint32_t pool_size, char *
  *
  * @return returns NULL on error
  */
-allocman_t *bootstrap_new_1level_bootinfo(seL4_BootInfo *bi, int cnode_size, uint32_t pool_size, char *pool, cspace_simple1level_t **old_cspace);
+allocman_t *bootstrap_new_1level_bootinfo(seL4_BootInfo *bi, size_t cnode_size, size_t pool_size, void *pool, cspace_simple1level_t **old_cspace);
 
 /**
  * Bootstraps using all the information in bootinfo, but switches to a new two
@@ -135,7 +135,7 @@ allocman_t *bootstrap_new_1level_bootinfo(seL4_BootInfo *bi, int cnode_size, uin
  *
  * @return returns NULL on error
  */
-allocman_t *bootstrap_new_2level_bootinfo(seL4_BootInfo *bi, int l1size, int l2size, uint32_t pool_size, char *pool, cspace_simple1level_t **old_cspace);
+allocman_t *bootstrap_new_2level_bootinfo(seL4_BootInfo *bi, size_t l1size, size_t l2size, size_t pool_size, void *pool, cspace_simple1level_t **old_cspace);
 
 /**
  * Give an allocator all the untyped memory that simple knows about.
@@ -157,7 +157,7 @@ int allocman_add_simple_untypeds(allocman_t *alloc, simple_t *simple);
  *
  * @return returns NULL on error
  */
-allocman_t *bootstrap_new_2level_simple(simple_t *simple, int l1size, int l2size, uint32_t pool_size, char *pool);
+allocman_t *bootstrap_new_2level_simple(simple_t *simple, size_t l1size, size_t l2size, size_t pool_size, void *pool);
 
 /**
  * Bootstraps into the current environment as defined by simple. This will continue
@@ -169,7 +169,7 @@ allocman_t *bootstrap_new_2level_simple(simple_t *simple, int l1size, int l2size
  *
  * @return returns NULL on error
  */
-allocman_t *bootstrap_use_current_simple(simple_t *simple, uint32_t pool_size, char *pool);
+allocman_t *bootstrap_use_current_simple(simple_t *simple, size_t pool_size, void *pool);
 
 /**
  * Bootstraps an allocator that will reuse the current single level cspace (which
@@ -185,7 +185,7 @@ allocman_t *bootstrap_use_current_simple(simple_t *simple, uint32_t pool_size, c
  *
  * @return returns NULL on error
  */
-allocman_t *bootstrap_use_current_1level(seL4_CPtr root_cnode, int cnode_size, seL4_CPtr start_slot, seL4_CPtr end_slot, uint32_t pool_size, char *pool);
+allocman_t *bootstrap_use_current_1level(seL4_CPtr root_cnode, size_t cnode_size, seL4_CPtr start_slot, seL4_CPtr end_slot, size_t pool_size, void *pool);
 
 /**
  * Provides a description of the boot cspace if you are doing a customized
@@ -214,7 +214,7 @@ int bootstrap_set_boot_cspace(bootstrap_info_t *bs, cspace_interface_t cspace, c
  *
  * @return returns 0 on success
  */
-int bootstrap_add_untypeds(bootstrap_info_t *bs, int num, const cspacepath_t *uts, uint32_t *size_bits, uint32_t *paddr);
+int bootstrap_add_untypeds(bootstrap_info_t *bs, size_t num, const cspacepath_t *uts, size_t *size_bits, uintptr_t *paddr);
 
 /**
  * Adds knowledge of all the untypeds of bootinfo to the bootstrapper. These will
@@ -240,7 +240,7 @@ int bootstrap_add_untypeds_from_bootinfo(bootstrap_info_t *bs, seL4_BootInfo *bi
  *
  * @return returns NULL on error
  */
-allocman_t *bootstrap_new_1level(bootstrap_info_t *info, int cnode_size, cspacepath_t tcb, cspacepath_t pd, cspacepath_t *oldroot);
+allocman_t *bootstrap_new_1level(bootstrap_info_t *info, size_t cnode_size, cspacepath_t tcb, cspacepath_t pd, cspacepath_t *oldroot);
 
 /**
  * Completes bootstrapping into a new two level cspace.
@@ -255,7 +255,7 @@ allocman_t *bootstrap_new_1level(bootstrap_info_t *info, int cnode_size, cspacep
  *
  * @return returns NULL on error
  */
-allocman_t *bootstrap_new_2level(bootstrap_info_t *info, int l1size, int l2size, cspacepath_t tcb, cspacepath_t pd, cspacepath_t *oldroot);
+allocman_t *bootstrap_new_2level(bootstrap_info_t *info, size_t l1size, size_t l2size, cspacepath_t tcb, cspacepath_t pd, cspacepath_t *oldroot);
 
 /**
  * This function starts bootstrapping the system, and then 'breaks out' and
@@ -267,7 +267,7 @@ allocman_t *bootstrap_new_2level(bootstrap_info_t *info, int l1size, int l2size,
  *
  * @return returns NULL on error
  */
-bootstrap_info_t *bootstrap_create_info(uint32_t pool_size, char *pool);
+bootstrap_info_t *bootstrap_create_info(size_t pool_size, void *pool);
 
 /**
  * Creates an empty allocman from a starting pool. The returned allocman will not
@@ -279,6 +279,6 @@ bootstrap_info_t *bootstrap_create_info(uint32_t pool_size, char *pool);
  *
  * @return returns NULL on error
  */
-allocman_t *bootstrap_create_allocman(uint32_t pool_size, char *pool);
+allocman_t *bootstrap_create_allocman(size_t pool_size, void *pool);
 
 #endif

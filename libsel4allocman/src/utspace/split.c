@@ -62,7 +62,7 @@ static void _delete_node(allocman_t *alloc, struct utspace_split_node *node) {
     allocman_mspace_free(alloc, node, sizeof(*node));
 }
 
-static int _insert_new_node(allocman_t *alloc, struct utspace_split_node **head, cspacepath_t ut, uint32_t paddr) {
+static int _insert_new_node(allocman_t *alloc, struct utspace_split_node **head, cspacepath_t ut, uintptr_t paddr) {
     int error;
     struct utspace_split_node *node;
     node = (struct utspace_split_node*) allocman_mspace_alloc(alloc, sizeof(*node), &error);
@@ -78,16 +78,16 @@ static int _insert_new_node(allocman_t *alloc, struct utspace_split_node **head,
 
 void utspace_split_create(utspace_split_t *split)
 {
-    int i;
-    for (i = 0; i < 32; i++) {
+    size_t i;
+    for (i = 0; i < ARRAY_SIZE(split->heads); i++) {
         split->heads[i] = NULL;
     }
 }
 
-int _utspace_split_add_uts(allocman_t *alloc, void *_split, uint32_t num, const cspacepath_t *uts, uint32_t *size_bits, uint32_t *paddr) {
+int _utspace_split_add_uts(allocman_t *alloc, void *_split, size_t num, const cspacepath_t *uts, size_t *size_bits, uintptr_t *paddr) {
     utspace_split_t *split = (utspace_split_t*) _split;
     int error;
-    uint32_t i;
+    size_t i;
     for (i = 0; i < num; i++) {
         error = _insert_new_node(alloc, &split->heads[size_bits[i]], uts[i], paddr ? paddr[i] : 0);
         if (error) {
@@ -97,7 +97,7 @@ int _utspace_split_add_uts(allocman_t *alloc, void *_split, uint32_t num, const 
     return 0;
 }
 
-static int _refill_pool(allocman_t *alloc, utspace_split_t *split, uint32_t size_bits) {
+static int _refill_pool(allocman_t *alloc, utspace_split_t *split, size_t size_bits) {
     struct utspace_split_node *node;
     struct utspace_split_node *left, *right;
     int sel4_error;
@@ -106,7 +106,7 @@ static int _refill_pool(allocman_t *alloc, utspace_split_t *split, uint32_t size
         return 0;
     }
     /* ensure we are not the highest pool */
-    if (size_bits >= 30) {
+    if (size_bits >= sizeof(seL4_Word) * 8 - 2) {
         /* bugger, no untypeds bigger than us */
         return 1;
     }
@@ -170,10 +170,10 @@ static int _refill_pool(allocman_t *alloc, utspace_split_t *split, uint32_t size
     return 0;
 }
 
-uint32_t _utspace_split_alloc(allocman_t *alloc, void *_split, uint32_t size_bits, seL4_Word type, const cspacepath_t *slot, int *error)
+seL4_Word _utspace_split_alloc(allocman_t *alloc, void *_split, size_t size_bits, seL4_Word type, const cspacepath_t *slot, int *error)
 {
     utspace_split_t *split = (utspace_split_t*)_split;
-    uint32_t sel4_size_bits;
+    size_t sel4_size_bits;
     int sel4_error;
     struct utspace_split_node *node;
     /* get size of untyped call */
@@ -205,10 +205,10 @@ uint32_t _utspace_split_alloc(allocman_t *alloc, void *_split, uint32_t size_bit
     _remove_node(&split->heads[size_bits], node);
     SET_ERROR(error, 0);
     /* return the node as a cookie */
-    return (uint32_t)node;
+    return (seL4_Word)node;
 }
 
-void _utspace_split_free(allocman_t *alloc, void *_split, uint32_t cookie, uint32_t size_bits)
+void _utspace_split_free(allocman_t *alloc, void *_split, seL4_Word cookie, size_t size_bits)
 {
     utspace_split_t *split = (utspace_split_t*)_split;
     struct utspace_split_node *node = (struct utspace_split_node*)cookie;
@@ -221,14 +221,14 @@ void _utspace_split_free(allocman_t *alloc, void *_split, uint32_t cookie, uint3
         _delete_node(alloc, node->sibling);
         _delete_node(alloc, node);
         /* put the parent back in */
-        _utspace_split_free(alloc, split, (uint32_t) parent, size_bits + 1);
+        _utspace_split_free(alloc, split, (seL4_Word) parent, size_bits + 1);
     } else {
         /* just put ourselves back in */
         _insert_node(&split->heads[size_bits], node);
     }
 }
 
-uint32_t _utspace_split_paddr(void *_split, uint32_t cookie, uint32_t size_bits)
+uintptr_t _utspace_split_paddr(void *_split, seL4_Word cookie, size_t size_bits)
 {
     struct utspace_split_node *node = (struct utspace_split_node*)cookie;
     return node->paddr;

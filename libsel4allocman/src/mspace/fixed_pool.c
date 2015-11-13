@@ -13,9 +13,9 @@
 #include <allocman/util.h>
 #include <stdlib.h>
 
-static k_r_malloc_header_t *_morecore(uint32_t cookie, mspace_k_r_malloc_t *k_r_malloc, uint32_t new_units)
+static k_r_malloc_header_t *_morecore(size_t cookie, mspace_k_r_malloc_t *k_r_malloc, size_t new_units)
 {
-    uint32_t new_size;
+    size_t new_size;
     k_r_malloc_header_t *new_header;
     mspace_fixed_pool_t *fixed_pool = (mspace_fixed_pool_t*)cookie;
     new_size = new_units * sizeof(k_r_malloc_header_t);
@@ -30,16 +30,16 @@ static k_r_malloc_header_t *_morecore(uint32_t cookie, mspace_k_r_malloc_t *k_r_
 
 void mspace_fixed_pool_create(mspace_fixed_pool_t *fixed_pool, struct mspace_fixed_pool_config config)
 {
-    uint32_t padding;
-    fixed_pool->pool_ptr = (uint32_t)config.pool;
+    size_t padding;
+    fixed_pool->pool_ptr = (uintptr_t)config.pool;
     fixed_pool->remaining = config.size;
     padding = fixed_pool->pool_ptr % sizeof(k_r_malloc_header_t);
     fixed_pool->pool_ptr += padding;
     fixed_pool->remaining -= padding;
-    mspace_k_r_malloc_init(&fixed_pool->k_r_malloc, (uint32_t)fixed_pool, _morecore);
+    mspace_k_r_malloc_init(&fixed_pool->k_r_malloc, (size_t)fixed_pool, _morecore);
 }
 
-void *_mspace_fixed_pool_alloc(struct allocman *alloc, void *_fixed_pool, uint32_t bytes, int *error)
+void *_mspace_fixed_pool_alloc(struct allocman *alloc, void *_fixed_pool, size_t bytes, int *error)
 {
     void *ret;
     mspace_fixed_pool_t *fixed_pool = (mspace_fixed_pool_t*)_fixed_pool;
@@ -52,7 +52,7 @@ void *_mspace_fixed_pool_alloc(struct allocman *alloc, void *_fixed_pool, uint32
     return ret;
 }
 
-void _mspace_fixed_pool_free(struct allocman *alloc, void *_fixed_pool, void *ptr, uint32_t bytes)
+void _mspace_fixed_pool_free(struct allocman *alloc, void *_fixed_pool, void *ptr, size_t bytes)
 {
     mspace_fixed_pool_t *fixed_pool = (mspace_fixed_pool_t*)_fixed_pool;
     mspace_k_r_malloc_free(&fixed_pool->k_r_malloc, ptr);

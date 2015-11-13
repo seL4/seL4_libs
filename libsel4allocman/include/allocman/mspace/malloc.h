@@ -25,8 +25,8 @@
 /* Other mspace managers might have a struct with book keeping
    information, so to maintain a consistent interface we have an
    unused parameter */
-void *_mspace_malloc_alloc(struct allocman *alloc, void *unused, uint32_t bytes, int *error);
-void _mspace_malloc_free(struct allocman *alloc, void *unsued, void *ptr, uint32_t bytes);
+void *_mspace_malloc_alloc(struct allocman *alloc, void *unused, size_t bytes, int *error);
+void _mspace_malloc_free(struct allocman *alloc, void *unsued, void *ptr, size_t bytes);
 
 static const struct mspace_interface mspace_malloc_interface = {
     .alloc = _mspace_malloc_alloc,

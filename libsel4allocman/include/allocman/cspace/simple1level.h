@@ -21,18 +21,18 @@ struct cspace_simple1level_config {
     /* A cptr to the cnode that we are managing slots in */
     seL4_CPtr cnode;
     /* Size in bits of the cnode */
-    uint32_t cnode_size_bits;
+    size_t cnode_size_bits;
     /* Guard depth added to this cspace. */
-    uint32_t cnode_guard_bits;
+    size_t cnode_guard_bits;
     /* First valid slot (as an index) */
-    uint32_t first_slot;
+    size_t first_slot;
     /* Last valid slot + 1 (as an index) */
-    uint32_t end_slot;
+    size_t end_slot;
 };
 
 typedef struct cspace_simple1level {
     struct cspace_simple1level_config config;
-    uint32_t current_slot;
+    size_t current_slot;
 } cspace_simple1level_t;
 
 static inline cspacepath_t _cspace_simple1level_make_path(void *_cspace, seL4_CPtr slot)

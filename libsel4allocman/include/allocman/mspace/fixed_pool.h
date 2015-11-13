@@ -12,6 +12,7 @@
 #define _ALLOCMAN_MSPACE_FIXED_POOL_H_
 
 #include <autoconf.h>
+#include <stdlib.h>
 #include <stdint.h>
 #include <sel4/types.h>
 #include <allocman/mspace/mspace.h>
@@ -21,19 +22,19 @@
 
 struct mspace_fixed_pool_config {
     void *pool;
-    uint32_t size;
+    size_t size;
 };
 
 typedef struct mspace_fixed_pool {
-    uint32_t pool_ptr;
-    uint32_t remaining;
+    uintptr_t pool_ptr;
+    size_t remaining;
     mspace_k_r_malloc_t k_r_malloc;
 } mspace_fixed_pool_t;
 
 void mspace_fixed_pool_create(mspace_fixed_pool_t *fixed_pool, struct mspace_fixed_pool_config config);
 
-void *_mspace_fixed_pool_alloc(struct allocman *alloc, void *_fixed_pool, uint32_t bytes, int *error);
-void _mspace_fixed_pool_free(struct allocman *alloc, void *_fixed_pool, void *ptr, uint32_t bytes);
+void *_mspace_fixed_pool_alloc(struct allocman *alloc, void *_fixed_pool, size_t bytes, int *error);
+void _mspace_fixed_pool_free(struct allocman *alloc, void *_fixed_pool, void *ptr, size_t bytes);
 
 static inline struct mspace_interface mspace_fixed_pool_make_interface(mspace_fixed_pool_t *fixed_pool) {
     return (struct mspace_interface){

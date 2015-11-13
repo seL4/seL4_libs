@@ -64,8 +64,8 @@
  * Used by {@link #allocman_configure_mspace_reserve}
  */
 struct allocman_mspace_chunk {
-    uint32_t size;
-    uint32_t count;
+    size_t size;
+    size_t count;
 };
 
 /**
@@ -73,9 +73,9 @@ struct allocman_mspace_chunk {
  * Used by {@link #allocman_configure_utspace_reserve}
  */
 struct allocman_utspace_chunk {
-    uint32_t size_bits;
+    size_t size_bits;
     seL4_Word type;
-    uint32_t count;
+    size_t count;
 };
 
 /**
@@ -83,18 +83,18 @@ struct allocman_utspace_chunk {
  * the reservation system
  */
 struct allocman_utspace_allocation {
-    uint32_t cookie;
+    seL4_Word cookie;
     cspacepath_t slot;
 };
 
 struct allocman_freed_mspace_chunk {
     void *ptr;
-    uint32_t size;
+    size_t size;
 };
 
 struct allocman_freed_utspace_chunk {
-    uint32_t size_bits;
-    uint32_t cookie;
+    size_t size_bits;
+    seL4_Word cookie;
 };
 
 /**
@@ -116,12 +116,12 @@ typedef struct allocman {
     int in_operation;
 
     /* Counts that track re-entry into each specific alloc/free function */
-    uint32_t cspace_alloc_depth;
-    uint32_t cspace_free_depth;
-    uint32_t utspace_alloc_depth;
-    uint32_t utspace_free_depth;
-    uint32_t mspace_alloc_depth;
-    uint32_t mspace_free_depth;
+    size_t cspace_alloc_depth;
+    size_t cspace_free_depth;
+    size_t utspace_alloc_depth;
+    size_t utspace_free_depth;
+    size_t mspace_alloc_depth;
+    size_t mspace_free_depth;
 
     /* Track whether the watermark is currently refilled so we don't recursively do it */
     int refilling_watermark;
@@ -129,33 +129,33 @@ typedef struct allocman {
     int used_watermark;
 
     /* track resources that we have not yet been able to free due to circular dependencies */
-    uint32_t desired_freed_slots;
-    uint32_t num_freed_slots;
+    size_t desired_freed_slots;
+    size_t num_freed_slots;
     cspacepath_t *freed_slots;
 
-    uint32_t desired_freed_mspace_chunks;
-    uint32_t num_freed_mspace_chunks;
+    size_t desired_freed_mspace_chunks;
+    size_t num_freed_mspace_chunks;
     struct allocman_freed_mspace_chunk *freed_mspace_chunks;
 
-    uint32_t desired_freed_utspace_chunks;
-    uint32_t num_freed_utspace_chunks;
+    size_t desired_freed_utspace_chunks;
+    size_t num_freed_utspace_chunks;
     struct allocman_freed_utspace_chunk *freed_utspace_chunks;
 
     /* cspace watermark resources */
-    uint32_t desired_cspace_slots;
-    uint32_t num_cspace_slots;
+    size_t desired_cspace_slots;
+    size_t num_cspace_slots;
     cspacepath_t *cspace_slots;
 
     /* mspace watermark resources */
-    uint32_t num_mspace_chunks;
+    size_t num_mspace_chunks;
     struct allocman_mspace_chunk *mspace_chunk;
-    uint32_t *mspace_chunk_count;
+    size_t *mspace_chunk_count;
     void ***mspace_chunks;
 
     /* utspace watermark resources */
-    uint32_t num_utspace_chunks;
+    size_t num_utspace_chunks;
     struct allocman_utspace_chunk *utspace_chunk;
-    uint32_t *utspace_chunk_count;
+    size_t *utspace_chunk_count;
     struct allocman_utspace_allocation **utspace_chunks;
 } allocman_t;
 
@@ -168,7 +168,7 @@ typedef struct allocman {
  *
  * @return returns pointer to allocated memory
  */
-void *allocman_mspace_alloc(allocman_t *alloc, uint32_t bytes, int *_error);
+void *allocman_mspace_alloc(allocman_t *alloc, size_t bytes, int *_error);
 
 /**
  * Frees 'real' memory, as previously allocated by {@link #allocman_mspace_alloc}
@@ -177,7 +177,7 @@ void *allocman_mspace_alloc(allocman_t *alloc, uint32_t bytes, int *_error);
  * @param ptr Allocated memory (as returned by {@link #allocman_mspace_alloc}
  * @param bytes Size in bytes of the allocation to free. Allocations cannot be partially freed
  */
-void allocman_mspace_free(allocman_t *alloc, void *ptr, uint32_t bytes);
+void allocman_mspace_free(allocman_t *alloc, void *ptr, size_t bytes);
 
 /**
  * Allocates a cslot from the allocator
@@ -228,7 +228,7 @@ static inline cspacepath_t allocman_cspace_make_path(allocman_t *alloc, seL4_CPt
  *
  * @return Returns a cookie that can be used in future to free this allocation
  */
-uint32_t allocman_utspace_alloc(allocman_t *alloc, uint32_t size_bits, seL4_Word type, const cspacepath_t *path, int *_error);
+seL4_Word allocman_utspace_alloc(allocman_t *alloc, size_t size_bits, seL4_Word type, const cspacepath_t *path, int *_error);
 
 /**
  * Returns a portion of untyped memory back to the allocator. It is assumed that this
@@ -240,7 +240,7 @@ uint32_t allocman_utspace_alloc(allocman_t *alloc, uint32_t size_bits, seL4_Word
     This is different to seL4_Untyped_Retype for seL4_CapTableObjects
  * @param cookie The cookie representing this allocation (as returned by {@link allocman_utspace_alloc}
  */
-void allocman_utspace_free(allocman_t *alloc, uint32_t cookie, uint32_t size_bits);
+void allocman_utspace_free(allocman_t *alloc, seL4_Word cookie, size_t size_bits);
 
 /**
  * Initialize a new allocman. all it requires is a memory allocator, everything will be boot strapped from it
@@ -310,7 +310,7 @@ int allocman_configure_utspace_reserve(allocman_t *alloc, struct allocman_utspac
  *
  * @return returns 0 on success
  */
-int allocman_configure_cspace_reserve(allocman_t *alloc, uint32_t num);
+int allocman_configure_cspace_reserve(allocman_t *alloc, size_t num);
 
 /**
  * Configure the maximul number of freed cptrs we can store. This is required for
@@ -322,7 +322,7 @@ int allocman_configure_cspace_reserve(allocman_t *alloc, uint32_t num);
  *
  * @return returns 0 on success
  */
-int allocman_configure_max_freed_slots(allocman_t *alloc, uint32_t num);
+int allocman_configure_max_freed_slots(allocman_t *alloc, size_t num);
 
 /**
  * Configure the maximul number of freed memory objects we can store. This is required for
@@ -334,7 +334,7 @@ int allocman_configure_max_freed_slots(allocman_t *alloc, uint32_t num);
  *
  * @return returns 0 on success
  */
-int allocman_configure_max_freed_memory_chunks(allocman_t *alloc, uint32_t num);
+int allocman_configure_max_freed_memory_chunks(allocman_t *alloc, size_t num);
 
 /**
  * Configure the maximul number of freed untyped objects we can store. This is required for
@@ -346,7 +346,7 @@ int allocman_configure_max_freed_memory_chunks(allocman_t *alloc, uint32_t num);
  *
  * @return returns 0 on success
  */
-int allocman_configure_max_freed_untyped_chunks(allocman_t *alloc, uint32_t num);
+int allocman_configure_max_freed_untyped_chunks(allocman_t *alloc, size_t num);
 
 /**
  * Add additional untyped objects to the underlying untyped manager. This allows additional
@@ -360,7 +360,7 @@ int allocman_configure_max_freed_untyped_chunks(allocman_t *alloc, uint32_t num)
  *
  * @return returns 0 on success
  */
-static inline int allocman_utspace_add_uts(allocman_t *alloc, uint32_t num, const cspacepath_t *uts, uint32_t *size_bits, uint32_t *paddr) {
+static inline int allocman_utspace_add_uts(allocman_t *alloc, size_t num, const cspacepath_t *uts, size_t *size_bits, uintptr_t *paddr) {
     int error;
     assert(alloc->have_utspace);
     error = alloc->utspace.add_uts(alloc, alloc->utspace.utspace, num, uts, size_bits, paddr);
@@ -380,7 +380,7 @@ static inline int allocman_utspace_add_uts(allocman_t *alloc, uint32_t num, cons
  *
  * @return Physical address of the object
  */
-static inline uint32_t allocman_utspace_paddr(allocman_t *alloc, uint32_t cookie, uint32_t size_bits) {
+static inline uintptr_t allocman_utspace_paddr(allocman_t *alloc, seL4_Word cookie, size_t size_bits) {
     assert(alloc->have_utspace);
     return alloc->utspace.paddr(alloc->utspace.utspace, cookie, size_bits);
 }

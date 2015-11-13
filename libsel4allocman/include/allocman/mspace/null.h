@@ -20,13 +20,13 @@
 #include <allocman/util.h>
 #include <stdlib.h>
 
-static inline void *_mspace_null_alloc(struct allocman *alloc, void *unused, uint32_t bytes, int *error)
+static inline void *_mspace_null_alloc(struct allocman *alloc, void *unused, size_t bytes, int *error)
 {
     SET_ERROR(error, 1);
     return NULL;
 }
 
-static inline void _mspace_null_free(struct allocman *alloc, void *unused, void *ptr, uint32_t bytes)
+static inline void _mspace_null_free(struct allocman *alloc, void *unused, void *ptr, size_t bytes)
 {
     /* While this is clearly a bug, we have no nice WARN_ON or other macro for flagging this, so just ignore */
 }

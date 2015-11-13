@@ -23,22 +23,22 @@
 
 struct utspace_twinkle_ut {
     cspacepath_t path;
-    uint32_t offset;
-    uint32_t size_bits;
+    size_t offset;
+    size_t size_bits;
 };
 
 typedef struct utspace_twinkle {
-    uint32_t num_uts;
+    size_t num_uts;
     struct utspace_twinkle_ut *uts;
 } utspace_twinkle_t;
 
 void utspace_twinkle_create(utspace_twinkle_t *twinkle);
-int _utspace_twinkle_add_uts(struct allocman *alloc, void *_twinkle, uint32_t num, const cspacepath_t *uts, uint32_t *size_bits, uint32_t *paddr);
+int _utspace_twinkle_add_uts(struct allocman *alloc, void *_twinkle, size_t num, const cspacepath_t *uts, size_t *size_bits, uintptr_t *paddr);
 
-uint32_t _utspace_twinkle_alloc(struct allocman *alloc, void *_twinkle, uint32_t size_bits, seL4_Word type, const cspacepath_t *slot, int *error);
-void _utspace_twinkle_free(struct allocman *alloc, void *_twinkle, uint32_t cookie, uint32_t size_bits);
+seL4_Word _utspace_twinkle_alloc(struct allocman *alloc, void *_twinkle, size_t size_bits, seL4_Word type, const cspacepath_t *slot, int *error);
+void _utspace_twinkle_free(struct allocman *alloc, void *_twinkle, seL4_Word cookie, size_t size_bits);
 
-static inline uint32_t _utspace_twinkle_paddr(void *_twinkle, uint32_t cookie, uint32_t size_bits) {
+static inline uintptr_t _utspace_twinkle_paddr(void *_twinkle, seL4_Word cookie, size_t size_bits) {
     assert(!"not implemented");
     return 0;
 }

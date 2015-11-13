@@ -7,17 +7,17 @@
 #include <stdlib.h>
 #include <string.h> /* For memcpy */
 
-void mspace_k_r_malloc_init(mspace_k_r_malloc_t *k_r_malloc, uint32_t cookie, k_r_malloc_header_t * (*morecore)(uint32_t cookie, mspace_k_r_malloc_t *k_r_malloc, uint32_t new_units))
+void mspace_k_r_malloc_init(mspace_k_r_malloc_t *k_r_malloc, size_t cookie, k_r_malloc_header_t * (*morecore)(size_t cookie, mspace_k_r_malloc_t *k_r_malloc, size_t new_units))
 {
     k_r_malloc->freep = NULL;
     k_r_malloc->cookie = cookie;
     k_r_malloc->morecore = morecore;
 }
 
-void *mspace_k_r_malloc_alloc(mspace_k_r_malloc_t *k_r_malloc, uint32_t nbytes)
+void *mspace_k_r_malloc_alloc(mspace_k_r_malloc_t *k_r_malloc, size_t nbytes)
 {
     k_r_malloc_header_t *p, *prevp;
-    unsigned nunits;
+    size_t nunits;
     nunits = (nbytes + sizeof(k_r_malloc_header_t) - 1) / sizeof(k_r_malloc_header_t) + 1;
     if ((prevp = k_r_malloc->freep) == NULL) {	/* no free list yet */
         k_r_malloc->base.s.ptr = k_r_malloc->freep = prevp = &k_r_malloc->base;

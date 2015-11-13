@@ -20,27 +20,30 @@
 
 struct utspace_trickle_node {
     cspacepath_t *ut;
-    uint32_t offset;
-    uint32_t parent_cookie;
-    uint32_t bitmap_bits;
-    uint32_t bitmap;
+    size_t offset;
+    seL4_Word parent_cookie;
+    size_t bitmap_bits;
+    size_t bitmap;
     struct utspace_trickle_node *next, *prev;
-    uint32_t padding;
-    uint32_t paddr;
+    size_t padding;
+    uintptr_t paddr;
 };
 
+compile_time_assert(trickle_struct_size32, sizeof(struct utspace_trickle_node) == 36 || sizeof(size_t) == 8);
+compile_time_assert(trickle_struct_size64, sizeof(struct utspace_trickle_node) == 72 || sizeof(size_t) == 4);
+
 typedef struct utspace_trickle {
-    struct utspace_trickle_node *heads[32];
+    struct utspace_trickle_node *heads[CONFIG_WORD_SIZE];
 } utspace_trickle_t;
 
 void utspace_trickle_create(utspace_trickle_t *trickle);
 
-int _utspace_trickle_add_uts(struct allocman *alloc, void *_trickle, uint32_t num, const cspacepath_t *uts, uint32_t *size_bits, uint32_t *paddr);
+int _utspace_trickle_add_uts(struct allocman *alloc, void *_trickle, size_t num, const cspacepath_t *uts, size_t *size_bits, uintptr_t *paddr);
 
-uint32_t _utspace_trickle_alloc(struct allocman *alloc, void *_trickle, uint32_t size_bits, seL4_Word type, const cspacepath_t *slot, int *error);
-void _utspace_trickle_free(struct allocman *alloc, void *_trickle, uint32_t cookie, uint32_t size_bits);
+seL4_Word _utspace_trickle_alloc(struct allocman *alloc, void *_trickle, size_t size_bits, seL4_Word type, const cspacepath_t *slot, int *error);
+void _utspace_trickle_free(struct allocman *alloc, void *_trickle, seL4_Word cookie, size_t size_bits);
 
-uint32_t _utspace_trickle_paddr(void *_trickle, uint32_t cookie, uint32_t size_bits);
+uintptr_t _utspace_trickle_paddr(void *_trickle, seL4_Word cookie, size_t size_bits);
 
 static inline utspace_interface_t utspace_trickle_make_interface(utspace_trickle_t *trickle) {
     return (utspace_interface_t) {

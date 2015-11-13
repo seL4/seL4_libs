@@ -86,7 +86,7 @@ void test_use_current_cspace() {
     error = cspace_single_level_create(allocman, cspace, (struct cspace_single_level_config) {
         .cnode = seL4_CapInitThreadCNode,
         .cnode_size_bits = bi->initThreadCNodeSizeBits,
-        .cnode_guard_bits = 32 - bi->initThreadCNodeSizeBits,
+        .cnode_guard_bits = seL4_WordBits - bi->initThreadCNodeSizeBits,
         .first_slot = bi->empty.start,
         .end_slot = bi->empty.end
     });
@@ -149,7 +149,7 @@ void test_new_1level_cspace() {
     cspace_simple1level_create(&boot_cspace, (struct cspace_simple1level_config){
         .cnode = seL4_CapInitThreadCNode,
         .cnode_size_bits = bi->initThreadCNodeSizeBits,
-        .cnode_guard_bits = 32 - bi->initThreadCNodeSizeBits,
+        .cnode_guard_bits = seL4_WordBits - bi->initThreadCNodeSizeBits,
         .first_slot = bi->empty.start,
         .end_slot = bi->empty.end - 1
     });
@@ -217,7 +217,7 @@ void test_new_2level_cspace() {
     cspace_simple1level_create(&boot_cspace, (struct cspace_simple1level_config){
         .cnode = seL4_CapInitThreadCNode,
         .cnode_size_bits = bi->initThreadCNodeSizeBits,
-        .cnode_guard_bits = 32 - bi->initThreadCNodeSizeBits,
+        .cnode_guard_bits = seL4_WordBits - bi->initThreadCNodeSizeBits,
         .first_slot = bi->empty.start,
         .end_slot = bi->empty.end - 1
     });

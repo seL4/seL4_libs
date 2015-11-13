@@ -11,6 +11,7 @@
 #include <autoconf.h>
 
 #include <regex.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -32,7 +33,7 @@ static int buf_index = BUFFERING_DISABLED;
 
 static int num_tests = 0;
 static int num_tests_passed = 0;
-static int current_test_passed = 1;
+static int current_test_passed = true;
 
 #ifdef CONFIG_BUFFER_OUTPUT
 #undef printf
@@ -66,7 +67,7 @@ sel4test_start_suite(char *name) {
 
     num_tests = 0;
     num_tests_passed = 0;
-    current_test_passed = 1;
+    current_test_passed = true;
 }
 
 void 
@@ -95,7 +96,7 @@ sel4test_start_test(const char *name) {
     printf("Starting test %d: %s\n", num_tests, name);
 #endif /* CONFIG_PRINT_XML */
     num_tests++;
-    current_test_passed = 1;
+    current_test_passed = true;
 }
 
 void 
@@ -105,7 +106,7 @@ _sel4test_report_error(char *error, char *file, int line) {
 #else
     printf("\tError: %s at line %d of file %s\n", error, line, file);    
 #endif /* CONFIG_PRINT_XML */
-    current_test_passed = 0;
+    current_test_passed = false;
 }
 
 
@@ -116,7 +117,7 @@ _sel4test_failure(char *failure, char *file, int line) {
 #else
     printf("\tFailure: %s at line %d of file %s\n", failure, line, file);
 #endif /* CONFIG_PRINT_XML */
-    current_test_passed = 0;
+    current_test_passed = false;
 }
 
 void 
@@ -136,6 +137,13 @@ sel4test_end_test(void) {
     printf("\t</testcase>\n");
 #endif /* CONFIG_PRINT_XML */
 }
+
+bool 
+sel4test_get_result(void) 
+{
+    return current_test_passed;
+}
+
 
 void sel4_test_get_suite_results(int *out_num_tests, int *out_passed, int *out_failed) {
     if (out_num_tests) (*out_num_tests) = num_tests;
@@ -203,7 +211,7 @@ sel4test_run_tests(char *name, int (*run_test)(struct testcase *t)) {
          sel4test_start_test(tests[i]->name);
          int result = run_test(tests[i]);
          if (result != SUCCESS) {
-             current_test_passed = 0;
+             current_test_passed = false;
          }
          sel4test_end_test();
      }
@@ -220,7 +228,7 @@ sel4test_run_tests(char *name, int (*run_test)(struct testcase *t)) {
          sel4test_start_test(name_copy);
          int result = run_test(tests[i]);
          if (result != SUCCESS) {
-              current_test_passed = 0;
+              current_test_passed = false;
          }
          sel4test_end_test();
      }

@@ -20,13 +20,14 @@
 #include <sel4test/macros.h>
 
 #include <inttypes.h>
+#include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
 
-#define SUCCESS 0
-#define FAILURE (-1)
+#define SUCCESS true
+#define FAILURE false
 
 
 /* Contains information about the test environment.
@@ -34,7 +35,7 @@
 struct env;
 typedef struct env *env_t;
 
-/* Prototype of a test function. Returns non-zero on failure. */
+/* Prototype of a test function. Returns false on failure. */
 typedef int (*test_fn)(env_t, void *);
 
 /* Represents a single testcase. */
@@ -220,4 +221,7 @@ void sel4test_run_tests(char *name, int (*run_test)(struct testcase *t));
  * @return the test corresponding to name, NULL if test not found.
  */
 testcase_t* sel4test_get_test(char *name);
+
+
+bool sel4test_get_result(void);
 #endif /* SEL4_TEST_H */

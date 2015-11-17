@@ -28,7 +28,6 @@ debug_print_bootinfo(seL4_BootInfo *info)
     LOG_INFO("userImageFrames: [%u --> %u)", info->userImageFrames.start, info->userImageFrames.end);
     LOG_INFO("userImagePTs:    [%u --> %u)", info->userImagePTs.start, info->userImagePTs.end);
     LOG_INFO("untypeds:        [%u --> %u)", info->untyped.start, info->untyped.end);
-    LOG_INFO("Initial thread domain: %u\n", info->initThreadDomain);
     LOG_INFO("Initial thread cnode size: %u", info->initThreadCNodeSizeBits);
     LOG_INFO("List of untypeds");
     LOG_INFO("------------------");

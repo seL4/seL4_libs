@@ -397,11 +397,6 @@ vspace_map_pages_at_vaddr(vspace_t *vspace, seL4_CPtr caps[], uint32_t cookies[]
         return 0;
     }
 
-    if (!utils_valid_size_bits(size_bits)) {
-        ZF_LOGE("Invalid size bits %u", size_bits);
-        return -1;
-    }
-
     if (vaddr == NULL) {
         ZF_LOGW("Mapping NULL");
     }
@@ -426,11 +421,6 @@ vspace_unmap_pages(vspace_t *vspace, void *vaddr, size_t num_pages, size_t size_
     if (num_pages == 0) {
         printf("Num pages : %d\n", num_pages);
         ZF_LOGW("Attempt to unmap 0 pages");
-        return;
-    }
-
-    if (!utils_valid_size_bits(size_bits)) {
-        ZF_LOGE("Invalid size_bits %d", size_bits);
         return;
     }
 
@@ -485,11 +475,6 @@ vspace_reserve_range_aligned(vspace_t *vspace, size_t bytes, size_t size_bits,
 
     if (vaddr == NULL) {
         ZF_LOGE("Cannot store result at NULL");
-        return error;
-    }
-
-    if (!utils_valid_size_bits(size_bits)) {
-        ZF_LOGE("Invalid size_bits %d", size_bits);
         return error;
     }
 
@@ -643,11 +628,6 @@ vspace_share_mem_at_vaddr(vspace_t *from, vspace_t *to, void *start, int num_pag
 
     if (start == NULL || vaddr == NULL) {
         ZF_LOGE("Cannot share memory at NULL");
-    }
-
-    if (!utils_valid_size_bits(size_bits)) {
-        ZF_LOGE("Invalid size_bits %d", size_bits);
-        return -1;
     }
 
     if (from->share_mem_at_vaddr == NULL) {

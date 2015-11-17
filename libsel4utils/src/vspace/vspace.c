@@ -18,6 +18,7 @@
 #include <string.h>
 
 #include <sel4utils/vspace.h>
+#include <sel4utils/page.h>
 
 #include <sel4utils/vspace_internal.h>
 #include <vka/capops.h>
@@ -417,6 +418,11 @@ sel4utils_map_pages_at_vaddr(vspace_t *vspace, seL4_CPtr caps[], uint32_t cookie
     sel4utils_alloc_data_t *data = get_alloc_data(vspace);
     sel4utils_res_t *res = reservation_to_res(reservation);
 
+    if (!utils_valid_size_bits(size_bits)) {
+        ZF_LOGE("Invalid size_bits %zu", size_bits);
+        return -1;
+    }
+
     if (!check_reservation(data->top_level, res, (uintptr_t) vaddr, num_pages, size_bits)) {
         return -1;
     }
@@ -450,6 +456,11 @@ sel4utils_unmap_pages(vspace_t *vspace, void *vaddr, size_t num_pages, size_t si
     uintptr_t v = (uintptr_t) vaddr;
     sel4utils_alloc_data_t *data = get_alloc_data(vspace);
     sel4utils_res_t *reserve = find_reserve(data, v);
+
+    if (!utils_valid_size_bits(size_bits)) {
+        ZF_LOGE("Invalid size_bits %zu", size_bits);
+        return;
+    }
 
     if (vka == VSPACE_FREE) {
         vka = data->vka;
@@ -529,11 +540,19 @@ sel4utils_reserve_range_aligned(vspace_t *vspace, size_t bytes, size_t size_bits
                                 int cacheable, void **result)
 {
     reservation_t reservation;
-    sel4utils_res_t *res = (sel4utils_res_t *) malloc(sizeof(sel4utils_res_t));
+    sel4utils_res_t *res;
+
+    reservation.res = NULL;
+
+    if (!utils_valid_size_bits(size_bits)) {
+        ZF_LOGE("Invalid size bits %zu", size_bits);
+        return reservation;
+    }
+
+    res = (sel4utils_res_t *) malloc(sizeof(sel4utils_res_t));
 
     if (res == NULL) {
         ZF_LOGE("Malloc failed");
-        reservation.res = NULL;
         return reservation;
     }
 
@@ -751,6 +770,11 @@ sel4utils_share_mem_at_vaddr(vspace_t *from, vspace_t *to, void *start, int num_
     cspacepath_t from_path, to_path;
     int page;
     sel4utils_res_t *res = reservation_to_res(reservation);
+
+    if (!utils_valid_size_bits(size_bits)) {
+        ZF_LOGE("Invalid size bits %zu", size_bits);
+        return -1;
+    }
 
     /* go through, page by page, and duplicate the page cap into the to cspace and
      * map it into the to vspace */

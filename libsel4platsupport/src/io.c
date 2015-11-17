@@ -19,6 +19,7 @@
 #include <utils/util.h>
 #include <sel4utils/util.h>
 #include <sel4utils/mapping.h>
+#include <sel4utils/page.h>
 
 #include <vspace/vspace.h>
 #include <vka/capops.h>

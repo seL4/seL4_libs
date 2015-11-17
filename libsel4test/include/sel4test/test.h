@@ -36,14 +36,13 @@ struct env;
 typedef struct env *env_t;
 
 /* Prototype of a test function. Returns false on failure. */
-typedef int (*test_fn)(env_t, void *);
+typedef int (*test_fn)(env_t);
 
 /* Represents a single testcase. */
 typedef struct testcase {
     const char *name;
     const char *description;
     test_fn function;
-    void *args;
 } testcase_t;  
 
 /* Declare a testcase. */
@@ -200,7 +199,7 @@ env_t sel4test_get_env(void);
 static inline int
 sel4test_basic_run_test(struct testcase *t) 
 {
-    return t->function(sel4test_get_env(), t->args);
+    return t->function(sel4test_get_env());
 }
 
 /* 

@@ -130,11 +130,11 @@ static inline void _test_abort(char *condition, char *file, int line)
          typeof (a) _a = (a); \
          typeof (b) _b = (b); \
          if (sizeof(_a) != sizeof(_b)) { \
-             int len = snprintf(NULL, 0, #a" (size %d) != "#b" (size %d), use of test_eq incorrect",\
-                     sizeof(_a), sizeof(_b)) + 1;\
+             int len = snprintf(NULL, 0, "%s (size %d) != %s (size %d), use of test_eq incorrect", #a,\
+                     sizeof(_a), #b, sizeof(_b)) + 1;\
              char buffer[len];\
-             snprintf(buffer, len, #a" (size %d) != "#b" (size %d), use of test_eq incorrect", sizeof(_a),\
-                     sizeof(_b));\
+             snprintf(buffer, len, "%s (size %d) != %s (size %d), use of test_eq incorrect", #a, sizeof(_a),\
+                     #b, sizeof(_b));\
              _test_error(buffer, __FILE__, __LINE__);\
          } else if (TYPES_COMPATIBLE(typeof(_a), int)) {\
              test_op_type(_a, _b, op, "%d", a, b, int); \

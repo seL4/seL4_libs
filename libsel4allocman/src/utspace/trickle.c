@@ -20,7 +20,7 @@
 
 static inline size_t _make_bitmap(size_t bits) {
     /* avoid shift by int max in BIT/MASK code */
-    if (BIT(bits) == sizeof(size_t)) {
+    if (BIT(bits - 1) == CONFIG_WORD_SIZE) {
         return -1;
     } else {
         /* shift the result up so that the high bits are set */
@@ -69,7 +69,7 @@ static inline size_t _cookie_to_offset(seL4_Word cookie)
 }
 
 static inline struct utspace_trickle_node *_make_node(struct allocman *alloc, int *error) {
-    uintptr_t addr = (uintptr_t)allocman_mspace_alloc(alloc, sizeof(utspace_trickle_node) * 2 - sizeof(size_t), error);
+    uintptr_t addr = (uintptr_t)allocman_mspace_alloc(alloc, sizeof(struct utspace_trickle_node) * 2 - sizeof(size_t), error);
     struct utspace_trickle_node *node;
     if (*error) {
         return NULL;
@@ -81,7 +81,7 @@ static inline struct utspace_trickle_node *_make_node(struct allocman *alloc, in
 
 static inline void _free_node(struct allocman *alloc, struct utspace_trickle_node *node)
 {
-    allocman_mspace_free(alloc, (void*)node->padding, sizeof(utspace_trickle_node) * 2 - sizeof(size_t));
+    allocman_mspace_free(alloc, (void*)node->padding, sizeof(struct utspace_trickle_node) * 2 - sizeof(size_t));
 }
 
 int _utspace_trickle_add_uts(allocman_t *alloc, void *_trickle, size_t num, const cspacepath_t *uts, size_t *size_bits, uintptr_t *paddr) {
@@ -148,9 +148,9 @@ static int _refill_pool(struct allocman *alloc, utspace_trickle_t *trickle, size
             break;
         }
     }
-    if (i == CONGIG_WORD_SIZE) {
+    if (i == CONFIG_WORD_SIZE) {
         /* Search for the biggest one near us */
-        for (i = size_bits + 5 > CONFIG_WORD_SIZE - 1 ? CONFIG_WORD_SIZE : size_bits + 5; i > size_bits; i--) {
+        for (i = size_bits + 5 > CONFIG_WORD_SIZE - 1 ? CONFIG_WORD_SIZE - 1 : size_bits + 5; i > size_bits; i--) {
             if (trickle->heads[i]) {
                 break;
             }

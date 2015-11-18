@@ -12,6 +12,7 @@
 #define _ALLOCMAN_CSPACE_SINGLE_LEVEL_H_
 
 #include <autoconf.h>
+#include <stdlib.h>
 #include <sel4/types.h>
 #include <allocman/cspace/cspace.h>
 

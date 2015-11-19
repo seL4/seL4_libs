@@ -202,7 +202,7 @@ sys_platform_write(void *data, size_t count)
 long
 sys_open(va_list ap)
 {
-    const char *pathname __attribute__((unused)) = va_arg(ap, const char *);
+    const char *pathname = va_arg(ap, const char *);
     int flags = va_arg(ap, int);
     mode_t mode = va_arg(ap, mode_t);
     (void) mode;

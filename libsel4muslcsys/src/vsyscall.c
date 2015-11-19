@@ -78,4 +78,4 @@ long sel4_vsyscall(long sysnum, ...) {
 
 /* Put a pointer to sel4_vsyscall in a special section so anyone loading us
  * knows how to configure our syscall table */
-uintptr_t __attribute__((externally_visible)) __attribute__((section("__vsyscall"))) __vsyscall_ptr = (uintptr_t) sel4_vsyscall;
+uintptr_t VISIBLE SECTION("__vsyscall") __vsyscall_ptr = (uintptr_t) sel4_vsyscall;

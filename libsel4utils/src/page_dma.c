@@ -67,7 +67,6 @@ static uintptr_t dma_pin(void *cookie, void *addr, size_t size)
 static void* dma_alloc(void *cookie, size_t size, int align, int cached, ps_mem_flags_t flags)
 {
     int error;
-    unsigned int i;
     dma_man_t *dma = (dma_man_t*)cookie;
     cspacepath_t *frames = NULL;
     reservation_t res = {NULL};
@@ -108,7 +107,7 @@ static void* dma_alloc(void *cookie, size_t size, int align, int cached, ps_mem_
         goto handle_error;
     }
     memset(frames, 0, sizeof(cspacepath_t) * num_frames);
-    for (i = 0; i < num_frames; i++) {
+    for (unsigned i = 0; i < num_frames; i++) {
         error = vka_cspace_alloc_path(&dma->vka, &frames[i]);
         if (error) {
             goto handle_error;
@@ -136,7 +135,7 @@ static void* dma_alloc(void *cookie, size_t size, int align, int cached, ps_mem_
     alloc->ut = ut;
     alloc->paddr = paddr;
     /* Map in all the pages */
-    for (i = 0; i < num_frames; i++) {
+    for (unsigned i = 0; i < num_frames; i++) {
         error = vspace_map_pages_at_vaddr(&dma->vspace, &frames[i].capPtr, (uint32_t*)&alloc, base + i * PAGE_SIZE_4K, 1, PAGE_BITS_4K, res);
         if (error) {
             goto handle_error;
@@ -154,8 +153,7 @@ handle_error:
         vspace_free_reservation(&dma->vspace, res);
     }
     if (frames) {
-        int i;
-        for (i = 0; i < num_frames; i++) {
+        for (int i = 0; i < num_frames; i++) {
             if (frames[i].capPtr) {
                 vka_cnode_delete(&frames[i]);
                 vka_cspace_free(&dma->vka, frames[i].capPtr);

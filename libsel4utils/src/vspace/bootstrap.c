@@ -416,7 +416,7 @@ sel4utils_bootstrap_clone_into_vspace(vspace_t *current, vspace_t *clone, reserv
          * So we map the page in and copy the data across instead :( */
 
         /* create the page in the clone vspace */
-        int error = vspace_new_pages_at_vaddr(clone, (void *) page, 1, seL4_PageBits, image);
+        error = vspace_new_pages_at_vaddr(clone, (void *) page, 1, seL4_PageBits, image);
         if (error) {
             /* vspace will be left inconsistent */
             LOG_ERROR("Error %d while trying to map page at %"PRIuPTR, error, page);

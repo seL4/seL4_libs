@@ -10,6 +10,7 @@
 
 #include <autoconf.h>
 #include <stdio.h>
+#include <stdint.h>
 #include <sel4/sel4.h>
 #include <utils/util.h>
 #include <bits/syscall.h>

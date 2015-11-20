@@ -208,13 +208,12 @@ _irq_thread_entry(struct irq_server_thread* st)
     DIRQSERVER("thread started. Waiting on endpoint %d\n", notification);
 
     while (1) {
-        seL4_MessageInfo_t info;
         seL4_Word badge;
-        info = seL4_Wait(notification, &badge);
+        seL4_Wait(notification, &badge);
         assert(badge != 0);
         if (sep != seL4_CapNull) {
             /* Synchronous endpoint registered. Send IPC */
-            info = seL4_MessageInfo_new(label, 0, 0, 2);
+            seL4_MessageInfo_t info = seL4_MessageInfo_new(label, 0, 0, 2);
             seL4_SetMR(0, badge);
             seL4_SetMR(1, node_ptr);
             seL4_Send(sep, info);
@@ -396,7 +395,7 @@ irq_server_wait_for_irq(irq_server_t irq_server, seL4_Word* badge_ret)
     seL4_Word badge;
 
     /* Wait for an event */
-    msginfo = seL4_Wait(irq_server->delivery_ep, &badge);
+    msginfo = seL4_Recv(irq_server->delivery_ep, &badge);
     if (badge_ret) {
         *badge_ret = badge;
     }

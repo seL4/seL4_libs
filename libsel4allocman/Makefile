@@ -18,7 +18,8 @@ CFILES += $(patsubst $(SOURCE_DIR)/%,%,$(wildcard $(SOURCE_DIR)/src/utspace/*.c)
 CFILES += $(patsubst $(SOURCE_DIR)/%,%,$(wildcard $(SOURCE_DIR)/src/mspace/*.c))
 
 # Header files/directories this library provides
-HDRFILES := $(wildcard $(SOURCE_DIR)/include/*)
+HDRFILES := $(wildcard $(SOURCE_DIR)/include/*) \
+    $(wildcard ${SOURCE_DIR}/sel4_arch/${SEL4_ARCH}/*)
 
 CFLAGS += -std=gnu99
 

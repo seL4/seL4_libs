@@ -9,6 +9,7 @@
  */
 
 #include <errno.h>
+#include <stddef.h>
 #include <vspace/vspace.h>
 #include <sel4utils/stack.h>
 #include <sel4utils/util.h>

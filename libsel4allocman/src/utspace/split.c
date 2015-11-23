@@ -46,11 +46,13 @@ static struct utspace_split_node *_new_node(allocman_t *alloc) {
     struct utspace_split_node *node;
     node = (struct utspace_split_node*) allocman_mspace_alloc(alloc, sizeof(*node), &error);
     if (error) {
+        ZF_LOGV("Failed to allocate node of size %d", sizeof(*node));
         return NULL;
     }
     error = allocman_cspace_alloc(alloc, &node->ut);
     if (error) {
         allocman_mspace_free(alloc, node, sizeof(*node));
+        ZF_LOGV("Failed to allocate slot");
         return NULL;
     }
     return node;
@@ -67,6 +69,7 @@ static int _insert_new_node(allocman_t *alloc, struct utspace_split_node **head,
     struct utspace_split_node *node;
     node = (struct utspace_split_node*) allocman_mspace_alloc(alloc, sizeof(*node), &error);
     if (error) {
+        ZF_LOGV("Failed to allocate node of size %d", sizeof(*node));
         return 1;
     }
     node->parent = NULL;
@@ -108,11 +111,13 @@ static int _refill_pool(allocman_t *alloc, utspace_split_t *split, size_t size_b
     /* ensure we are not the highest pool */
     if (size_bits >= sizeof(seL4_Word) * 8 - 2) {
         /* bugger, no untypeds bigger than us */
+        ZF_LOGV("Failed to refill pool of size %zu, no larger pools", size_bits);
         return 1;
     }
     /* get something from the highest pool */
     if (_refill_pool(alloc, split, size_bits + 1)) {
         /* could not fill higher pool */
+        ZF_LOGV("Failed to refill pool of size %zu", size_bits);
         return 1;
     }
     /* use the first node for lack of a better one */
@@ -120,10 +125,12 @@ static int _refill_pool(allocman_t *alloc, utspace_split_t *split, size_t size_b
     /* allocate two new nodes */
     left = _new_node(alloc);
     if (!left) {
+        ZF_LOGV("Failed to allocate left node");
         return 1;
     }
     right = _new_node(alloc);
     if (!right) {
+        ZF_LOGV("Failed to allocate right node");
         _delete_node(alloc, left);
         return 1;
     }
@@ -186,6 +193,7 @@ seL4_Word _utspace_split_alloc(allocman_t *alloc, void *_split, size_t size_bits
     if (_refill_pool(alloc, split, size_bits)) {
         /* out of memory? */
         SET_ERROR(error, 1);
+        ZF_LOGV("Failed to refill pool to allocate object of size %zu", size_bits);
         return 0;
     }
     /* use the first node for lack of a better one */

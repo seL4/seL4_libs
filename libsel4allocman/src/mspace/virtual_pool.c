@@ -85,12 +85,14 @@ static k_r_malloc_header_t *_morecore(size_t cookie, mspace_k_r_malloc_t *k_r_ma
     new_size = new_units * sizeof(k_r_malloc_header_t);
 
     if (virtual_pool->pool_ptr + new_size > virtual_pool->pool_limit) {
+        ZF_LOGV("morecore out of virtual pool");
         return NULL;
     }
     while (virtual_pool->pool_ptr + new_size > virtual_pool->pool_top) {
         int error;
         error = _add_page(virtual_pool->morecore_alloc, virtual_pool->pd, virtual_pool->pool_top);
         if (error) {
+            ZF_LOGV("morecore failed to add page");
             return NULL;
         }
         virtual_pool->pool_top += PAGE_SIZE_4K;

@@ -50,12 +50,6 @@ sel4utils_set_stack_pointer(seL4_UserContext *regs, seL4_Word value)
     regs->esp = value;
 }
 
-static inline void
-sel4utils_set_arg0(seL4_UserContext *regs, seL4_Word value)
-{
-    regs->eip = value;
-}
-
 /* Helper function for writing your OWN TLS_BASE register on x86.
  * This function assumes that the tcb capability your are modifying
  * is the currently executing thread and will not work otherwise.

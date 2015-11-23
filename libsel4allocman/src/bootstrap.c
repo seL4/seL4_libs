@@ -18,6 +18,7 @@
 #include <allocman/utspace/trickle.h>
 #include <allocman/utspace/split.h>
 #include <allocman/bootstrap.h>
+#include <allocman/sel4_arch/reservation.h>
 #include <stdio.h>
 #include <vka/capops.h>
 #include <vka/object.h>
@@ -1067,6 +1068,7 @@ void bootstrap_configure_virtual_pool(allocman_t *alloc, void *vstart, size_t vs
      * we ignore any errors */
     allocman_configure_utspace_reserve(alloc, (struct allocman_utspace_chunk) {vka_get_object_size(seL4_ARCH_4KPage, 0), seL4_ARCH_4KPage, 3});
     allocman_configure_utspace_reserve(alloc, (struct allocman_utspace_chunk) {vka_get_object_size(seL4_ARCH_PageTableObject, 0), seL4_ARCH_PageTableObject, 1});
+    allocman_sel4_arch_configure_reservations(alloc);
     mspace_dual_pool_attach_virtual(
             (mspace_dual_pool_t*)alloc->mspace.mspace,
             (struct mspace_virtual_pool_config){

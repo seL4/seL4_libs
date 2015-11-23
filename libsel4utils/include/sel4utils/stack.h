@@ -19,10 +19,10 @@
  * @param vspace interface to allocate stack with
  * @param func to jump to with the new stack.
  * @param arg to pass to func.
- * @ret   the return value of func. -1 if stack allocation fails.
- *        Note: it would be unwise to write func such that it returns -1.
+ * @param[out] retval The return value of func is written to this pointer if it is non-null
+ * @ret   0 on success or -1 if stack allocation fails.
  *
  */
-void *sel4utils_run_on_stack(vspace_t *vspace, void * (*func)(void *arg), void *arg);
+int sel4utils_run_on_stack(vspace_t *vspace, void * (*func)(void *arg), void *arg, void **retval);
 
 #endif /* __SEL4UTILS_STACK_H */

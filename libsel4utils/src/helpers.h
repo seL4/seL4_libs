@@ -28,29 +28,33 @@
 /* write to a remote stack */
 int sel4utils_stack_write(vspace_t *current_vspace, vspace_t *target_vspace,
                       vka_t *vka, void *buf, size_t len, uintptr_t *stack_top);
-/* 
- * Initialise a threads user context for a specific architecture
- * 
- * @param local_stack true of the stack is mapped in the current address space. If local stack is 
- *        false and we are running on x86 (32-bit) this function will not copy arg* unless vka, 
+
+/*
+ * Initialize a threads user context for a specific architecture
+ *
+ * @return 0 on success.
+ */
+int sel4utils_arch_init_context(void *entry_point, void *stack_top, seL4_UserContext *context);
+
+/*
+ * Legacy function to initialise a threads user context for a specific architecture, and put
+ * some arguments into registers/stack
+ *
+ * @param local_stack true of the stack is mapped in the current address space. If local stack is
+ *        false and we are running on x86 (32-bit) this function will not copy arg* unless vka,
  *        local_vspace and remote_vspace are provided.
  *
  * @return 0 on success.
  */
-int sel4utils_arch_init_context(void *entry_point, void *arg0, void *arg1, void *arg2,
-                                bool local_stack, void *stack_top, seL4_UserContext *context, 
+int sel4utils_arch_init_context_with_args(void *entry_point, void *arg0, void *arg1, void *arg2,
+                                bool local_stack, void *stack_top, seL4_UserContext *context,
                                 vka_t *vka, vspace_t *local_vspace, vspace_t *remote_vspace);
 
 /* convenient wrappers */
 static inline int
 sel4utils_arch_init_local_context(void *entry_point, void *arg0, void *arg1, void *arg2,
                                  void *stack_top, seL4_UserContext *context) {
-    return sel4utils_arch_init_context(entry_point, arg0, arg1, arg2, true, stack_top, context, NULL, NULL, NULL);
-}
-
-static inline int
-sel4utils_arch_init_context_without_args(void *entry_point, void *stack_top, seL4_UserContext *context) {
-    return sel4utils_arch_init_context(entry_point, NULL, NULL, NULL, false, stack_top, context, NULL, NULL, NULL);
+    return sel4utils_arch_init_context_with_args(entry_point, arg0, arg1, arg2, true, stack_top, context, NULL, NULL, NULL);
 }
 
 #endif /* SEL4UTILS_HELPERS_H */

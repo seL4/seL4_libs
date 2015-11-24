@@ -220,17 +220,17 @@ sel4utils_spawn_process(sel4utils_process_t *process, vka_t *vka, vspace_t *vspa
         }
         new_process_argv = stack_top;
     }
-    /* move the stack pointer down to a place we can write too, 
+    /* move the stack pointer down to a place we can write too,
      * move it two words to retain double word alignment which is required
      * by some architectures. */
     stack_top = (uintptr_t) stack_top - sizeof(seL4_Word) * 2;
- 
+
     seL4_UserContext context = {0};
     size_t context_size = sizeof(seL4_UserContext) / sizeof(seL4_Word);
-   
-    error = sel4utils_arch_init_context(process->entry_point, (void *) argc, 
-                                        (void *) new_process_argv, 
-                                        (void *) process->thread.ipc_buffer_addr, false, 
+
+    error = sel4utils_arch_init_context_with_args(process->entry_point, (void *) argc,
+                                        (void *) new_process_argv,
+                                        (void *) process->thread.ipc_buffer_addr, false,
                                         (void *) stack_top,
                                         &context, vka, vspace, &process->vspace);
     if (error) {
@@ -328,7 +328,7 @@ sel4utils_spawn_process_v(sel4utils_process_t *process, vka_t *vka, vspace_t *vs
 
     ZF_LOGD("Starting process at %p, stack %p\n", process->entry_point, (void *) stack_top);
     assert(stack_top % (2 * sizeof(seL4_Word)) == 0);
-    error = sel4utils_arch_init_context_without_args(process->entry_point, (void *) stack_top, &context);
+    error = sel4utils_arch_init_context(process->entry_point, (void *) stack_top, &context);
     if (error) {
         return error;
     }

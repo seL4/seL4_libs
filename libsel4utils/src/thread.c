@@ -109,8 +109,8 @@ sel4utils_start_thread(sel4utils_thread_t *thread, void *entry_point, void *arg0
     int error;
     seL4_UserContext context = {0};
     size_t context_size = sizeof(seL4_UserContext) / sizeof(seL4_Word);
-   
-    error = sel4utils_arch_init_local_context(entry_point, arg0, arg1, 
+
+    error = sel4utils_arch_init_local_context(entry_point, arg0, arg1,
                                               (void *) thread->ipc_buffer_addr,
                                               thread->stack_top, &context);
     if (error) {

@@ -141,7 +141,7 @@ sel4utils_copy_cap_to_process(sel4utils_process_t *process, cspacepath_t src)
     return dest.capPtr;
 }
 
-static int
+int
 sel4utils_stack_write(vspace_t *current_vspace, vspace_t *target_vspace,
                       vka_t *vka, void *buf, size_t len, uintptr_t *stack_top)
 {
@@ -220,23 +220,24 @@ sel4utils_spawn_process(sel4utils_process_t *process, vka_t *vka, vspace_t *vspa
         }
         new_process_argv = stack_top;
     }
-    /* Some architectures want stack to be double word aligned */
-    stack_top = ROUND_DOWN(stack_top, sizeof(void*) * 2);
-
-    /* On arm we write the arguments to registers */
-#ifdef CONFIG_ARCH_IA32
-    /* Write 6 words to make the argument list */
-    uint32_t stack_args[6] = {0, (uint32_t)argc, (uint32_t)new_process_argv, process->thread.ipc_buffer, 0, 0};
-    error = sel4utils_stack_write(vspace, &process->vspace, vka, stack_args, sizeof(stack_args), &stack_top);
+    /* move the stack pointer down to a place we can write too, 
+     * move it two words to retain double word alignment which is required
+     * by some architectures. */
+    stack_top = (uintptr_t) stack_top - sizeof(seL4_Word) * 2;
+ 
+    seL4_UserContext context = {0};
+    size_t context_size = sizeof(seL4_UserContext) / sizeof(seL4_Word);
+   
+    error = sel4utils_arch_init_context(process->entry_point, (void *) argc, 
+                                        (void *) new_process_argv, 
+                                        (void *) process->thread.ipc_buffer_addr, false, 
+                                        (void *) stack_top,
+                                        &context, vka, vspace, &process->vspace);
     if (error) {
-        return -1;
-    }
-#endif
+        return error;
+        }
 
-    error = sel4utils_internal_start_thread(&process->thread, process->entry_point,
-                                            (void *) argc, (void *) new_process_argv, resume, NULL, (void*)stack_top);
-
-    return error;
+    return seL4_TCB_WriteRegisters(process->thread.tcb.cptr, resume, 0, context_size, &context);
 }
 
 int
@@ -245,36 +246,45 @@ sel4utils_spawn_process_v(sel4utils_process_t *process, vka_t *vka, vspace_t *vs
 {
     /* define an envp and auxp */
     int envc = 1;
-    char ipc_buf_env[30];
+    char ipc_buf_env[WORD_STRING_SIZE];
     sprintf(ipc_buf_env, "IPCBUFFER=0x%x", process->thread.ipc_buffer_addr);
     char *envp[] = {ipc_buf_env};
     int auxc = process->sysinfo ? 1 : 0;
-#if defined(CONFIG_ARCH_IA32) || defined(CONFIG_ARCH_ARM)
-    Elf32_auxv_t auxv[] = { {.a_type = AT_SYSINFO, .a_un = {process->sysinfo}}};
-#elif defined(CONFIG_X86_64)
-    Elf64_auxv_t auxv[] = { {.a_type = AT_SYSINFO, .a_un = {process->sysinfo}}};
-#else
-#error Not defined
-#endif
-    seL4_UserContext context;
-    memset(&context, 0, sizeof(context));
-    /* write all the strings into the stack */
-    uintptr_t stack_top = (uintptr_t)process->thread.stack_top - 4;
+    Elf_auxv_t auxv[] = { {.a_type = AT_SYSINFO, .a_un = {process->sysinfo}}};
+    seL4_UserContext context = {0};
+
+    uintptr_t stack_top = (uintptr_t) process->thread.stack_top - sizeof(seL4_Word);
     uintptr_t dest_argv[argc];
     uintptr_t dest_envp[envc];
     int error;
+    
+    /* write all the strings into the stack */
     /* Copy over the user arguments */
     error = sel4utils_stack_copy_args(vspace, &process->vspace, vka, argc, argv, dest_argv, &stack_top);
     if (error) {
         return -1;
     }
+
     /* copy the environment */
     error = sel4utils_stack_copy_args(vspace, &process->vspace, vka, envc, envp, dest_envp, &stack_top);
     if (error) {
         return -1;
     }
 
-#if defined(CONFIG_ARCH_IA32) || defined(CONFIG_ARCH_ARM) || defined(CONFIG_X86_64)
+    /* we need to make sure the stack is aligned to a double word boundary after we push on everything else 
+     * below this point. First, work out how much we are going to push */
+    size_t to_push = 5 * sizeof(seL4_Word) + /* constants */
+                    sizeof(auxv[0]) * auxc + /* aux */
+                    sizeof(dest_argv) + /* args */
+                    sizeof(dest_envp); /* env */
+    /* now if the stack is going to end up unaligned */
+    if (((stack_top - to_push) % (2 * sizeof(seL4_Word))) != 0) {
+        /* align it */
+        stack_top -= sizeof(seL4_Word);
+        /* sanity check */
+        assert (((stack_top - to_push) % (2 * sizeof(seL4_Word))) == 0);
+    }
+
     /* construct initial stack frame */
     /* Null terminate aux */
     error = sel4utils_stack_write_constant(vspace, &process->vspace, vka, 0, &stack_top);
@@ -315,32 +325,17 @@ sel4utils_spawn_process_v(sel4utils_process_t *process, vka_t *vka, vspace_t *vs
     if (error) {
         return -1;
     }
-#else
-#error Not implemented yet
-#endif
 
-#if defined(CONFIG_ARCH_IA32)
-    /* No atexit pointer */
-    context.edx = 0;
-    context.esp = stack_top;
-    context.gs = IPCBUF_GDT_SELECTOR;
-    context.eip = (seL4_Word)process->entry_point;
-#elif defined(CONFIG_X86_64)
-    context.rdx = 0;
-    context.rsp = stack_top;
-    context.gs = IPCBUF_GDT_SELECTOR;
-    context.rip = (seL4_Word)process->entry_point;
-#elif defined(CONFIG_ARCH_ARM)
-    context.sp = stack_top;
-    context.pc = (seL4_Word)process->entry_point;
-#else
-#error Not implemented yet
-#endif
+    ZF_LOGD("Starting process at %p, stack %p\n", process->entry_point, (void *) stack_top);
+    assert(stack_top % (2 * sizeof(seL4_Word)) == 0);
+    error = sel4utils_arch_init_context_without_args(process->entry_point, (void *) stack_top, &context);
+    if (error) {
+        return error;
+    }
 
-    ZF_LOGD("Starting process at %p\n", process->entry_point);
     /* Write the registers */
-    error = seL4_TCB_WriteRegisters(process->thread.tcb.cptr, resume, 0, sizeof(context) / sizeof(seL4_Word), &context);
-    return error;
+    return seL4_TCB_WriteRegisters(process->thread.tcb.cptr, resume, 0, sizeof(context) / sizeof(seL4_Word), 
+                                  &context);
 }
 
 int

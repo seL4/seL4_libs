@@ -10,18 +10,47 @@
 
 #ifndef SEL4UTILS_HELPERS_H
 #define SEL4UTILS_HELPERS_H
-/**
- * Start a thread.
- *
- * @param local_stack_top address of the stack in the current vspace, or NULL if arguments
- *                        have already been placed on the stack
- * @param dest_stack_top  stack pointer to set in the newly running thread. This is passed in
- *                        instead of being grabbed from thread in case values have been pushed
- *                        onto it. Only one of local_stack_top and dest_stack_top should be set
- * Other parameters see sel4utils_start_thread.
- */
-int sel4utils_internal_start_thread(sel4utils_thread_t *thread, void *entry_point, void *arg0,
-                                    void *arg1, int resume, void *local_stack_top, void *dest_stack_top);
 
+#include <sel4/types.h>
+#include <sel4utils/thread.h>
+#include <stdbool.h>
+#include <vka/vka.h>
+#include <vspace/vspace.h>
+
+#if CONFIG_WORD_SIZE == 64
+#define Elf_auxv_t Elf64_auxv_t
+#elif CONFIG_WORD_SIZE == 32
+#define Elf_auxv_t Elf32_auxv_t
+#else
+#error "Word size unsupported"
+#endif /* CONFIG_WORD_SIZE */
+
+/* write to a remote stack */
+int sel4utils_stack_write(vspace_t *current_vspace, vspace_t *target_vspace,
+                      vka_t *vka, void *buf, size_t len, uintptr_t *stack_top);
+/* 
+ * Initialise a threads user context for a specific architecture
+ * 
+ * @param local_stack true of the stack is mapped in the current address space. If local stack is 
+ *        false and we are running on x86 (32-bit) this function will not copy arg* unless vka, 
+ *        local_vspace and remote_vspace are provided.
+ *
+ * @return 0 on success.
+ */
+int sel4utils_arch_init_context(void *entry_point, void *arg0, void *arg1, void *arg2,
+                                bool local_stack, void *stack_top, seL4_UserContext *context, 
+                                vka_t *vka, vspace_t *local_vspace, vspace_t *remote_vspace);
+
+/* convenient wrappers */
+static inline int
+sel4utils_arch_init_local_context(void *entry_point, void *arg0, void *arg1, void *arg2,
+                                 void *stack_top, seL4_UserContext *context) {
+    return sel4utils_arch_init_context(entry_point, arg0, arg1, arg2, true, stack_top, context, NULL, NULL, NULL);
+}
+
+static inline int
+sel4utils_arch_init_context_without_args(void *entry_point, void *stack_top, seL4_UserContext *context) {
+    return sel4utils_arch_init_context(entry_point, NULL, NULL, NULL, false, stack_top, context, NULL, NULL, NULL);
+}
 
 #endif /* SEL4UTILS_HELPERS_H */

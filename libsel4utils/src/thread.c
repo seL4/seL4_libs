@@ -103,77 +103,21 @@ sel4utils_configure_thread_config(vka_t *vka, vspace_t *parent, vspace_t *alloc,
 }
 
 int
-sel4utils_internal_start_thread(sel4utils_thread_t *thread, void *entry_point, void *arg0,
-                                void *arg1, int resume, void *local_stack_top, void *dest_stack_top)
-{
-    seL4_UserContext context = {0};
-    size_t context_size = sizeof(seL4_UserContext) / sizeof(seL4_Word);
-    int error;
-    /* one of these must be set */
-    assert(local_stack_top || dest_stack_top);
-    /* but not both of them */
-    assert(!(local_stack_top && dest_stack_top));
-
-#ifdef ARCH_IA32
-
-#ifdef CONFIG_X86_64
-    context.rdi = (seL4_Word)arg0;
-    context.rsi = (seL4_Word)arg1;
-    context.rdx = (seL4_Word)thread->ipc_buffer_addr;
-    if (dest_stack_top) {
-        context.rsp = (seL4_Word) dest_stack_top;
-    } else {
-        context.rsp = (seL4_Word) thread->stack_top;
-    }
-    context.gs = IPCBUF_GDT_SELECTOR;
-    context.rip = (seL4_Word)entry_point;
-#else
-    if (local_stack_top) {
-        seL4_Word *stack_ptr = (seL4_Word *) local_stack_top;
-        stack_ptr[-5] = (seL4_Word) arg0;
-        stack_ptr[-4] = (seL4_Word) arg1;
-        stack_ptr[-3] = (seL4_Word) thread->ipc_buffer_addr;
-        context.esp = (seL4_Word) (thread->stack_top - 24);
-    } else {
-        context.esp = (seL4_Word) dest_stack_top;
-    }
-    context.gs = IPCBUF_GDT_SELECTOR;
-    context.eip = (seL4_Word)entry_point;
-#endif
-
-    /* check that stack is aligned correctly */
-    assert((seL4_Word) thread->stack_top % (sizeof(seL4_Word) * 2) == 0);
-    error = seL4_TCB_WriteRegisters(thread->tcb.cptr, resume, 0, context_size, &context);
-#elif ARCH_ARM /* ARCH_IA32 */
-    context.pc = (seL4_Word) entry_point;
-    if (dest_stack_top) {
-        context.sp = (seL4_Word) dest_stack_top;
-    } else {
-        context.sp = (seL4_Word) thread->stack_top;
-    }
-    context.r0 = (seL4_Word) arg0;
-    context.r1 = (seL4_Word) arg1;
-    context.r2 = (seL4_Word) thread->ipc_buffer_addr;
-
-    /* check that stack is aligned correctly */
-    assert((uint32_t) thread->stack_top % (sizeof(seL4_Word) * 2) == 0);
-    error = seL4_TCB_WriteRegisters(thread->tcb.cptr, resume, 0, context_size, &context);
-#endif /* ARCH_ARM */
-
-    if (error) {
-        LOG_ERROR("seL4_TCB_WriteRegisters failed with error %d", error);
-        return -1;
-    }
-
-    return 0;
-}
-
-
-int
 sel4utils_start_thread(sel4utils_thread_t *thread, void *entry_point, void *arg0, void *arg1,
                        int resume)
 {
-    return sel4utils_internal_start_thread(thread, entry_point, arg0, arg1, resume, thread->stack_top, NULL);
+    int error;
+    seL4_UserContext context = {0};
+    size_t context_size = sizeof(seL4_UserContext) / sizeof(seL4_Word);
+   
+    error = sel4utils_arch_init_local_context(entry_point, arg0, arg1, 
+                                              (void *) thread->ipc_buffer_addr,
+                                              thread->stack_top, &context);
+    if (error) {
+        return error;
+    }
+
+    return seL4_TCB_WriteRegisters(thread->tcb.cptr, resume, 0, context_size, &context);
 }
 
 void

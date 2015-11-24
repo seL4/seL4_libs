@@ -36,7 +36,7 @@ sel4utils_arch_init_context_with_args(void *entry_point, void *arg0, void *arg1,
     context->r1 = (seL4_Word) arg1;
     context->r2 = (seL4_Word) arg2;
 
-    return sel4utils_init_context(entry_point, stack_top, context);
+    return sel4utils_arch_init_context(entry_point, stack_top, context);
 }
 
 

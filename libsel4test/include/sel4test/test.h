@@ -116,10 +116,10 @@ static inline void _test_abort(char *condition, char *file, int line)
 #define test_op_type(a, b, op, t, name_a, name_b, cast) \
     do {\
         if (!(a op b)) { \
-            int len = snprintf(NULL, 0, "Check %s("t") %s %s("t") failed.",\
+            int len = snprintf(NULL, 0, "Check %s(" t ") %s %s(" t ") failed.",\
                                #name_a, (cast) a, #op, #name_b, (cast) b) + 1; \
             char buffer[len]; \
-            snprintf(buffer, len, "Check %s("t") %s %s("t") failed.",\
+            snprintf(buffer, len, "Check %s(" t ") %s %s(" t ") failed.",\
                      #name_a, (cast) a, #op, #name_b, (cast) b); \
             _test_error(buffer, __FILE__, __LINE__); \
         }\
@@ -151,7 +151,7 @@ static inline void _test_abort(char *condition, char *file, int line)
          } else if (TYPES_COMPATIBLE(typeof(_a), char)) {\
              test_op_type(_a, _b, op, "%c", a, b, char); \
          } else if (TYPES_COMPATIBLE(typeof(_a), uintptr_t)) {\
-             test_op_type(_a, _b, op, "0x%"PRIxPTR, a, b, uintptr_t);\
+             test_op_type(_a, _b, op, "0x%" PRIxPTR, a, b, uintptr_t);\
          } else { \
              _test_error("Cannot use test_op on this type", __FILE__, __LINE__);\
          }\
@@ -170,9 +170,9 @@ static inline void _test_abort(char *condition, char *file, int line)
 #define test_strop(a, b, op) \
      do {\
           if (strnlen(a, __TEST_MAX_STRING) == __TEST_MAX_STRING) {\
-              _test_error("String "#a" too long for test_str* macros", __FILE__, __LINE__);\
+              _test_error("String " #a " too long for test_str* macros", __FILE__, __LINE__);\
           } else if (strnlen(b, __TEST_MAX_STRING) == __TEST_MAX_STRING) {\
-              _test_error("String "#b" too long for test_str* macros", __FILE__, __LINE__);\
+              _test_error("String " #b " too long for test_str* macros", __FILE__, __LINE__);\
           } else if (!(strncmp(a, b, __TEST_MAX_STRING)) op 0) {\
               char buffer[__TEST_BUFFER_SIZE + 2 * __TEST_MAX_STRING];\
               snprintf(buffer, sizeof(buffer),\

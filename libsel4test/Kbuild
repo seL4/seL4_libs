@@ -9,4 +9,4 @@
 #
 
 libs-$(CONFIG_LIB_SEL4_TEST) += libsel4test
-libsel4test: $(libc) libsel4 common
+libsel4test: $(libc) libsel4 common libutils

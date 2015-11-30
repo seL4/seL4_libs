@@ -10,7 +10,7 @@
 
 menuconfig LIB_SEL4_TEST
     bool "libsel4test"
-    depends on HAVE_LIBC
+    depends on HAVE_LIBC && HAVE_LIB_UTILS
     select HAVE_LIB_SEL4_TEST
     default y
     help

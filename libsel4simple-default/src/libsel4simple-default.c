@@ -87,25 +87,6 @@ seL4_CPtr simple_default_get_IOPort_cap(void *data, uint16_t start_port, uint16_
     return seL4_CapIOPort;
 }
 
-#define INIT_CAP_BASE_RANGE (seL4_CapInitThreadASIDPool)
-#if defined(CONFIG_ARCH_ARM)
-    #if defined(CONFIG_IOMMU)
-        #define INIT_CAP_TOP_RANGE (seL4_CapDomain - seL4_CapIOPort + INIT_CAP_BASE_RANGE)
-    #else
-        #define INIT_CAP_TOP_RANGE (seL4_CapDomain - seL4_CapIOSpace + INIT_CAP_BASE_RANGE)
-    #endif
-#elif defined(CONFIG_ARCH_IA32)
-    #if defined(CONFIG_IOMMU)
-        #define INIT_CAP_TOP_RANGE (seL4_CapDomain - seL4_CapInitThreadASIDPool + INIT_CAP_BASE_RANGE)
-    #else
-        #define INIT_CAP_TOP_RANGE (seL4_CapDomain - seL4_CapInitThreadASIDPool - 1 + INIT_CAP_BASE_RANGE)
-    #endif
-#endif
-#define SHARED_FRAME_RANGE ((bi->sharedFrames.end - bi->sharedFrames.start) + INIT_CAP_TOP_RANGE)
-#define USER_IMAGE_FRAMES_RANGE ((bi->userImageFrames.end - bi->userImageFrames.start) + SHARED_FRAME_RANGE)
-#define USER_IMAGE_PTS_RANGE ((bi->userImagePTs.end - bi->userImagePTs.start) + USER_IMAGE_FRAMES_RANGE)
-#define UNTYPED_RANGE ((bi->untyped.end - bi->untyped.start) + USER_IMAGE_PTS_RANGE)
-#define DEVICE_RANGE (device_caps + UNTYPED_RANGE)
 
 int simple_default_cap_count(void *data) {
     assert(data);
@@ -123,14 +104,18 @@ int simple_default_cap_count(void *data) {
            + (bi->userImageFrames.end - bi->userImageFrames.start)
            + (bi->userImagePTs.end - bi->userImagePTs.start)
            + (bi->untyped.end - bi->untyped.start)
-           + INIT_CAP_TOP_RANGE; //Include all the init caps
+           + seL4_NumInitialCaps; //Include all the init caps
 }
 
 seL4_CPtr simple_default_nth_cap(void *data, int n) {
     assert(data);
 
     seL4_BootInfo * bi = (seL4_BootInfo *) data;
-    
+    size_t shared_frame_range = bi->sharedFrames.end - bi->sharedFrames.start + seL4_NumInitialCaps;
+    size_t user_img_frame_range = bi->userImageFrames.end - bi->userImageFrames.start + shared_frame_range;
+    size_t user_img_pt_range = bi->userImagePTs.end - bi->userImagePTs.start + user_img_frame_range;
+    size_t untyped_range = bi->untyped.end - bi->untyped.start + user_img_pt_range;
+
     int i;
     int device_caps = 0;
     seL4_CPtr true_return = seL4_CapNull;
@@ -138,34 +123,38 @@ seL4_CPtr simple_default_nth_cap(void *data, int n) {
     for(i = 0; i < bi->numDeviceRegions; i++) {
         device_caps += bi->deviceRegions[i].frames.end - bi->deviceRegions[i].frames.start;
     }
-    if(n < INIT_CAP_BASE_RANGE) {
+ 
+    size_t device_range = device_caps + untyped_range;
+
+    if (n < seL4_CapInitThreadASIDPool) {
         true_return = (seL4_CPtr) n+1;
-    } else if(n < INIT_CAP_TOP_RANGE) {
+    } else if (n < seL4_NumInitialCaps) {
         true_return = (seL4_CPtr) n+1;
-        #if defined(CONFIG_ARCH_ARM)
+#if defined(CONFIG_ARCH_ARM)
+        true_return++;
+#endif
+#ifndef CONFIG_IOMMU
+        if(true_return >= seL4_CapIOSpace) {
             true_return++;
-        #endif
-        #ifndef CONFIG_IOMMU
-            if(true_return >= seL4_CapIOSpace) {
-                true_return++;
-            }
-        #endif
-    } else if(n < SHARED_FRAME_RANGE) {
-        return bi->sharedFrames.start + (n - INIT_CAP_TOP_RANGE);
-    } else if(n < USER_IMAGE_FRAMES_RANGE) {
-        return bi->userImageFrames.start + (n - SHARED_FRAME_RANGE);
-    } else if(n < USER_IMAGE_PTS_RANGE) {
-        return bi->userImagePTs.start + (n - USER_IMAGE_FRAMES_RANGE);
-    } else if(n < UNTYPED_RANGE) {
-        return bi->untyped.start + (n - USER_IMAGE_PTS_RANGE);
-    } else if(n < DEVICE_RANGE) {
+        }
+#endif
+    } else if (n < shared_frame_range) {
+        return bi->sharedFrames.start + (n - seL4_NumInitialCaps);
+    } else if (n < user_img_frame_range) {
+        return bi->userImageFrames.start + (n - shared_frame_range);
+    } else if (n < user_img_pt_range) {
+        return bi->userImagePTs.start + (n - user_img_frame_range);
+    } else if (n < untyped_range) {
+        return bi->untyped.start + (n - user_img_pt_range);
+    } else if (n < device_range) {
         i = 0;
         int current_count = 0;
-        while((bi->deviceRegions[i].frames.end - bi->deviceRegions[i].frames.start) + current_count < (n - UNTYPED_RANGE)) {
+        while((bi->deviceRegions[i].frames.end - bi->deviceRegions[i].frames.start) +
+               current_count < (n - untyped_range)) {
             current_count += bi->deviceRegions[i].frames.end - bi->deviceRegions[i].frames.start;
             i++;
         }
-        return bi->deviceRegions[i].frames.start + (n - UNTYPED_RANGE - current_count);
+        return bi->deviceRegions[i].frames.start + (n - untyped_range - current_count);
     }
 
     return true_return;

@@ -19,6 +19,7 @@
 
 #include <sel4test/prototype.h>
 #include <sel4test/test.h>
+#include <utils/util.h>
 
 #define MAX_NAME_SIZE 100
 #define STDOUT_CACHE 50000
@@ -155,6 +156,8 @@ void sel4_test_get_suite_results(int *out_num_tests, int *out_passed, int *out_f
 extern struct testcase __start__test_case[];
 extern struct testcase __stop__test_case[];
 
+/* Force the _test_case section to be created even if no tests are defined. */
+static USED SECTION("_test_case") struct {} dummy;
 
 testcase_t*
 sel4test_get_test(char *name) 

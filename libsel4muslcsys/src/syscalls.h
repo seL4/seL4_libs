@@ -22,6 +22,7 @@ long sys_rt_sigprocmask(va_list ap);
 long sys_gettid(va_list ap);
 long sys_getpid(va_list ap);
 long sys_tgkill(va_list ap);
+long sys_tkill(va_list ap);
 long sys_exit_group(va_list ap);
 long sys_open(va_list ap);
 long sys_close(va_list ap);

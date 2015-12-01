@@ -18,7 +18,7 @@
 
 #include <stdint.h>
 #include <sel4platsupport/timer.h>
-
+#include <platsupport/plat/gpt_constants.h>
 
 /**
  * Get an interface for an initialised gpt timer.

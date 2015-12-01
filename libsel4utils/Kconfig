@@ -36,8 +36,8 @@ if LIB_SEL4_UTILS
         will compile down to nothing.
 
     config SEL4UTILS_TIMESLICE
-    int "Timeslice for sel4utils threads in ticks"
-    default 10
+    int "Timeslice for sel4utils threads in microseconds"
+    default 2000
 
 endif
 

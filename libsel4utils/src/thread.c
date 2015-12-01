@@ -95,9 +95,8 @@ sel4utils_configure_thread_config(simple_t *simple, vka_t *vka, vspace_t *parent
 
         seL4_Time budget = config.custom_budget;
         if (!config.custom_sched_params) {
-            budget = CONFIG_SEL4UTILS_TIMESLICE;
+            budget = (seL4_Time) CONFIG_SEL4UTILS_TIMESLICE;
         }
-
         error = seL4_SchedControl_Configure(simple_get_sched_ctrl(simple), 
                                             res->sched_context.cptr, budget);
     

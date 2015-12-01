@@ -1170,11 +1170,6 @@ long sys_fremovexattr(va_list ap)
     assert(!"sys_fremovexattr not implemented");
     return 0;
 }
-long sys_tkill(va_list ap)
-{
-    assert(!"sys_tkill not implemented");
-    return 0;
-}
 long sys_sendfile64(va_list ap)
 {
     assert(!"sys_sendfile64 not implemented");
@@ -2638,11 +2633,6 @@ long sys_lremovexattr(va_list ap)
 long sys_fremovexattr(va_list ap)
 {
     assert(!"sys_fremovexattr not implemented");
-    return 0;
-}
-long sys_tkill(va_list ap)
-{
-    assert(!"sys_tkill not implemented");
     return 0;
 }
 long sys_sendfile64(va_list ap)

@@ -91,6 +91,7 @@ timer_common_init(vspace_t *vspace, simple_t *simple,
 
     /* map in the frame */
     timer_data->vaddr = vspace_map_pages(vspace, &frame_cap, NULL, seL4_AllRights, 1, seL4_PageBits, 0);
+    ZF_LOGV("Mapped timer at %p\n", timer_data->vaddr);
     if (timer_data->vaddr == NULL) {
         LOG_ERROR("Failed to map page at vaddr %p\n", timer_data->vaddr);
         goto error;
@@ -108,6 +109,7 @@ timer_common_init(vspace_t *vspace, simple_t *simple,
         goto error;
     }
 
+    ZF_LOGV("Timer initialised\n");
     /* success */
     return timer_data;
 

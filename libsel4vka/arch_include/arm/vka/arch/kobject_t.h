@@ -16,9 +16,18 @@
 #include <autoconf.h>
 #include <utils/util.h>
 
+enum _arm_kobject_type {
+    KOBJECT_FRAME = 0,
+    KOBJECT_PAGE_DIRECTORY,
+    KOBJECT_PAGE_TABLE,
+    KOBJECT_ARCH_NUM_TYPES,
+};
+
+typedef int kobject_t;
+
 /*
  * Get the size (in bits) of the untyped memory required to
- * create an object of the given size.
+ * create an object of the given size
  */
 static inline seL4_Word
 arch_kobject_get_size(kobject_t type, seL4_Word objectSize)

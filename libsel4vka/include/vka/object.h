@@ -201,18 +201,6 @@ LEAKY_SIZE_BITS(cnode_object)
 
 #include <vka/arch/object.h>
 
-/* The name of the object that defines a vspace root can vary, this provides
- * an abstraction for code that doesn't want to care about the type and
- * just wants whatever object fills this role */
-static inline int vka_alloc_vspace_root(vka_t *vka, vka_object_t *result)
-{
-#ifdef CONFIG_PAE_PAGING
-    return vka_alloc_pdpt(vka, result);
-#else
-    return vka_alloc_page_directory(vka, result);
-#endif
-}
-
 /*
  * Get the size (in bits) of the untyped memory required to create an object of
  * the given size.

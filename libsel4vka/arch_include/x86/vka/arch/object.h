@@ -14,6 +14,7 @@
 #include <vka/vka.h>
 #include <vka/kobject_t.h>
 #include <utils/util.h>
+#include <vka/sel4_arch/object.h>
 
 /*resource allocation interfaces for virtual machine extensions on x86*/
 #ifdef CONFIG_VTX
@@ -38,20 +39,12 @@ static inline int vka_alloc_ept_page_table (vka_t *vka, vka_object_t *result)
 }
 #endif /* CONFIG_VTX */
 
-#ifdef CONFIG_IOMMU
 static inline int vka_alloc_io_page_table(vka_t *vka, vka_object_t *result)
 {
     return vka_alloc_object(vka, seL4_X86_IOPageTableObject, seL4_IOPageTableBits, result);
 }
-#endif
 
-#ifdef CONFIG_PAE_PAGING
-static inline int vka_alloc_pdpt(vka_t *vka, vka_object_t *result)
-{
-    return vka_alloc_object(vka, seL4_IA32_PDPTObject, seL4_PDPTBits, result);
-}
-LEAKY(pdpt)
-#endif
+LEAKY(io_page_table)
 
 #ifdef CONFIG_VTX
 LEAKY(vcpu)
@@ -59,9 +52,6 @@ LEAKY(ept_page_directory_pointer_table)
 LEAKY(ept_page_directory)
 LEAKY(ept_page_table)
 #endif /* CONFIG_VTX */
-#ifdef CONFIG_IOMMU
-LEAKY(io_page_table)
-#endif
 
 static inline unsigned long
 vka_arch_get_object_size(seL4_Word objectType)
@@ -75,10 +65,6 @@ vka_arch_get_object_size(seL4_Word objectType)
         return seL4_PageTableBits;
     case seL4_X86_PageDirectoryObject:
         return seL4_PageDirBits;
-#ifdef CONFIG_PAE_PAGING
-    case seL4_IA32_PDPTObject:
-        return seL4_PDPTBits;
-#endif
 
 #ifdef CONFIG_VTX
     case seL4_X86_VCPUObject:
@@ -91,15 +77,11 @@ vka_arch_get_object_size(seL4_Word objectType)
         return seL4_X86_EPTPageTableBits;
 #endif
 
-#ifdef CONFIG_IOMMU
     case seL4_X86_IOPageTableObject:
         return seL4_IOPageTableBits;
-#endif
 
     default:
-        /* Unknown object type. */
-        ZF_LOGF("Unknown object type %ld", (long)objectType);
-        return -1;
+        return vka_x86_mode_get_object_size(objectType);
     }
 }
 

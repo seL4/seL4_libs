@@ -15,6 +15,14 @@
 #include <assert.h>
 #include <autoconf.h>
 #include <utils/util.h>
+#include <vka/sel4_arch/kobject_t.h>
+
+enum _x86_kobject_type {
+    KOBJECT_IO_PAGETABLE = KOBJECT_MODE_NUM_TYPES,
+    KOBJECT_PAGE_DIRECTORY,
+    KOBJECT_PAGE_TABLE,
+    KOBJECT_ARCH_NUM_TYPES,
+};
 
 /*
  * Get the size (in bits) of the untyped memory required to
@@ -24,28 +32,24 @@ static inline seL4_Word
 arch_kobject_get_size(kobject_t type, seL4_Word objectSize)
 {
     switch (type) {
+    case KOBJECT_IO_PAGETABLE:
+        return seL4_IOPageTableBits;
     case KOBJECT_FRAME:
         switch (objectSize) {
         case seL4_PageBits:
-        case 22:
+        case seL4_LargePageBits:
             return objectSize;
-        default:
-            return 0;
         }
-        return seL4_PageBits;
-#ifdef CONFIG_IOMMU
-    case KOBJECT_IO_PAGETABLE:
-        return seL4_IOPageTableBits;
-#endif /* CONFIG_IOMMU */
+        /* If frame size was unknown fall through to default case as it
+         * might be a mode specific frame size */
     default:
-        ZF_LOGE("Uknown object type");
-        return 0;
+        return x86_mode_kobject_get_size(type, objectSize);
     }
 }
 
 
 static inline seL4_Word
-arch_kobject_get_type(kobject_t type, seL4_Word objectSize)
+arch_kobject_get_type(int type, seL4_Word objectSize)
 {
     switch (type) {
     case KOBJECT_PAGE_DIRECTORY:
@@ -59,16 +63,12 @@ arch_kobject_get_type(kobject_t type, seL4_Word objectSize)
         case seL4_LargePageBits:
             return seL4_X86_LargePageObject;
         default:
-            return -1;
+            return x86_mode_kobject_get_type(type, objectSize);
         }
-#ifdef CONFIG_IOMMU
     case KOBJECT_IO_PAGETABLE:
         return seL4_X86_IOPageTableObject;
-#endif /* CONFIG_IOMMU */
     default:
-        /* Unknown object type. */
-        ZF_LOGE("Unknown object type");
-        return -1;
+        return x86_mode_kobject_get_type(type, objectSize);
     }
 }
 

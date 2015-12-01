@@ -26,6 +26,11 @@ static inline int vka_alloc_vcpu(vka_t *vka, vka_object_t *result)
 LEAKY(vcpu)
 #endif
 
+static inline int vka_alloc_vspace_root(vka_t *vka, vka_object_t *result)
+{
+    return vka_alloc_page_directory(vka, result);
+}
+
 /*
  * Get the size (in bits) of the untyped memory required to create an object of
  * the given size.

@@ -75,6 +75,6 @@ sel4platsupport_get_tsc_timer(seL4_timer_t *timeout_timer)
         return NULL;
     }
 
-    return finish_get_tsc(timer, tsc_get_timer(timeout_timer));
+    return finish_get_tsc(timer, tsc_get_timer(timeout_timer->timer));
 }
 

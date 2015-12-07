@@ -153,6 +153,10 @@ sel4utils_clean_up_thread(vka_t *vka, vspace_t *alloc, sel4utils_thread_t *threa
         vka_free_object(vka, &thread->tcb);
     }
 
+    if (thread->sched_context.cptr != 0) {
+        vka_free_object(vka, &thread->sched_context);
+    }
+
     if (thread->ipc_buffer_addr != 0) {
         vspace_free_ipc_buffer(alloc, (seL4_Word *) thread->ipc_buffer_addr);
     }

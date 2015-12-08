@@ -240,7 +240,7 @@ void __wrap_free(void *ptr)
         return;
     }
 
-    void *ret = __builtin_return_address(0);
+    void *ret = __builtin_extract_return_addr(__builtin_return_address(0));
 
     untrack(ptr, ret);
 
@@ -281,7 +281,7 @@ void *__wrap_realloc(void *ptr, size_t size)
         return __real_realloc(ptr, size);
     }
 
-    void *ret = __builtin_return_address(0);
+    void *ret = __builtin_extract_return_addr(__builtin_return_address(0));
 
     untrack(ptr, ret);
     ptr = unbox(ptr, ret);

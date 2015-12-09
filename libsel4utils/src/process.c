@@ -277,13 +277,10 @@ sel4utils_spawn_process_v(sel4utils_process_t *process, vka_t *vka, vspace_t *vs
                     sizeof(auxv[0]) * auxc + /* aux */
                     sizeof(dest_argv) + /* args */
                     sizeof(dest_envp); /* env */
-    /* now if the stack is going to end up unaligned */
-    if (((stack_top - to_push) % (2 * sizeof(seL4_Word))) != 0) {
-        /* align it */
-        stack_top -= sizeof(seL4_Word);
-        /* sanity check */
-        assert (((stack_top - to_push) % (2 * sizeof(seL4_Word))) == 0);
-    }
+    uintptr_t hypothetical_stack_top = stack_top - to_push;
+    uintptr_t rounded_stack_top = ROUND_DOWN(hypothetical_stack_top, sizeof(seL4_Word) * 2);
+    ptrdiff_t stack_rounding = hypothetical_stack_top - rounded_stack_top;
+    stack_top -= stack_rounding;
 
     /* construct initial stack frame */
     /* Null terminate aux */

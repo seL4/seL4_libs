@@ -39,10 +39,14 @@ static long (*syscall_table[])(va_list) = {
     [__NR_ioctl] = sys_ioctl,
     [__NR_prlimit64] = sys_prlimit64,
     [__NR_lseek] = sys_lseek,
+#ifdef __NR__llseek
     [__NR__llseek] = sys__llseek,
+#endif
     [__NR_access] = sys_access,
     [__NR_brk] = sys_brk,
+#ifdef __NR_mmap2
     [__NR_mmap2] = sys_mmap2,
+#endif
     [__NR_mremap] = sys_mremap,
 };
 

@@ -220,10 +220,10 @@ sel4utils_spawn_process(sel4utils_process_t *process, vka_t *vka, vspace_t *vspa
         }
         new_process_argv = stack_top;
     }
-    /* move the stack pointer down to a place we can write too,
-     * move it two words to retain double word alignment which is required
-     * by some architectures. */
-    stack_top = (uintptr_t) stack_top - sizeof(seL4_Word) * 2;
+    /* move the stack pointer down to a place we can write to.
+     * to be compatible with as many architectures as possible
+     * we need to ensure double word alignment */
+    stack_top = ROUND_DOWN(stack_top - sizeof(seL4_Word), sizeof(seL4_Word) * 2);
 
     seL4_UserContext context = {0};
     size_t context_size = sizeof(seL4_UserContext) / sizeof(seL4_Word);

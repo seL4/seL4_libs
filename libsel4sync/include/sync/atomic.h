@@ -16,10 +16,10 @@
  * @param x Pointer to integer to increment.
  * @param[out] oldval Previous value of the integer. May be written to even if
  *   the increment fails.
- * @param memorder The memory order to enforce
+ * @param success_memorder The memory order to enforce
  * @return 0 if the increment succeeds, non-zero if it would cause an overflow.
  */
-int sync_atomic_increment_safe(volatile int *x, int *oldval, int memorder);
+int sync_atomic_increment_safe(volatile int *x, int *oldval, int success_memorder);
 
 /** \brief Atomically decrement an integer, accounting for possible overflow.
  *

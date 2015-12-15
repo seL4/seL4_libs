@@ -15,6 +15,8 @@
 #include <sel4/sel4.h>
 #include <sel4utils/mapping.h>
 #include <vka/kobject_t.h>
+#include <sel4/messages.h>
+#include <allocman/sel4_arch/mapping.h>
 
 /* This allocator deliberately does not use the vspace library to prevent
  * circular dependencies between the vspace library and the allocator */
@@ -26,50 +28,48 @@ static int _add_page(allocman_t *alloc, seL4_CPtr pd, void *vaddr)
     int error;
     error = allocman_cspace_alloc(alloc, &frame_path);
     if (error) {
+        ZF_LOGV("Failed to allocate slot");
         return error;
     }
     frame_cookie = allocman_utspace_alloc(alloc, 12, seL4_ARCH_4KPage, &frame_path, &error);
     if (error) {
         allocman_cspace_free(alloc, &frame_path);
+        ZF_LOGV("Failed to allocate frame");
         return error;
     }
-    error = seL4_ARCH_Page_Map(frame_path.capPtr, pd, (seL4_Word) vaddr, seL4_AllRights,
-                seL4_ARCH_Default_VMAttributes);
-    if (error == seL4_FailedLookup) {
-        cspacepath_t pt_path;
-        seL4_Word pt_cookie;
-        error = allocman_cspace_alloc(alloc, &pt_path);
+    while ((error = seL4_ARCH_Page_Map(frame_path.capPtr, pd, (seL4_Word) vaddr, seL4_AllRights,
+                    seL4_ARCH_Default_VMAttributes)) == seL4_FailedLookup) {
+        cspacepath_t path;
+        error = allocman_cspace_alloc(alloc, &path);
         if (error) {
-            allocman_cspace_free(alloc, &frame_path);
-            allocman_utspace_free(alloc, frame_cookie, 12);
-            return error;
+            ZF_LOGV("Failed to allocate slot");
+            break;
         }
-        pt_cookie = allocman_utspace_alloc(alloc, seL4_PageTableBits, kobject_get_type(KOBJECT_PAGE_TABLE, 0), &pt_path, &error);
-        if (error) {
-            allocman_cspace_free(alloc, &frame_path);
-            allocman_utspace_free(alloc, frame_cookie, 12);
-            allocman_cspace_free(alloc, &pt_path);
-            return error;
+        seL4_Word failed_bits = seL4_MappingFailedLookupLevel();
+        /* handle the common case that occurs on all architectures of
+         * a page table being missing */
+        if (failed_bits == seL4_PageTableBits + seL4_PageBits) {
+            seL4_Word cookie;
+            cookie = allocman_utspace_alloc(alloc, seL4_PageTableBits, kobject_get_type(KOBJECT_PAGE_TABLE, 0), &path, &error);
+            if (error) {
+                allocman_cspace_free(alloc, &path);
+                ZF_LOGV("Failed to allocate page table");
+                break;
+            }
+            error = seL4_ARCH_PageTable_Map(path.capPtr, pd, (seL4_Word) vaddr,
+                        seL4_ARCH_Default_VMAttributes);
+            if (error != seL4_NoError) {
+                allocman_utspace_free(alloc, cookie, seL4_PageTableBits);
+            }
+        } else {
+            error = allocman_sel4_arch_create_object_at_level(alloc, failed_bits, &path, vaddr, pd);
         }
-        error = seL4_ARCH_PageTable_Map(pt_path.capPtr, pd, (seL4_Word) vaddr,
-                    seL4_ARCH_Default_VMAttributes);
         if (error != seL4_NoError) {
-            allocman_cspace_free(alloc, &frame_path);
-            allocman_utspace_free(alloc, frame_cookie, 12);
-            allocman_cspace_free(alloc, &pt_path);
-            allocman_utspace_free(alloc, pt_cookie, seL4_PageTableBits);
-            return error;
+            allocman_cspace_free(alloc, &path);
+            break;
         }
-        error = seL4_ARCH_Page_Map(frame_path.capPtr, pd, (seL4_Word) vaddr, seL4_AllRights,
-                    seL4_ARCH_Default_VMAttributes);
-        if (error != seL4_NoError) {
-            allocman_cspace_free(alloc, &frame_path);
-            allocman_utspace_free(alloc, frame_cookie, 12);
-            allocman_cspace_free(alloc, &pt_path);
-            allocman_utspace_free(alloc, pt_cookie, seL4_PageTableBits);
-            return error;
-        }
-    } else if (error != seL4_NoError) {
+    }
+    if (error != seL4_NoError) {
         allocman_cspace_free(alloc, &frame_path);
         allocman_utspace_free(alloc, frame_cookie, 12);
         return error;
@@ -85,12 +85,14 @@ static k_r_malloc_header_t *_morecore(size_t cookie, mspace_k_r_malloc_t *k_r_ma
     new_size = new_units * sizeof(k_r_malloc_header_t);
 
     if (virtual_pool->pool_ptr + new_size > virtual_pool->pool_limit) {
+        ZF_LOGV("morecore out of virtual pool");
         return NULL;
     }
     while (virtual_pool->pool_ptr + new_size > virtual_pool->pool_top) {
         int error;
         error = _add_page(virtual_pool->morecore_alloc, virtual_pool->pd, virtual_pool->pool_top);
         if (error) {
+            ZF_LOGV("morecore failed to add page");
             return NULL;
         }
         virtual_pool->pool_top += PAGE_SIZE_4K;

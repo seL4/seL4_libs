@@ -94,11 +94,13 @@ sel4utils_configure_thread_config(simple_t *simple, vka_t *vka, vspace_t *parent
         }
 
         seL4_Time budget = config.custom_budget;
+        seL4_Time period = config.custom_period;
         if (!config.custom_sched_params) {
             budget = (seL4_Time) CONFIG_SEL4UTILS_TIMESLICE;
+            period = budget;
         }
         error = seL4_SchedControl_Configure(simple_get_sched_ctrl(simple), 
-                                            res->sched_context.cptr, budget);
+                                            res->sched_context.cptr, budget, period);
     
         if (error) {
             ZF_LOGE("Failed to configure sched context");

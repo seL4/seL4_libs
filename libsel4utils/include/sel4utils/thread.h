@@ -55,7 +55,7 @@ typedef struct sel4utils_thread_config {
     bool custom_sched_params;
     /* the custom params */
     seL4_Time custom_budget;
-
+    seL4_Time custom_period;
 } sel4utils_thread_config_t;
 
 typedef struct sel4utils_checkpoint {

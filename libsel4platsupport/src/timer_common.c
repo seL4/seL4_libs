@@ -46,7 +46,10 @@ timer_common_handle_irq(seL4_timer_t *timer, uint32_t irq)
 {
     timer_common_data_t *data = (timer_common_data_t *) timer->data;
     timer_handle_irq(timer->timer, irq);
-    seL4_IRQHandler_Ack(data->irq);
+    int error = seL4_IRQHandler_Ack(data->irq);
+    if (error != seL4_NoError) {
+        ZF_LOGE("Failed to ack irq %d, error %d", irq, error);
+    }
 }
 
 void

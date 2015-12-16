@@ -48,7 +48,7 @@ static int _add_page(allocman_t *alloc, seL4_CPtr pd, void *vaddr)
         seL4_Word failed_bits = seL4_MappingFailedLookupLevel();
         /* handle the common case that occurs on all architectures of
          * a page table being missing */
-        if (failed_bits == seL4_PageTableBits + seL4_PageBits) {
+        if (failed_bits == SEL4_MAPPING_LOOKUP_NO_PT) {
             seL4_Word cookie;
             cookie = allocman_utspace_alloc(alloc, seL4_PageTableBits, kobject_get_type(KOBJECT_PAGE_TABLE, 0), &path, &error);
             if (error) {

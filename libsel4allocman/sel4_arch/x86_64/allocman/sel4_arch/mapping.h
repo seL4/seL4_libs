@@ -20,9 +20,9 @@ static inline seL4_Error allocman_sel4_arch_create_object_at_level(allocman_t *a
         long (*map)(seL4_CPtr, seL4_CPtr, seL4_Word, seL4_Word);
     };
     struct object objects[] = {
-        [SEL4_X64_LOOKUP_NO_PT] = {seL4_PageTableBits, seL4_X86_PageTableObject, seL4_X86_PageTable_Map},
-        [SEL4_X64_LOOKUP_NO_PD] = {seL4_PageDirBits, seL4_X86_PageDirectoryObject, seL4_X86_PageDirectory_Map},
-        [SEL4_X64_LOOKUP_NO_PDPT] = {seL4_PDPTBits, seL4_X86_PDPTObject, seL4_X86_PDPT_Map},
+        [SEL4_MAPPING_LOOKUP_NO_PT] = {seL4_PageTableBits, seL4_X86_PageTableObject, seL4_X86_PageTable_Map},
+        [SEL4_MAPPING_LOOKUP_NO_PD] = {seL4_PageDirBits, seL4_X86_PageDirectoryObject, seL4_X86_PageDirectory_Map},
+        [SEL4_MAPPING_LOOKUP_NO_PDPT] = {seL4_PDPTBits, seL4_X86_PDPTObject, seL4_X86_PDPT_Map},
     };
     if (bits >= ARRAY_SIZE(objects) || !objects[bits].map) {
         ZF_LOGF("Unknown lookup bits %d", (int)bits);

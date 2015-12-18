@@ -106,6 +106,15 @@ typedef struct {
 #ifndef CONFIG_KERNEL_STABLE
     seL4_CPtr asid_pool;
 #endif
+    /* should we create a scheduling context? */
+    bool create_sc;
+    /* if so do you want to populate it with custom params? */
+    bool custom_sched_params;
+    /* the custom params */
+    seL4_Time custom_budget;
+    seL4_Time custom_period;
+    /* if not, provide one (can be seL4_CapNull) */
+    seL4_CPtr sched_context;
 } sel4utils_process_config_t;
 
 /**
@@ -180,6 +189,8 @@ int sel4utils_spawn_process_v(sel4utils_process_t *process, vka_t *vka, vspace_t
  * won't come through correctly.
  *
  * @param process      uninitialised process struct.
+ * @param simple       a simple that can provide cap_sched_control if you want the thread to have a
+ *                     scheduling context
  * @param vka          allocator to use to allocate objects.
  * @param vspace vspace allocator for the current vspace.
  * @param priority     priority to configure the process to run as.

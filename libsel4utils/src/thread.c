@@ -93,20 +93,26 @@ sel4utils_configure_thread_config(simple_t *simple, vka_t *vka, vspace_t *parent
             return -1;
         }
 
-        seL4_Time budget = config.custom_budget;
-        seL4_Time period = config.custom_period;
-        if (!config.custom_sched_params) {
-            budget = (seL4_Time) CONFIG_SEL4UTILS_TIMESLICE;
-            period = budget;
+        seL4_Time budget = CONFIG_SEL4UTILS_TIMESLICE_US;
+        seL4_Time period = CONFIG_SEL4UTILS_TIMESLICE_US;
+        if (config.custom_sched_params) {
+            budget = config.custom_budget;
+            period = config.custom_period;
         }
+
         error = seL4_SchedControl_Configure(simple_get_sched_ctrl(simple), 
                                             res->sched_context.cptr, budget, period);
-    
         if (error) {
-            ZF_LOGE("Failed to configure sched context");
-            sel4utils_clean_up_thread(vka, alloc, res);
-            return -1;
+            ZF_LOGW("Failed to configure sched context");
+            vka_free_object(vka, &res->sched_context);
+            res->sched_context.cptr = seL4_CapNull;
+            res->own_sc = false;
+        } else {
+            res->own_sc = true;
         }
+    } else {
+        res->sched_context.cptr = config.sched_context;
+        res->own_sc = false;
     }
 
     seL4_CapData_t null_cap_data = {{0}};
@@ -155,7 +161,7 @@ sel4utils_clean_up_thread(vka_t *vka, vspace_t *alloc, sel4utils_thread_t *threa
         vka_free_object(vka, &thread->tcb);
     }
 
-    if (thread->sched_context.cptr != 0) {
+    if (thread->sched_context.cptr != 0 && thread->own_sc) {
         vka_free_object(vka, &thread->sched_context);
     }
 

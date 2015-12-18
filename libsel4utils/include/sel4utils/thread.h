@@ -36,6 +36,7 @@ typedef struct sel4utils_thread {
     seL4_CPtr ipc_buffer;
     seL4_Word ipc_buffer_addr;
     vka_object_t sched_context;
+    bool own_sc;
 } sel4utils_thread_t;
 
 typedef struct sel4utils_thread_config {
@@ -49,13 +50,17 @@ typedef struct sel4utils_thread_config {
     seL4_CNode cspace;
     /* data for cspace access */
     seL4_CapData_t cspace_root_data;
-    /* true if configure should allocate a sched context */
+    /* true if configure should allocate a sched context -
+     * if this is set then you must also provide a simple interface to the
+     * configure call that can provide the seL4_SchedControl cap. */
     bool create_sc;
     /* true if that sched context should use custom params */
     bool custom_sched_params;
     /* the custom params */
     seL4_Time custom_budget;
     seL4_Time custom_period;
+    /* otherwise provide a custom scheduling context cap */
+    seL4_CPtr sched_context;
 } sel4utils_thread_config_t;
 
 typedef struct sel4utils_checkpoint {
@@ -67,6 +72,8 @@ typedef struct sel4utils_checkpoint {
 /**
  * Configure a thread, allocating any resources required.
  *
+ * @param simple a simple that can provide the sched_ctrl cap. If create_sc is not set to true
+ *               in the thread config this is not required.
  * @param vka initialised vka to allocate objects with
  * @param parent vspace structure of the thread calling this function, used for temporary mappings
  * @param alloc initialised vspace structure to allocate virtual memory with

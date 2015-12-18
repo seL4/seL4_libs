@@ -35,7 +35,7 @@ if LIB_SEL4_UTILS
         Enables the functionality of a set of profiling tools. When disabled these profiling tools
         will compile down to nothing.
 
-    config SEL4UTILS_TIMESLICE
+    config SEL4UTILS_TIMESLICE_US
     int "Timeslice for sel4utils threads in microseconds"
     default 2000
 

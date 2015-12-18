@@ -348,6 +348,7 @@ sel4utils_configure_process(sel4utils_process_t *process, simple_t *simple, vka_
         .create_vspace = true,
         .create_fault_endpoint = true,
         .priority = priority,
+        .create_sc = simple != NULL,
 #ifndef CONFIG_KERNEL_STABLE
         .asid_pool = seL4_CapInitThreadASIDPool,
 #endif
@@ -535,8 +536,21 @@ int sel4utils_configure_process_custom(sel4utils_process_t *process, simple_t *s
 
     /* create the thread, do this *after* elf-loading so that we don't clobber
      * the required virtual memory*/
-    error = sel4utils_configure_thread(simple, vka, spawner_vspace, &process->vspace, SEL4UTILS_ENDPOINT_SLOT,
-                                       config.priority, process->cspace.cptr, cspace_root_data, &process->thread);
+    sel4utils_thread_config_t thread_config = {
+        .fault_endpoint = SEL4UTILS_ENDPOINT_SLOT,
+        .priority = config.priority,
+        .max_priority = config.priority,
+        .cspace = process->cspace.cptr,
+        .cspace_root_data = cspace_root_data,
+        .create_sc = config.create_sc,
+        .custom_sched_params = config.custom_sched_params,
+        .custom_budget = config.custom_budget,
+        .custom_period = config.custom_period,
+        .sched_context = config.sched_context
+    };
+
+    error = sel4utils_configure_thread_config(simple, vka, spawner_vspace, &process->vspace, thread_config,
+                                              &process->thread);
 
     if (error) {
         ZF_LOGE("ERROR: failed to configure thread for new process %d\n", error);

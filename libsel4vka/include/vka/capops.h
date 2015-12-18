@@ -38,9 +38,10 @@ vka_cnode_saveTCBCaller(const cspacepath_t* src, vka_object_t *tcb)
                /* _service */      src->root,
                /* index */         src->capPtr,
                /* depth */         src->capDepth,
-               tcb->cptr
+               /* tcb cap */       tcb->cptr
            );
 }
+
 inline static int
 vka_cnode_copy(const cspacepath_t* dest, const cspacepath_t* src, seL4_CapRights rights)
 {

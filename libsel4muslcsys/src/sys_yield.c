@@ -15,6 +15,6 @@
 
 long sys_sched_yield(va_list ap)
 {
-    seL4_Yield();
+    /* won't work */
     return 0;
 }

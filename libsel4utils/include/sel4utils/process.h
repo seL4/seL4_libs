@@ -59,10 +59,6 @@ enum sel4utils_cspace_layout {
      * The root cnode (with appropriate guard)
      */
     SEL4UTILS_CNODE_SLOT = 1,
-    /* The slot on the cspace that fault_endpoint is put if
-     * sel4utils_configure_process is used.
-     */
-    SEL4UTILS_ENDPOINT_SLOT = 2,
 };
 
 typedef struct {

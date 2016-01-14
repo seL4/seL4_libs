@@ -433,16 +433,6 @@ create_fault_endpoint(vka_t *vka, sel4utils_process_t *process)
         return error;
     }
 
-    cspacepath_t src;
-    vka_cspace_make_path(vka, process->fault_endpoint.cptr, &src);
-    error = sel4utils_copy_cap_to_process(process, src);
-
-    if (error == 0) {
-        ZF_LOGE("Failed to move allocated endpoint: %d\n", error);
-        return error;
-    }
-    assert(error == SEL4UTILS_ENDPOINT_SLOT);
-
     return 0;
 }
 
@@ -537,7 +527,7 @@ int sel4utils_configure_process_custom(sel4utils_process_t *process, simple_t *s
     /* create the thread, do this *after* elf-loading so that we don't clobber
      * the required virtual memory*/
     sel4utils_thread_config_t thread_config = {
-        .fault_endpoint = SEL4UTILS_ENDPOINT_SLOT,
+        .fault_endpoint = process->fault_endpoint.cptr,
         .priority = config.priority,
         .max_priority = config.priority,
         .cspace = process->cspace.cptr,

@@ -458,7 +458,7 @@ static int bootstrap_new_1level_cspace(bootstrap_info_t *bs, int size) {
         return 1;
     }
     /* now we can call set space */
-    error = seL4_TCB_SetSpace(bs->tcb.capPtr, 0, node.capPtr,
+    error = seL4_TCB_SetSpace(bs->tcb.capPtr, 0, 0, node.capPtr,
                 seL4_CapData_Guard_new(0, seL4_WordBits - size),
                 bs->pd.capPtr, seL4_NilData);
     if (error != seL4_NoError) {
@@ -583,7 +583,7 @@ static int bootstrap_new_2level_cspace(bootstrap_info_t *bs, size_t l1size, size
         return 1;
     }
     /* now we can call set space */
-    error = seL4_TCB_SetSpace(bs->tcb.capPtr, 0, l1node.capPtr,
+    error = seL4_TCB_SetSpace(bs->tcb.capPtr, 0, 0, l1node.capPtr,
                 seL4_CapData_Guard_new(0, seL4_WordBits - l1size - l2size),
                 bs->pd.capPtr, seL4_NilData);
     if (error != seL4_NoError) {

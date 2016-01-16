@@ -101,7 +101,7 @@ sel4utils_configure_thread_config(simple_t *simple, vka_t *vka, vspace_t *parent
         }
 
         error = seL4_SchedControl_Configure(simple_get_sched_ctrl(simple), 
-                                            res->sched_context.cptr, budget, period);
+                                            res->sched_context.cptr, budget, period, 0);
         if (error) {
             ZF_LOGW("Failed to configure sched context");
             vka_free_object(vka, &res->sched_context);
@@ -117,7 +117,8 @@ sel4utils_configure_thread_config(simple_t *simple, vka_t *vka, vspace_t *parent
 
     seL4_CapData_t null_cap_data = {{0}};
     seL4_Prio_t prio = seL4_Prio_new(config.priority, config.max_priority);
-    error = seL4_TCB_Configure(res->tcb.cptr, config.fault_endpoint, prio, res->sched_context.cptr, config.cspace, config.cspace_root_data, vspace_get_root(alloc), null_cap_data, res->ipc_buffer_addr, res->ipc_buffer);
+    error = seL4_TCB_Configure(res->tcb.cptr, config.fault_endpoint, config.temporal_fault_endpoint,
+                               prio, res->sched_context.cptr, config.cspace, config.cspace_root_data, vspace_get_root(alloc), null_cap_data, res->ipc_buffer_addr, res->ipc_buffer);
 
     if (error != seL4_NoError) {
         LOG_ERROR("TCB configure failed with seL4 error code %d", error);

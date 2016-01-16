@@ -42,6 +42,8 @@ typedef struct sel4utils_thread {
 typedef struct sel4utils_thread_config {
     /* fault_endpoint endpoint to set as the threads fault endpoint. Can be seL4_CapNull. */
     seL4_CPtr fault_endpoint;
+    /* temporal fault_endpoint endpoint to set as the threads temporal fault endpoint. Can be seL4_CapNull. */
+    seL4_CPtr temporal_fault_endpoint;
     /* seL4 priority for the thread to be scheduled with. */
     uint8_t priority;
     /* max priority for that the thread can create and set other threads to */

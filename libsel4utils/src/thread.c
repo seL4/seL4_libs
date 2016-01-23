@@ -50,7 +50,9 @@ int sel4utils_configure_thread(simple_t *simple, vka_t *vka, vspace_t *parent, v
     sel4utils_thread_config_t config = {
         .fault_endpoint = fault_endpoint,
         .priority = priority,
-        .max_priority = priority,
+        .mcp = priority,
+        .criticality = seL4_MinCrit,
+        .mcc = seL4_MinCrit,
         .cspace = cspace,
         .cspace_root_data = cspace_root_data,
         .create_sc = true,
@@ -116,7 +118,7 @@ sel4utils_configure_thread_config(simple_t *simple, vka_t *vka, vspace_t *parent
     }
 
     seL4_CapData_t null_cap_data = {{0}};
-    seL4_Prio_t prio = seL4_Prio_new(config.priority, config.max_priority);
+    seL4_Prio_t prio = seL4_Prio_new(config.priority, config.mcp, config.criticality, config.mcc);
     error = seL4_TCB_Configure(res->tcb.cptr, config.fault_endpoint, config.temporal_fault_endpoint,
                                prio, res->sched_context.cptr, config.cspace, config.cspace_root_data, vspace_get_root(alloc), null_cap_data, res->ipc_buffer_addr, res->ipc_buffer);
 

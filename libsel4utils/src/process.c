@@ -529,7 +529,7 @@ int sel4utils_configure_process_custom(sel4utils_process_t *process, simple_t *s
     sel4utils_thread_config_t thread_config = {
         .fault_endpoint = process->fault_endpoint.cptr,
         .priority = config.priority,
-        .max_priority = config.priority,
+        .mcp = config.priority,
         .cspace = process->cspace.cptr,
         .cspace_root_data = cspace_root_data,
         .create_sc = config.create_sc,

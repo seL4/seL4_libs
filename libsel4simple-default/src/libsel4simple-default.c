@@ -128,7 +128,7 @@ int simple_default_cap_count(void *data) {
     return (device_caps)
            + (bi->sharedFrames.end - bi->sharedFrames.start)
            + (bi->userImageFrames.end - bi->userImageFrames.start)
-           + (bi->userImagePTs.end - bi->userImagePTs.start)
+           + (bi->userImagePaging.end - bi->userImagePaging.start)
            + (bi->untyped.end - bi->untyped.start)
            + seL4_NumInitialCaps; //Include all the init caps
 }
@@ -139,17 +139,17 @@ seL4_CPtr simple_default_nth_cap(void *data, int n) {
     seL4_BootInfo * bi = (seL4_BootInfo *) data;
     size_t shared_frame_range = bi->sharedFrames.end - bi->sharedFrames.start + seL4_NumInitialCaps;
     size_t user_img_frame_range = bi->userImageFrames.end - bi->userImageFrames.start + shared_frame_range;
-    size_t user_img_pt_range = bi->userImagePTs.end - bi->userImagePTs.start + user_img_frame_range;
-    size_t untyped_range = bi->untyped.end - bi->untyped.start + user_img_pt_range;
+    size_t user_img_paging_range = bi->userImagePaging.end - bi->userImagePaging.start + user_img_frame_range;
+    size_t untyped_range = bi->untyped.end - bi->untyped.start + user_img_paging_range;
 
     int i;
     int device_caps = 0;
     seL4_CPtr true_return = seL4_CapNull;
-    
+
     for(i = 0; i < bi->numDeviceRegions; i++) {
         device_caps += bi->deviceRegions[i].frames.end - bi->deviceRegions[i].frames.start;
     }
- 
+
     size_t device_range = device_caps + untyped_range;
 
     if (n < seL4_CapInitThreadASIDPool) {
@@ -168,10 +168,10 @@ seL4_CPtr simple_default_nth_cap(void *data, int n) {
         return bi->sharedFrames.start + (n - seL4_NumInitialCaps);
     } else if (n < user_img_frame_range) {
         return bi->userImageFrames.start + (n - shared_frame_range);
-    } else if (n < user_img_pt_range) {
-        return bi->userImagePTs.start + (n - user_img_frame_range);
+    } else if (n < user_img_paging_range) {
+        return bi->userImagePaging.start + (n - user_img_frame_range);
     } else if (n < untyped_range) {
-        return bi->untyped.start + (n - user_img_pt_range);
+        return bi->untyped.start + (n - user_img_paging_range);
     } else if (n < device_range) {
         i = 0;
         int current_count = 0;
@@ -253,7 +253,7 @@ void simple_default_print(void *data) {
     printf("Shared frames     0x%08x 0x%08x\n", info->sharedFrames.start, info->sharedFrames.end);
     printf("User image frames 0x%08x 0x%08x\n", info->userImageFrames.start,
             info->userImageFrames.end);
-    printf("User image PTs    0x%08x 0x%08x\n", info->userImagePTs.start, info->userImagePTs.end);
+    printf("User image paging 0x%08x 0x%08x\n", info->userImagePaging.start, info->userImagePaging.end);
     printf("Untypeds          0x%08x 0x%08x\n", info->untyped.start, info->untyped.end);
 
     printf("\n--- Untyped Details ---\n");

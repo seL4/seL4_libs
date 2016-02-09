@@ -49,29 +49,21 @@ arch_kobject_get_type(kobject_t type, seL4_Word objectSize)
 {
     switch (type) {
     case KOBJECT_PAGE_DIRECTORY:
-        return seL4_IA32_PageDirectoryObject;
+        return seL4_X86_PageDirectoryObject;
     case KOBJECT_PAGE_TABLE:
-        return seL4_IA32_PageTableObject;
+        return seL4_X86_PageTableObject;
     case KOBJECT_FRAME:
         switch (objectSize) {
         case seL4_PageBits:
-            return seL4_IA32_4K;
-            /* Use an #ifdef here to support any old kernels that might
-             * not have seL4_LargePageBits defined. This should be able
-             * to be dropped eventually */
-#ifdef CONFIG_PAE_PAGING
+            return seL4_X86_4K;
         case seL4_LargePageBits:
-            return seL4_IA32_LargePage;
-#else
-        case 22:
-            return seL4_IA32_4M;
-#endif /* CONFIG_PAE_PAGING */
+            return seL4_X86_LargePageObject;
         default:
             return -1;
         }
 #ifdef CONFIG_IOMMU
     case KOBJECT_IO_PAGETABLE:
-        return seL4_IA32_IOPageTableObject;
+        return seL4_X86_IOPageTableObject;
 #endif /* CONFIG_IOMMU */
     default:
         /* Unknown object type. */

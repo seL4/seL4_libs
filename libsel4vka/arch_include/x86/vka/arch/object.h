@@ -19,29 +19,29 @@
 #ifdef CONFIG_VTX
 static inline int vka_alloc_vcpu (vka_t *vka, vka_object_t *result)
 {
-    return vka_alloc_object(vka, seL4_IA32_VCPUObject, seL4_IA32_VCPUBits, result);
+    return vka_alloc_object(vka, seL4_X86_VCPUObject, seL4_X86_VCPUBits, result);
 }
 
 static inline int vka_alloc_ept_page_directory_pointer_table (vka_t *vka, vka_object_t *result)
 {
-    return vka_alloc_object(vka, seL4_IA32_EPTPageDirectoryPointerTableObject, seL4_IA32_EPTPageDirectoryPointerTableBits, result);
+    return vka_alloc_object(vka, seL4_X86_EPTPageDirectoryPointerTableObject, seL4_X86_EPTPageDirectoryPointerTableBits, result);
 }
 
 static inline int vka_alloc_ept_page_directory (vka_t *vka, vka_object_t *result)
 {
-    return vka_alloc_object(vka, seL4_IA32_EPTPageDirectoryObject, seL4_IA32_EPTPageDirectoryBits, result);
+    return vka_alloc_object(vka, seL4_X86_EPTPageDirectoryObject, seL4_X86_EPTPageDirectoryBits, result);
 }
 
 static inline int vka_alloc_ept_page_table (vka_t *vka, vka_object_t *result)
 {
-    return vka_alloc_object(vka, seL4_IA32_EPTPageTableObject, seL4_IA32_EPTPageTableBits, result);
+    return vka_alloc_object(vka, seL4_X86_EPTPageTableObject, seL4_X86_EPTPageTableBits, result);
 }
 #endif /* CONFIG_VTX */
 
 #ifdef CONFIG_IOMMU
 static inline int vka_alloc_io_page_table(vka_t *vka, vka_object_t *result)
 {
-    return vka_alloc_object(vka, seL4_IA32_IOPageTableObject, seL4_IOPageTableBits, result);
+    return vka_alloc_object(vka, seL4_X86_IOPageTableObject, seL4_IOPageTableBits, result);
 }
 #endif
 
@@ -67,21 +67,13 @@ static inline unsigned long
 vka_arch_get_object_size(seL4_Word objectType)
 {
     switch (objectType) {
-    case seL4_IA32_4K:
+    case seL4_X86_4K:
         return seL4_PageBits;
-        /* Use an #ifdef here to support any old kernels that might
-         * not have seL4_LargePageBits defined. This should be able
-         * to be dropped eventually */
-#ifdef CONFIG_PAE_PAGING
-    case seL4_IA32_LargePage:
+    case seL4_X86_LargePageObject:
         return seL4_LargePageBits;
-#else
-    case seL4_IA32_4M:
-        return seL4_4MBits;
-#endif
-    case seL4_IA32_PageTableObject:
+    case seL4_X86_PageTableObject:
         return seL4_PageTableBits;
-    case seL4_IA32_PageDirectoryObject:
+    case seL4_X86_PageDirectoryObject:
         return seL4_PageDirBits;
 #ifdef CONFIG_PAE_PAGING
     case seL4_IA32_PDPTObject:
@@ -89,18 +81,18 @@ vka_arch_get_object_size(seL4_Word objectType)
 #endif
 
 #ifdef CONFIG_VTX
-    case seL4_IA32_VCPUObject:
-        return seL4_IA32_VCPUBits;
-    case seL4_IA32_EPTPageDirectoryPointerTableObject:
-        return seL4_IA32_EPTPageDirectoryPointerTableBits;
-    case seL4_IA32_EPTPageDirectoryObject:
-        return seL4_IA32_EPTPageDirectoryBits;
-    case seL4_IA32_EPTPageTableObject:
-        return seL4_IA32_EPTPageTableBits;
+    case seL4_X86_VCPUObject:
+        return seL4_X86_VCPUBits;
+    case seL4_X86_EPTPageDirectoryPointerTableObject:
+        return seL4_X86_EPTPageDirectoryPointerTableBits;
+    case seL4_X86_EPTPageDirectoryObject:
+        return seL4_X86_EPTPageDirectoryBits;
+    case seL4_X86_EPTPageTableObject:
+        return seL4_X86_EPTPageTableBits;
 #endif
 
 #ifdef CONFIG_IOMMU
-    case seL4_IA32_IOPageTableObject:
+    case seL4_X86_IOPageTableObject:
         return seL4_IOPageTableBits;
 #endif
 

@@ -32,13 +32,13 @@ debug_print_bootinfo(seL4_BootInfo *info)
     ZF_LOGI("Initial thread cnode size: %u", info->initThreadCNodeSizeBits);
     ZF_LOGI("List of untypeds");
     ZF_LOGI("------------------");
-    ZF_LOGI("Paddr    | Size   ");
+    ZF_LOGI("Paddr    | Size   | Device");
 
     int sizes[32] = {0};
     for (int i = 0; i < CONFIG_MAX_NUM_BOOTINFO_UNTYPED_CAPS && i < (info->untyped.end - info->untyped.start); i++) {
-        if (info->untypedPaddrList[i] != 0) {
-            sizes[info->untypedSizeBitsList[i]]++;
-            ZF_LOGI("0x%08x | %u", info->untypedPaddrList[i], info->untypedSizeBitsList[i]);
+        if (info->untypedList[i].paddr != 0) {
+            sizes[info->untypedList[i].sizeBits]++;
+            ZF_LOGI("0x%08x | %u | %u", info->untypedList[i].paddr, info->untypedList[i].sizeBits, info->untypedList[i].isDevice);
         }
     }
 
@@ -48,17 +48,6 @@ debug_print_bootinfo(seL4_BootInfo *info)
             printf("%d untypeds of size %d\n", sizes[i], i);
         }
     }
-
-    ZF_LOGI("DeviceRegions: %u\n", info->numDeviceRegions);
-    printf("List of deviceRegions\n");
-    printf("Paddr    | Size     | Slot Region\n");
-    for (int i = 0; i < info->numDeviceRegions; i++) {
-        printf("0x%08x | %08u | [%u <--> %u ]\n", info->deviceRegions[i].basePaddr,
-               info->deviceRegions[i].frameSizeBits,
-               info->deviceRegions[i].frames.start,
-               info->deviceRegions[i].frames.end);
-    }
-
 }
 
 #endif  /* CONFIG_USER_DEBUG_BUILD */

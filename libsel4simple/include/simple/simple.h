@@ -18,6 +18,7 @@
 #include <simple/arch/simple.h>
 #include <stdlib.h>
 #include <utils/util.h>
+#include <stdbool.h>
 #include <vka/cspacepath_t.h>
 
 
@@ -120,7 +121,6 @@ typedef uint8_t  (*simple_get_cnode_size_fn)(void *data);
 */
 
 typedef int (*simple_get_untyped_count_fn)(void *data);
-
 /**
  * Get the nth untyped cap that this library can address
  *
@@ -133,7 +133,7 @@ typedef int (*simple_get_untyped_count_fn)(void *data);
  * @param the physical address of the returned cap
 */
 
-typedef seL4_CPtr (*simple_get_nth_untyped_fn)(void *data, int n, uint32_t *size_bits, uint32_t *paddr);
+typedef seL4_CPtr (*simple_get_nth_untyped_fn)(void *data, int n, uint32_t *size_bits, uint32_t *paddr, bool *device);
 
 /**
  * Get the amount of user image caps available
@@ -384,7 +384,7 @@ simple_get_untyped_count(simple_t *simple)
 }
 
 static inline seL4_CPtr
-simple_get_nth_untyped(simple_t *simple, int n, uint32_t *size_bits, uint32_t *paddr)
+simple_get_nth_untyped(simple_t *simple, int n, uint32_t *size_bits, uint32_t *paddr, bool *device)
 {
     if (!simple) {
         ZF_LOGE("Simple is NULL");
@@ -395,7 +395,7 @@ simple_get_nth_untyped(simple_t *simple, int n, uint32_t *size_bits, uint32_t *p
         return seL4_CapNull;
     }
 
-    return simple->nth_untyped(simple->data, n, size_bits, paddr);
+    return simple->nth_untyped(simple->data, n, size_bits, paddr, device);
 }
 
 static inline int 

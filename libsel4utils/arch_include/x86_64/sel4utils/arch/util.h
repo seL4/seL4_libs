@@ -15,6 +15,7 @@
 #include <sel4/arch/exIPC.h>
 
 #define EXCEPT_IPC_SYS_MR_IP EXCEPT_IPC_RIP
+#define ARCH_SYSCALL_INSTRUCTION_SIZE 2
 
 static inline int
 sel4utils_is_read_fault(void)

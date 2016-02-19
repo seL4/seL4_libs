@@ -17,6 +17,7 @@
 #include <vka/kobject_t.h>
 #include <sel4/messages.h>
 #include <allocman/sel4_arch/mapping.h>
+#include <string.h>
 
 /* This allocator deliberately does not use the vspace library to prevent
  * circular dependencies between the vspace library and the allocator */
@@ -31,7 +32,7 @@ static int _add_page(allocman_t *alloc, seL4_CPtr pd, void *vaddr)
         ZF_LOGV("Failed to allocate slot");
         return error;
     }
-    frame_cookie = allocman_utspace_alloc(alloc, 12, seL4_ARCH_4KPage, &frame_path, &error);
+    frame_cookie = allocman_utspace_alloc(alloc, 12, seL4_ARCH_4KPage, &frame_path, true, &error);
     if (error) {
         allocman_cspace_free(alloc, &frame_path);
         ZF_LOGV("Failed to allocate frame");
@@ -50,7 +51,7 @@ static int _add_page(allocman_t *alloc, seL4_CPtr pd, void *vaddr)
          * a page table being missing */
         if (failed_bits == SEL4_MAPPING_LOOKUP_NO_PT) {
             seL4_Word cookie;
-            cookie = allocman_utspace_alloc(alloc, seL4_PageTableBits, kobject_get_type(KOBJECT_PAGE_TABLE, 0), &path, &error);
+            cookie = allocman_utspace_alloc(alloc, seL4_PageTableBits, kobject_get_type(KOBJECT_PAGE_TABLE, 0), &path, false, &error);
             if (error) {
                 allocman_cspace_free(alloc, &path);
                 ZF_LOGV("Failed to allocate page table");
@@ -74,6 +75,8 @@ static int _add_page(allocman_t *alloc, seL4_CPtr pd, void *vaddr)
         allocman_utspace_free(alloc, frame_cookie, 12);
         return error;
     }
+    /* zero the memory in case we were allocated from a device range */
+    memset(vaddr, 0, PAGE_SIZE_4K);
     return 0;
 }
 

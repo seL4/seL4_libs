@@ -27,7 +27,7 @@ typedef struct utspace_vka_cookie {
     seL4_Word type;
 } utspace_vka_cookie_t;
 
-static inline seL4_Word _utspace_vka_alloc(struct allocman *alloc, void *_vka, size_t size_bits, seL4_Word type, const cspacepath_t *slot, int *error)
+static inline seL4_Word _utspace_vka_alloc(struct allocman *alloc, void *_vka, size_t size_bits, seL4_Word type, const cspacepath_t *slot, uintptr_t paddr, bool canBeDevice, int *error)
 {
     vka_t *vka = (vka_t *)_vka;
     size_t sel4_size_bits = get_sel4_object_size(type, size_bits);
@@ -36,7 +36,12 @@ static inline seL4_Word _utspace_vka_alloc(struct allocman *alloc, void *_vka, s
         SET_ERROR(error, 1);
         return 0;
     }
-    int _error = vka_utspace_alloc(vka, slot, type, sel4_size_bits, &cookie->original_cookie);
+    int _error;
+    if (paddr == ALLOCMAN_NO_PADDR) {
+        _error = vka_utspace_alloc(vka, slot, type, sel4_size_bits, &cookie->original_cookie);
+    } else {
+        _error = vka_utspace_alloc_at(vka, slot, type, sel4_size_bits, paddr, &cookie->original_cookie);
+    }
     SET_ERROR(error, _error);
     if (!_error) {
         cookie->type = type;
@@ -61,7 +66,7 @@ static inline uintptr_t _utspace_vka_paddr(void *_vka, seL4_Word _cookie, size_t
     return vka_utspace_paddr(vka, cookie->original_cookie, cookie->type, get_sel4_object_size(cookie->type, size_bits));
 }
 
-static inline int _utspace_vka_add_uts(struct allocman *alloc, void *_trickle, size_t num, const cspacepath_t *uts, size_t *size_bits, uintptr_t *paddr)
+static inline int _utspace_vka_add_uts(struct allocman *alloc, void *_trickle, size_t num, const cspacepath_t *uts, size_t *size_bits, uintptr_t *paddr, int utType)
 {
     assert(!"VKA interface does not support adding untypeds after creation");
     return -1;

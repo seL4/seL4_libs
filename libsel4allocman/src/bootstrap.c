@@ -57,6 +57,7 @@ struct bootstrap_info {
     cspacepath_t *uts;
     size_t *ut_size_bits;
     uintptr_t *ut_paddr;
+    bool *ut_isDevice;
     simple_t *simple;
 };
 
@@ -134,10 +135,11 @@ static bootstrap_info_t *_create_info(allocman_t *alloc) {
     return bs;
 }
 
-static int _add_ut(bootstrap_info_t *bs, cspacepath_t slot, size_t size_bits, uintptr_t paddr) {
+static int _add_ut(bootstrap_info_t *bs, cspacepath_t slot, size_t size_bits, uintptr_t paddr, bool isDevice) {
     cspacepath_t *new_uts;
     size_t *new_size_bits;
     uintptr_t *new_paddr;
+    bool *new_isDevice;
     int error;
     new_uts = allocman_mspace_alloc(bs->alloc, sizeof(cspacepath_t) * (bs->num_uts + 1), &error);
     if (error) {
@@ -154,29 +156,38 @@ static int _add_ut(bootstrap_info_t *bs, cspacepath_t slot, size_t size_bits, ui
         LOG_ERROR("Failed to allocate space for untypeds (new_paddr)");
         return error;
     }
+    new_isDevice = allocman_mspace_alloc(bs->alloc, sizeof(bool) * (bs->num_uts + 1), &error);
+    if (error) {
+        ZF_LOGE("Failed to allocate space for untypeds (new_isDevice)");
+        return error;
+    }
     if (bs->uts) {
         memcpy(new_uts, bs->uts, sizeof(cspacepath_t) * bs->num_uts);
         memcpy(new_size_bits, bs->ut_size_bits, sizeof(size_t) * bs->num_uts);
         memcpy(new_paddr, bs->ut_paddr, sizeof(uintptr_t) * bs->num_uts);
+        memcpy(new_isDevice, bs->ut_isDevice, sizeof(bool) * bs->num_uts);
         allocman_mspace_free(bs->alloc, bs->uts, sizeof(cspacepath_t) * bs->num_uts);
         allocman_mspace_free(bs->alloc, bs->ut_size_bits, sizeof(size_t) * bs->num_uts);
         allocman_mspace_free(bs->alloc, bs->ut_paddr, sizeof(uintptr_t) * bs->num_uts);
+        allocman_mspace_free(bs->alloc, bs->ut_isDevice, sizeof(bool) * bs->num_uts);
     }
     new_uts[bs->num_uts] = slot;
     new_size_bits[bs->num_uts] = size_bits;
     new_paddr[bs->num_uts] = paddr;
+    new_isDevice[bs->num_uts] = isDevice;
     bs->uts = new_uts;
     bs->ut_size_bits = new_size_bits;
     bs->ut_paddr = new_paddr;
+    bs->ut_isDevice = new_isDevice;
     bs->num_uts++;
     return 0;
 }
 
-int bootstrap_add_untypeds(bootstrap_info_t *bs, size_t num, const cspacepath_t *uts, size_t *size_bits, uintptr_t *paddr) {
+int bootstrap_add_untypeds(bootstrap_info_t *bs, size_t num, const cspacepath_t *uts, size_t *size_bits, uintptr_t *paddr, bool isDevice) {
     size_t i;
     int error;
     for (i = 0; i < num; i++) {
-        error = _add_ut(bs, uts[i], size_bits[i], paddr ? paddr[i] : 0);
+        error = _add_ut(bs, uts[i], size_bits[i], paddr ? paddr[i] : 0, isDevice);
         if (error) {
             return error;
         }
@@ -193,10 +204,11 @@ int bootstrap_add_untypeds_from_bootinfo(bootstrap_info_t *bs, seL4_BootInfo *bi
         return 1;
     }
     for (i = bi->untyped.start; i < bi->untyped.end; i++) {
+        size_t index = i - bi->untyped.start;
         cspacepath_t slot = bs->boot_cspace.make_path(bs->boot_cspace.cspace, i);
-        size_t size_bits = bi->untypedSizeBitsList[i - bi->untyped.start];
-        uintptr_t paddr = bi->untypedPaddrList[i - bi->untyped.start];
-        error = _add_ut(bs, slot, size_bits, paddr);
+        size_t size_bits = bi->untypedList[index].sizeBits;
+        uintptr_t paddr = bi->untypedList[index].paddr;
+        error = _add_ut(bs, slot, size_bits, paddr, bi->untypedList[index].isDevice);
         if (error) {
             return error;
         }
@@ -217,9 +229,10 @@ static int bootstrap_add_untypeds_from_simple(bootstrap_info_t *bs, simple_t *si
     for (i = 0; i < simple_get_untyped_count(simple); i++) {
         size_t size_bits;
         uintptr_t paddr;
+        bool device;
         cspacepath_t slot = bs->boot_cspace.make_path(bs->boot_cspace.cspace,
-                                                      simple_get_nth_untyped(simple, i, &size_bits, &paddr));
-        error = _add_ut(bs, slot, size_bits, paddr);
+                                                      simple_get_nth_untyped(simple, i, &size_bits, &paddr, &device));
+        error = _add_ut(bs, slot, size_bits, paddr, device);
         if (error) {
             return error;
         }
@@ -233,6 +246,7 @@ static int _remove_ut(bootstrap_info_t *bs, size_t i) {
     cspacepath_t *new_uts = NULL;
     size_t *new_size_bits = NULL;
     uintptr_t *new_paddr = NULL;
+    bool *new_isDevice = NULL;
     int error;
     if (bs->num_uts == 0) {
         /* what? */
@@ -253,19 +267,27 @@ static int _remove_ut(bootstrap_info_t *bs, size_t i) {
         if (error) {
             return error;
         }
+        new_isDevice = allocman_mspace_alloc(bs->alloc, sizeof(bool) * (bs->num_uts - 1), &error);
+        if (error) {
+            return error;
+        }
         memcpy(&new_uts[0], &bs->uts[0], i * sizeof(cspacepath_t));
         memcpy(&new_uts[i], &bs->uts[i + 1], (bs->num_uts - i - 1) * sizeof(cspacepath_t));
         memcpy(&new_size_bits[0], &bs->ut_size_bits[0], i * sizeof(size_t));
         memcpy(&new_size_bits[i], &bs->ut_size_bits[i + 1], (bs->num_uts - i - 1) * sizeof(size_t));
         memcpy(&new_paddr[0], &bs->ut_paddr[0], i * sizeof(uintptr_t));
         memcpy(&new_paddr[i], &bs->ut_paddr[i + 1], (bs->num_uts - i - 1) * sizeof(uintptr_t));
+        memcpy(&new_isDevice[0], &bs->ut_isDevice[0], i * sizeof(bool));
+        memcpy(&new_isDevice[i], &bs->ut_isDevice[i + 1], (bs->num_uts - i - 1) * sizeof(bool));
     }
     allocman_mspace_free(bs->alloc, bs->uts, sizeof(cspacepath_t) * (bs->num_uts));
     allocman_mspace_free(bs->alloc, bs->ut_size_bits, sizeof(size_t) * (bs->num_uts));
     allocman_mspace_free(bs->alloc, bs->ut_paddr, sizeof(uintptr_t) * (bs->num_uts));
+    allocman_mspace_free(bs->alloc, bs->ut_isDevice, sizeof(bool) * (bs->num_uts));
     bs->uts = new_uts;
     bs->ut_size_bits = new_size_bits;
     bs->ut_paddr = new_paddr;
+    bs->ut_isDevice = new_isDevice;
     bs->num_uts--;
     return 0;
 }
@@ -299,6 +321,7 @@ static int bootstrap_allocate_cnode(bootstrap_info_t *bs, size_t size, cspacepat
     int best = -1;
     uintptr_t best_paddr;
     size_t best_size;
+    bool best_isDevice;
     int error;
     cspacepath_t best_path;
     if (!bs->have_boot_cspace) {
@@ -307,7 +330,7 @@ static int bootstrap_allocate_cnode(bootstrap_info_t *bs, size_t size, cspacepat
     ut_size = size + seL4_SlotBits;
     /* find the smallest untyped to allocate from */
     for (i = 0; i < bs->num_uts; i++) {
-        if (bs->ut_size_bits[i] >= ut_size && ( best == -1 || (bs->ut_size_bits[best] > bs->ut_size_bits[i]) ) ) {
+        if (bs->ut_size_bits[i] >= ut_size && ( best == -1 || (bs->ut_size_bits[best] > bs->ut_size_bits[i]) ) && !bs->ut_isDevice[i]) {
             best = i;
         }
     }
@@ -317,6 +340,9 @@ static int bootstrap_allocate_cnode(bootstrap_info_t *bs, size_t size, cspacepat
     best_size = bs->ut_size_bits[best];
     best_path = bs->uts[best];
     best_paddr = bs->ut_paddr[best];
+    best_isDevice = bs->ut_isDevice[best];
+    /* we searched for a non device one, but make sure here */
+    assert(!best_isDevice);
     error = _remove_ut(bs, best);
     if (error) {
         return error;
@@ -341,7 +367,7 @@ static int bootstrap_allocate_cnode(bootstrap_info_t *bs, size_t size, cspacepat
          * of book keeping physical addresses it is important to note that we are putting the
          * FIRST half back in */
         temp_size = best_size - 1;
-        error = bootstrap_add_untypeds(bs, 1, &slot1, &temp_size, &best_paddr);
+        error = bootstrap_add_untypeds(bs, 1, &slot1, &temp_size, &best_paddr, best_isDevice);
         if (error) {
             return error;
         }
@@ -621,6 +647,7 @@ static int bootstrap_move_untypeds(bootstrap_info_t *bs) {
 
 static int bootstrap_create_utspace(bootstrap_info_t *bs) {
     int error;
+    int i;
     UTMAN_TYPE *utspace;
     utspace = allocman_mspace_alloc(bs->alloc, sizeof(*utspace), &error);
     if (error) {
@@ -634,8 +661,8 @@ static int bootstrap_create_utspace(bootstrap_info_t *bs) {
         return error;
     }
 
-    if (bs->num_uts > 0) {
-        error = UTMAN_ADD_UTS(bs->alloc, utspace, bs->num_uts, bs->uts, bs->ut_size_bits, bs->ut_paddr);
+    for (i = 0; i < bs->num_uts; i++) {
+        error = UTMAN_ADD_UTS(bs->alloc, utspace, 1, &bs->uts[i], &bs->ut_size_bits[i], &bs->ut_paddr[i], bs->ut_isDevice[i] ? ALLOCMAN_UT_DEV : ALLOCMAN_UT_KERNEL);
         if (error) {
             LOG_ERROR("Failed to add untypeds to untyped allocator");
             return error;
@@ -912,8 +939,9 @@ int allocman_add_simple_untypeds(allocman_t *alloc, simple_t *simple) {
     for(i = 0; i < total_untyped; i++) {
         size_t size_bits;
         uintptr_t paddr;
-        cspacepath_t path = allocman_cspace_make_path(alloc, simple_get_nth_untyped(simple, i, &size_bits, &paddr));
-        error = allocman_utspace_add_uts(alloc, 1, &path, &size_bits, &paddr);
+        bool device;
+        cspacepath_t path = allocman_cspace_make_path(alloc, simple_get_nth_untyped(simple, i, &size_bits, &paddr, &device));
+        error = allocman_utspace_add_uts(alloc, 1, &path, &size_bits, &paddr, device ? ALLOCMAN_UT_DEV : ALLOCMAN_UT_KERNEL);
 
         if(error) {
             return error;
@@ -989,13 +1017,14 @@ static int allocman_add_bootinfo_untypeds(allocman_t *alloc, seL4_BootInfo *bi) 
     seL4_CPtr i;
     int error;
     for (i = bi->untyped.start; i < bi->untyped.end; i++) {
+        size_t index = i - bi->untyped.start;
         cspacepath_t slot;
         size_t size_bits;
         uintptr_t paddr;
         slot = allocman_cspace_make_path(alloc, i);
-        size_bits = bi->untypedSizeBitsList[i - bi->untyped.start];
-        paddr = bi->untypedPaddrList[i - bi->untyped.start];
-        error = allocman_utspace_add_uts(alloc, 1, &slot, &size_bits, &paddr);
+        size_bits = bi->untypedList[index].sizeBits;
+        paddr = bi->untypedList[index].paddr;
+        error = allocman_utspace_add_uts(alloc, 1, &slot, &size_bits, &paddr, bi->untypedList[index].isDevice ? ALLOCMAN_UT_DEV : ALLOCMAN_UT_KERNEL);
         if (error) {
             return error;
         }

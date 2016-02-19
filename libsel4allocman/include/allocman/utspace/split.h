@@ -27,8 +27,8 @@ struct utspace_split_node {
     struct utspace_split_node *parent;
     /* if we have a parent, then this is a pointer to our other sibling */
     struct utspace_split_node *sibling;
-    /* whether or not this node is currrently in the free lists or not */
-    int allocated;
+    /* which (if any) free list this is in */
+    struct utspace_split_node **head;
     /* physical address of the node */
     uintptr_t paddr;
     /* if this node is not allocated then these are the next/previous pointers in the free list */
@@ -36,13 +36,18 @@ struct utspace_split_node {
 };
 
 typedef struct utspace_split {
+    /* untypeds from the kernel window. Used for anything */
     struct utspace_split_node *heads[CONFIG_WORD_SIZE];
+    /* untypeds that are unknown device regions */
+    struct utspace_split_node *dev_heads[CONFIG_WORD_SIZE];
+    /* untypeds that are known to be RAM from the device region */
+    struct utspace_split_node *dev_mem_heads[CONFIG_WORD_SIZE];
 } utspace_split_t;
 
 void utspace_split_create(utspace_split_t *split);
-int _utspace_split_add_uts(struct allocman *alloc, void *_split, size_t num, const cspacepath_t *uts, size_t *size_bits, uintptr_t *paddr);
+int _utspace_split_add_uts(struct allocman *alloc, void *_split, size_t num, const cspacepath_t *uts, size_t *size_bits, uintptr_t *paddr, int utType);
 
-seL4_Word _utspace_split_alloc(struct allocman *alloc, void *_split, size_t size_bits, seL4_Word type, const cspacepath_t *slot, int *error);
+seL4_Word _utspace_split_alloc(struct allocman *alloc, void *_split, size_t size_bits, seL4_Word type, const cspacepath_t *slot, uintptr_t paddr, bool canBeDev, int *error);
 void _utspace_split_free(struct allocman *alloc, void *_split, seL4_Word cookie, size_t size_bits);
 
 uintptr_t _utspace_split_paddr(void *_split, seL4_Word cookie, size_t size_bits);

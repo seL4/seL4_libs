@@ -11,11 +11,22 @@
 #ifndef _ALLOCMAN_UTSPACE_H_
 #define _ALLOCMAN_UTSPACE_H_
 
+#include <stdbool.h>
 #include <sel4/types.h>
 #include <allocman/properties.h>
 #include <allocman/cspace/cspace.h>
 #include <vka/vka.h>
 #include <vka/object.h>
+
+#define ALLOCMAN_UT_KERNEL 0
+#define ALLOCMAN_UT_DEV 1
+#define ALLOCMAN_UT_DEV_MEM 2
+
+/* Use the value of 1 internally to indicate the absence of a physical address.
+ * This is chosen because the zero frame might actually be valid physical memory,
+ * and 1 is not a valid alignment of any seL4 object, so it should never be
+ * a valid physical address you can request */
+#define ALLOCMAN_NO_PADDR 1
 
 /* Convert from size of an untyped object in bytes, to the size as acceptable to a call to
  * untyped retype */
@@ -32,9 +43,9 @@ struct allocman;
 typedef struct utspace_interface {
     /* size_bits is always the size in memory of allocated object. This differs to the untypedretype
        semantics of size_bits when cnodes are involved */
-    seL4_Word (*alloc)(struct allocman *alloc, void *utspace, size_t size_bits, seL4_Word object_type, const cspacepath_t *slot, int *error);
+    seL4_Word (*alloc)(struct allocman *alloc, void *utspace, size_t size_bits, seL4_Word object_type, const cspacepath_t *slot, uintptr_t paddr, bool canBeDevice, int *error);
     void (*free)(struct allocman *alloc, void *utspace, seL4_Word cookie, size_t size_bits);
-    int (*add_uts)(struct allocman *alloc, void *utspace, size_t num, const cspacepath_t *uts, size_t *size_bits, uintptr_t *paddr);
+    int (*add_uts)(struct allocman *alloc, void *utspace, size_t num, const cspacepath_t *uts, size_t *size_bits, uintptr_t *paddr, int utType);
     uintptr_t (*paddr)(void *utspace, seL4_Word cookie, size_t size_bits);
     struct allocman_properties properties;
     void *utspace;

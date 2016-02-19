@@ -224,11 +224,35 @@ static inline cspacepath_t allocman_cspace_make_path(allocman_t *alloc, seL4_CPt
     This is different to seL4_Untyped_Retype for allocating seL4_CapTableObjects
  * @param type The seL4 type of the object being allocated
  * @param path A path to a location to put the allocated object (this must be a valid empty slot)
+ * @param paddr The desired physical address of the start of this object. A value of '1' indicates do not care
+ *              as '1' can never be a valid object base address
+ * @param canBeDev Whether this allocation can be satisified from a device region, provided that
+ *  region is known to be actual RAM. Objects from device regions are not initialized (i.e. not zeroed)
  * @param _error (Optional) set to 0 on success
  *
  * @return Returns a cookie that can be used in future to free this allocation
  */
-seL4_Word allocman_utspace_alloc(allocman_t *alloc, size_t size_bits, seL4_Word type, const cspacepath_t *path, int *_error);
+seL4_Word allocman_utspace_alloc_at(allocman_t *alloc, size_t size_bits, seL4_Word type, const cspacepath_t *path, uintptr_t paddr, bool canBeDev, int *_error);
+
+/**
+ * Allocates a portion of untyped memory, and retypes it into the desired object for you.
+ *
+ * @param alloc Allocman to allocate from
+ * @param size_bits The size in bits of the memory that will be required to store this object.
+    This is different to seL4_Untyped_Retype for allocating seL4_CapTableObjects
+ * @param type The seL4 type of the object being allocated
+ * @param path A path to a location to put the allocated object (this must be a valid empty slot)
+ * @param canBeDev Whether this allocation can be satisified from a device region, provided that
+ *  region is known to be actual RAM. Objects from device regions are not initialized (i.e. not zeroed)
+ * @param _error (Optional) set to 0 on success
+ *
+ * @return Returns a cookie that can be used in future to free this allocation
+ */
+static inline
+seL4_Word allocman_utspace_alloc(allocman_t *alloc, size_t size_bits, seL4_Word type, const cspacepath_t *path, bool canBeDev, int *_error)
+{
+    return allocman_utspace_alloc_at(alloc, size_bits, type, path, ALLOCMAN_NO_PADDR, canBeDev, _error);
+}
 
 /**
  * Returns a portion of untyped memory back to the allocator. It is assumed that this
@@ -357,13 +381,14 @@ int allocman_configure_max_freed_untyped_chunks(allocman_t *alloc, size_t num);
  * @param uts Path to each of the untyped to add. untyped is assumed to be at depth 32 from this threads cspace_root
  * @param size_bits Size, in bits, of each of the untypeds
  * @param paddr Optional parameter specifying the physical address of each of the untypeds
+ * @param utType The type of all untypeds being added. One of (ALLOCMAN_UT_KERNEL, ALLOCMAN_UT_DEV, ALLOCMAN_UT_DEV_RAM)
  *
  * @return returns 0 on success
  */
-static inline int allocman_utspace_add_uts(allocman_t *alloc, size_t num, const cspacepath_t *uts, size_t *size_bits, uintptr_t *paddr) {
+static inline int allocman_utspace_add_uts(allocman_t *alloc, size_t num, const cspacepath_t *uts, size_t *size_bits, uintptr_t *paddr, int utType) {
     int error;
     assert(alloc->have_utspace);
-    error = alloc->utspace.add_uts(alloc, alloc->utspace.utspace, num, uts, size_bits, paddr);
+    error = alloc->utspace.add_uts(alloc, alloc->utspace.utspace, num, uts, size_bits, paddr, utType);
     if (error) {
         return error;
     }

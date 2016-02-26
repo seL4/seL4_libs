@@ -12,6 +12,7 @@
 #define __SEL4BENCH_PRIVATE_H__
 
 #include <stdint.h>
+#include <utils/util.h>
 
 typedef uint64_t sel4bench_counter_t;
 #define SEL4BENCH_COUNTER_FORMAT "llu"
@@ -25,10 +26,6 @@ typedef uint64_t sel4bench_counter_t;
 
 //functions that will be passed to seL4_DebugRun() -- fast, but obviously not inlined
 #define KERNELFN __attribute__((noinline, flatten))
-
-#ifndef BIT
-#define BIT(x) (1ul << (x))
-#endif
 
 #define IN_TX_BIT BIT(0)
 #define IN_TXCP_BIT BIT(1)

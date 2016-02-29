@@ -20,7 +20,7 @@
 
 #include <simple-default/simple-default.h>
 
-#include <sel4utils/mapping.h>
+#include <vspace/page.h>
 
 void *simple_default_get_frame_info(void *data, void *paddr, int size_bits, seL4_CPtr *frame_cap, seL4_Word *offset) {
     assert(data && paddr && frame_cap);

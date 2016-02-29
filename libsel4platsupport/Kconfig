@@ -10,7 +10,7 @@
 
 menuconfig LIB_SEL4_PLAT_SUPPORT
     bool libsel4platsupport
-    depends on HAVE_LIB_SEL4_UTILS && HAVE_LIB_SEL4 && HAVE_LIBC && HAVE_LIB_SEL4_VSPACE && \
+    depends on HAVE_LIB_SEL4 && HAVE_LIBC && HAVE_LIB_SEL4_VSPACE && \
                HAVE_LIB_SEL4_SIMPLE && HAVE_LIB_PLATSUPPORT && HAVE_LIB_UTILS && HAVE_LIB_SEL4_VKA
     select HAVE_LIB_SEL4_PLAT_SUPPORT
     default y

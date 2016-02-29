@@ -10,7 +10,7 @@
 
 config LIB_SEL4_SIMPLE_STABLE
     bool "libsel4simple-stable"
-    depends on HAVE_LIB_SEL4 && HAVE_LIBC && HAVE_LIB_SEL4_SIMPLE && HAVE_LIB_SEL4_UTILS && HAVE_LIB_SEL4_VKA
+    depends on HAVE_LIB_SEL4 && HAVE_LIBC && HAVE_LIB_SEL4_SIMPLE && HAVE_LIB_SEL4_VKA && HAVE_LIB_SEL4_VSPACE
     select HAVE_SEL4_LIBS
     select HAVE_LIB_SEL4_SIMPLE_STABLE
     default y

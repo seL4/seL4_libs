@@ -12,7 +12,7 @@
 #define __PLAT_INTERNAL_H__
 
 #include <sel4/sel4.h>
-#include <sel4utils/util.h>
+#include <utils/util.h>
 #include <platsupport/io.h>
 
 /* Functions provided from platform layer to arch code. */

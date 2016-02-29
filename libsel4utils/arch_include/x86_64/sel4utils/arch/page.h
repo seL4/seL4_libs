@@ -10,14 +10,6 @@
 #ifndef _SEL4UTILS_ARCH_PAGE_H
 #define _SEL4UTILS_ARCH_PAGE_H
 
-#include <stdint.h>
-#include <util/attributes.h>
-#include <sel4/arch/types.h>
-
-/* ordered list of page sizes for this architecture */
-static const UNUSED size_t utils_page_sizes[] = {
-    seL4_PageBits,
-    seL4_LargePageBits,
-};
+#include <vspace/arch/page.h>
 
 #endif /* _SEL4UTILS_ARCH_PAGE_H */

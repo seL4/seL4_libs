@@ -11,25 +11,15 @@
 #ifndef _SEL4UTILS_PAGE_H_
 #define _SEL4UTILS_PAGE_H_
 
-#include <sel4utils/arch/page.h>
+#include <vspace/page.h>
 #include <utils/arith.h>
 
-#define UTILS_NUM_PAGE_SIZES ((int) ARRAY_SIZE(utils_page_sizes))
+#define UTILS_NUM_PAGE_SIZES SEL4_NUM_PAGE_SIZES
 
-static inline bool
+static inline DEPRECATED("Use sel4_valid_size_bits") bool
 utils_valid_size_bits(size_t size_bits)
 {
-    for (int i = 0; i < UTILS_NUM_PAGE_SIZES && size_bits >= utils_page_sizes[i]; i++) {
-        /* sanity check, utils_page_sizes should be ordered */
-        if (i > 0) {
-            assert(utils_page_sizes[i] < utils_page_sizes[i+1]);
-        }
-        if (size_bits == utils_page_sizes[i]) {
-            return true;
-        }
-    }
-
-    return false;
+    return sel4_valid_size_bits(size_bits);
 }
 
 #endif /* _SEL4UTILS_PAGE_H_ */

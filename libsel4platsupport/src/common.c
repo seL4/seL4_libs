@@ -22,7 +22,7 @@
 #include <sel4/invocation.h>
 #include <sel4platsupport/device.h>
 #include <sel4platsupport/platsupport.h>
-#include <sel4utils/mapping.h>
+#include <vspace/page.h>
 #include <simple/simple_helpers.h>
 #include <vspace/vspace.h>
 #include "plat_internal.h"

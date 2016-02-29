@@ -14,7 +14,7 @@
 #include <sel4platsupport/arch/io.h>
 #include <assert.h>
 #include <stdint.h>
-#include <sel4utils/util.h>
+#include <utils/util.h>
 
 static int
 sel4platsupport_io_port_in(void *cookie, uint32_t port, int io_size, uint32_t *result)

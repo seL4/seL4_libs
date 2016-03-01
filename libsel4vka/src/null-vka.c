@@ -30,13 +30,13 @@ static void cspace_free(void *data, seL4_CPtr slot)
 }
 
 static int utspace_alloc(void *data, const cspacepath_t *dest, seL4_Word type,
-                         seL4_Word size_bits, uint32_t *res)
+                         seL4_Word size_bits, seL4_Word *res)
 {
     return -1;
 }
 
 static void utspace_free(void *data, seL4_Word type, seL4_Word size_bits,
-                         uint32_t target)
+                         seL4_Word target)
 {
 }
 

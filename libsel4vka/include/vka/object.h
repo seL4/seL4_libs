@@ -38,7 +38,7 @@ static inline int
 vka_alloc_object(vka_t *vka, seL4_Word type, seL4_Word size_bits, vka_object_t *result)
 {
     seL4_CPtr cptr;
-    uint32_t ut;
+    seL4_Word ut;
     int error;
     cspacepath_t path;
 

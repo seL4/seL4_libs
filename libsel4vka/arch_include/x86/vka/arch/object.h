@@ -98,7 +98,7 @@ vka_arch_get_object_size(seL4_Word objectType)
 
     default:
         /* Unknown object type. */
-        ZF_LOGF("Unknown object type");
+        ZF_LOGF("Unknown object type %ld", (long)objectType);
         return -1;
     }
 }

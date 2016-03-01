@@ -58,7 +58,7 @@ typedef void (*vka_cspace_free_fn)(void *data, seL4_CPtr slot);
  * @param res pointer to a location to store the cookie representing this allocation
  * @return 0 on success
  */
-typedef int (*vka_utspace_alloc_fn)(void *data, const cspacepath_t *dest, seL4_Word type, seL4_Word size_bits, uint32_t *res);
+typedef int (*vka_utspace_alloc_fn)(void *data, const cspacepath_t *dest, seL4_Word type, seL4_Word size_bits, seL4_Word *res);
 
 /**
  * Free a portion of an allocated untyped. Is the responsibility of the caller to
@@ -69,7 +69,7 @@ typedef int (*vka_utspace_alloc_fn)(void *data, const cspacepath_t *dest, seL4_W
  * @param size_bits the size of the object that was allocated (as passed to Untyped_Retype)
  * @param target cookie to the allocation as given by the utspace alloc function
  */
-typedef void (*vka_utspace_free_fn)(void *data, seL4_Word type, seL4_Word size_bits, uint32_t target);
+typedef void (*vka_utspace_free_fn)(void *data, seL4_Word type, seL4_Word size_bits, seL4_Word target);
 
 /**
  * Request the physical address of an object.
@@ -80,7 +80,7 @@ typedef void (*vka_utspace_free_fn)(void *data, seL4_Word type, seL4_Word size_b
  * @param size_bits the size of the object that was allocated (as passed to Untyped_Retype)
  * @return paddr of object, or NULL on error
  */
-typedef uintptr_t (*vka_utspace_paddr_fn)(void *data, uint32_t target, seL4_Word type, seL4_Word size_bits);
+typedef uintptr_t (*vka_utspace_paddr_fn)(void *data, seL4_Word target, seL4_Word type, seL4_Word size_bits);
 
 /*
  * Generic Virtual Kernel Allocator (VKA) data structure.
@@ -179,7 +179,7 @@ vka_cspace_free_path(vka_t *vka, cspacepath_t path)
 }
 
 static inline int
-vka_utspace_alloc(vka_t *vka, const cspacepath_t *dest, seL4_Word type, seL4_Word size_bits, uint32_t *res)
+vka_utspace_alloc(vka_t *vka, const cspacepath_t *dest, seL4_Word type, seL4_Word size_bits, seL4_Word *res)
 {
     if (!vka) {
         ZF_LOGE("vka is NULL");
@@ -199,7 +199,7 @@ vka_utspace_alloc(vka_t *vka, const cspacepath_t *dest, seL4_Word type, seL4_Wor
 }
 
 static inline void
-vka_utspace_free(vka_t *vka, seL4_Word type, seL4_Word size_bits, uint32_t target)
+vka_utspace_free(vka_t *vka, seL4_Word type, seL4_Word size_bits, seL4_Word target)
 {
     if (!vka) {
         ZF_LOGE("vka is NULL");
@@ -218,7 +218,7 @@ vka_utspace_free(vka_t *vka, seL4_Word type, seL4_Word size_bits, uint32_t targe
 }
 
 static inline uintptr_t
-vka_utspace_paddr(vka_t *vka, uint32_t target, seL4_Word type, seL4_Word size_bits)
+vka_utspace_paddr(vka_t *vka, seL4_Word target, seL4_Word type, seL4_Word size_bits)
 {
 
     if (!vka) {

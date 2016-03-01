@@ -419,7 +419,7 @@ vspace_unmap_pages(vspace_t *vspace, void *vaddr, size_t num_pages, size_t size_
     }
 
     if (num_pages == 0) {
-        printf("Num pages : %d\n", num_pages);
+        printf("Num pages : %zu\n", num_pages);
         ZF_LOGW("Attempt to unmap 0 pages");
         return;
     }

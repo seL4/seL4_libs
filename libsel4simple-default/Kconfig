@@ -10,7 +10,7 @@
 
 config LIB_SEL4_SIMPLE_DEFAULT
     bool "libsel4simple-default"
-    depends on HAVE_LIB_SEL4 && HAVE_LIBC && HAVE_LIB_SEL4_SIMPLE && HAVE_LIB_SEL4_UTILS
+    depends on HAVE_LIB_SEL4 && HAVE_LIBC && HAVE_LIB_SEL4_SIMPLE && HAVE_LIB_SEL4_VSPACE
     select HAVE_SEL4_LIBS
     select HAVE_LIB_SEL4_SIMPLE_DEFAULT
     default y

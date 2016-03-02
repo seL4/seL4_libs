@@ -16,7 +16,7 @@
 #include <sel4platsupport/timer.h>
 #include <sel4platsupport/mach/epit.h>
 #include <platsupport/mach/epit.h>
-#include <sel4utils/util.h>
+#include <utils/util.h>
 #include "../../timer_common.h"
 
 

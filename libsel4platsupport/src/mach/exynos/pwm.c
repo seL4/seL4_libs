@@ -16,7 +16,7 @@
 #include <sel4platsupport/timer.h>
 #include <sel4platsupport/plat/timer.h>
 #include <platsupport/mach/pwm.h>
-#include <sel4utils/util.h>
+#include <utils/util.h>
 #include "../../timer_common.h"
 
 seL4_timer_t *

@@ -111,7 +111,7 @@ page_map_retry:
             assert(*num_objects > 1);
             error = vka_alloc_page_directory(vka, &objects[1]);
             if (!error) {
-                error = seL4_IA32_PageDirectory_Map(objects[1].cptr, pd, (seL4_Word) vaddr,
+                error = seL4_X86_PageDirectory_Map(objects[1].cptr, pd, (seL4_Word) vaddr,
                                                     seL4_ARCH_Default_VMAttributes);
             } else {
                 LOG_ERROR("Page directory allocation failed, %d", error);
@@ -163,7 +163,7 @@ sel4utils_map_iospace_page(vka_t *vka, seL4_CPtr iospace, seL4_CPtr frame, seL4_
     assert(size_bits == seL4_PageBits);
     /* Start mapping in pages and page tables until it bloody well works */
     num = 0;
-    while ( (error = seL4_IA32_Page_MapIO(frame, iospace, rights, vaddr)) == seL4_FailedLookup && error != seL4_NoError) {
+    while ( (error = seL4_X86_Page_MapIO(frame, iospace, rights, vaddr)) == seL4_FailedLookup && error != seL4_NoError) {
         /* Need a page table? */
         vka_object_t pt;
         error = vka_alloc_io_page_table(vka, &pt);
@@ -176,7 +176,7 @@ sel4utils_map_iospace_page(vka_t *vka, seL4_CPtr iospace, seL4_CPtr frame, seL4_
             assert(num_pts);
             *num_pts = num;
         }
-        error = seL4_IA32_IOPageTable_Map(pt.cptr, iospace, vaddr);
+        error = seL4_X86_IOPageTable_Map(pt.cptr, iospace, vaddr);
         if (error != seL4_NoError) {
             return error;
         }
@@ -207,11 +207,11 @@ sel4utils_map_ept_page(vka_t *vka, seL4_CPtr pd, seL4_CPtr frame, seL4_Word vadd
     seL4_ARCH_VMAttributes attr = 0;
 
     if (!cacheable) {
-        attr = seL4_IA32_CacheDisabled;
+        attr = seL4_X86_CacheDisabled;
     }
 
     /* Try map into EPT directory first. */
-    ret = seL4_IA32_Page_Map(frame, pd, vaddr, rights, attr);
+    ret = seL4_X86_Page_Map(frame, pd, vaddr, rights, attr);
     if (ret == seL4_NoError) {
         /* Successful! */
         return ret;
@@ -230,7 +230,7 @@ sel4utils_map_ept_page(vka_t *vka, seL4_CPtr pd, seL4_CPtr frame, seL4_Word vadd
         }
 
         /* Map in the page directory. */
-        ret = seL4_IA32_EPTPageDirectory_Map(pagedir->cptr, pd, vaddr, attr);
+        ret = seL4_X86_EPTPageDirectory_Map(pagedir->cptr, pd, vaddr, attr);
         if (ret != seL4_NoError) {
             LOG_ERROR("Failed to map EPT PD, error: %d", ret);
             return ret;
@@ -244,7 +244,7 @@ sel4utils_map_ept_page(vka_t *vka, seL4_CPtr pd, seL4_CPtr frame, seL4_Word vadd
         }
 
         /* Map in the EPT page table. */
-        ret = seL4_IA32_EPTPageTable_Map(pagetable->cptr, pd, vaddr, attr);
+        ret = seL4_X86_EPTPageTable_Map(pagetable->cptr, pd, vaddr, attr);
 
         /* Mapping could fail due to missing PD. In this case, we map the PD and try again. */
         if (ret == seL4_FailedLookup) {
@@ -256,14 +256,14 @@ sel4utils_map_ept_page(vka_t *vka, seL4_CPtr pd, seL4_CPtr frame, seL4_Word vadd
             }
 
             /* Map the EPT page directory in. */
-            ret = seL4_IA32_EPTPageDirectory_Map(pagedir->cptr, pd, vaddr, attr);
+            ret = seL4_X86_EPTPageDirectory_Map(pagedir->cptr, pd, vaddr, attr);
             if (ret != seL4_NoError) {
                 LOG_ERROR("Failed to map EPT PD, error: %d", ret);
                 return ret;
             }
 
             /* Try to map the page table again. */
-            ret = seL4_IA32_EPTPageTable_Map(pagetable->cptr, pd, vaddr, attr);
+            ret = seL4_X86_EPTPageTable_Map(pagetable->cptr, pd, vaddr, attr);
             if (ret != seL4_NoError) {
                 LOG_ERROR("Second attempt at mapping EPT PT failed, error: %d", ret);
                 return ret;
@@ -279,7 +279,7 @@ sel4utils_map_ept_page(vka_t *vka, seL4_CPtr pd, seL4_CPtr frame, seL4_Word vadd
     }
 
     /* Try to map the frame again. */
-    return seL4_IA32_Page_Map(frame, pd, vaddr, rights, attr);
+    return seL4_X86_Page_Map(frame, pd, vaddr, rights, attr);
 }
 
 

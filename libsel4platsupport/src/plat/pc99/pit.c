@@ -21,7 +21,7 @@
 
 #include <utils/util.h>
 
-#include <sel4utils/util.h>
+#include <utils/util.h>
 
 #include "../../timer_common.h"
 

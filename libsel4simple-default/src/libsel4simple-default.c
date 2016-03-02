@@ -20,7 +20,7 @@
 
 #include <simple-default/simple-default.h>
 
-#include <sel4utils/mapping.h>
+#include <vspace/page.h>
 
 void *simple_default_get_frame_info(void *data, void *paddr, int size_bits, seL4_CPtr *frame_cap, seL4_Word *offset) {
     assert(data && paddr && frame_cap);
@@ -76,7 +76,33 @@ void *simple_default_get_frame_mapping(void *data, void *paddr, int size_bits) {
 }
 
 seL4_Error simple_default_get_irq(void *data, int irq, seL4_CNode root, seL4_Word index, uint8_t depth) {
+#ifdef CONFIG_IRQ_IOAPIC
+    /* we need to try and guess how to map a requested IRQ to an IOAPIC
+     * pin, as well as what the edge and polarity detection mode is.
+     * Without any way to inspect the ACPI tables here we make the following
+     * assumptions
+     *   + There is an override for ISA-IRQ-0 -> GSI 2
+     *   + Only one IOAPIC and error on IRQs >= 24
+     *   + IRQs below 16 are ISA and edge detected polarity high
+     *   + IRQs 16 and above are PCI and level detected polarity low
+     */
+    int vector = irq;
+    if (irq == 0) {
+        irq = 2;
+    }
+    int level;
+    int low_polarity;
+    if (irq >= 16) {
+        level = 1;
+        low_polarity = 1;
+    } else {
+        level = 0;
+        low_polarity = 0;
+    }
+    return seL4_IRQControl_GetIOAPIC(seL4_CapIRQControl, root, index, depth, 0, irq, level, low_polarity, vector);
+#else
     return seL4_IRQControl_Get(seL4_CapIRQControl, irq, root, index, depth);
+#endif
 }
 
 seL4_Error simple_default_set_ASID(void *data, seL4_CPtr vspace) {
@@ -102,7 +128,7 @@ int simple_default_cap_count(void *data) {
     return (device_caps)
            + (bi->sharedFrames.end - bi->sharedFrames.start)
            + (bi->userImageFrames.end - bi->userImageFrames.start)
-           + (bi->userImagePTs.end - bi->userImagePTs.start)
+           + (bi->userImagePaging.end - bi->userImagePaging.start)
            + (bi->untyped.end - bi->untyped.start)
            + seL4_NumInitialCaps; //Include all the init caps
 }
@@ -113,17 +139,17 @@ seL4_CPtr simple_default_nth_cap(void *data, int n) {
     seL4_BootInfo * bi = (seL4_BootInfo *) data;
     size_t shared_frame_range = bi->sharedFrames.end - bi->sharedFrames.start + seL4_NumInitialCaps;
     size_t user_img_frame_range = bi->userImageFrames.end - bi->userImageFrames.start + shared_frame_range;
-    size_t user_img_pt_range = bi->userImagePTs.end - bi->userImagePTs.start + user_img_frame_range;
-    size_t untyped_range = bi->untyped.end - bi->untyped.start + user_img_pt_range;
+    size_t user_img_paging_range = bi->userImagePaging.end - bi->userImagePaging.start + user_img_frame_range;
+    size_t untyped_range = bi->untyped.end - bi->untyped.start + user_img_paging_range;
 
     int i;
     int device_caps = 0;
     seL4_CPtr true_return = seL4_CapNull;
-    
+
     for(i = 0; i < bi->numDeviceRegions; i++) {
         device_caps += bi->deviceRegions[i].frames.end - bi->deviceRegions[i].frames.start;
     }
- 
+
     size_t device_range = device_caps + untyped_range;
 
     if (n < seL4_CapInitThreadASIDPool) {
@@ -142,10 +168,10 @@ seL4_CPtr simple_default_nth_cap(void *data, int n) {
         return bi->sharedFrames.start + (n - seL4_NumInitialCaps);
     } else if (n < user_img_frame_range) {
         return bi->userImageFrames.start + (n - shared_frame_range);
-    } else if (n < user_img_pt_range) {
-        return bi->userImagePTs.start + (n - user_img_frame_range);
+    } else if (n < user_img_paging_range) {
+        return bi->userImagePaging.start + (n - user_img_frame_range);
     } else if (n < untyped_range) {
-        return bi->untyped.start + (n - user_img_pt_range);
+        return bi->untyped.start + (n - user_img_paging_range);
     } else if (n < device_range) {
         i = 0;
         int current_count = 0;
@@ -227,7 +253,7 @@ void simple_default_print(void *data) {
     printf("Shared frames     0x%08x 0x%08x\n", info->sharedFrames.start, info->sharedFrames.end);
     printf("User image frames 0x%08x 0x%08x\n", info->userImageFrames.start,
             info->userImageFrames.end);
-    printf("User image PTs    0x%08x 0x%08x\n", info->userImagePTs.start, info->userImagePTs.end);
+    printf("User image paging 0x%08x 0x%08x\n", info->userImagePaging.start, info->userImagePaging.end);
     printf("Untypeds          0x%08x 0x%08x\n", info->untyped.start, info->untyped.end);
 
     printf("\n--- Untyped Details ---\n");

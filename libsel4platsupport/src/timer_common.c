@@ -11,7 +11,7 @@
 #include "timer_common.h"
 #include <string.h>
 #include <stdlib.h>
-#include <sel4utils/util.h>
+#include <utils/util.h>
 #include <vka/capops.h>
 
 #ifdef CONFIG_LIB_SEL4_VSPACE

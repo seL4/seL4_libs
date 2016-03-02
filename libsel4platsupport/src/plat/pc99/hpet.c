@@ -12,7 +12,7 @@
 #include <sel4/sel4.h>
 #include <platsupport/plat/hpet.h>
 #include <sel4platsupport/plat/hpet.h>
-#include <sel4utils/util.h>
+#include <utils/util.h>
 #include <string.h>
 #include <utils/attribute.h>
 #include <vka/capops.h>

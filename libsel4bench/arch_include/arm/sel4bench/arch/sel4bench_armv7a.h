@@ -13,6 +13,7 @@
 
 #include "sel4bench_private_armv7a.h"
 #include <sel4/sel4.h>
+#include <utils/util.h>
 
 //expose common event definitions
 #define SEL4BENCH_EVENT_CACHE_L1I_MISS      SEL4BENCH_ARMV7A_EVENT_CACHE_L1I_MISS
@@ -25,9 +26,6 @@
 
 
 //utility macros
-#ifndef BIT
-#define BIT(x) (1ul << (x))
-#endif
 #define MODIFY_PMCR(op, val) sel4bench_private_write_pmcr(sel4bench_private_read_pmcr() op (val))
 
 /* Silence warnings about including the following functions when seL4_DebugRun

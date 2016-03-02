@@ -20,8 +20,8 @@
 
 #include <simple-stable/simple-stable.h>
 
-#include <sel4utils/mapping.h>
-#include <sel4utils/util.h>
+#include <vspace/page.h>
+#include <utils/util.h>
 #include <vka/kobject_t.h>
 
 void *simple_stable_get_frame_info(void *data, void *paddr, int size_bits, seL4_CPtr *frame_cap, seL4_Word *ut_offset) {

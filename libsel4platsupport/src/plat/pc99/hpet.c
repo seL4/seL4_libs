@@ -47,13 +47,13 @@ seL4_timer_t *sel4platsupport_get_hpet(vspace_t *vspace, simple_t *simple, acpi_
 
     hpet = (seL4_timer_t *)calloc(1, sizeof(seL4_timer_t));
     if (hpet == NULL) {
-        LOG_ERROR("Failed to allocate hpet_t sizeofze %u\n", sizeof(seL4_timer_t));
+        LOG_ERROR("Failed to allocate hpet_t sizeofze %zu\n", sizeof(seL4_timer_t));
         goto error;
     }
 
     /* check what range the IRQ is in */
 #ifdef CONFIG_IRQ_IOAPIC
-    if (irq_number < MSI_MIN) {
+    if ((int)irq_number < MSI_MIN) {
         if (CONFIG_MAX_NUM_IOAPIC != 1) {
             LOG_ERROR("HPET does not support > 1 IOAPIC as we do not work out which IOAPIC we are connected to");
             goto error;
@@ -63,7 +63,7 @@ seL4_timer_t *sel4platsupport_get_hpet(vspace_t *vspace, simple_t *simple, acpi_
         hpet->handle_irq = hpet_handle_irq_ioapic;
     }
 #endif
-    if (irq_number >= MSI_MIN || irq_number <= MSI_MAX) {
+    if ((int)irq_number >= MSI_MIN || irq_number <= MSI_MAX) {
         irq = irq_number + IRQ_OFFSET;
         ioapic = 0;
         hpet->handle_irq = hpet_handle_irq_msi;
@@ -86,7 +86,7 @@ seL4_timer_t *sel4platsupport_get_hpet(vspace_t *vspace, simple_t *simple, acpi_
         /* find the physical address of the timer */
         /* hpet is in page sized blocks, so just map one page in as we use the first timer only */
         acpi_hpet_t *hpet_header = (acpi_hpet_t *) header;
-        addr = (void*) (uint32_t) hpet_header->base_address.address;
+        addr = (void*) (uintptr_t)hpet_header->base_address.address;
     }
 
     hpet_data = timer_common_init(vspace, simple, vka, notification, irq_number, addr);

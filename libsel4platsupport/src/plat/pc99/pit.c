@@ -45,14 +45,14 @@ sel4platsupport_get_pit(vka_t *vka, simple_t *simple, ps_io_port_ops_t *ops, seL
 
     seL4_pit_data_t *data = malloc(sizeof(seL4_pit_data_t));
     if (data == NULL) {
-        LOG_ERROR("Failed to allocate object of size %u\n", sizeof(*data));
+        LOG_ERROR("Failed to allocate object of size %zu\n", sizeof(*data));
         goto error;
     }
 
 
     seL4_timer_t *pit = calloc(1, sizeof(*pit));
     if (pit == NULL) {
-        LOG_ERROR("Failed to malloc object of size %u\n", sizeof(*pit));
+        LOG_ERROR("Failed to malloc object of size %zu\n", sizeof(*pit));
         goto error;
     }
     pit->handle_irq = pit_handle_irq;

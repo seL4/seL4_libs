@@ -126,27 +126,27 @@ sel4platsupport_map_paddr_with_page_size(sel4platsupport_io_mapper_cookie_t *io_
     /* search at start of page */
     int page_size = BIT(page_size_bits);
     uintptr_t start = ROUND_DOWN(paddr, page_size);
-    uint32_t offset = paddr - start;
+    uintptr_t offset = paddr - start;
     size += offset;
 
     /* calculate number of pages */
-    uint32_t num_pages = ROUND_UP(size, page_size) >> page_size_bits;
+    unsigned int num_pages = ROUND_UP(size, page_size) >> page_size_bits;
     assert(num_pages << page_size_bits >= size);
 
     seL4_CPtr *frames = (seL4_CPtr*)malloc(sizeof(*frames) * num_pages);
     if (!frames) {
-        LOG_ERROR("Failed to allocate array of size %d", sizeof(*frames) * num_pages);
+        LOG_ERROR("Failed to allocate array of size %zu", sizeof(*frames) * num_pages);
         return NULL;
     }
     io_mapping_t *node = (io_mapping_t*)malloc(sizeof(*node));
     if (!node) {
-        LOG_ERROR("Failed to malloc of size %d", sizeof(*node));
+        LOG_ERROR("Failed to malloc of size %zu", sizeof(*node));
         free(frames);
         return NULL;
     }
 
     /* get all of the physical frame caps */
-    for (uint32_t i = 0; i < num_pages; i++) {
+    for (unsigned int i = 0; i < num_pages; i++) {
         /* allocate a cslot */
         int error = vka_cspace_alloc(vka, &frames[i]);
         if (error) {
@@ -188,7 +188,7 @@ sel4platsupport_map_paddr_with_page_size(sel4platsupport_io_mapper_cookie_t *io_
         return vaddr + offset;
     }
 error:
-    for (uint32_t i = 0; i < num_pages; i++) {
+    for (unsigned int i = 0; i < num_pages; i++) {
         cspacepath_t path;
         vka_cspace_make_path(vka, frames[i], &path);
         vka_cnode_delete(&path);
@@ -207,18 +207,18 @@ sel4platsupport_get_vaddr_with_page_size(sel4platsupport_io_mapper_cookie_t *io_
     /* search at start of page */
     int page_size = BIT(page_size_bits);
     uintptr_t start = ROUND_DOWN(paddr, page_size);
-    uint32_t offset = paddr - start;
+    uintptr_t offset = paddr - start;
     size += offset;
 
     /* calculate number of pages */
-    uint32_t num_pages = ROUND_UP(size, page_size) >> page_size_bits;
+    unsigned int num_pages = ROUND_UP(size, page_size) >> page_size_bits;
     assert(num_pages << page_size_bits >= size);
 
     void *first_vaddr = simple_get_frame_vaddr(simple, (void*)start, page_size_bits);
     if (!first_vaddr) {
         return NULL;
     }
-    for (uint32_t i = 1; i < num_pages; i++) {
+    for (unsigned int i = 1; i < num_pages; i++) {
         void *vaddr = simple_get_frame_vaddr(simple, (void*)start + (i * page_size), page_size_bits);
         if (first_vaddr + (i * page_size) != vaddr) {
             return NULL;
@@ -275,7 +275,7 @@ sel4platsupport_map_paddr(void *cookie, uintptr_t paddr, size_t size, int cached
     }
 
     /* shit out of luck */
-    LOG_ERROR("Failed to find a way to map address 0x%x", (uint32_t)paddr);
+    LOG_ERROR("Failed to find a way to map address %p", (void*)paddr);
     return NULL;
 }
 
@@ -289,7 +289,7 @@ sel4platsupport_unmap_vaddr(void *cookie, void *vaddr, size_t size)
 
     mapping = _find_node(io_mapper, vaddr);
     if (!mapping) {
-        LOG_ERROR("Tried to unmap vaddr 0x%x, which was never mapped in", (uint32_t)vaddr);
+        LOG_ERROR("Tried to unmap vaddr %p, which was never mapped in", vaddr);
         assert(mapping);
         return;
     }
@@ -321,7 +321,7 @@ sel4platsupport_new_io_mapper(simple_t simple, vspace_t vspace, vka_t vka, ps_io
     sel4platsupport_io_mapper_cookie_t *cookie;
     cookie = (sel4platsupport_io_mapper_cookie_t*)malloc(sizeof(*cookie));
     if (!cookie) {
-        LOG_ERROR("Failed to allocate %d bytes", sizeof(*cookie));
+        LOG_ERROR("Failed to allocate %zu bytes", sizeof(*cookie));
         return -1;
     }
     *cookie = (sel4platsupport_io_mapper_cookie_t) {

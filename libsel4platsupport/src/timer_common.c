@@ -71,7 +71,7 @@ timer_common_init(vspace_t *vspace, simple_t *simple,
 
     timer_data = malloc(sizeof(timer_common_data_t));
     if (timer_data == NULL) {
-        LOG_ERROR("Failed to allocate timer_common_data_t size: %u\n", sizeof(timer_common_data_t));
+        LOG_ERROR("Failed to allocate timer_common_data_t size: %zu\n", sizeof(timer_common_data_t));
         goto error;
     }
     memset(timer_data, 0, sizeof(timer_common_data_t));

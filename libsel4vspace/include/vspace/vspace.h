@@ -601,6 +601,10 @@ vspace_get_root(vspace_t *vspace)
         ZF_LOGE("vspace is NULL");
         return seL4_CapNull;
     }
+    if (vspace->get_root == NULL) {
+        ZF_LOGE("Not implemented");
+        return seL4_CapNull;
+    }
     return vspace->get_root(vspace);
 }
 

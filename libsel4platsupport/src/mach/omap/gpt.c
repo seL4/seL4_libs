@@ -20,20 +20,20 @@
 #include "../../timer_common.h"
 
 
-seL4_timer_t *
-sel4platsupport_get_gpt(vspace_t *vspace, simple_t *simple, vka_t *vka, seL4_CPtr notification,
-                        gpt_id_t gpt_id, uint32_t prescaler)
+static seL4_timer_t *
+sel4platsupport_get_gpt_impl(vspace_t *vspace, simple_t *simple, vka_t *vka, seL4_CPtr notification,
+                        gpt_id_t gpt_id, uint32_t prescaler, bool relative)
 {
 
     /* check the id */
     if (gpt_id > GPT_LAST) {
-        LOG_ERROR("Incorrect GPT id %d\n", gpt_id);
+        ZF_LOGE("Incorrect GPT id %d\n", gpt_id);
         return NULL;
     }
 
     seL4_timer_t *timer = calloc(1, sizeof(seL4_timer_t));
     if (timer == NULL) {
-        LOG_ERROR("Failed to allocate object of size %u\n", sizeof(seL4_timer_t));
+        ZF_LOGE("Failed to allocate object of size %u\n", sizeof(seL4_timer_t));
         goto error;
     }
 
@@ -52,11 +52,17 @@ sel4platsupport_get_gpt(vspace_t *vspace, simple_t *simple, vka_t *vka, seL4_CPt
 
     /* do hardware init */
     gpt_config_t config = {
-        .vaddr = data->vaddr,
-        .prescaler = prescaler
+        .id = gpt_id,
+        .prescaler = prescaler,
+        .vaddr = data->vaddr 
     };
 
-    timer->timer = gpt_get_timer(&config);
+    if (relative) {
+        timer->timer = rel_gpt_get_timer(&config);
+    } else {
+        timer->timer = abs_gpt_get_timer(&config);
+    }
+
     if (timer->timer == NULL) {
         goto error;
     }
@@ -72,6 +78,29 @@ error:
     return NULL;
 }
 
+DEPRECATED("use sel4platsupport_get_rel_gpt") seL4_timer_t *
+sel4platsupport_get_gpt(vspace_t *vspace, simple_t *simple, vka_t *vka, seL4_CPtr notification,
+                        gpt_id_t gpt_id, uint32_t prescaler)
+{
+    return sel4platsupport_get_rel_gpt(vspace, simple, vka, notification, gpt_id, 
+                                       prescaler);
+}
+
+seL4_timer_t *
+sel4platsupport_get_rel_gpt(vspace_t *vspace, simple_t *simple, vka_t *vka, seL4_CPtr notification,
+                        gpt_id_t gpt_id, uint32_t prescaler)
+{
+    return sel4platsupport_get_gpt_impl(vspace, simple, vka, notification, gpt_id, 
+                                       prescaler, true);
+}
+
+seL4_timer_t *
+sel4platsupport_get_abs_gpt(vspace_t *vspace, simple_t *simple, vka_t *vka, seL4_CPtr notification,
+                        gpt_id_t gpt_id, uint32_t prescaler)
+{
+    return sel4platsupport_get_gpt_impl(vspace, simple, vka, notification, gpt_id, 
+                                       prescaler, false);
+}
 void
 sel4platsupport_destroy_gpt(seL4_timer_t *timer, vka_t *vka, vspace_t *vspace)
 {

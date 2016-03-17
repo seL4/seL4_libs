@@ -34,6 +34,9 @@
 
 #include "sel4bench_private.h"
 
+#define CCNT_FORMAT "%llu"
+typedef uint64_t ccnt_t;
+
 /* The framework as it stands supports the following Intel processors:
  * - All P6-family processors (up to and including the Pentium M)
  * - All processors supporting IA-32 architectural performance

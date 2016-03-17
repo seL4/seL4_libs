@@ -19,5 +19,8 @@
 #include "sel4bench_arm1136.h"
 #endif //ARM1136JF_S
 
+typedef uint32_t ccnt_t;
+#define CCNT_FORMAT "%u"
+
 #endif /* __ARCH_SEL4BENCH_H__ */
 

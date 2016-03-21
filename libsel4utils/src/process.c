@@ -414,10 +414,17 @@ create_cspace(vka_t *vka, int size_bits, sel4utils_process_t *process,
     process->cspace_next_free = 1;
 
     /*  mint the cnode cap into the process cspace */
+    UNUSED seL4_CPtr slot;
     cspacepath_t src;
     vka_cspace_make_path(vka, process->cspace.cptr, &src);
-    error = sel4utils_mint_cap_to_process(process, src, seL4_AllRights, cspace_root_data);
-    assert(error == SEL4UTILS_CNODE_SLOT);
+    slot = sel4utils_mint_cap_to_process(process, src, seL4_AllRights, cspace_root_data);
+    assert(slot == SEL4UTILS_CNODE_SLOT);
+
+    /* copy fault endpoint cap into process cspace */
+    vka_cspace_make_path(vka, process->fault_endpoint.cptr, &src);
+    slot = sel4utils_copy_cap_to_process(process, src);
+    assert(slot == SEL4UTILS_ENDPOINT_SLOT);
+
 
     return 0;
 }
@@ -431,16 +438,6 @@ create_fault_endpoint(vka_t *vka, sel4utils_process_t *process)
         ZF_LOGE("Failed to allocate fault endpoint: %d\n", error);
         return error;
     }
-
-    cspacepath_t src;
-    vka_cspace_make_path(vka, process->fault_endpoint.cptr, &src);
-    error = sel4utils_copy_cap_to_process(process, src);
-
-    if (error == 0) {
-        ZF_LOGE("Failed to move allocated endpoint: %d\n", error);
-        return error;
-    }
-    assert(error == SEL4UTILS_ENDPOINT_SLOT);
 
     return 0;
 }
@@ -476,6 +473,14 @@ int sel4utils_configure_process_custom(sel4utils_process_t *process, vka_t *vka,
         process->pd = config.page_dir;
     }
 
+    if (config.create_fault_endpoint) {
+        if (create_fault_endpoint(vka, process) != 0) {
+            goto error;
+        }
+    } else {
+        process->fault_endpoint = config.fault_endpoint;
+    }
+
     process->own_cspace = config.create_cspace;
     if (config.create_cspace) {
         if (create_cspace(vka, config.one_level_cspace_size_bits, process, cspace_root_data) != 0) {
@@ -483,14 +488,6 @@ int sel4utils_configure_process_custom(sel4utils_process_t *process, vka_t *vka,
         }
     } else {
         process->cspace = config.cnode;
-    }
-
-    if (config.create_fault_endpoint) {
-        if (create_fault_endpoint(vka, process) != 0) {
-            goto error;
-        }
-    } else {
-        process->fault_endpoint = config.fault_endpoint;
     }
 
     /* create a vspace */

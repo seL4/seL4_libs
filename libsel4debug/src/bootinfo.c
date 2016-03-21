@@ -20,15 +20,15 @@ void
 debug_print_bootinfo(seL4_BootInfo *info)
 {
 
-    ZF_LOGI("Node %u of %u", info->nodeID, info->numNodes);
-    ZF_LOGI("IOPT levels:     %u", info->numIOPTLevels);
+    ZF_LOGI("Node %lu of %lu", (long)info->nodeID, (long)info->numNodes);
+    ZF_LOGI("IOPT levels:     %u", (int)info->numIOPTLevels);
     ZF_LOGI("IPC buffer:      %p", info->ipcBuffer);
-    ZF_LOGI("Empty slots:     [%u --> %u)", info->empty.start, info->empty.end);
-    ZF_LOGI("sharedFrames:    [%u --> %u)", info->sharedFrames.start, info->sharedFrames.end);
-    ZF_LOGI("userImageFrames: [%u --> %u)", info->userImageFrames.start, info->userImageFrames.end);
-    ZF_LOGI("userImagePaging: [%u --> %u)", info->userImagePaging.start, info->userImagePaging.end);
-    ZF_LOGI("untypeds:        [%u --> %u)", info->untyped.start, info->untyped.end);
-    ZF_LOGI("Initial thread domain: %u\n", info->initThreadDomain);
+    ZF_LOGI("Empty slots:     [%lu --> %lu)", (long)info->empty.start, (long)info->empty.end);
+    ZF_LOGI("sharedFrames:    [%lu --> %lu)", (long)info->sharedFrames.start, (long)info->sharedFrames.end);
+    ZF_LOGI("userImageFrames: [%lu --> %lu)", (long)info->userImageFrames.start, (long)info->userImageFrames.end);
+    ZF_LOGI("userImagePaging: [%lu --> %lu)", (long)info->userImagePaging.start, (long)info->userImagePaging.end);
+    ZF_LOGI("untypeds:        [%lu --> %lu)", (long)info->untyped.start, (long)info->untyped.end);
+    ZF_LOGI("Initial thread domain: %u\n", (int)info->initThreadDomain);
     ZF_LOGI("Initial thread cnode size: %u", info->initThreadCNodeSizeBits);
     ZF_LOGI("List of untypeds");
     ZF_LOGI("------------------");
@@ -38,7 +38,7 @@ debug_print_bootinfo(seL4_BootInfo *info)
     for (int i = 0; i < CONFIG_MAX_NUM_BOOTINFO_UNTYPED_CAPS && i < (info->untyped.end - info->untyped.start); i++) {
         if (info->untypedList[i].paddr != 0) {
             sizes[info->untypedList[i].sizeBits]++;
-            ZF_LOGI("0x%08x | %u | %u", info->untypedList[i].paddr, info->untypedList[i].sizeBits, info->untypedList[i].isDevice);
+            ZF_LOGI("%p | %zu | %d", (void*)info->untypedList[i].paddr, (size_t)info->untypedList[i].sizeBits, (int)info->untypedList[i].isDevice);
         }
     }
 

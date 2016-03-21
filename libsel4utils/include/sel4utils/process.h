@@ -55,6 +55,8 @@ typedef struct {
  * These are the caps
  */
 enum sel4utils_cspace_layout {
+    /* no cap in NULL */
+    SEL4UTILS_NULL_SLOT = 0,
     /*
      * The root cnode (with appropriate guard)
      */

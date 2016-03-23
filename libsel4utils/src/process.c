@@ -465,14 +465,11 @@ int sel4utils_configure_process_custom(sel4utils_process_t *process, vka_t *vka,
             goto error;
         }
 
-#ifndef CONFIG_KERNEL_STABLE
-#ifndef CONFIG_X86_64
         /* assign an asid pool */
-        if (assign_asid_pool(config.asid_pool, process->pd.cptr) != seL4_NoError) {
+        if (!(config_set(CONFIG_KERNEL_STABLE) || config_set(CONFIG_X86_64)) &&
+              assign_asid_pool(config.asid_pool, process->pd.cptr) != seL4_NoError) {
             goto error;
         }
-#endif /* end of !CONFIG_X86_64 */
-#endif /* CONFIG_KERNEL_STABLE */
     } else {
         process->pd = config.page_dir;
     }

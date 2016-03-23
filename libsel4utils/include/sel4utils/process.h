@@ -55,6 +55,8 @@ typedef struct {
  * These are the caps
  */
 enum sel4utils_cspace_layout {
+    /* no cap in NULL */
+    SEL4UTILS_NULL_SLOT = 0,
     /*
      * The root cnode (with appropriate guard)
      */
@@ -63,6 +65,11 @@ enum sel4utils_cspace_layout {
      * sel4utils_configure_process is used.
      */
     SEL4UTILS_ENDPOINT_SLOT = 2,
+ 
+    /* The page directory slot */
+    SEL4UTILS_PD_SLOT = 3,
+    /* First free slot in the cspace configured by sel4utils */
+    SEL4UTILS_FIRST_FREE = 4
 };
 
 typedef struct {

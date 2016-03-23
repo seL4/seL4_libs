@@ -35,6 +35,7 @@
  */
 char morecore_area[CONFIG_LIB_SEL4_MUSLC_SYS_MORECORE_BYTES];
 
+size_t morecore_size = CONFIG_LIB_SEL4_MUSLC_SYS_MORECORE_BYTES;
 /* Pointer to free space in the morecore area. */
 static uintptr_t morecore_base = (uintptr_t) &morecore_area;
 static uintptr_t morecore_top = (uintptr_t) &morecore_area[CONFIG_LIB_SEL4_MUSLC_SYS_MORECORE_BYTES];

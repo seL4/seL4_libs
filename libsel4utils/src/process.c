@@ -86,7 +86,6 @@ allocate_next_slot(sel4utils_process_t *process)
     process->cspace_next_free++;
 }
 
-
 void
 sel4utils_create_word_args(char strings[][WORD_STRING_SIZE], char *argv[], int argc, ...)
 {
@@ -455,9 +454,9 @@ create_fault_endpoint(vka_t *vka, sel4utils_process_t *process)
     return 0;
 }
 
-
-int sel4utils_configure_process_custom(sel4utils_process_t *process, vka_t *vka,
-                                       vspace_t *spawner_vspace, sel4utils_process_config_t config)
+int 
+sel4utils_configure_process_custom(sel4utils_process_t *process, vka_t *vka,
+                                   vspace_t *spawner_vspace, sel4utils_process_config_t config)
 {
     int error;
     sel4utils_alloc_data_t * data = NULL;

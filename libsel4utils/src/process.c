@@ -375,30 +375,33 @@ create_reservations(vspace_t *vspace, int num, sel4utils_elf_region_t regions[])
     return 0;
 }
 
-#ifndef CONFIG_KERNEL_STABLE
-static int
-assign_asid_pool(seL4_CPtr asid_pool, seL4_CPtr pd)
+static seL4_CPtr 
+get_asid_pool(seL4_CPtr asid_pool) 
 {
-
-    int error;
-
     if (asid_pool == 0) {
         ZF_LOGW("This method will fail if run in a thread that is not in the root server cspace\n");
         asid_pool = seL4_CapInitThreadASIDPool;
     }
 
-    error = seL4_ARCH_ASIDPool_Assign(asid_pool, pd);
+    return asid_pool;
+}
+
+static seL4_CPtr
+assign_asid_pool(seL4_CPtr asid_pool, seL4_CPtr pd)
+{
+
+    int error;
+    error = seL4_ARCH_ASIDPool_Assign(get_asid_pool(asid_pool), pd);
     if (error) {
         ZF_LOGE("Failed to assign asid pool\n");
     }
 
     return error;
 }
-#endif
 
 static int
 create_cspace(vka_t *vka, int size_bits, sel4utils_process_t *process,
-              seL4_CapData_t cspace_root_data)
+              seL4_CapData_t cspace_root_data, seL4_CPtr asid_pool)
 {
     int error;
 
@@ -429,6 +432,12 @@ create_cspace(vka_t *vka, int size_bits, sel4utils_process_t *process,
     vka_cspace_make_path(vka, process->pd.cptr, &src);
     slot = sel4utils_copy_cap_to_process(process, src);
     assert(slot == SEL4UTILS_PD_SLOT);
+
+    if (!(config_set(CONFIG_KERNEL_STABLE) || config_set(CONFIG_X86_64))) {
+        vka_cspace_make_path(vka, get_asid_pool(asid_pool), &src);
+        slot = sel4utils_copy_cap_to_process(process, src);
+        assert(slot == SEL4UTILS_ASID_POOL_SLOT);
+    }
 
     return 0;
 }
@@ -484,7 +493,8 @@ int sel4utils_configure_process_custom(sel4utils_process_t *process, vka_t *vka,
 
     process->own_cspace = config.create_cspace;
     if (config.create_cspace) {
-        if (create_cspace(vka, config.one_level_cspace_size_bits, process, cspace_root_data) != 0) {
+        if (create_cspace(vka, config.one_level_cspace_size_bits, process, cspace_root_data, 
+                          config.asid_pool) != 0) {
             goto error;
         }
     } else {

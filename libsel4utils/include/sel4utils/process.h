@@ -65,11 +65,16 @@ enum sel4utils_cspace_layout {
      * sel4utils_configure_process is used.
      */
     SEL4UTILS_ENDPOINT_SLOT = 2,
- 
+    
     /* The page directory slot */
     SEL4UTILS_PD_SLOT = 3,
+ 
+    /* the slot for the asid pool that this thread is in and can create threads
+     * in. 0 if this kernel does not support asid pools */
+    SEL4UTILS_ASID_POOL_SLOT = 4,
+
     /* First free slot in the cspace configured by sel4utils */
-    SEL4UTILS_FIRST_FREE = 4
+    SEL4UTILS_FIRST_FREE = 5
 };
 
 typedef struct {

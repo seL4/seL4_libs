@@ -26,15 +26,15 @@
 #include <sel4utils/mapping.h>
 #include "helpers.h"
 
-static int recurse = 0;
+static bool recurse = false;
 
 void
 sel4utils_allocated_object(void *cookie, vka_object_t object)
 {
-    if (recurse == 1) {
-        assert(!"VSPACE RECURSION ON MALLOC, YOU ARE DEAD\n");
+    if (recurse) {
+        ZF_LOGF("VSPACE RECURSION ON MALLOC, YOU ARE DEAD\n");
     }
-    recurse = 1;
+    recurse = true;
 
     sel4utils_process_t *process = (sel4utils_process_t *) cookie;
 
@@ -45,7 +45,7 @@ sel4utils_allocated_object(void *cookie, vka_object_t object)
     node->next = process->allocated_object_list_head;
     process->allocated_object_list_head = node;
 
-    recurse = 0;
+    recurse = false;
 }
 
 static void

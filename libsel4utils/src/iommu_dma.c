@@ -85,7 +85,7 @@ static void* dma_alloc(void *cookie, size_t size, int align, int cached, ps_mem_
             /* work out the size of this page */
             for (int i = 0; i < dma->num_iospaces; i++) {
                 /* see if its already mapped */
-                uint32_t *cookie = (uint32_t*)vspace_get_cookie(dma->iospaces + i, (void*)addr);
+                uintptr_t *cookie = (uintptr_t*)vspace_get_cookie(dma->iospaces + i, (void*)addr);
                 if (cookie) {
                     /* increment the counter */
                     (*cookie)++;
@@ -120,7 +120,7 @@ static void* dma_alloc(void *cookie, size_t size, int align, int cached, ps_mem_
                     }
                     cookie = malloc(sizeof(*cookie));
                     if (!cookie) {
-                        ZF_LOGE("Failed to malloc %d bytes", sizeof(*cookie));
+                        ZF_LOGE("Failed to malloc %zu bytes", sizeof(*cookie));
                         vspace_free_reservation(dma->iospaces + i, res);
                         vka_cnode_delete(&copy_path);
                         vka_cspace_free(&dma->vka, copy_path.capPtr);
@@ -129,7 +129,7 @@ static void* dma_alloc(void *cookie, size_t size, int align, int cached, ps_mem_
                         return NULL;
                     }
                     *cookie = 1;
-                    error = vspace_map_pages_at_vaddr(dma->iospaces + i, &copy_path.capPtr, (uint32_t*)&cookie, (void*)addr, 1, seL4_PageBits, res);
+                    error = vspace_map_pages_at_vaddr(dma->iospaces + i, &copy_path.capPtr, (uintptr_t*)&cookie, (void*)addr, 1, seL4_PageBits, res);
                     if (error) {
                         ZF_LOGE("Failed to map frame into iospace");
                         free(cookie);

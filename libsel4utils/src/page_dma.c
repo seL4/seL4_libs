@@ -90,7 +90,7 @@ static void* dma_alloc(void *cookie, size_t size, int align, int cached, ps_mem_
     vka_object_t ut;
     error = vka_alloc_untyped(&dma->vka, size_bits, &ut);
     if (error) {
-        ZF_LOGE("Failed to allocate untyped of size %d", size_bits);
+        ZF_LOGE("Failed to allocate untyped of size %zu", size_bits);
         return NULL;
     }
     /* Get the physical address */
@@ -136,7 +136,7 @@ static void* dma_alloc(void *cookie, size_t size, int align, int cached, ps_mem_
     alloc->paddr = paddr;
     /* Map in all the pages */
     for (unsigned i = 0; i < num_frames; i++) {
-        error = vspace_map_pages_at_vaddr(&dma->vspace, &frames[i].capPtr, (uint32_t*)&alloc, base + i * PAGE_SIZE_4K, 1, PAGE_BITS_4K, res);
+        error = vspace_map_pages_at_vaddr(&dma->vspace, &frames[i].capPtr, (uintptr_t*)&alloc, base + i * PAGE_SIZE_4K, 1, PAGE_BITS_4K, res);
         if (error) {
             goto handle_error;
         }

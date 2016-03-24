@@ -198,12 +198,12 @@ _irq_thread_entry(struct irq_server_thread* st)
 {
     seL4_CPtr sep;
     seL4_CPtr notification;
-    uint32_t node_ptr;
+    uintptr_t node_ptr;
     seL4_Word label;
 
     sep = st->delivery_sep;
     notification = st->node->notification;
-    node_ptr = (uint32_t)st->node;
+    node_ptr = (uintptr_t)st->node;
     label = st->label;
     DIRQSERVER("thread started. Waiting on endpoint %d\n", notification);
 
@@ -290,8 +290,8 @@ struct irq_server {
 void
 irq_server_handle_irq_ipc(irq_server_t irq_server)
 {
-    uint32_t badge;
-    uint32_t node_ptr;
+    seL4_Word badge;
+    uintptr_t node_ptr;
 
     (void)irq_server;
     badge = seL4_GetMR(0);

@@ -236,7 +236,7 @@ sel4utils_checkpoint_thread(sel4utils_thread_t *thread, sel4utils_checkpoint_t *
     
     checkpoint->stack = (void *) malloc(stack_size);
     if (checkpoint->stack == NULL) {
-        ZF_LOGE("Failed to malloc stack of size %u\n", stack_size);
+        ZF_LOGE("Failed to malloc stack of size %zu\n", stack_size);
         return -1;
     }
 

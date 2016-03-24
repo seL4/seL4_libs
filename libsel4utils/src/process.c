@@ -14,6 +14,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include <inttypes.h>
 #include <elf.h>
 #include <sel4/sel4.h>
 #include <vka/object.h>
@@ -95,7 +96,7 @@ sel4utils_create_word_args(char strings[][WORD_STRING_SIZE], char *argv[], int a
     for (int i = 0; i < argc; i++) {
         seL4_Word arg = va_arg(args, seL4_Word);
         argv[i] = strings[i];
-        snprintf(argv[i], WORD_STRING_SIZE, "%d", arg);
+        snprintf(argv[i], WORD_STRING_SIZE, "%"PRIiPTR"", arg);
 
     }
 
@@ -248,7 +249,7 @@ sel4utils_spawn_process(sel4utils_process_t *process, vka_t *vka, vspace_t *vspa
     seL4_UserContext context = {0};
     size_t context_size = sizeof(seL4_UserContext) / sizeof(seL4_Word);
 
-    error = sel4utils_arch_init_context_with_args(process->entry_point, (void *) argc,
+    error = sel4utils_arch_init_context_with_args(process->entry_point, (void *) (uintptr_t)argc,
                                         (void *) new_process_argv,
                                         (void *) process->thread.ipc_buffer_addr, false,
                                         (void *) stack_top,
@@ -267,7 +268,7 @@ sel4utils_spawn_process_v(sel4utils_process_t *process, vka_t *vka, vspace_t *vs
     /* define an envp and auxp */
     int envc = 1;
     char ipc_buf_env[WORD_STRING_SIZE];
-    sprintf(ipc_buf_env, "IPCBUFFER=0x%x", process->thread.ipc_buffer_addr);
+    sprintf(ipc_buf_env, "IPCBUFFER=0x%"PRIxPTR"", process->thread.ipc_buffer_addr);
     char *envp[] = {ipc_buf_env};
     int auxc = process->sysinfo ? 1 : 0;
     Elf_auxv_t auxv[] = { {.a_type = AT_SYSINFO, .a_un = {process->sysinfo}}};

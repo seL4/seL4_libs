@@ -91,33 +91,25 @@ platsupport_alloc_device_vaddr(seL4_Word bits)
     return va;
 }
 
-static seL4_CPtr
-_platsupport_find_device_cap(seL4_Word paddr, seL4_Word page_bits, simple_t *simple, vka_t *vka)
-{
-    int UNUSED error;
-    cspacepath_t path;
-    error = vka_cspace_alloc_path(vka, &path);
-    assert(!error);
-    error = simple_get_frame_cap(simple, (void *) paddr, page_bits, &path);
-    assert(error == seL4_NoError);
-    return path.capPtr;
-}
-
 static void*
 __map_device_page_failsafe(void* cookie UNUSED, uintptr_t paddr, size_t size,
                            int cached UNUSED, ps_mem_flags_t flags UNUSED)
 {
     int bits = CTZ(size);
     int error;
-    seL4_Word vaddr;
+    seL4_Word vaddr = 0;
+    cspacepath_t dest;
 
     if (device_cap != 0) {
         /* we only support a single page for the serial */
         for (;;);
     }
-    device_cap = _platsupport_find_device_cap(paddr, bits, simple, vka);
-    assert(device_cap);
-
+    error = sel4platsupport_copy_frame_cap(vka, simple, (void *) paddr, bits, &dest);
+    if (error != seL4_NoError) {
+        goto error;
+    }
+    device_cap = dest.capPtr;
+    
     vaddr = platsupport_alloc_device_vaddr(bits);
     error =
         seL4_ARCH_Page_Map(
@@ -127,6 +119,8 @@ __map_device_page_failsafe(void* cookie UNUSED, uintptr_t paddr, size_t size,
             seL4_AllRights,
             0
         );
+    
+error:
     if (error)
         for (;;);
 
@@ -141,17 +135,20 @@ __map_device_page_regular(void* cookie UNUSED, uintptr_t paddr, size_t size,
 {
     int bits = CTZ(size);
     void *vaddr;
-    seL4_CPtr cap;
+    int error;
+    cspacepath_t dest;
 
-    cap = _platsupport_find_device_cap(paddr, bits, simple, vka);
-    assert(cap);
+    error = sel4platsupport_copy_frame_cap(vka, simple, (void *) paddr, bits, &dest);
+    if (error) {
+        ZF_LOGF("Failed to get cap for serial device frame");
+    }
 
-    vaddr = vspace_map_pages(vspace, &cap, NULL, seL4_AllRights, 1, bits, 0);
+    vaddr = vspace_map_pages(vspace, &dest.capPtr, NULL, seL4_AllRights, 1, bits, 0);
     if (!vaddr) {
-        printf("Failed to map serial device :(\n");
+        ZF_LOGF("Failed to map serial device :(\n");
         for (;;);
     }
-    device_cap = cap;
+    device_cap = dest.capPtr;
 
     return (void*)vaddr;
 }

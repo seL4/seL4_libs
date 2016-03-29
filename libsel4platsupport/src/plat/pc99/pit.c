@@ -59,10 +59,11 @@ sel4platsupport_get_pit(vka_t *vka, simple_t *simple, ps_io_port_ops_t *ops, seL
     pit->data = data;
 
     /* set up irq */
-    data->irq = timer_common_get_irq(vka, simple, PIT_INTERRUPT);
-    if (data->irq == 0) {
+    cspacepath_t dest;
+    if (sel4platsupport_copy_irq_cap(vka, simple, PIT_INTERRUPT, &dest) != seL4_NoError) {
         goto error;
     }
+    data->irq = dest.capPtr;
 
     /* bind to endpoint */
     if (seL4_IRQHandler_SetNotification(data->irq, notification) != seL4_NoError) {

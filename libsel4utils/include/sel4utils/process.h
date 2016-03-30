@@ -228,6 +228,21 @@ int sel4utils_configure_process_custom(sel4utils_process_t *process, vka_t *targ
  */
 seL4_CPtr sel4utils_copy_cap_to_process(sel4utils_process_t *process, cspacepath_t src);
 
+
+/**
+ * Move a cap into a process' cspace.
+ *
+ * This will only work if you configured the process using one of the above functions, or
+ * have mimicked their functionality.
+ *
+ * @param process process to move the cap to
+ * @param src     path in the current cspace to move the cap from
+ * @param vka     the allocator that owns the cslot the cap is currently in, so it may be freed after the move.
+ *
+ * @return 0 on failure, otherwise the slot in the processes cspace.
+ */
+seL4_CPtr sel4utils_move_cap_to_process(sel4utils_process_t *process, cspacepath_t src, vka_t *from_vka);
+
 /**
  *
  * Mint a cap into a process' cspace.

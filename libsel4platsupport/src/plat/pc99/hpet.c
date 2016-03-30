@@ -47,7 +47,7 @@ seL4_timer_t *sel4platsupport_get_hpet(vspace_t *vspace, simple_t *simple, acpi_
 
     hpet = (seL4_timer_t *)calloc(1, sizeof(seL4_timer_t));
     if (hpet == NULL) {
-        LOG_ERROR("Failed to allocate hpet_t sizeofze %zu\n", sizeof(seL4_timer_t));
+        ZF_LOGE("Failed to allocate hpet_t of size %zu\n", sizeof(seL4_timer_t));
         goto error;
     }
 
@@ -55,7 +55,7 @@ seL4_timer_t *sel4platsupport_get_hpet(vspace_t *vspace, simple_t *simple, acpi_
 #ifdef CONFIG_IRQ_IOAPIC
     if ((int)irq_number < MSI_MIN) {
         if (CONFIG_MAX_NUM_IOAPIC != 1) {
-            LOG_ERROR("HPET does not support > 1 IOAPIC as we do not work out which IOAPIC we are connected to");
+            ZF_LOGE("HPET does not support > 1 IOAPIC as we do not work out which IOAPIC we are connected to");
             goto error;
         }
         irq = irq_number;
@@ -72,7 +72,7 @@ seL4_timer_t *sel4platsupport_get_hpet(vspace_t *vspace, simple_t *simple, acpi_
         hpet->handle_irq = hpet_handle_irq_msi;
     }
     if (irq == -1) {
-        LOG_ERROR("IRQ %u is not valid\n", irq_number);
+        ZF_LOGE("IRQ %u is not valid\n", irq_number);
         goto error;
     }
 
@@ -83,7 +83,7 @@ seL4_timer_t *sel4platsupport_get_hpet(vspace_t *vspace, simple_t *simple, acpi_
     if (acpi != NULL) {
         acpi_header_t *header = acpi_find_region(acpi, ACPI_HPET);
         if (header == NULL) {
-            LOG_ERROR("Failed to find HPET acpi table\n");
+            ZF_LOGE("Failed to find HPET acpi table\n");
             goto error;
         }
         /* find the physical address of the timer */

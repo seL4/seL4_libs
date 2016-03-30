@@ -29,13 +29,13 @@ sel4platsupport_get_timer(enum timer_id id, vka_t *vka, vspace_t *vspace,
     case DMTIMER7:
         break;
     default:
-        LOG_ERROR("Bad timer ID %d\n", id);
+        ZF_LOGE("Bad timer ID %d\n", id);
         return NULL;
     }
 
     seL4_timer_t *timer = calloc(1, sizeof(seL4_timer_t));
     if (timer == NULL) {
-        LOG_ERROR("Failed to allocate object of size %u\n", sizeof(seL4_timer_t));
+        ZF_LOGE("Failed to allocate object of size %u\n", sizeof(seL4_timer_t));
         return NULL;
     }
 

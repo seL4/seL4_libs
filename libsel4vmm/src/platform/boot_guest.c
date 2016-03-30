@@ -156,12 +156,12 @@ int vmm_guest_load_boot_module(vmm_t *vmm, const char *name) {
     size_t initrd_size = 0;
     int fd = vmm->plat_callbacks.open(name);
     if (fd == -1) {
-        LOG_ERROR("Boot module \"%s\" not found.", name);
+        ZF_LOGE("Boot module \"%s\" not found.", name);
         return -1;
     }
     initrd_size = vmm->plat_callbacks.filelength(fd);
     if (!initrd_size) {
-        LOG_ERROR("Boot module has zero size. This is probably not what you want.");
+        ZF_LOGE("Boot module has zero size. This is probably not what you want.");
         return -1;
     }
 
@@ -205,7 +205,7 @@ static int make_guest_page_dir(vmm_t *vmm) {
     /* This is constructed with magical new memory that we will not tell Linux about */
     uintptr_t pd = (uintptr_t)vspace_new_pages(&vmm->guest_mem.vspace, seL4_AllRights, 1, seL4_PageBits);
     if (pd == 0) {
-        LOG_ERROR("Failed to allocate page for initial guest pd");
+        ZF_LOGE("Failed to allocate page for initial guest pd");
         return -1;
     }
     printf("Guest page dir allocated at 0x%x. Creating 1-1 entries\n", (unsigned int)pd);
@@ -225,7 +225,7 @@ static int make_guest_cmd_line(vmm_t *vmm, const char *cmdline) {
     int len = strlen(cmdline);
     uintptr_t cmd_addr = guest_ram_allocate(&vmm->guest_mem, len + 1);
     if (cmd_addr == 0) {
-        LOG_ERROR("Failed to allocate guest cmdline (length %d)", len);
+        ZF_LOGE("Failed to allocate guest cmdline (length %d)", len);
         return -1;
     }
     printf("Constructing guest cmdline at 0x%x of size %d\n", (unsigned int)cmd_addr, len);
@@ -358,7 +358,7 @@ static int make_guest_boot_info(vmm_t *vmm) {
     /* TODO: Bootinfo struct needs to be allocated in location accessable by real mode? */
     uintptr_t addr = guest_ram_allocate(&vmm->guest_mem, sizeof(struct boot_params));
     if (addr == 0) {
-        LOG_ERROR("Failed to allocate %d bytes for guest boot info struct", sizeof(struct boot_params));
+        ZF_LOGE("Failed to allocate %d bytes for guest boot info struct", sizeof(struct boot_params));
         return -1;
     }
     printf("Guest boot info allocated at 0x%x. Populating...\n", (unsigned int)addr);
@@ -423,7 +423,7 @@ static int vmm_load_guest_segment(vmm_t *vmm, seL4_Word source_offset,
     cspacepath_t dup_slot;
     ret = vka_cspace_alloc_path(&vmm->vka, &dup_slot);
     if (ret) {
-        LOG_ERROR("Failed to allocate slot");
+        ZF_LOGE("Failed to allocate slot");
         return ret;
     }
 
@@ -434,7 +434,7 @@ static int vmm_load_guest_segment(vmm_t *vmm, seL4_Word source_offset,
         seL4_CPtr cap;
         cap = vspace_get_cap(&vmm->guest_mem.vspace, (void*)dest_addr);
         if (!cap) {
-            LOG_ERROR("Failed to find frame cap while loading elf segment at 0x%x", dest_addr);
+            ZF_LOGE("Failed to find frame cap while loading elf segment at 0x%x", dest_addr);
             return -1;
         }
         cspacepath_t cap_path;
@@ -444,7 +444,7 @@ static int vmm_load_guest_segment(vmm_t *vmm, seL4_Word source_offset,
         vka_cnode_copy(&dup_slot, &cap_path, seL4_AllRights);
         void *map_vaddr = vspace_map_pages(&vmm->host_vspace, &dup_slot.capPtr, NULL, seL4_AllRights, 1, page_size, 1);
         if (!map_vaddr) {
-            LOG_ERROR("Failed to map page into host vspace");
+            ZF_LOGE("Failed to map page into host vspace");
             return -1;
         }
 
@@ -492,13 +492,13 @@ int vmm_load_guest_elf(vmm_t *vmm, const char *elfname, size_t alignment) {
     DPRINTF(4, "Loading guest elf %s\n", elfname);
     int fd = vmm->plat_callbacks.open(elfname);
     if (fd == -1) {
-        LOG_ERROR("Guest elf \"%s\" not found.", elfname);
+        ZF_LOGE("Guest elf \"%s\" not found.", elfname);
         return -1;
     }
 
     ret = vmm_read_elf_headers(elf_file, vmm, fd, sizeof(elf_file));
     if(ret < 0) {
-        LOG_ERROR("Guest elf \"%s\" invalid.", elfname);
+        ZF_LOGE("Guest elf \"%s\" invalid.", elfname);
         return -1;
     }
 

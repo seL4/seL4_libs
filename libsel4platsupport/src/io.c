@@ -135,12 +135,12 @@ sel4platsupport_map_paddr_with_page_size(sel4platsupport_io_mapper_cookie_t *io_
 
     seL4_CPtr *frames = (seL4_CPtr*)malloc(sizeof(*frames) * num_pages);
     if (!frames) {
-        LOG_ERROR("Failed to allocate array of size %zu", sizeof(*frames) * num_pages);
+        ZF_LOGE("Failed to allocate array of size %zu", sizeof(*frames) * num_pages);
         return NULL;
     }
     io_mapping_t *node = (io_mapping_t*)malloc(sizeof(*node));
     if (!node) {
-        LOG_ERROR("Failed to malloc of size %zu", sizeof(*node));
+        ZF_LOGE("Failed to malloc of size %zu", sizeof(*node));
         free(frames);
         return NULL;
     }
@@ -150,7 +150,7 @@ sel4platsupport_map_paddr_with_page_size(sel4platsupport_io_mapper_cookie_t *io_
         /* allocate a cslot */
         int error = vka_cspace_alloc(vka, &frames[i]);
         if (error) {
-            LOG_ERROR("cspace alloc failed");
+            ZF_LOGE("cspace alloc failed");
             assert(error == 0);
             /* we don't clean up as everything has gone to hell */
             return NULL;
@@ -226,7 +226,7 @@ sel4platsupport_get_vaddr_with_page_size(sel4platsupport_io_mapper_cookie_t *io_
     }
     io_mapping_t *node = new_unmapped_node(first_vaddr + offset);
     if (!node) {
-        LOG_ERROR("Failed to allocate node to track mapping");
+        ZF_LOGE("Failed to allocate node to track mapping");
         return NULL;
     }
     _insert_node(io_mapper, node);
@@ -275,7 +275,7 @@ sel4platsupport_map_paddr(void *cookie, uintptr_t paddr, size_t size, int cached
     }
 
     /* shit out of luck */
-    LOG_ERROR("Failed to find a way to map address %p", (void*)paddr);
+    ZF_LOGE("Failed to find a way to map address %p", (void *)paddr);
     return NULL;
 }
 
@@ -289,8 +289,7 @@ sel4platsupport_unmap_vaddr(void *cookie, void *vaddr, size_t size)
 
     mapping = _find_node(io_mapper, vaddr);
     if (!mapping) {
-        LOG_ERROR("Tried to unmap vaddr %p, which was never mapped in", vaddr);
-        assert(mapping);
+        ZF_LOGF("Tried to unmap vaddr %p, which was never mapped in", vaddr);
         return;
     }
     if (!mapping->was_mapped) {
@@ -321,7 +320,7 @@ sel4platsupport_new_io_mapper(simple_t simple, vspace_t vspace, vka_t vka, ps_io
     sel4platsupport_io_mapper_cookie_t *cookie;
     cookie = (sel4platsupport_io_mapper_cookie_t*)malloc(sizeof(*cookie));
     if (!cookie) {
-        LOG_ERROR("Failed to allocate %zu bytes", sizeof(*cookie));
+        ZF_LOGE("Failed to allocate %zu bytes", sizeof(*cookie));
         return -1;
     }
     *cookie = (sel4platsupport_io_mapper_cookie_t) {

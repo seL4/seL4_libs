@@ -34,7 +34,7 @@ int vmm_pci_init(vmm_pci_space_t *space) {
     /* Define the initial PCI bridge */
     vmm_pci_device_def_t *bridge = malloc(sizeof(*bridge));
     if (!bridge) {
-        LOG_ERROR("Failed to malloc memory for pci bridge");
+        ZF_LOGE("Failed to malloc memory for pci bridge");
         return -1;
     }
     define_pci_host_bridge(bridge);
@@ -52,11 +52,11 @@ int vmm_pci_add_entry(vmm_pci_space_t *space, vmm_pci_entry_t entry, vmm_pci_add
             if (addr) {
                 *addr = (vmm_pci_address_t){.bus = 0, .dev = i, .fun = 0};
             }
-            LOG_INFO("Adding virtual PCI device at %02x:%02x.%d", 0, i, 0);
+            ZF_LOGI("Adding virtual PCI device at %02x:%02x.%d", 0, i, 0);
             return 0;
         }
     }
-    LOG_ERROR("No free device slot on bus 0 to add virtual pci device");
+    ZF_LOGE("No free device slot on bus 0 to add virtual pci device");
     return -1;
 }
 
@@ -101,7 +101,7 @@ int vmm_pci_io_port_in(void *cookie, unsigned int port_no, unsigned int size, un
         /* if the guest strayed from bus 0 then somethign went wrong. otherwise random reads
          * could just be it probing for devices */
         if (addr.bus != 0) {
-            LOG_INFO("Guest attempted access to non existent device %02x:%02x.%d register 0x%x", addr.bus, addr.dev, addr.fun, reg);
+            ZF_LOGI("Guest attempted access to non existent device %02x:%02x.%d register 0x%x", addr.bus, addr.dev, addr.fun, reg);
         } else {
             DPRINTF(3, "Ignoring guest probe for device %02x:%02x.%d register 0x%x\n", addr.bus, addr.dev, addr.fun, reg);
         }
@@ -148,7 +148,7 @@ int vmm_pci_io_port_out(void *cookie, unsigned int port_no, unsigned int size, u
     /* Check if this device exists */
     vmm_pci_entry_t *dev = find_device(self, addr);
     if (!dev) {
-        LOG_INFO("Guest attempted access to non existent device %02x:%02x.%d register 0x%x", addr.bus, addr.dev, addr.fun, reg);
+        ZF_LOGI("Guest attempted access to non existent device %02x:%02x.%d register 0x%x", addr.bus, addr.dev, addr.fun, reg);
         return 0;
     }
     return dev->iowrite(dev->cookie, reg + offset, size, value);

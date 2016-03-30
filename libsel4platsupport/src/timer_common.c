@@ -69,7 +69,7 @@ timer_common_init(vspace_t *vspace, simple_t *simple,
 
     timer_data = malloc(sizeof(timer_common_data_t));
     if (timer_data == NULL) {
-        LOG_ERROR("Failed to allocate timer_common_data_t size: %zu\n", sizeof(timer_common_data_t));
+        ZF_LOGE("Failed to allocate timer_common_data_t size: %zu\n", sizeof(timer_common_data_t));
         goto error;
     }
     memset(timer_data, 0, sizeof(timer_common_data_t));
@@ -84,7 +84,7 @@ timer_common_init(vspace_t *vspace, simple_t *simple,
                                          1, seL4_PageBits, 0);
     ZF_LOGV("Mapped timer at %p\n", timer_data->vaddr);
     if (timer_data->vaddr == NULL) {
-        LOG_ERROR("Failed to map page at vaddr %p\n", timer_data->vaddr);
+        ZF_LOGE("Failed to map page at vaddr %p\n", timer_data->vaddr);
         goto error;
     }
 
@@ -98,7 +98,7 @@ timer_common_init(vspace_t *vspace, simple_t *simple,
     /* set the end point */
     error = seL4_IRQHandler_SetNotification(timer_data->irq, notification);
     if (error != seL4_NoError) {
-        LOG_ERROR("seL4_IRQHandler_SetNotification failed with error %d\n", error);
+        ZF_LOGE("seL4_IRQHandler_SetNotification failed with error %d\n", error);
         goto error;
     }
 

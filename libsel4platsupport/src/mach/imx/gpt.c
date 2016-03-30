@@ -27,7 +27,7 @@ sel4platsupport_get_gpt(vspace_t *vspace, simple_t *simple, vka_t *vka, seL4_CPt
 
     seL4_timer_t *timer = calloc(1, sizeof(seL4_timer_t));
     if (timer == NULL) {
-        LOG_ERROR("Failed to allocate object of size %u\n", sizeof(seL4_timer_t));
+        ZF_LOGE("Failed to allocate object of size %u\n", sizeof(seL4_timer_t));
         goto error;
     }
 

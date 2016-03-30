@@ -38,7 +38,7 @@ void
 irq_data_ack_irq(struct irq_data* irq)
 {
     if (irq == NULL || irq->cap == seL4_CapNull) {
-        LOG_ERROR("IRQ data invalid when acknowledging IRQ\n");
+        ZF_LOGE("IRQ data invalid when acknowledging IRQ\n");
     } else {
         seL4_IRQHandler_Ack(irq->cap);
     }
@@ -89,13 +89,13 @@ irq_bind(irq_t irq, seL4_CPtr notification_cap, int idx, vka_t* vka, simple_t *s
     /* Create an IRQ cap */
     err = vka_cspace_alloc(vka, &irq_cap);
     if (err != 0) {
-        LOG_ERROR("Failed to allocate cslot for irq\n");
+        ZF_LOGE("Failed to allocate cslot for irq\n");
         return seL4_CapNull;
     }
     vka_cspace_make_path(vka, irq_cap, &irq_path);
     err = simple_get_IRQ_control(simple, irq, irq_path);
     if (err != seL4_NoError) {
-        LOG_ERROR("Failed to get cap to irq_number %u\n", irq);
+        ZF_LOGE("Failed to get cap to irq_number %u\n", irq);
         vka_cspace_free(vka, irq_cap);
         return seL4_CapNull;
     }
@@ -103,7 +103,7 @@ irq_bind(irq_t irq, seL4_CPtr notification_cap, int idx, vka_t* vka, simple_t *s
      * index of the associated IRQ data. */
     err = vka_cspace_alloc(vka, &bnotification_cap);
     if (err != 0) {
-        LOG_ERROR("Failed to allocate cslot for irq\n");
+        ZF_LOGE("Failed to allocate cslot for irq\n");
         vka_cspace_free(vka, irq_cap);
         return seL4_CapNull;
     }
@@ -112,7 +112,7 @@ irq_bind(irq_t irq, seL4_CPtr notification_cap, int idx, vka_t* vka, simple_t *s
     badge = seL4_CapData_Badge_new(BIT(idx));
     err = vka_cnode_mint(&bnotification_path, &notification_path, seL4_AllRights, badge);
     if (err != seL4_NoError) {
-        LOG_ERROR("Failed to badge IRQ notification endpoint\n");
+        ZF_LOGE("Failed to badge IRQ notification endpoint\n");
         vka_cspace_free(vka, irq_cap);
         vka_cspace_free(vka, bnotification_cap);
         return seL4_CapNull;
@@ -120,7 +120,7 @@ irq_bind(irq_t irq, seL4_CPtr notification_cap, int idx, vka_t* vka, simple_t *s
     /* bind the IRQ cap to our badged endpoint */
     err = seL4_IRQHandler_SetNotification(irq_cap, bnotification_cap);
     if (err != seL4_NoError) {
-        LOG_ERROR("Failed to bind IRQ handler to notification\n");
+        ZF_LOGE("Failed to bind IRQ handler to notification\n");
         vka_cspace_free(vka, irq_cap);
         vka_cspace_free(vka, bnotification_cap);
         return seL4_CapNull;
@@ -249,7 +249,7 @@ irq_server_thread_new(vspace_t* vspace, vka_t* vka, seL4_CPtr cspace, seL4_Word 
     /* Create an endpoint to listen on */
     err = vka_alloc_notification(vka, &st->notification);
     if (err) {
-        LOG_ERROR("Failed to allocate IRQ notification endpoint for IRQ server thread\n");
+        ZF_LOGE("Failed to allocate IRQ notification endpoint for IRQ server thread\n");
         return NULL;
     }
     st->node->notification = st->notification.cptr;
@@ -257,13 +257,13 @@ irq_server_thread_new(vspace_t* vspace, vka_t* vka, seL4_CPtr cspace, seL4_Word 
     err = sel4utils_configure_thread(vka, vspace, vspace, seL4_CapNull, priority,
                                      cspace, seL4_NilData, &st->thread);
     if (err) {
-        LOG_ERROR("Failed to configure IRQ server thread\n");
+        ZF_LOGE("Failed to configure IRQ server thread\n");
         return NULL;
     }
     /* Start the thread */
     err = sel4utils_start_thread(&st->thread, (void*)_irq_thread_entry, st, NULL, 1);
     if (err) {
-        LOG_ERROR("Failed to start IRQ server thread\n");
+        ZF_LOGE("Failed to start IRQ server thread\n");
         return NULL;
     }
     return st;
@@ -297,7 +297,7 @@ irq_server_handle_irq_ipc(irq_server_t irq_server)
     badge = seL4_GetMR(0);
     node_ptr = seL4_GetMR(1);
     if (node_ptr == 0) {
-        LOG_ERROR("Invalid data in irq server IPC\n");
+        ZF_LOGE("Invalid data in irq server IPC\n");
     } else {
         irq_server_node_handle_irq((struct irq_server_node*)node_ptr, badge);
     }
@@ -327,7 +327,7 @@ irq_server_register_irq(irq_server_t irq_server, irq_t irq,
                                    irq_server->thread_priority, &irq_server->simple,
                                    irq_server->label, irq_server->delivery_ep);
         if (st == NULL) {
-            LOG_ERROR("Failed to create server thread\n");
+            ZF_LOGE("Failed to create server thread\n");
             return NULL;
         }
 
@@ -356,7 +356,7 @@ irq_server_new(vspace_t* vspace, vka_t* vka, seL4_CPtr cspace, seL4_Word priorit
     /* Structure allocation and initialisation */
     irq_server = (struct irq_server*)malloc(sizeof(*irq_server));
     if (irq_server == NULL) {
-        LOG_ERROR("malloc failed on irq server memory allocation");
+        ZF_LOGE("malloc failed on irq server memory allocation");
         return -1;
     }
     irq_server->delivery_ep = sync_ep;

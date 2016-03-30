@@ -85,7 +85,7 @@ update(vspace_t *vspace, uintptr_t vaddr, seL4_CPtr page, uint32_t cookie)
 {
 
     if (page == RESERVED) {
-        LOG_ERROR("Cap %x cannot be used!", RESERVED);
+        ZF_LOGE("Cap %x cannot be used!", RESERVED);
         return -1;
     }
 

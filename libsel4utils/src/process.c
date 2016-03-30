@@ -444,9 +444,14 @@ create_cspace(vka_t *vka, int size_bits, sel4utils_process_t *process,
     assert(slot == SEL4UTILS_CNODE_SLOT);
 
     /* copy fault endpoint cap into process cspace */
-    vka_cspace_make_path(vka, process->fault_endpoint.cptr, &src);
-    slot = sel4utils_copy_cap_to_process(process, src);
-    assert(slot == SEL4UTILS_ENDPOINT_SLOT);
+    if (process->fault_endpoint.cptr != 0) {
+        vka_cspace_make_path(vka, process->fault_endpoint.cptr, &src);
+        slot = sel4utils_copy_cap_to_process(process, src);
+        assert(slot == SEL4UTILS_ENDPOINT_SLOT);
+    } else {
+        /* no fault endpoint, update slot so next will work */
+        allocate_next_slot(process);
+    }
 
     /* copy page directory cap into process cspace */
     vka_cspace_make_path(vka, process->pd.cptr, &src);

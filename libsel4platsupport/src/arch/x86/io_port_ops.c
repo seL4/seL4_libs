@@ -23,7 +23,7 @@ sel4platsupport_io_port_in(void *cookie, uint32_t port, int io_size, uint32_t *r
     uint32_t last_port = port + io_size - 1;
     seL4_X86_IOPort io_port_cap = simple_get_IOPort_cap(simple, port, last_port);
     if (!io_port_cap) {
-        LOG_ERROR("Failed to get capability for IOPort range 0x%x-0x%x", port, last_port);
+        ZF_LOGE("Failed to get capability for IOPort range 0x%x-0x%x", port, last_port);
         return -1;
     }
 
@@ -44,7 +44,7 @@ sel4platsupport_io_port_in(void *cookie, uint32_t port, int io_size, uint32_t *r
         return x.error;
     }
     default:
-        LOG_ERROR("Invalid io_size %d, expected 1, 2 or 4", io_size);
+        ZF_LOGE("Invalid io_size %d, expected 1, 2 or 4", io_size);
         return -1;
     }
 
@@ -57,7 +57,7 @@ sel4platsupport_io_port_out(void *cookie, uint32_t port, int io_size, uint32_t v
     uint32_t last_port = port + io_size - 1;
     seL4_X86_IOPort io_port_cap = simple_get_IOPort_cap(simple, port, last_port);
     if (!io_port_cap) {
-        LOG_ERROR("Failed to get capability for IOPort range 0x%x-0x%x", port, last_port);
+        ZF_LOGE("Failed to get capability for IOPort range 0x%x-0x%x", port, last_port);
         return -1;
     }
 
@@ -69,7 +69,7 @@ sel4platsupport_io_port_out(void *cookie, uint32_t port, int io_size, uint32_t v
     case 4:
         return seL4_X86_IOPort_Out32(io_port_cap, port, val);
     default:
-        LOG_ERROR("Invalid io_size %d, expected 1, 2 or 4", io_size);
+        ZF_LOGE("Invalid io_size %d, expected 1, 2 or 4", io_size);
         return -1;
     }
 

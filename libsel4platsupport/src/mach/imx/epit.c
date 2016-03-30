@@ -27,20 +27,20 @@ sel4platsupport_get_epit(vspace_t *vspace, simple_t *simple, vka_t *vka, seL4_CP
 
     seL4_timer_t *timer = calloc(1, sizeof(seL4_timer_t));
     if (timer == NULL) {
-        LOG_ERROR("Failed to allocate object of size %u\n", sizeof(seL4_timer_t));
+        ZF_LOGE("Failed to allocate object of size %u\n", sizeof(seL4_timer_t));
         goto error;
     }
 
 #ifdef CONFIG_PLAT_IMX31
     if (epit_id == EPIT1) {
-        LOG_ERROR("Epit1 is taken by the kernel\n");
+        ZF_LOGE("Epit1 is taken by the kernel\n");
         goto error;
     }
 #endif
 
     /* check the id */
     if (epit_id != EPIT1 && epit_id != EPIT2) {
-        LOG_ERROR("Invalid epit id %d\n", epit_id);
+        ZF_LOGE("Invalid epit id %d\n", epit_id);
         goto error;
     }
 

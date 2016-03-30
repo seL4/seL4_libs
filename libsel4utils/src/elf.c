@@ -55,7 +55,7 @@ load_segment(vspace_t *loadee_vspace, vspace_t *loader_vspace,
     int error = seL4_NoError;
 
     if (file_size > segment_size) {
-        LOG_ERROR("Error, file_size %zu > segment_size %zu", file_size, segment_size);
+        ZF_LOGE("Error, file_size %zu > segment_size %zu", file_size, segment_size);
         return seL4_InvalidArgument;
     }
 
@@ -65,7 +65,7 @@ load_segment(vspace_t *loadee_vspace, vspace_t *loader_vspace,
 
     error = vka_cspace_alloc(loader_vka, &loader_slot);
     if (error) {
-        LOG_ERROR("Failed to allocate cslot by loader vka: %d", error);
+        ZF_LOGE("Failed to allocate cslot by loader vka: %d", error);
         return error;
     }
     vka_cspace_make_path(loader_vka, loader_slot, &loader_frame_cap);
@@ -79,7 +79,7 @@ load_segment(vspace_t *loadee_vspace, vspace_t *loader_vspace,
         /* create and map the frame in the loadee address space */
         error = vspace_new_pages_at_vaddr(loadee_vspace, loadee_vaddr, 1, seL4_PageBits, reservation);
         if (error != seL4_NoError) {
-            LOG_ERROR("ERROR: failed to allocate frame by loadee vka: %d", error);
+            ZF_LOGE("ERROR: failed to allocate frame by loadee vka: %d", error);
             continue;
         }
 
@@ -90,7 +90,7 @@ load_segment(vspace_t *loadee_vspace, vspace_t *loader_vspace,
                              &loadee_frame_cap);
         error = vka_cnode_copy(&loader_frame_cap, &loadee_frame_cap, seL4_AllRights);
         if (error != seL4_NoError) {
-            LOG_ERROR("ERROR: failed to copy frame cap into loader cspace: %d", error);
+            ZF_LOGE("ERROR: failed to copy frame cap into loader cspace: %d", error);
             continue;
         }
 
@@ -98,7 +98,7 @@ load_segment(vspace_t *loadee_vspace, vspace_t *loader_vspace,
         loader_vaddr = vspace_map_pages(loader_vspace, &loader_frame_cap.capPtr, NULL, seL4_AllRights,
                                         1, seL4_PageBits, 1);
         if (loader_vaddr == NULL) {
-            LOG_ERROR("failed to map frame into loader vspace.");
+            ZF_LOGE("failed to map frame into loader vspace.");
             error = -1;
             continue;
         }
@@ -140,7 +140,7 @@ sel4utils_elf_num_regions(char *image_name)
     assert(image_name);
     elf_file = cpio_get_file(_cpio_archive, image_name, &elf_size);
     if (elf_file == NULL) {
-        LOG_ERROR("ERROR: failed to load elf file %s", image_name);
+        ZF_LOGE("ERROR: failed to load elf file %s", image_name);
         return 0;
     }
 
@@ -188,7 +188,7 @@ sel4utils_elf_reserve(vspace_t *loadee, char *image_name, sel4utils_elf_region_t
     unsigned long elf_size;
     char *elf_file = cpio_get_file(_cpio_archive, image_name, &elf_size);
     if (elf_file == NULL) {
-        LOG_ERROR("ERROR: failed to load elf file %s", image_name);
+        ZF_LOGE("ERROR: failed to load elf file %s", image_name);
         return NULL;
     }
 
@@ -209,7 +209,7 @@ sel4utils_elf_reserve(vspace_t *loadee, char *image_name, sel4utils_elf_region_t
                     vspace_free_reservation(loadee, regions[region].reservation);
                     regions[region].reservation.res = NULL;
                 }
-                LOG_ERROR("Failed to create reservation");
+                ZF_LOGE("Failed to create reservation");
                 return NULL;
             }
             region++;
@@ -218,7 +218,7 @@ sel4utils_elf_reserve(vspace_t *loadee, char *image_name, sel4utils_elf_region_t
 
     uint64_t entry_point = elf_getEntryPoint(elf_file);
     if ((uint32_t) (entry_point >> 32) != 0) {
-        LOG_ERROR("ERROR: this code hasn't been tested for 64bit!");
+        ZF_LOGE("ERROR: this code hasn't been tested for 64bit!");
         return NULL;
     }
     assert(entry_point != 0);
@@ -231,7 +231,7 @@ sel4utils_elf_load_record_regions(vspace_t *loadee, vspace_t *loader, vka_t *loa
     unsigned long elf_size;
     char *elf_file = cpio_get_file(_cpio_archive, image_name, &elf_size);
     if (elf_file == NULL) {
-        LOG_ERROR("ERROR: failed to load elf file %s", image_name);
+        ZF_LOGE("ERROR: failed to load elf file %s", image_name);
         return NULL;
     }
 
@@ -241,7 +241,7 @@ sel4utils_elf_load_record_regions(vspace_t *loadee, vspace_t *loader, vka_t *loa
 
     uint64_t entry_point = elf_getEntryPoint(elf_file);
     if ((uint32_t) (entry_point >> 32) != 0) {
-        LOG_ERROR("ERROR: this code hasn't been tested for 64bit!");
+        ZF_LOGE("ERROR: this code hasn't been tested for 64bit!");
         return NULL;
     }
     assert(entry_point != 0);
@@ -262,16 +262,16 @@ sel4utils_elf_load_record_regions(vspace_t *loadee, vspace_t *loader, vka_t *loa
             sel4utils_elf_region_t region;
             error = make_region(loadee, flags, segment_size, vaddr, &region, mapanywhere);
             if (error) {
-                LOG_ERROR("Failed to reserve region");
+                ZF_LOGE("Failed to reserve region");
                 break;
             }
             unsigned long offset = vaddr - PAGE_ALIGN_4K(vaddr);
             /* Copy it across to the vspace */
-            LOG_INFO(" * Loading segment %08x-->%08x", (int)vaddr, (int)(vaddr + segment_size));
+            ZF_LOGI(" * Loading segment %08x-->%08x", (int)vaddr, (int)(vaddr + segment_size));
             error = load_segment(loadee, loader, loadee_vka, loader_vka, source_addr,
                                  segment_size, file_size, offset + (uint32_t)((seL4_Word)region.reservation_vstart), region.reservation);
             if (error) {
-                LOG_ERROR("Failed to load segment");
+                ZF_LOGE("Failed to load segment");
                 break;
             }
             /* record the region if requested */
@@ -293,7 +293,7 @@ uintptr_t sel4utils_elf_get_vsyscall(char *image_name)
     unsigned long elf_size;
     char *elf_file = cpio_get_file(_cpio_archive, image_name, &elf_size);
     if (elf_file == NULL) {
-        LOG_ERROR("ERROR: failed to lookup elf file %s", image_name);
+        ZF_LOGE("ERROR: failed to lookup elf file %s", image_name);
         return 0;
     }
     /* See if we can find the __vsyscall section */

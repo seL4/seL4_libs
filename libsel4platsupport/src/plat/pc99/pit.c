@@ -55,14 +55,14 @@ sel4platsupport_get_pit(vka_t *vka, simple_t *simple, ps_io_port_ops_t *ops, seL
 
     seL4_pit_data_t *data = malloc(sizeof(seL4_pit_data_t));
     if (data == NULL) {
-        LOG_ERROR("Failed to allocate object of size %zu\n", sizeof(*data));
+        ZF_LOGE("Failed to allocate object of size %zu\n", sizeof(*data));
         goto error;
     }
 
 
     seL4_timer_t *pit = calloc(1, sizeof(*pit));
     if (pit == NULL) {
-        LOG_ERROR("Failed to malloc object of size %zu\n", sizeof(*pit));
+        ZF_LOGE("Failed to malloc object of size %zu\n", sizeof(*pit));
         goto error;
     }
     
@@ -79,7 +79,7 @@ sel4platsupport_get_pit(vka_t *vka, simple_t *simple, ps_io_port_ops_t *ops, seL
 
     /* bind to endpoint */
     if (seL4_IRQHandler_SetNotification(data->irq, notification) != seL4_NoError) {
-        LOG_ERROR("seL4_IRQHandler_SetEndpoint failed\n");
+        ZF_LOGE("seL4_IRQHandler_SetEndpoint failed\n");
         goto error;
     }
 

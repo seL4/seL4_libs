@@ -16,6 +16,27 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+#define SEL4BENCH_READ_CCNT(var) do { \
+    uint32_t low, high; \
+    asm volatile( \
+        "movl $0, %%eax \n" \
+        "movl $0, %%ecx \n" \
+        "cpuid \n" \
+        "rdtsc \n" \
+        "movl %%edx, %0 \n" \
+        "movl %%eax, %1 \n" \
+        "movl $0, %%eax \n" \
+        "movl $0, %%ecx \n" \
+        "cpuid \n" \
+        : \
+         "=r"(high), \
+         "=r"(low) \
+        : \
+        : "eax", "ebx", "ecx", "edx" \
+    ); \
+    (var) = (((uint64_t)high) << 32ull) | ((uint64_t)low); \
+} while(0)
+
 //standard libsel4bench events
 #define SEL4BENCH_EVENT_CACHE_L1I_MISS    SEL4BENCH_IA32_EVENT_CACHE_L1I_MISS
 #define SEL4BENCH_EVENT_CACHE_L1D_MISS    SEL4BENCH_IA32_EVENT_CACHE_L1D_MISS

@@ -11,6 +11,8 @@
 #ifndef __ARCH_SEL4BENCH_H__
 #define __ARCH_SEL4BENCH_H__
 
+#include <sel4bench/armv/sel4bench.h>
+
 #ifdef ARMV7_A
 #include "sel4bench_armv7a.h"
 #endif //ARMV7_A

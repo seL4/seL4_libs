@@ -173,20 +173,6 @@ static FASTFN void sel4bench_private_write_pmnxsel(uint32_t val) {
 }
 
 /*
- * CCNT
- * 
- * the cycle counter.
- */
-static FASTFN uint32_t sel4bench_private_read_ccnt() {
-	uint32_t val;
-	asm volatile (
-		"mrc p15, 0, %0, c9, c13, 0\n"
-		: "=r"(val)
-	);
-	return val;
-}
-
-/*
  * EVTSEL
  *
  * determines which events are counted by a performance counter.

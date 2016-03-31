@@ -46,7 +46,7 @@ page_map_retry:
             error = seL4_ARCH_PageDirectoryPointerTable_Map(pagetable->cptr, pd, (seL4_Word)vaddr,
                                                             seL4_ARCH_Default_VMAttributes);
         } else {
-            LOG_ERROR("Page directory pointer table allocation failed %d", error);
+            ZF_LOGE("Page directory pointer table allocation failed %d", error);
         }
 
         if (!error) {
@@ -55,7 +55,7 @@ page_map_retry:
                 goto page_map_retry;
             }
         } else {
-            LOG_ERROR("Page directory pointer table mapping failed %d\n", error);
+            ZF_LOGE("Page directory pointer table mapping failed %d\n", error);
         }
     }
 
@@ -65,7 +65,7 @@ page_map_retry:
             error = seL4_ARCH_PageDirectory_Map(pagetable->cptr, pd, (seL4_Word)vaddr,
                                                 seL4_ARCH_Default_VMAttributes);
         } else {
-            LOG_ERROR("Page directory allocation failed %d\n", error);
+            ZF_LOGE("Page directory allocation failed %d\n", error);
         }
 
         if (!error) {
@@ -75,7 +75,7 @@ page_map_retry:
             }
 
         } else {
-            LOG_ERROR("Page directory mapping failed %d\n", error);
+            ZF_LOGE("Page directory mapping failed %d\n", error);
         }
     }
 
@@ -92,7 +92,7 @@ page_map_retry:
             error = seL4_ARCH_PageTable_Map(objects[0].cptr, pd, (seL4_Word) vaddr,
                                             seL4_ARCH_Default_VMAttributes);
         } else {
-            LOG_ERROR("Page table allocation failed, %d", error);
+            ZF_LOGE("Page table allocation failed, %d", error);
         }
 
         if (error == seL4_DeleteFirst) {
@@ -114,7 +114,7 @@ page_map_retry:
                 error = seL4_X86_PageDirectory_Map(objects[1].cptr, pd, (seL4_Word) vaddr,
                                                     seL4_ARCH_Default_VMAttributes);
             } else {
-                LOG_ERROR("Page directory allocation failed, %d", error);
+                ZF_LOGE("Page directory allocation failed, %d", error);
             }
             if (error == seL4_DeleteFirst) {
                 vka_free_object(vka, &objects[1]);
@@ -126,7 +126,7 @@ page_map_retry:
                 error = seL4_ARCH_PageTable_Map(objects[0].cptr, pd, (seL4_Word) vaddr,
                                                 seL4_ARCH_Default_VMAttributes);
             } else {
-                LOG_ERROR("Page directory mapping failed, %d", error);
+                ZF_LOGE("Page directory mapping failed, %d", error);
             }
         }
 #endif
@@ -134,12 +134,12 @@ page_map_retry:
         if (!error) {
             error = seL4_ARCH_Page_Map(frame, pd, (seL4_Word) vaddr, rights, attr);
         } else {
-            LOG_ERROR("Page table mapping failed, %d", error);
+            ZF_LOGE("Page table mapping failed, %d", error);
         }
     }
 
     if (error != seL4_NoError) {
-        LOG_ERROR("Failed to map page at address %p with cap %"PRIuPTR", error: %d", vaddr, frame, error);
+        ZF_LOGE("Failed to map page at address %p with cap %"PRIuPTR", error: %d", vaddr, frame, error);
     }
     *num_objects = num;
 
@@ -217,7 +217,7 @@ sel4utils_map_ept_page(vka_t *vka, seL4_CPtr pd, seL4_CPtr frame, seL4_Word vadd
         return ret;
     }
     if (ret != seL4_FailedLookup) {
-        LOG_ERROR("Failed to map page, error: %d", ret);
+        ZF_LOGE("Failed to map page, error: %d", ret);
         return ret;
     }
 
@@ -225,21 +225,21 @@ sel4utils_map_ept_page(vka_t *vka, seL4_CPtr pd, seL4_CPtr frame, seL4_Word vadd
         /* Allocate a directory table for a large page entry. */
         ret = vka_alloc_ept_page_directory(vka, pagedir);
         if (ret != seL4_NoError) {
-            LOG_ERROR("Allocation of EPT page directory failed, error: %d", ret);
+            ZF_LOGE("Allocation of EPT page directory failed, error: %d", ret);
             return ret;
         }
 
         /* Map in the page directory. */
         ret = seL4_X86_EPTPageDirectory_Map(pagedir->cptr, pd, vaddr, attr);
         if (ret != seL4_NoError) {
-            LOG_ERROR("Failed to map EPT PD, error: %d", ret);
+            ZF_LOGE("Failed to map EPT PD, error: %d", ret);
             return ret;
         }
     } else {
         /* Allocate an EPT page table for a 4K entry. */
         ret = vka_alloc_ept_page_table(vka, pagetable);
         if (ret != seL4_NoError) {
-            LOG_ERROR("allocating ept page table failed\n");
+            ZF_LOGE("allocating ept page table failed\n");
             return ret;
         }
 
@@ -251,25 +251,25 @@ sel4utils_map_ept_page(vka_t *vka, seL4_CPtr pd, seL4_CPtr frame, seL4_Word vadd
             /* Allocate an EPT page directory for the page table. */
             ret = vka_alloc_ept_page_directory(vka, pagedir);
             if (ret != seL4_NoError) {
-                LOG_ERROR("Allocating EPT page directory failed\n");
+                ZF_LOGE("Allocating EPT page directory failed\n");
                 return ret;
             }
 
             /* Map the EPT page directory in. */
             ret = seL4_X86_EPTPageDirectory_Map(pagedir->cptr, pd, vaddr, attr);
             if (ret != seL4_NoError) {
-                LOG_ERROR("Failed to map EPT PD, error: %d", ret);
+                ZF_LOGE("Failed to map EPT PD, error: %d", ret);
                 return ret;
             }
 
             /* Try to map the page table again. */
             ret = seL4_X86_EPTPageTable_Map(pagetable->cptr, pd, vaddr, attr);
             if (ret != seL4_NoError) {
-                LOG_ERROR("Second attempt at mapping EPT PT failed, error: %d", ret);
+                ZF_LOGE("Second attempt at mapping EPT PT failed, error: %d", ret);
                 return ret;
             }
         } else if (ret) {
-            LOG_ERROR("EPT PT failed to map, error: %d", ret);
+            ZF_LOGE("EPT PT failed to map, error: %d", ret);
             return ret;
         }
     }

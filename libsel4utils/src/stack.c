@@ -20,7 +20,7 @@ sel4utils_run_on_stack(vspace_t *vspace, void * (*func)(void *arg), void *arg, v
 {
     void *stack_top = vspace_new_stack(vspace);
     if (stack_top == NULL) {
-        LOG_ERROR("Failed to allocate new stack\n");
+        ZF_LOGE("Failed to allocate new stack\n");
         return -1;
     }
 

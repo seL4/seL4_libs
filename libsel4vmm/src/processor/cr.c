@@ -77,13 +77,13 @@ static int vmm_cr_set_cr4(vmm_vcpu_t *vcpu, unsigned int value) {
 
 
 static int vmm_cr_clts(vmm_vcpu_t *vcpu) {
-    LOG_INFO("Ignoring call of clts");
+    ZF_LOGI("Ignoring call of clts");
 
     return -1;
 }
 
 static int vmm_cr_lmsw(vmm_vcpu_t *vcpu, unsigned int value) {
-    LOG_INFO("Ignoring call of lmsw");
+    ZF_LOGI("Ignoring call of lmsw");
 
     return -1;
 

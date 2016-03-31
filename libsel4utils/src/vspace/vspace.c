@@ -482,8 +482,10 @@ sel4utils_unmap_pages(vspace_t *vspace, void *vaddr, size_t num_pages, size_t si
             vka_cspace_make_path(vka, cap, &path);
             vka_cnode_delete(&path);
             vka_cspace_free(vka, cap);
-            vka_utspace_free(vka, kobject_get_type(KOBJECT_FRAME, size_bits),
-                             size_bits, sel4utils_get_cookie(vspace, vaddr));
+            if (sel4utils_get_cookie(vspace, vaddr)) {
+                vka_utspace_free(vka, kobject_get_type(KOBJECT_FRAME, size_bits),
+                                     size_bits, sel4utils_get_cookie(vspace, vaddr));
+            }
         }
 
         if (reserve == NULL) {
@@ -814,6 +816,8 @@ sel4utils_share_mem_at_vaddr(vspace_t *from, vspace_t *to, void *start, int num_
             ZF_LOGE("Failed to map page into target vspace at vaddr %"PRIuPTR, to_vaddr);
             break;
         }
+
+        update_entries(to, to_vaddr, to_path.capPtr, size_bits, 0);
     }
 
     if (error) {

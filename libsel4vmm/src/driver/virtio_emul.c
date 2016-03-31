@@ -374,7 +374,7 @@ ethif_virtio_emul_t *ethif_virtio_emul_init(ps_io_ops_t io_ops, int queue_size, 
     internal->dma_man = io_ops.dma_manager;
     err = driver(&internal->driver, io_ops, config);
     if (err) {
-        LOG_ERROR("Fafiled to initialize driver");
+        ZF_LOGE("Fafiled to initialize driver");
         goto error;
     }
     int mtu;

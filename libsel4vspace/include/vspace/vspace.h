@@ -628,10 +628,12 @@ vspace_share_mem_at_vaddr(vspace_t *from, vspace_t *to, void *start, int num_pag
 
     if (to == NULL) {
         ZF_LOGE("To vspace does not exist");
+        return -1;
     }
 
     if (start == NULL || vaddr == NULL) {
         ZF_LOGE("Cannot share memory at NULL");
+        return -1;
     }
 
     if (from->share_mem_at_vaddr == NULL) {

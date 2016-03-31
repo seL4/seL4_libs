@@ -29,6 +29,16 @@ typedef struct {
     seL4_CPtr irq;
 } seL4_pit_data_t;
 
+static void
+pit_destroyer(seL4_timer_t *pit, vka_t *vka, UNUSED vspace_t *vspace)
+{
+
+    timer_stop(pit->timer);
+    seL4_pit_data_t *data = (seL4_pit_data_t *) pit->data;
+    timer_common_cleanup_irq(vka, data->irq);
+    free(data);
+    free(pit);
+}
 
 static void
 pit_handle_irq(seL4_timer_t *timer, UNUSED uint32_t irq)
@@ -45,28 +55,31 @@ sel4platsupport_get_pit(vka_t *vka, simple_t *simple, ps_io_port_ops_t *ops, seL
 
     seL4_pit_data_t *data = malloc(sizeof(seL4_pit_data_t));
     if (data == NULL) {
-        LOG_ERROR("Failed to allocate object of size %zu\n", sizeof(*data));
+        ZF_LOGE("Failed to allocate object of size %zu\n", sizeof(*data));
         goto error;
     }
 
 
     seL4_timer_t *pit = calloc(1, sizeof(*pit));
     if (pit == NULL) {
-        LOG_ERROR("Failed to malloc object of size %zu\n", sizeof(*pit));
+        ZF_LOGE("Failed to malloc object of size %zu\n", sizeof(*pit));
         goto error;
     }
+    
+    pit->destroy = pit_destroyer;
     pit->handle_irq = pit_handle_irq;
     pit->data = data;
 
     /* set up irq */
-    data->irq = timer_common_get_irq(vka, simple, PIT_INTERRUPT);
-    if (data->irq == 0) {
+    cspacepath_t dest;
+    if (sel4platsupport_copy_irq_cap(vka, simple, PIT_INTERRUPT, &dest) != seL4_NoError) {
         goto error;
     }
+    data->irq = dest.capPtr;
 
     /* bind to endpoint */
     if (seL4_IRQHandler_SetNotification(data->irq, notification) != seL4_NoError) {
-        LOG_ERROR("seL4_IRQHandler_SetEndpoint failed\n");
+        ZF_LOGE("seL4_IRQHandler_SetEndpoint failed\n");
         goto error;
     }
 
@@ -93,13 +106,4 @@ error:
     return NULL;
 }
 
-void
-sel4platsupport_destroy_pit(seL4_timer_t *pit, vka_t *vka)
-{
 
-    timer_stop(pit->timer);
-    seL4_pit_data_t *data = (seL4_pit_data_t *) pit->data;
-    timer_common_cleanup_irq(vka, data->irq);
-    free(data);
-    free(pit);
-}

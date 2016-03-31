@@ -181,7 +181,7 @@ static void *_allocman_mspace_alloc(allocman_t *alloc, size_t size, int *_error,
         if (use_watermark) {
             ret = _try_watermark_mspace(alloc, size, _error);
             if (!ret) {
-                LOG_INFO("Failed to fullfill recursive allocation from watermark, size %zu\n", size);
+                ZF_LOGI("Failed to fullfill recursive allocation from watermark, size %zu\n", size);
             }
             return ret;
         } else {
@@ -204,7 +204,7 @@ static void *_allocman_mspace_alloc(allocman_t *alloc, size_t size, int *_error,
     if (use_watermark) {
         ret = _try_watermark_mspace(alloc, size, _error);
         if (!ret) {
-            LOG_INFO("Regular mspace alloc failed, and watermark also failed. for size %zu\n", size);
+            ZF_LOGI("Regular mspace alloc failed, and watermark also failed. for size %zu\n", size);
         }
         _end_operation(alloc, root_op);
         return ret;
@@ -228,7 +228,7 @@ static int _allocman_cspace_alloc(allocman_t *alloc, cspacepath_t *slot, int use
         if (use_watermark) {
             int ret = _try_watermark_cspace(alloc, slot);
             if (ret) {
-                LOG_INFO("Failed to allocate cslot from watermark\n");
+                ZF_LOGI("Failed to allocate cslot from watermark\n");
             }
             return ret;
         } else {
@@ -249,7 +249,7 @@ static int _allocman_cspace_alloc(allocman_t *alloc, cspacepath_t *slot, int use
     if (use_watermark) {
         error = _try_watermark_cspace(alloc, slot);
         if (error) {
-            LOG_INFO("Regular cspace alloc failed, and failed from watermark\n");
+            ZF_LOGI("Regular cspace alloc failed, and failed from watermark\n");
         }
         _end_operation(alloc, root_op);
         return error;
@@ -274,7 +274,7 @@ static seL4_Word _allocman_utspace_alloc(allocman_t *alloc, size_t size_bits, se
         if (use_watermark) {
             ret = _try_watermark_utspace(alloc, size_bits, type, path, _error);
             if (ret == 0) {
-                LOG_INFO("Failed to allocate utspace from watermark. size %zu type %ld\n", size_bits, (long)type);
+                ZF_LOGI("Failed to allocate utspace from watermark. size %zu type %ld\n", size_bits, (long)type);
             }
             return ret;
         } else {
@@ -298,7 +298,7 @@ static seL4_Word _allocman_utspace_alloc(allocman_t *alloc, size_t size_bits, se
         ret = _try_watermark_utspace(alloc, size_bits, type, path, _error);
         _end_operation(alloc, root_op);
         if (ret == 0) {
-            LOG_INFO("Regular utspace alloc failed and not watermark for size %zu type %ld\n", size_bits, (long)type);
+            ZF_LOGI("Regular utspace alloc failed and not watermark for size %zu type %ld\n", size_bits, (long)type);
         }
         return ret;
     } else {

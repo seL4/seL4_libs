@@ -90,14 +90,14 @@ static void* dma_alloc(void *cookie, size_t size, int align, int cached, ps_mem_
     vka_object_t ut;
     error = vka_alloc_untyped(&dma->vka, size_bits, &ut);
     if (error) {
-        LOG_ERROR("Failed to allocate untyped of size %d", size_bits);
+        ZF_LOGE("Failed to allocate untyped of size %d", size_bits);
         return NULL;
     }
     /* Get the physical address */
     uintptr_t paddr;
     paddr = vka_utspace_paddr(&dma->vka, ut.ut, seL4_UntypedObject, size_bits);
     if (paddr == 0) {
-        LOG_ERROR("Allocated untyped has no physical address");
+        ZF_LOGE("Allocated untyped has no physical address");
         goto handle_error;
     }
     /* Allocate all the frames */
@@ -124,7 +124,7 @@ static void* dma_alloc(void *cookie, size_t size, int align, int cached, ps_mem_
     /* Grab a reservation */
     res = vspace_reserve_range(&dma->vspace, size, seL4_AllRights, cached, &base);
     if (!res.res) {
-        LOG_ERROR("Failed to reserve");
+        ZF_LOGE("Failed to reserve");
         return NULL;
     }
     alloc = malloc(sizeof(*alloc));

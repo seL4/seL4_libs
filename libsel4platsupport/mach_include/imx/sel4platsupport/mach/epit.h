@@ -46,7 +46,4 @@ typedef timer_common_data_t epit_data;
 seL4_timer_t *sel4platsupport_get_epit(vspace_t *vspace, simple_t *simple, vka_t *vka,
                                        seL4_CPtr notification, uint32_t prescaler, epit_id_t id);
 
-
-void sel4platsupport_destroy_epit(seL4_timer_t *timer, vka_t *vka, vspace_t *vspace);
-
 #endif /* __SEL4_PLAT_SUPPORT_EPIT_H */

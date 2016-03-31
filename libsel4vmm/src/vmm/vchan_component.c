@@ -109,7 +109,7 @@ int libvchan_recv(libvchan_t *ctrl, void *data, size_t size) {
 */
 vchan_buf_t *get_vchan_buf(vchan_ctrl_t *args, camkes_vchan_con_t *c, int action) {
     if(c->data_buf == NULL) {
-        LOG_ERROR("Mangled vchan connection: null data buffer\n");
+        ZF_LOGE("Mangled vchan connection: null data buffer\n");
         return NULL;
     }
 

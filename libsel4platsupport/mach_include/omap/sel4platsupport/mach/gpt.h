@@ -64,6 +64,4 @@ seL4_timer_t *
 sel4platsupport_get_abs_gpt(vspace_t *vspace, simple_t *simple, vka_t *vka, seL4_CPtr notification, 
                             gpt_id_t gpt_id, uint32_t prescaler);
               
-void sel4platsupport_destroy_gpt(seL4_timer_t *timer, vka_t *vka, vspace_t *vspace);
-
 #endif /* __SEL4_PLAT_SUPPORT_GPT_H */

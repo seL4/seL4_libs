@@ -59,7 +59,7 @@ guest_vspace_map(vspace_t *vspace, seL4_CPtr cap, void *vaddr, seL4_CapRights ri
     cspacepath_t new_path;
     error = vka_cspace_alloc_path(guest_vspace->vspace_data.vka, &new_path);
     if (error) {
-        LOG_ERROR("Failed to allocate cslot to duplicate frame cap");
+        ZF_LOGE("Failed to allocate cslot to duplicate frame cap");
         return error;
     }
     error = vka_cnode_copy(&new_path, &orig_path, seL4_AllRights);
@@ -67,14 +67,14 @@ guest_vspace_map(vspace_t *vspace, seL4_CPtr cap, void *vaddr, seL4_CapRights ri
     /* perform the regular mapping */
     void *vmm_vaddr = vspace_map_pages(&guest_vspace->vmm_vspace, &new_path.capPtr, NULL, seL4_AllRights, 1, size_bits, cacheable);
     if (!vmm_vaddr){
-        LOG_ERROR("Failed to map into VMM vspace");
+        ZF_LOGE("Failed to map into VMM vspace");
         return -1;
     }
     /* add translation information. give dummy cap value of 42 as it cannot be zero
      * but we really just want to store information in the cookie */
     error = update_entries(&guest_vspace->translation_vspace, vaddr, 42, size_bits, (uint32_t)vmm_vaddr);
     if (error){
-        LOG_ERROR("Failed to add translation information");
+        ZF_LOGE("Failed to add translation information");
         return error;
     }
 #ifdef CONFIG_IOMMU
@@ -84,7 +84,7 @@ guest_vspace_map(vspace_t *vspace, seL4_CPtr cap, void *vaddr, seL4_CapRights ri
     for (int i = 0; i < guest_vspace->num_iospaces; i++) {
         error = vka_cspace_alloc_path(guest_vspace->vspace_data.vka, &new_path);
         if (error) {
-            LOG_ERROR("Failed to allocate cslot to duplicate frame cap");
+            ZF_LOGE("Failed to allocate cslot to duplicate frame cap");
             return error;
         }
         error = vka_cnode_copy(&new_path, &orig_path, seL4_AllRights);
@@ -120,7 +120,7 @@ int vmm_get_guest_vspace(vspace_t *loader, vspace_t *vmm, vspace_t *new_vspace, 
     int error;
     guest_vspace_t *vspace = malloc(sizeof(*vspace));
     if (!vspace) {
-        LOG_ERROR("Malloc failed");
+        ZF_LOGE("Malloc failed");
         return -1;
     }
 #ifdef CONFIG_IOMMU
@@ -132,12 +132,12 @@ int vmm_get_guest_vspace(vspace_t *loader, vspace_t *vmm, vspace_t *new_vspace, 
     vspace->vmm_vspace = *vmm;
     error = sel4utils_get_vspace(loader, &vspace->translation_vspace, &vspace->translation_vspace_data, vka, page_directory, NULL, NULL);
     if (error) {
-        LOG_ERROR("Failed to create translation vspace");
+        ZF_LOGE("Failed to create translation vspace");
         return error;
     }
     error = sel4utils_get_vspace_with_map(loader, new_vspace, &vspace->vspace_data, vka, page_directory, NULL, NULL, guest_vspace_map);
     if (error) {
-        LOG_ERROR("Failed to create guest vspace");
+        ZF_LOGE("Failed to create guest vspace");
         return error;
     }
     return 0;
@@ -170,7 +170,7 @@ int vmm_guest_vspace_touch(vspace_t *vspace, uintptr_t addr, size_t size, vmm_gu
         next_addr = MIN(end_addr, next_page_start);
         void *vaddr = (void*)sel4utils_get_cookie(&guest_vspace->translation_vspace, (void*)current_aligned);
         if (!vaddr) {
-            LOG_ERROR("Failed to get cookie at 0x%x", current_aligned);
+            ZF_LOGE("Failed to get cookie at 0x%x", current_aligned);
             return -1;
         }
         int result = callback(current_addr, (void*)(vaddr + (current_addr - current_aligned)), next_addr - current_addr, current_addr - addr, cookie);

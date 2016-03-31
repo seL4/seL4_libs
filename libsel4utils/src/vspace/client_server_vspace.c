@@ -68,21 +68,21 @@ static int dup_and_map(client_server_vspace_t *cs_vspace, seL4_CPtr cap, void *c
     cspacepath_t cap_path, server_cap_path;
     int error = vka_cspace_alloc(cs_vspace->vka, &server_cap);
     if (error) {
-        LOG_ERROR("Failed to allocate cslot");
+        ZF_LOGE("Failed to allocate cslot");
         return error;
     }
     vka_cspace_make_path(cs_vspace->vka, cap, &cap_path);
     vka_cspace_make_path(cs_vspace->vka, server_cap, &server_cap_path);
     error = vka_cnode_copy(&server_cap_path, &cap_path, seL4_AllRights);
     if (error != seL4_NoError) {
-        LOG_ERROR("Error copying frame cap");
+        ZF_LOGE("Error copying frame cap");
         vka_cspace_free(cs_vspace->vka, server_cap);
         return -1;
     }
     /* map it into the server */
     void *saddr = vspace_map_pages(cs_vspace->server, &server_cap_path.capPtr, NULL, seL4_AllRights, 1, size_bits, 1);
     if (!saddr) {
-        LOG_ERROR("Error mapping frame into server vspace");
+        ZF_LOGE("Error mapping frame into server vspace");
         vka_cnode_delete(&server_cap_path);
         vka_cspace_free(cs_vspace->vka, server_cap);
         return -1;
@@ -166,7 +166,7 @@ static int cs_map_pages_at_vaddr(vspace_t *vspace, seL4_CPtr caps[], uint32_t co
     /* first map all the pages into the client */
     int result = vspace_map_pages_at_vaddr(cs_vspace->client, caps, cookies, vaddr, num_pages, size_bits, reservation);
     if (result) {
-        LOG_ERROR("Error mapping pages into client vspace");
+        ZF_LOGE("Error mapping pages into client vspace");
         /* some error, propagate up */
         return result;
     }
@@ -174,7 +174,7 @@ static int cs_map_pages_at_vaddr(vspace_t *vspace, seL4_CPtr caps[], uint32_t co
     result = dup_and_map_many(cs_vspace, caps, vaddr, num_pages, size_bits);
     if (result) {
         /* unmap */
-        LOG_ERROR("Error mapping pages into server vspace");
+        ZF_LOGE("Error mapping pages into server vspace");
         vspace_unmap_pages(cs_vspace->client, vaddr, num_pages, size_bits, VSPACE_PRESERVE);
         return result;
     }
@@ -214,12 +214,12 @@ static int cs_new_pages_at_vaddr(vspace_t *vspace, void *vaddr, size_t num_pages
     /* create new pages in the client first */
     int result = vspace_new_pages_at_vaddr(cs_vspace->client, vaddr, num_pages, size_bits, reservation);
     if (result) {
-        LOG_ERROR("Error creating pages in client vspace");
+        ZF_LOGE("Error creating pages in client vspace");
         return result;
     }
     result = find_dup_and_map_many(cs_vspace, vaddr, num_pages, size_bits);
     if (result) {
-        LOG_ERROR("Error mapping new page in server vspace");
+        ZF_LOGE("Error mapping new page in server vspace");
         assert(!"Cannot delete pages we created in client vspace");
         return -1;
     }
@@ -231,7 +231,7 @@ int sel4utils_get_cs_vspace(vspace_t *vspace, vka_t *vka, vspace_t *server, vspa
     int error;
     client_server_vspace_t *cs_vspace = malloc(sizeof(*cs_vspace));
     if (cs_vspace == NULL) {
-        LOG_ERROR("Failed to create translation vspace");
+        ZF_LOGE("Failed to create translation vspace");
         return -1;
     }
     cs_vspace->server = server;
@@ -241,7 +241,7 @@ int sel4utils_get_cs_vspace(vspace_t *vspace, vka_t *vka, vspace_t *server, vspa
     error = sel4utils_get_vspace(server, &cs_vspace->translation, &cs_vspace->translation_data,
                                  vka, 0, NULL, NULL);
     if (error) {
-        LOG_ERROR("Failed to create translation vspace");
+        ZF_LOGE("Failed to create translation vspace");
         free(cs_vspace);
         return error;
     }

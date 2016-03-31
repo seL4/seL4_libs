@@ -140,6 +140,27 @@ sel4utils_copy_cap_to_process(sel4utils_process_t *process, cspacepath_t src)
     return dest.capPtr;
 }
 
+seL4_CPtr
+sel4utils_move_cap_to_process(sel4utils_process_t *process, cspacepath_t src, vka_t *from_vka)
+{
+    cspacepath_t dest;
+    if (next_free_slot(process, &dest) == -1) {
+        return 0;
+    }
+
+    int error = vka_cnode_move(&dest, &src);
+    if (error != seL4_NoError) {
+        ZF_LOGE("Failed to move cap\n");
+        return 0;
+    }
+
+    /* free slot in previous vka */
+    vka_cspace_free(from_vka, src.capPtr);
+
+    /* success */
+    allocate_next_slot(process);
+    return dest.capPtr;
+}
 int
 sel4utils_stack_write(vspace_t *current_vspace, vspace_t *target_vspace,
                       vka_t *vka, void *buf, size_t len, uintptr_t *stack_top)
@@ -423,9 +444,14 @@ create_cspace(vka_t *vka, int size_bits, sel4utils_process_t *process,
     assert(slot == SEL4UTILS_CNODE_SLOT);
 
     /* copy fault endpoint cap into process cspace */
-    vka_cspace_make_path(vka, process->fault_endpoint.cptr, &src);
-    slot = sel4utils_copy_cap_to_process(process, src);
-    assert(slot == SEL4UTILS_ENDPOINT_SLOT);
+    if (process->fault_endpoint.cptr != 0) {
+        vka_cspace_make_path(vka, process->fault_endpoint.cptr, &src);
+        slot = sel4utils_copy_cap_to_process(process, src);
+        assert(slot == SEL4UTILS_ENDPOINT_SLOT);
+    } else {
+        /* no fault endpoint, update slot so next will work */
+        allocate_next_slot(process);
+    }
 
     /* copy page directory cap into process cspace */
     vka_cspace_make_path(vka, process->pd.cptr, &src);

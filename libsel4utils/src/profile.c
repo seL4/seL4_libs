@@ -39,7 +39,7 @@ void profile_scrape(profile_callback32 callback32, profile_callback64 callback64
             callback64(*(uint64_t*)i->var, i->varname, i->description, cookie);
             break;
         default:
-            LOG_ERROR("Unknown profile var. Probable memory corruption or linker failure!");
+            ZF_LOGE("Unknown profile var. Probable memory corruption or linker failure!");
             break;
         }
     }
@@ -57,7 +57,7 @@ void profile_reset(void)
             *(uint64_t*)i->var = 0;
             break;
         default:
-            LOG_ERROR("Unknown profile var. Probable memory corruption or linker failure!");
+            ZF_LOGE("Unknown profile var. Probable memory corruption or linker failure!");
             break;
         }
     }

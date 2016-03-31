@@ -132,7 +132,7 @@ sys_brk_static(va_list ap)
     /*if the newbrk is 0, return the bottom of the heap*/
     if (morecore_base == 0) {
         if (morecore_size == 0) {
-            LOG_ERROR("Warning: static morecore size is 0");
+            ZF_LOGE("Warning: static morecore size is 0");
         }
         morecore_base = (uintptr_t) morecore_area;
         morecore_top = (uintptr_t) &morecore_area[morecore_size];
@@ -156,7 +156,7 @@ sys_brk_dynamic(va_list ap)
     uintptr_t ret;
     uintptr_t newbrk = va_arg(ap, uintptr_t);
     if (!muslc_this_vspace || !muslc_brk_reservation.res || !muslc_brk_reservation_start) {
-        LOG_ERROR("Need to assign vspace for sys_brk to work!\n");
+        ZF_LOGE("Need to assign vspace for sys_brk to work!\n");
         assert(muslc_this_vspace && muslc_brk_reservation.res && muslc_brk_reservation_start);
         return 0;
     }
@@ -171,7 +171,7 @@ sys_brk_dynamic(va_list ap)
             int error = vspace_new_pages_at_vaddr(muslc_this_vspace, (void*) brk_start, 1,
                         seL4_PageBits, muslc_brk_reservation);
             if (error) {
-                LOG_ERROR("Mapping new pages to extend brk region failed\n");
+                ZF_LOGE("Mapping new pages to extend brk region failed\n");
                 return 0;
             }
             brk_start += PAGE_SIZE_4K;
@@ -189,8 +189,8 @@ sys_brk(va_list ap)
     } else if (muslc_this_vspace != NULL) {
         return sys_brk_dynamic(ap);
     } else {
-        LOG_ERROR("You need to define either morecore_area or the muslc*");
-        LOG_ERROR("global variables to use malloc\n");
+        ZF_LOGE("You need to define either morecore_area or the muslc*");
+        ZF_LOGE("global variables to use malloc\n");
         assert(morecore_area != NULL || muslc_this_vspace != NULL);
         return 0;
     }
@@ -240,7 +240,7 @@ sys_mmap2_dynamic(va_list ap)
     (void)fd;
     (void)offset;
     if (!muslc_this_vspace || !muslc_brk_reservation.res || !muslc_brk_reservation_start) {
-        LOG_ERROR("Need to assign vspace for sys_brk to work!\n");
+        ZF_LOGE("Need to assign vspace for sys_brk to work!\n");
         assert(muslc_this_vspace && muslc_brk_reservation.res && muslc_brk_reservation_start);
         return 0;
     }
@@ -262,7 +262,7 @@ sys_mmap2(va_list ap)
     } else if (muslc_this_vspace != NULL) {
         return sys_mmap2_dynamic(ap);
     } else {
-        LOG_ERROR("mmap requires morecore_area or muslc* vars to be initialised\n");
+        ZF_LOGE("mmap requires morecore_area or muslc* vars to be initialised\n");
         assert(morecore_area != NULL || muslc_this_vspace != NULL);
         return 0;
     }
@@ -308,20 +308,20 @@ sys_mremap_dynamic(va_list ap)
     int new_pages = new_size >> seL4_PageBits;
     reservation_t reservation = vspace_reserve_range(muslc_this_vspace, new_pages * PAGE_SIZE_4K, seL4_AllRights, 1, &new_address);
     if (!reservation.res) {
-        LOG_ERROR("Failed to make reservation for remap\n");
+        ZF_LOGE("Failed to make reservation for remap\n");
         goto restore;
     }
     /* map all the existing pages into the reservation */
     error = vspace_map_pages_at_vaddr(muslc_this_vspace, caps, cookies, new_address, num_pages, seL4_PageBits, reservation);
     if (error) {
-        LOG_ERROR("Mapping existing pages into new reservation failed\n");
+        ZF_LOGE("Mapping existing pages into new reservation failed\n");
         vspace_free_reservation(muslc_this_vspace, reservation);
         goto restore;
     }
     /* create any new pages */
     error = vspace_new_pages_at_vaddr(muslc_this_vspace, new_address + num_pages * PAGE_SIZE_4K, new_pages - num_pages, seL4_PageBits, reservation);
     if (error) {
-        LOG_ERROR("Creating new pages for remap region failed\n");
+        ZF_LOGE("Creating new pages for remap region failed\n");
         vspace_unmap_pages(muslc_this_vspace, new_address, num_pages, seL4_PageBits, VSPACE_PRESERVE);
         vspace_free_reservation(muslc_this_vspace, reservation);
         goto restore;
@@ -355,7 +355,7 @@ sys_mremap(va_list ap)
     } else if (muslc_this_vspace != NULL) {
         return sys_mremap_dynamic(ap);
     } else {
-        LOG_ERROR("mrepmap requires morecore_area or muslc* vars to be initialised\n");
+        ZF_LOGE("mrepmap requires morecore_area or muslc* vars to be initialised\n");
         assert(morecore_area != NULL || muslc_this_vspace != NULL);
         return 0;
     }

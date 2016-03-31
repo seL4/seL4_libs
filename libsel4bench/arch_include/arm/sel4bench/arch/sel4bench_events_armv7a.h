@@ -67,3 +67,8 @@
 #include "sel4bench_events_cortexa9.h"
 #endif
 
+#ifdef CONFIG_ARM_CORTEX_A15
+#include "sel4bench_events_cortexa15.h"
+#endif
+
+

@@ -17,6 +17,29 @@
 
 #ifdef CONFIG_LIB_SEL4_VSPACE
 
+static void
+timer_common_destroy_internal(timer_common_data_t *timer_data, vka_t *vka, vspace_t *vspace)
+{
+    if (timer_data != NULL) {
+
+        if (timer_data->irq != 0) {
+            seL4_IRQHandler_Clear(timer_data->irq);
+            cspacepath_t irq_path;
+            vka_cspace_make_path(vka, timer_data->irq, &irq_path);
+            vka_cnode_delete(&irq_path);
+            vka_cspace_free(vka, timer_data->irq);
+        }
+        if (timer_data->vaddr != NULL) {
+            vspace_unmap_pages(vspace, timer_data->vaddr, 1, seL4_PageBits, VSPACE_PRESERVE);
+        }
+        if (timer_data->frame.capPtr != 0) {
+            vka_cnode_delete(&timer_data->frame);
+            vka_cspace_free(vka, timer_data->frame.capPtr);
+        }
+        free(timer_data);
+    }
+}
+
 void
 timer_common_handle_irq(seL4_timer_t *timer, uint32_t irq)
 {
@@ -85,32 +108,20 @@ timer_common_init(vspace_t *vspace, simple_t *simple,
 
 error:
     /* clean up on failure */
-    timer_common_destroy(timer_data, vka, vspace);
+    timer_common_destroy_internal(timer_data, vka, vspace);
 
     return NULL;
 }
 
-void
-timer_common_destroy(timer_common_data_t *timer_data, vka_t *vka, vspace_t *vspace)
+void 
+timer_common_destroy(seL4_timer_t *timer, vka_t *vka, vspace_t *vspace)
 {
-    if (timer_data != NULL) {
-
-        if (timer_data->irq != 0) {
-            seL4_IRQHandler_Clear(timer_data->irq);
-            cspacepath_t irq_path;
-            vka_cspace_make_path(vka, timer_data->irq, &irq_path);
-            vka_cnode_delete(&irq_path);
-            vka_cspace_free(vka, timer_data->irq);
-        }
-        if (timer_data->vaddr != NULL) {
-            vspace_unmap_pages(vspace, timer_data->vaddr, 1, seL4_PageBits, VSPACE_PRESERVE);
-        }
-        if (timer_data->frame.capPtr != 0) {
-            vka_cnode_delete(&timer_data->frame);
-            vka_cspace_free(vka, timer_data->frame.capPtr);
-        }
-        free(timer_data);
+    timer_common_data_t *data = (timer_common_data_t *) timer->data;
+    if (timer->timer) {
+        timer_stop(timer->timer);
     }
+    timer_common_destroy_internal(data, vka, vspace);
+    free(timer);
 }
 
 #endif /* CONFIG_LIB_SEL4_VSPACE */

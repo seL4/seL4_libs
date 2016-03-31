@@ -63,6 +63,9 @@ seL4_timer_t *sel4platsupport_get_hpet(vspace_t *vspace, simple_t *simple, acpi_
         hpet->handle_irq = hpet_handle_irq_ioapic;
     }
 #endif
+
+    hpet->destroy = timer_common_destroy;
+
     if ((int)irq_number >= MSI_MIN || irq_number <= MSI_MAX) {
         irq = irq_number + IRQ_OFFSET;
         ioapic = 0;
@@ -112,22 +115,9 @@ seL4_timer_t *sel4platsupport_get_hpet(vspace_t *vspace, simple_t *simple, acpi_
     return hpet;
 
 error:
-    timer_common_destroy(hpet_data, vka, vspace);
-
-    if (hpet != NULL) {
-        free(hpet);
-    }
+    timer_common_destroy(hpet, vka, vspace);
 
     return NULL;
-}
-
-void
-sel4platsupport_destroy_hpet(seL4_timer_t *timer, vka_t *vka, vspace_t *vspace)
-{
-
-    timer_stop(timer->timer);
-    timer_common_destroy(timer->data, vka, vspace);
-    free(timer);
 }
 
 #endif /* CONFIG_LIB_SEL4_VSPACE */

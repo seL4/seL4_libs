@@ -22,6 +22,7 @@
 typedef struct seL4_timer seL4_timer_t;
 
 typedef void (*handle_irq_fn_t)(seL4_timer_t *timer, uint32_t irq);
+typedef void (*destroy_fn_t)(seL4_timer_t *timer, vka_t *vka, vspace_t *vspace);
 
 struct seL4_timer {
     /* os independant timer interface */
@@ -32,12 +33,25 @@ struct seL4_timer {
 
     /* sel4 specific functions to call to deal with timer */
     handle_irq_fn_t handle_irq;
+
+    /* destroy this timer, it will no longer be valid */
+    destroy_fn_t destroy;
 };
 
 static inline void
 sel4_timer_handle_irq(seL4_timer_t *timer, uint32_t irq)
 {
     timer->handle_irq(timer, irq);
+}
+
+static inline void
+sel4_timer_destroy(seL4_timer_t *timer, vka_t *vka, vspace_t *vspace)
+{
+    if (timer->destroy == NULL) {
+        ZF_LOGF("This timer doesn't support destroy!");
+    }
+
+    timer->destroy(timer, vka, vspace);
 }
 
 /* some timers use this as their config data. Check the timer specific header file to see */

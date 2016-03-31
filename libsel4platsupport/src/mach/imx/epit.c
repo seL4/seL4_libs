@@ -56,6 +56,7 @@ sel4platsupport_get_epit(vspace_t *vspace, simple_t *simple, vka_t *vka, seL4_CP
     }
 
     timer->handle_irq = timer_common_handle_irq;
+    timer->destroy = timer_common_destroy;
 
     /* do hardware init */
     epit_config_t config = {
@@ -73,17 +74,9 @@ sel4platsupport_get_epit(vspace_t *vspace, simple_t *simple, vka_t *vka, seL4_CP
     return timer;
 error:
     if (timer != NULL) {
-        timer_common_destroy(timer->data, vka, vspace);
-        free(timer);
+        timer_common_destroy(timer, vka, vspace);
     }
 
     return NULL;
 }
 
-void
-sel4platsupport_destroy_epit(seL4_timer_t *timer, vka_t *vka, vspace_t *vspace)
-{
-    timer_stop(timer->timer);
-    timer_common_destroy(timer->data, vka, vspace);
-    free(timer);
-}

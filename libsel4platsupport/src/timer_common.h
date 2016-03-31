@@ -35,7 +35,7 @@ timer_common_data_t *timer_common_init(vspace_t *vspace, simple_t *simple,
 /*
  * Something went wrong, clean up everything we did in timer_common_init.
  */
-void timer_common_destroy(timer_common_data_t *data, vka_t *vka, vspace_t *vspace);
+void timer_common_destroy(seL4_timer_t *timer, vka_t *vka, vspace_t *vspace);
 void timer_common_cleanup_irq(vka_t *vka, seL4_CPtr irq);
 
 void timer_common_handle_irq(seL4_timer_t *timer, uint32_t irq);

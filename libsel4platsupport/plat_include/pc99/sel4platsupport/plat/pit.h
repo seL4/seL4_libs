@@ -32,8 +32,4 @@
  */
 seL4_timer_t* sel4platsupport_get_pit(vka_t *vka, simple_t *simple, ps_io_port_ops_t *ops, seL4_CPtr notification);
 
-/*
- * Stop the timer and free allocated resources
- */
-void sel4platsupport_destroy_pit(seL4_timer_t *pit, vka_t *vka);
 #endif /* _SEL4_PLATSUPPORT_PIT_H_ */

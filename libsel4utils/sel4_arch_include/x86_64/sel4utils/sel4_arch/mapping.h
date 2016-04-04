@@ -23,6 +23,7 @@ sel4utils_create_object_at_level(vka_t *vka, seL4_Word failed_bits, vka_object_t
 {
     alloc_fn_t alloc;
     map_fn_t map;
+    vka_object_t object;
     switch (failed_bits) {
     case SEL4_MAPPING_LOOKUP_NO_PD:
         alloc = vka_alloc_page_directory;
@@ -37,22 +38,25 @@ sel4utils_create_object_at_level(vka_t *vka, seL4_Word failed_bits, vka_object_t
         return seL4_InvalidArgument;
     }
     int error;
-    error = alloc(vka, &objects[*num_objects]);
+    error = alloc(vka, &object);
     if (error) {
         ZF_LOGE("Failed to allocate object for level %d", (int)failed_bits);
         return error;
     }
-    error = map(objects[*num_objects].cptr, vspace_root, (seL4_Word)vaddr, seL4_X86_Default_VMAttributes);
+    error = map(object.cptr, vspace_root, (seL4_Word)vaddr, seL4_X86_Default_VMAttributes);
     if (error == seL4_DeleteFirst) {
         /* through creating the object we must have ended up mapping this
          * level as part of the metadata creation. Delete this and keep
          * on going */
-        vka_free_object(vka, &objects[*num_objects]);
+        vka_free_object(vka, &object);
         return 0;
     }
-    (*num_objects)++;
     if (error) {
         ZF_LOGE("Failed to map object for level %d", (int)failed_bits);
+        vka_free_object(vka, &object);
+    } else {
+        objects[*num_objects] = object;
+        (*num_objects)++;
     }
     return error;
 }

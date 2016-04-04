@@ -17,10 +17,37 @@
 static inline int
 sel4utils_create_object_at_level(vka_t *vka, seL4_Word failed_bits, vka_object_t *objects, int *num_objects, void *vaddr, seL4_CPtr vspace_root)
 {
+#ifdef CONFIG_PAE_PAGING
+    int error;
+    if (failed_bits == SEL4_MAPPING_LOOKUP_NO_PD) {
+        error = vka_alloc_page_directory(vka, &objects[*num_objects]);
+        if (error) {
+            ZF_LOGE("Failed to allocate page directory");
+            return error;
+        }
+        error = seL4_X86_PageDirectory_Map(objects[*num_objects].cptr, vspace_root, (seL4_Word)vaddr, seL4_X86_Default_VMAttributes);
+        if (error == seL4_DeleteFirst) {
+            /* through creating the object we must have ended up mapping this
+             * level as part of the metadata creation. Delete this and keep
+             * on going */
+            vka_free_object(vka, &objects[*num_objects]);
+            return 0;
+        }
+        (*num_objects)++;
+        if (error) {
+            ZF_LOGE("Failed to map page directory");
+        }
+        return error;
+    } else {
+        ZF_LOGE("Invalid lookup level %d", (int)failed_bits);
+        return seL4_InvalidArgument;
+    }
+#else
     /* we have no objects other than the page table, that should already have been
      * handled, so calling this function is an error */
      ZF_LOGF("Should no be called");
      return seL4_InvalidArgument;
+#endif
 }
 
 #endif /* _SEL4UTILS_SEL4_ARCH_MAPPING_H */

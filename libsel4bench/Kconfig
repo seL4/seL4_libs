@@ -11,7 +11,7 @@
 config LIB_SEL4_BENCH
     bool "libsel4bench"
     default y
-    depends on HAVE_LIB_SEL4 && HAVE_LIBC
+    depends on HAVE_LIB_SEL4 && HAVE_LIBC && HAVE_LIB_UTILS
     select HAVE_LIB_SEL4_BENCH
     help
         Benchmarking library and functionality for various platforms

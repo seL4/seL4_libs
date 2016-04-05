@@ -1,0 +1,58 @@
+/*
+ * Copyright 2016, NICTA
+ *
+ * This software may be distributed and modified according to the terms of
+ * the BSD 2-Clause license. Note that NO WARRANTY is provided.
+ * See "LICENSE_BSD2.txt" for details.
+ *
+ * @TAG(NICTA_BSD)
+ */
+
+#include <autoconf.h>
+
+#if defined(CONFIG_ARM_CORTEX_A8)
+
+#include "event_counters.h"
+
+#define NAME_EVENT(id, name) EVENT_COUNTER_FORMAT(SEL4BENCH_CORTEXA8_EVENT_##id, name)
+
+const char* const sel4bench_cpu_event_counter_data[] = {
+    NAME_EVENT(WRITE_BUFFER_DRAIN      , "WRITE_BUFFER_DRAIN"),
+    NAME_EVENT(CACHE_L2_WRITE          , "CACHE_L2_WRITE"),
+    NAME_EVENT(CACHE_L2_STORE          , "CACHE_L2_STORE"),
+    NAME_EVENT(CACHE_L2_READ           , "CACHE_L2_READ"),
+    NAME_EVENT(CACHE_L2_MISS           , "CACHE_L2_MISS"),
+    NAME_EVENT(AXI_READ                , "AXI_READ"),
+    NAME_EVENT(AXI_WRITE               , "AXI_WRITE"),
+    NAME_EVENT(MEMORY_REPLAY           , "MEMORY_REPLAY"),
+    NAME_EVENT(MEMORY_UNALIGNED_REPLAY , "MEMORY_UNALIGNED_REPLAY"),
+    NAME_EVENT(CACHE_L1D_MISS_HASH     , "CACHE_L1D_MISS_HASH"),
+    NAME_EVENT(CACHE_L1I_MISS_HASH     , "CACHE_L1I_MISS_HASH"),
+    NAME_EVENT(CACHE_L1D_CONFLICT_EVICT, "CACHE_L1D_CONFLICT_EVICT"),
+    NAME_EVENT(CACHE_L1D_HIT_NEON      , "CACHE_L1D_HIT_NEON"),
+    NAME_EVENT(CACHE_L1D_ACCESS_NEON   , "CACHE_L1D_ACCESS_NEON"),
+    NAME_EVENT(CACHE_L2_ACCESS_NEON    , "CACHE_L2_ACCESS_NEON"),
+    NAME_EVENT(CACHE_L2_HIT_NEON       , "CACHE_L2_HIT_NEON"),
+    NAME_EVENT(CACHE_L1I_ACCESS        , "CACHE_L1I_ACCESS"),
+    NAME_EVENT(RETURN_STACK_MISPREDICT , "RETURN_STACK_MISPREDICT"),
+    NAME_EVENT(BRANCH_MISPREDICT       , "BRANCH_MISPREDICT"),
+    NAME_EVENT(BRANCH_PREDICT_TRUE     , "BRANCH_PREDICT_TRUE"),
+    NAME_EVENT(EXECUTE_BRANCH_TRUE     , "EXECUTE_BRANCH_TRUE"),
+    NAME_EVENT(EXECUTE_OPERATION       , "EXECUTE_OPERATION"),
+    NAME_EVENT(STALL_INSTRUCTION       , "STALL_INSTRUCTION"),
+    NAME_EVENT(IPC                     , "IPC"),
+    NAME_EVENT(STALL_NEON_DATA         , "STALL_NEON_DATA"),
+    NAME_EVENT(STALL_NEON_EXECUTION    , "STALL_NEON_EXECUTION"),
+    NAME_EVENT(PROCESSOR_TOTALLY_BUSY  , "PROCESSOR_TOTALLY_BUSY"),
+    NAME_EVENT(PMUEXTIN_0              , "PMUEXTIN_0"),
+    NAME_EVENT(PMUEXTIN_1              , "PMUEXTIN_1"),
+    NAME_EVENT(PMUEXTIN                , "PMUEXTIN")
+};
+
+int
+sel4bench_cpu_get_num_counters(void)
+{
+    return ARRAY_SIZE(sel4bench_cpu_event_counter_data);
+}
+
+#endif /* defined(CONFIG_ARM_CORTEX_A8) */

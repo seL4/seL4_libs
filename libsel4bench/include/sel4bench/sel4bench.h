@@ -102,6 +102,14 @@ SEL4BENCH_API sel4bench_counter_t sel4bench_get_cycle_count();
 SEL4BENCH_API seL4_Word sel4bench_get_num_counters();
 
 /**
+ * Query the description of a counter
+ * @param counter The counter to query
+ * @return An ASCII string prepresentation of the counters description, or NULL
+ *         if the counter does not exist.
+ */
+const char* sel4bench_get_counter_description(seL4_Word counter);
+
+/**
  * Query the value of a counter.
  * 
  * @param counter The counter to query.

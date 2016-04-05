@@ -10,39 +10,45 @@
 
 #include <simple/simple_helpers.h>
 
-int simple_is_untyped_cap(simple_t *simple, seL4_CPtr pos) {
+int simple_is_untyped_cap(simple_t *simple, seL4_CPtr pos)
+{
     int i;
 
-    for(i = 0; i < simple_get_untyped_count(simple); i++) {
+    for (i = 0; i < simple_get_untyped_count(simple); i++) {
         uint32_t paddr;
         uint32_t size_bits;
         seL4_CPtr ut_pos = simple_get_nth_untyped(simple, i, &size_bits, &paddr);
-        if(ut_pos == pos) {
+        if (ut_pos == pos) {
             return 1;
         }
     }
-    
+
     return 0;
 }
 
-seL4_Error simple_copy_caps(simple_t *simple, seL4_CNode cspace, int copy_untypeds) {
+seL4_Error simple_copy_caps(simple_t *simple, seL4_CNode cspace, int copy_untypeds)
+{
     int i;
     seL4_Error error = seL4_NoError;
 
-    for(i = 0; i < simple_get_cap_count(simple); i++) {
+    for (i = 0; i < simple_get_cap_count(simple); i++) {
         seL4_CPtr pos = simple_get_nth_cap(simple, i);
         /* Don't copy this, put the cap to the new cspace */
-        if(pos == seL4_CapInitThreadCNode) continue;
+        if (pos == seL4_CapInitThreadCNode) {
+            continue;
+        }
 
         /* If we don't want to copy untypeds and it is one move on */
-        if(!copy_untypeds && simple_is_untyped_cap(simple, pos)) continue;
+        if (!copy_untypeds && simple_is_untyped_cap(simple, pos)) {
+            continue;
+        }
 
         error = seL4_CNode_Copy(
                     cspace, pos, seL4_WordBits,
                     seL4_CapInitThreadCNode, pos, seL4_WordBits,
                     seL4_AllRights);
         /* Don't error on the low cap numbers, we might have tried to copy a control cap */
-        if(error && i > 10) {
+        if (error && i > 10) {
             return error;
         }
     }
@@ -50,7 +56,8 @@ seL4_Error simple_copy_caps(simple_t *simple, seL4_CNode cspace, int copy_untype
     return error;
 }
 
-int simple_vka_cspace_alloc(void *data, seL4_CPtr *slot) {
+int simple_vka_cspace_alloc(void *data, seL4_CPtr *slot)
+{
     assert(data && slot);
 
     simple_t *simple = (simple_t *) data;
@@ -59,18 +66,18 @@ int simple_vka_cspace_alloc(void *data, seL4_CPtr *slot) {
 
     /* Keep trying to find the next free slot by seeing if we can copy something there */
     seL4_Error error = seL4_CNode_Copy(cnode, simple_get_cap_count(simple) + i, seL4_WordBits, cnode, cnode, seL4_WordBits, seL4_AllRights);
-    while(error == seL4_DeleteFirst) {
+    while (error == seL4_DeleteFirst) {
         i++;
         error = seL4_CNode_Copy(cnode, simple_get_cap_count(simple) + i, seL4_WordBits, cnode, cnode, seL4_WordBits, seL4_AllRights);
     }
 
-    if(error != seL4_NoError) {
+    if (error != seL4_NoError) {
         error = seL4_CNode_Delete(cnode, simple_get_cap_count(simple) + i, seL4_WordBits);
         return error;
     }
 
     error = seL4_CNode_Delete(cnode, simple_get_cap_count(simple) + i, seL4_WordBits);
-    if(error != seL4_NoError) {
+    if (error != seL4_NoError) {
         return error;
     }
 
@@ -78,7 +85,8 @@ int simple_vka_cspace_alloc(void *data, seL4_CPtr *slot) {
     return seL4_NoError;
 }
 
-void simple_vka_cspace_make_path(void *data, seL4_CPtr slot, cspacepath_t *path) {
+void simple_vka_cspace_make_path(void *data, seL4_CPtr slot, cspacepath_t *path)
+{
     assert(data && path);
 
     simple_t *simple = (simple_t *) data;
@@ -91,7 +99,8 @@ void simple_vka_cspace_make_path(void *data, seL4_CPtr slot, cspacepath_t *path)
     path->destDepth = seL4_WordBits;
 }
 
-void simple_make_vka(simple_t *simple, vka_t *vka) {
+void simple_make_vka(simple_t *simple, vka_t *vka)
+{
     vka->data = simple;
     vka->cspace_alloc = &simple_vka_cspace_alloc;
     vka->cspace_make_path = &simple_vka_cspace_make_path;
@@ -100,12 +109,15 @@ void simple_make_vka(simple_t *simple, vka_t *vka) {
     vka->utspace_free = NULL;
 }
 
-seL4_CPtr simple_last_valid_cap(simple_t *simple) {
+seL4_CPtr simple_last_valid_cap(simple_t *simple)
+{
     seL4_CPtr largest = 0;
     int i;
     for (i = 0; i < simple_get_cap_count(simple); i++) {
         seL4_CPtr cap = simple_get_nth_cap(simple, i);
-        if (cap > largest) largest = cap;
+        if (cap > largest) {
+            largest = cap;
+        }
     }
     return largest;
 }

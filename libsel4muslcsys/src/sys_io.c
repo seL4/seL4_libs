@@ -143,7 +143,7 @@ grow_fds(int how_much)
     int *new_free_fd_table = malloc(FREE_FD_TABLE_SIZE(new_num_fds));
     if (!new_free_fd_table) {
         free(new_fd_table);
-        LOG_ERROR("Failed to allocate free fd table\n");
+        ZF_LOGE("Failed to allocate free fd table\n");
         return -ENOMEM;
     }
 
@@ -210,7 +210,7 @@ sys_open(va_list ap)
     flags &= ~O_LARGEFILE;
     /* only support reading in basic modes */
     if (flags != O_RDONLY) {
-        LOG_ERROR("Open only supports O_RDONLY, not 0x%x on %s\n", flags, pathname);
+        ZF_LOGE("Open only supports O_RDONLY, not 0x%x on %s\n", flags, pathname);
         assert(flags == O_RDONLY);
         return -EINVAL;
     }
@@ -224,16 +224,16 @@ sys_open(va_list ap)
         file = cpio_get_file(_cpio_archive, pathname + 2, &size);
     }
 #else
-    LOG_ERROR("Warning: attempted to use fopen with no file system (CONFIG_LIB_SEL4_MUSLC_SYS_CPIO_FS not set)\n");
+    ZF_LOGE("Warning: attempted to use fopen with no file system (CONFIG_LIB_SEL4_MUSLC_SYS_CPIO_FS not set)\n");
     return -ENOENT;
 #endif
     if (!file) {
-        LOG_ERROR("Failed to open file %s\n", pathname);
+        ZF_LOGE("Failed to open file %s\n", pathname);
         return -ENOENT;
     }
     int fd = allocate_fd();
     if (fd == -EMFILE) {
-        LOG_ERROR("Out of fds!\n");
+        ZF_LOGE("Out of fds!\n");
         return -EMFILE;
     }
 
@@ -241,7 +241,7 @@ sys_open(va_list ap)
     fds->filetype = FILE_TYPE_CPIO;
     fds->data = malloc(sizeof(cpio_file_data_t));
     if (!fds->data) {
-        LOG_ERROR("Malloc failed\n");
+        ZF_LOGE("Malloc failed\n");
         add_free_fd(fd);
         return -ENOMEM;
     }
@@ -519,6 +519,6 @@ long sys_access(va_list ap) {
         close(fd);
         return 0;
     }
-    LOG_ERROR("Must pass F_OK or R_OK to %s\n", __FUNCTION__);
+    ZF_LOGE("Must pass F_OK or R_OK to %s\n", __FUNCTION__);
     return -EACCES;
 }

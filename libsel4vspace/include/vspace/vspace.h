@@ -75,7 +75,7 @@ void *vspace_share_mem(vspace_t *from, vspace_t *to, void *start, int num_pages,
  * @return vaddr at the start of the device mapping
  *         NULL on failure.
  */
-void *vspace_map_pages(vspace_t *vspace, seL4_CPtr caps[], uint32_t cookies[],
+void *vspace_map_pages(vspace_t *vspace, seL4_CPtr caps[], uintptr_t cookies[],
                        seL4_CapRights rights, size_t num_pages, size_t size_bits,
                        int cacheable);
 /**
@@ -163,7 +163,7 @@ typedef int (*vspace_new_pages_at_vaddr_fn)(vspace_t *vspace, void *vaddr, size_
  *`
  * @param vspace the virtual memory allocator used.
  * @param seL4_CPtr caps array of caps to map in
- * @param uint32_t cookies array of allocation cookies. Populate this if you want the vspace to
+ * @param uintptr_t cookies array of allocation cookies. Populate this if you want the vspace to
  *                         be able to free the caps for you with a vka. NULL acceptable.
  * @param size_bits size, in bits, of an individual page -- all pages must be the same size.
  * @param num_pages the number of pages to map in (must correspond to the size of the array).
@@ -172,7 +172,7 @@ typedef int (*vspace_new_pages_at_vaddr_fn)(vspace_t *vspace, void *vaddr, size_
  * @return seL4_NoError on success. -1 on failure.
  *         NULL on failure.
  */
-typedef int (*vspace_map_pages_at_vaddr_fn)(vspace_t *vspace, seL4_CPtr caps[], uint32_t cookies[],
+typedef int (*vspace_map_pages_at_vaddr_fn)(vspace_t *vspace, seL4_CPtr caps[], uintptr_t cookies[],
                                             void *vaddr, size_t num_pages,
                                             size_t size_bits, reservation_t reservation);
 
@@ -298,7 +298,7 @@ typedef seL4_CPtr (*vspace_get_cap_fn)(vspace_t *vspace, void *vaddr);
  *
  * @return the allocation cookie mapped to this virtual address, 0 otherwise.
  */
-typedef uint32_t (*vspace_get_cookie_fn)(vspace_t *vspace, void *vaddr);
+typedef uintptr_t (*vspace_get_cookie_fn)(vspace_t *vspace, void *vaddr);
 
 /**
  * Function that the vspace allocator will call if it allocates any memory.
@@ -384,7 +384,7 @@ vspace_new_pages_at_vaddr(vspace_t *vspace, void *vaddr, size_t num_pages, size_
 }
 
 static inline int
-vspace_map_pages_at_vaddr(vspace_t *vspace, seL4_CPtr caps[], uint32_t cookies[], void *vaddr,
+vspace_map_pages_at_vaddr(vspace_t *vspace, seL4_CPtr caps[], uintptr_t cookies[], void *vaddr,
                           size_t num_pages, size_t size_bits, reservation_t reservation)
 {
     if (vspace == NULL) {
@@ -419,7 +419,7 @@ vspace_unmap_pages(vspace_t *vspace, void *vaddr, size_t num_pages, size_t size_
     }
 
     if (num_pages == 0) {
-        printf("Num pages : %d\n", num_pages);
+        printf("Num pages : %zu\n", num_pages);
         ZF_LOGW("Attempt to unmap 0 pages");
         return;
     }
@@ -558,7 +558,7 @@ vspace_get_cap(vspace_t *vspace, void *vaddr)
     return vspace->get_cap(vspace, vaddr);
 }
 
-static inline uint32_t
+static inline uintptr_t
 vspace_get_cookie(vspace_t *vspace, void *vaddr)
 {
     if (vspace == NULL) {
@@ -601,6 +601,10 @@ vspace_get_root(vspace_t *vspace)
         ZF_LOGE("vspace is NULL");
         return seL4_CapNull;
     }
+    if (vspace->get_root == NULL) {
+        ZF_LOGE("Not implemented");
+        return seL4_CapNull;
+    }
     return vspace->get_root(vspace);
 }
 
@@ -624,10 +628,12 @@ vspace_share_mem_at_vaddr(vspace_t *from, vspace_t *to, void *start, int num_pag
 
     if (to == NULL) {
         ZF_LOGE("To vspace does not exist");
+        return -1;
     }
 
     if (start == NULL || vaddr == NULL) {
         ZF_LOGE("Cannot share memory at NULL");
+        return -1;
     }
 
     if (from->share_mem_at_vaddr == NULL) {

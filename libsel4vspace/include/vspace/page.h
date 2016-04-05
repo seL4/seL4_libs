@@ -25,7 +25,7 @@ sel4_valid_size_bits(size_t size_bits)
     for (int i = 0; i < SEL4_NUM_PAGE_SIZES && size_bits >= sel4_page_sizes[i]; i++) {
         /* sanity check, sel4_page_sizes should be ordered */
         if (i > 0) {
-            assert(sel4_page_sizes[i] < sel4_page_sizes[i+1]);
+            assert(sel4_page_sizes[i - 1] < sel4_page_sizes[i]);
         }
         if (size_bits == sel4_page_sizes[i]) {
             return true;

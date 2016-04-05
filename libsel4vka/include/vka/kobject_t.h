@@ -15,37 +15,28 @@
 #include <assert.h>
 #include <autoconf.h>
 #include <utils/util.h>
+#include <vka/arch/kobject_t.h>
 
 /* Generic Kernel Object Type used by generic allocator */
 
-typedef enum _kobject_type {
-    KOBJECT_TCB,
+enum _kobject_type {
+    KOBJECT_TCB = KOBJECT_ARCH_NUM_TYPES,
     KOBJECT_CNODE,
     KOBJECT_CSLOT,
     KOBJECT_UNTYPED,
     KOBJECT_ENDPOINT,
     KOBJECT_NOTIFICATION,
-    KOBJECT_FRAME,
-    KOBJECT_PAGE_DIRECTORY,
-    KOBJECT_PAGE_TABLE,
     KOBJECT_SCHED_CONTEXT,
-#ifdef CONFIG_X86_64
-    KOBJECT_PAGE_MAP_LEVEL4,
-    KOBJECT_PAGE_DIRECTORY_POINTER_TABLE,
-#endif
-#ifdef CONFIG_IOMMU
-    KOBJECT_IO_PAGETABLE,
-#endif
 #ifdef CONFIG_CACHE_COLORING
     KOBJECT_KERNEL_IMAGE,
 #endif
     NUM_KOBJECT_TYPES
 
-} kobject_t;
+};
+
 DEPRECATED("Use KOBJECT_NOTIFICATION") static const kobject_t KOBJECT_ASYNC_ENDPOINT = KOBJECT_NOTIFICATION;
 DEPRECATED("Use KOBJECT_ENDPOINT") static const kobject_t KOBJECT_SYNC_ENDPOINT  = KOBJECT_ENDPOINT;
 
-#include <vka/arch/kobject_t.h>
 /*
  * Get the size (in bits) of the untyped memory required to
  * create an object of the given size.

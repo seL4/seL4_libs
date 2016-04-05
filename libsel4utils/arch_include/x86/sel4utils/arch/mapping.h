@@ -11,5 +11,6 @@
 #define _SEL4UTILS_ARCH_MAPPING_H
 
 #include <vspace/arch/page.h>
+#include <sel4utils/sel4_arch/mapping.h>
 
 #endif /* _SEL4UTILS_ARCH_MAPPING_H */

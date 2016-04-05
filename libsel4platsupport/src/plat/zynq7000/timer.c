@@ -28,7 +28,7 @@ sel4platsupport_get_timer(enum timer_id id, vka_t *vka, vspace_t *vspace,
     /* Allocate the timer structure */
     timer = calloc(1, sizeof(*timer));
     if (timer == NULL) {
-        LOG_ERROR("Failed to allocate object of size %u\n", sizeof(seL4_timer_t));
+        ZF_LOGE("Failed to allocate object of size %u\n", sizeof(seL4_timer_t));
         return NULL;
     }
     /* init seL4 resources */

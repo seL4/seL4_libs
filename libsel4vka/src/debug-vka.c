@@ -92,8 +92,8 @@ static void track_slot(state_t *state, seL4_CPtr slot)
     unsigned int available = 0;
     for (unsigned int i = 0; i < state->live_slots_sz; i++) {
         if (state->live_slots[i] == slot) {
-            fatal("allocator attempted to hand out slot %u that is currently "
-                  "in use", slot);
+            fatal("allocator attempted to hand out slot %lu that is currently "
+                  "in use", (long)slot);
         } else if (available == i && state->live_slots[i] != 0) {
             available++;
         }
@@ -133,7 +133,7 @@ static void untrack_slot(state_t *state, seL4_CPtr slot)
             return;
         }
     }
-    fatal("attempt to free slot %u that was not live (double free?)", slot);
+    fatal("attempt to free slot %lu that was not live (double free?)", (long)slot);
 }
 
 static void cspace_free(void *data, seL4_CPtr slot)
@@ -202,7 +202,7 @@ static void track_obj(state_t *state, seL4_Word type, seL4_Word size_bits,
 }
 
 static int utspace_alloc(void *data, const cspacepath_t *dest, seL4_Word type,
-                         seL4_Word size_bits, uint32_t *res)
+                         seL4_Word size_bits, seL4_Word *res)
 {
     assert(data != NULL);
 
@@ -224,30 +224,30 @@ static int utspace_alloc(void *data, const cspacepath_t *dest, seL4_Word type,
 
 /* Stop tracking an object that is now dead. */
 static void untrack_obj(state_t *state, seL4_Word type, seL4_Word size_bits,
-                        uint32_t cookie)
+                        seL4_Word cookie)
 {
     assert(state != NULL);
 
     for (unsigned int i = 0; i < state->live_objs_sz; i++) {
         if (state->live_objs[i].cookie == cookie) {
             if (state->live_objs[i].type != type) {
-                fatal("attempt to free object with type %u that was allocated "
-                      "with type %u", type, state->live_objs[i].type);
+                fatal("attempt to free object with type %d that was allocated "
+                    "with type %d", (int)type, (int)state->live_objs[i].type);
             }
             if (state->live_objs[i].size_bits != size_bits) {
-                fatal("attempt to free object with size %u that was allocated "
-                      "with size %u", size_bits, state->live_objs[i].size_bits);
+                fatal("attempt to free object with size %d that was allocated "
+                    "with size %d", (int)size_bits, (int)state->live_objs[i].size_bits);
             }
             state->live_objs[i].cookie = 0;
             return;
         }
     }
-    fatal("attempt to free object %u that was not live (double free?)",
-          cookie);
+    fatal("attempt to free object %lu that was not live (double free?)",
+          (long)cookie);
 }
 
 static void utspace_free(void *data, seL4_Word type, seL4_Word size_bits,
-                         uint32_t target)
+                         seL4_Word target)
 {
     assert(data != NULL);
 

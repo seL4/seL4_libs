@@ -49,6 +49,7 @@ sel4platsupport_get_gpt_impl(vspace_t *vspace, simple_t *simple, vka_t *vka, seL
     }
 
     timer->handle_irq = timer_common_handle_irq;
+    timer->destroy = timer_common_destroy;
 
     /* do hardware init */
     gpt_config_t config = {
@@ -71,8 +72,7 @@ sel4platsupport_get_gpt_impl(vspace_t *vspace, simple_t *simple, vka_t *vka, seL
     return timer;
 error:
     if (timer != NULL) {
-        timer_common_destroy(timer->data, vka, vspace);
-        free(timer);
+        timer_common_destroy(timer, vka, vspace);
     }
 
     return NULL;
@@ -100,11 +100,4 @@ sel4platsupport_get_abs_gpt(vspace_t *vspace, simple_t *simple, vka_t *vka, seL4
 {
     return sel4platsupport_get_gpt_impl(vspace, simple, vka, notification, gpt_id, 
                                        prescaler, false);
-}
-void
-sel4platsupport_destroy_gpt(seL4_timer_t *timer, vka_t *vka, vspace_t *vspace)
-{
-    timer_stop(timer->timer);
-    timer_common_destroy(timer->data, vka, vspace);
-    free(timer);
 }

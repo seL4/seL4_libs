@@ -18,6 +18,7 @@
 
 #include <sel4test/prototype.h>
 #include <sel4test/macros.h>
+#include <utils/attribute.h>
 
 #include <inttypes.h>
 #include <stdbool.h>
@@ -38,12 +39,24 @@ typedef struct env *env_t;
 /* Prototype of a test function. Returns false on failure. */
 typedef int (*test_fn)(env_t);
 
-/* Represents a single testcase. */
+/* Represents a single testcase.
+ * Because this struct is used to declare variables that get
+ * placed into custom sections, that we later treat as an array,
+ * we need to provide some additional alignment. The reason for
+ * this is because these are independent static variables gcc
+ * is permitted to place arbitrary padding between them. This
+ * is annoying as we wish to treat all the items in the section
+ * as an array. To work around this we use the fact that GCC
+ * seems to be wanting to align to 32byte boundaries and set
+ * the struct alignment to 32. Therefore the actual size of
+ * the objects in the section is the same as the size reported
+ * by sizeof(struct testcase), allowing as to treat the items
+ * in the section as an array */
 typedef struct testcase {
     const char *name;
     const char *description;
     test_fn function;
-} testcase_t;  
+} ALIGN(32) testcase_t;
 
 /* Declare a testcase. */
 #define DEFINE_TEST(_name, _description, _function) \
@@ -130,10 +143,10 @@ static inline void _test_abort(char *condition, char *file, int line)
          typeof (a) _a = (a); \
          typeof (b) _b = (b); \
          if (sizeof(_a) != sizeof(_b)) { \
-             int len = snprintf(NULL, 0, "%s (size %d) != %s (size %d), use of test_eq incorrect", #a,\
+             int len = snprintf(NULL, 0, "%s (size %zu) != %s (size %zu), use of test_eq incorrect", #a,\
                      sizeof(_a), #b, sizeof(_b)) + 1;\
              char buffer[len];\
-             snprintf(buffer, len, "%s (size %d) != %s (size %d), use of test_eq incorrect", #a, sizeof(_a),\
+             snprintf(buffer, len, "%s (size %zu) != %s (size %zu), use of test_eq incorrect", #a, sizeof(_a),\
                      #b, sizeof(_b));\
              _test_error(buffer, __FILE__, __LINE__);\
          } else if (TYPES_COMPATIBLE(typeof(_a), int)) {\

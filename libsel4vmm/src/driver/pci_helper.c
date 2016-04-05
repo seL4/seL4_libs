@@ -48,11 +48,11 @@ typedef struct pci_cap_emulation {
 
 int vmm_pci_mem_device_read(void *cookie, int offset, int size, uint32_t *result) {
     if (offset < 0) {
-        LOG_ERROR("Offset should not be negative");
+        ZF_LOGE("Offset should not be negative");
         return -1;
     }
     if (offset + size >= 0x40) {
-        LOG_INFO("Indexing capability space not yet supported, returning 0");
+        ZF_LOGI("Indexing capability space not yet supported, returning 0");
         *result = 0;
         return 0;
     }
@@ -243,7 +243,7 @@ vmm_pci_entry_t vmm_pci_create_passthrough(vmm_pci_address_t addr, vmm_pci_confi
     assert(dev);
     dev->addr = addr;
     dev->config = config;
-    LOG_INFO("Creating passthrough device for %02x:%02x.%d", addr.bus, addr.dev, addr.fun);
+    ZF_LOGI("Creating passthrough device for %02x:%02x.%d", addr.bus, addr.dev, addr.fun);
     return (vmm_pci_entry_t){.cookie = dev, .ioread = passthrough_pci_config_ioread, .iowrite = passthrough_pci_config_iowrite};
 }
 
@@ -258,7 +258,7 @@ int vmm_pci_helper_map_bars(vmm_t *vmm, libpci_device_iocfg_t *cfg, vmm_pci_bar_
         assert(size != 0);
         int size_bits = 31 - CLZ(size);
         if (BIT(size_bits) != size) {
-            LOG_ERROR("PCI bar is not power of 2 size (0x%x)", size);
+            ZF_LOGE("PCI bar is not power of 2 size (0x%x)", size);
             return -1;
         }
         bars[bar].size_bits = size_bits;
@@ -266,7 +266,7 @@ int vmm_pci_helper_map_bars(vmm_t *vmm, libpci_device_iocfg_t *cfg, vmm_pci_bar_
             /* Need to map into the VMM. Make sure it is aligned */
             uintptr_t addr = vmm_map_guest_device(vmm, cfg->base_addr[i], size, BIT(size_bits));
             if(addr == 0) {
-                LOG_ERROR("Failed to map PCI bar 0x%x size 0x%x", cfg->base_addr[i], size);
+                ZF_LOGE("Failed to map PCI bar 0x%x size 0x%x", cfg->base_addr[i], size);
                 return -1;
             }
             bars[bar].ismem = 1;
@@ -319,7 +319,7 @@ static int pci_cap_emul_read(void *cookie, int offset, int size, uint32_t *resul
     for (i = 0; i < emul->num_ignore; i++) {
         if (offset <= emul->ignore_start[i] && offset+size > emul->ignore_end[i]) {
             /* who cares about the size, just ignore everything */
-            LOG_INFO("Attempted read at 0x%x of size %d from region 0x%x-0x%x", offset, size, emul->ignore_start[i], emul->ignore_end[i]);
+            ZF_LOGI("Attempted read at 0x%x of size %d from region 0x%x-0x%x", offset, size, emul->ignore_start[i], emul->ignore_end[i]);
             *result = 0;
             return 0;
         }
@@ -351,7 +351,7 @@ static int pci_cap_emul_write(void *cookie, int offset, int size, uint32_t value
     for (i = 0; i < emul->num_ignore; i++) {
         if (offset <= emul->ignore_start[i] && offset+size > emul->ignore_end[i]) {
             /* who cares about the size, just ignore everything */
-            LOG_INFO("Attempted write at 0x%x of size %d from region 0x%x-0x%x", offset, size, emul->ignore_start[i], emul->ignore_end[i]);
+            ZF_LOGI("Attempted write at 0x%x of size %d from region 0x%x-0x%x", offset, size, emul->ignore_start[i], emul->ignore_end[i]);
             return 0;
         }
     }

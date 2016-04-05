@@ -36,6 +36,4 @@ typedef timer_common_data_t pwm_data;
 seL4_timer_t *sel4platsupport_get_pwm(vspace_t *vspace, simple_t *simple, vka_t *vka,
                                       seL4_CPtr notification);
 
-void sel4platsupport_destroy_pwm(seL4_timer_t *timer, vka_t *vka, vspace_t *vspace);
-
 #endif /* __SEL4_PLAT_SUPPORT_PWM_H */

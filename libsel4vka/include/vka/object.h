@@ -38,7 +38,7 @@ static inline int
 vka_alloc_object(vka_t *vka, seL4_Word type, seL4_Word size_bits, vka_object_t *result)
 {
     seL4_CPtr cptr;
-    uint32_t ut;
+    seL4_Word ut;
     int error;
     cspacepath_t path;
 
@@ -206,18 +206,6 @@ LEAKY_SIZE_BITS(frame)
 LEAKY_SIZE_BITS(cnode_object)
 
 #include <vka/arch/object.h>
-
-/* The name of the object that defines a vspace root can vary, this provides
- * an abstraction for code that doesn't want to care about the type and
- * just wants whatever object fills this role */
-static inline int vka_alloc_vspace_root(vka_t *vka, vka_object_t *result)
-{
-#ifdef CONFIG_PAE_PAGING
-    return vka_alloc_pdpt(vka, result);
-#else
-    return vka_alloc_page_directory(vka, result);
-#endif
-}
 
 /*
  * Get the size (in bits) of the untyped memory required to create an object of

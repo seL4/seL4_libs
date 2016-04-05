@@ -19,18 +19,6 @@
 
 #include <sel4platsupport/timer.h>
 
-
-/*
- * Allocate a cslot for an irq and get the cap for that irq.
- *
- * @param irq_number to get the cap to
- * @return the cap to the irq
- */
-seL4_CPtr timer_common_get_irq(vka_t *vka, simple_t *simple, uint32_t irq_number);
-
-void timer_common_cleanup_irq(vka_t *vka, seL4_CPtr irq);
-
-void timer_common_handle_irq(seL4_timer_t *timer, uint32_t irq);
 /**
  *
  * Some of our timers require 1 irq, 1 frame and an notification.
@@ -47,6 +35,9 @@ timer_common_data_t *timer_common_init(vspace_t *vspace, simple_t *simple,
 /*
  * Something went wrong, clean up everything we did in timer_common_init.
  */
-void timer_common_destroy(timer_common_data_t *data, vka_t *vka, vspace_t *vspace);
+void timer_common_destroy(seL4_timer_t *timer, vka_t *vka, vspace_t *vspace);
+void timer_common_cleanup_irq(vka_t *vka, seL4_CPtr irq);
+
+void timer_common_handle_irq(seL4_timer_t *timer, uint32_t irq);
 
 #endif /* _SEL4PLATSUPPORT_TIMER_INTERNAL_H */

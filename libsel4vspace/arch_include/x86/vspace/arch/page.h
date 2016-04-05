@@ -10,6 +10,7 @@
 #ifndef _VSPACE_ARCH_PAGE_H
 #define _VSPACE_ARCH_PAGE_H
 
+#include <autoconf.h>
 #include <stddef.h>
 #include <utils/attribute.h>
 #include <sel4/sel4_arch/constants.h>
@@ -18,6 +19,9 @@
 static const UNUSED size_t sel4_page_sizes[] = {
     seL4_PageBits,
     seL4_LargePageBits,
+#ifdef CONFIG_HUGE_PAGE
+    seL4_HugePageBits,
+#endif
 };
 
 #define seL4_ARCH_Page_Map             seL4_X86_Page_Map

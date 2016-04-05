@@ -12,16 +12,31 @@
 #define __SEL4PLATSUPPORT_DEVICE_H__
 
 #include <sel4/sel4.h>
+#include <simple/simple.h>
+#include <vka/vka.h>
 
-/**
- * Parse a device cap from boot info.
- *
- * @param paddr     physical address of the device
- * @param page_bits page size in bits of the device page
- *
- * @return 0 on failure, otherwise the cap.
+/*  
+ * Allocate a cslot for a physical frame and get the cap for that frame.
+ * 
+ * @param vka to allocate slot with
+ * @param simple to get the cap from
+ * @param paddr to get the cap for
+ * @param size_bits size of frame in bits
+ * @param[out] dest empty path struct to return path to frame cap in. 
+ * @return 0 on success
  */
-seL4_CPtr
-platsupport_find_device_cap(seL4_Word paddr, seL4_Word page_bits);
+seL4_Error sel4platsupport_copy_frame_cap(vka_t *vka, simple_t *simple, void *paddr, 
+                                          size_t size_bits, cspacepath_t *dest);
 
+/*
+ * Allocate a cslot for an irq and get the cap for an irq.
+ 
+ * @param vka to allocate slot with
+ * @param simple to get the cap from
+ * @param irq_number to get the cap to
+ * @param[out] dest empty path struct to return path to irq in 
+ * @return 0 on success
+ */
+seL4_Error sel4platsupport_copy_irq_cap(vka_t *vka, simple_t *simple, seL4_Word irq, 
+                                       cspacepath_t *dest);
 #endif /* __SEL4PLATSUPPORT_DEVICE_H__ */

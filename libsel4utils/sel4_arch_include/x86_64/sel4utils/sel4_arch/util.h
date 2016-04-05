@@ -7,23 +7,16 @@
  *
  * @TAG(NICTA_BSD)
  */
-#ifndef _SEL4UTILS_ARCH_UTIL_H
-#define _SEL4UTILS_ARCH_UTIL_H
+#ifndef _SEL4UTILS_SEL4_ARCH_UTIL_H
+#define _SEL4UTILS_SEL4_ARCH_UTIL_H
 
+#include <stdint.h>
 #include <sel4/sel4.h>
 #include <sel4/arch/pfIPC.h>
 #include <sel4/arch/exIPC.h>
 
-#define EXCEPT_IPC_SYS_MR_IP EXCEPT_IPC_RIP
+#define EXCEPT_IPC_SYS_MR_IP EXCEPT_IPC_SYS_MR_RIP
 #define ARCH_SYSCALL_INSTRUCTION_SIZE 2
-
-static inline int
-sel4utils_is_read_fault(void)
-{
-    seL4_Word fsr = seL4_GetMR(SEL4_PFIPC_FSR);
-    return (fsr & (1 << 1)) == 0;
-}
-
 
 static inline void
 sel4utils_set_instruction_pointer(seL4_UserContext *regs, seL4_Word value)
@@ -37,17 +30,16 @@ sel4utils_get_instruction_pointer(seL4_UserContext regs)
     return regs.rip;
 }
 
+static inline seL4_Word
+sel4utils_get_sp(seL4_UserContext regs)
+{
+    return regs.rsp;
+}
+
 static inline void
 sel4utils_set_stack_pointer(seL4_UserContext *regs, seL4_Word value)
 {
     regs->rsp = value;
 }
 
-static inline void
-sel4utils_set_arg0(seL4_UserContext *regs, seL4_Word value)
-{
-    regs->rdi = value;
-}
-#endif /* _SEL4UTILS_ARCH_UTIL_H */
-
-
+#endif /* _SEL4UTILS_SEL4_ARCH_UTIL_H */

@@ -28,15 +28,9 @@
 
     .text
 
-#ifdef X86_64
-
 .align 0x1000
 _start:
     leaq    _stack_top, %rsp
-
-    /* Setup segment selector for IPC buffer access. */
-    movw    $IPCBUF_GDT_SELECTOR, %ax
-    movw    %ax, %gs
 
 #   setup the bootinfo
     movq    %rbx, %rdi
@@ -51,33 +45,6 @@ _start:
     call    exit
 
 1:  jmp     1b
-
-#else
-
-_start:
-    leal    _stack_top, %esp
-
-    /* Setup segment selector for IPC buffer access. */
-    movw    $IPCBUF_GDT_SELECTOR, %ax
-    movw    %ax, %gs
-
-    /* Setup the global "bootinfo" structure. */
-    pushl   %ebx
-    call    seL4_InitBootInfo
-    addl    $4, %esp
-
-    /* Call constructors and other initialisation functions. */
-    call    _init
-
-    /* Start main. */
-    call    main
-
-    /* Call exit with the return value from main. */
-    pushl   %eax
-    call    exit
-1:  jmp     1b
-
-#endif
 
     .bss
     .align  8

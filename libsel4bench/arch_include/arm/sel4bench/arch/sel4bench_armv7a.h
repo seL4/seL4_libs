@@ -84,10 +84,11 @@ static FASTFN seL4_Word sel4bench_get_num_counters() {
 }
 
 static FASTFN sel4bench_counter_t sel4bench_get_cycle_count() {
+   uint32_t val;
 	uint32_t enable_word = sel4bench_private_read_cntens(); //store running state
 
 	sel4bench_private_write_cntenc(BIT(SEL4BENCH_ARMV7A_COUNTER_CCNT)); //stop CCNT
-	uint32_t val = sel4bench_private_read_ccnt(); //read its value
+	SEL4BENCH_READ_CCNT(val); //read its value
 	sel4bench_private_write_cntens(enable_word); //start it again if it was running
 
 	return val;
@@ -132,7 +133,8 @@ static CACHESENSFN sel4bench_counter_t sel4bench_get_counters(seL4_Word counters
 		}
 	}
 
-	uint32_t ccnt = sel4bench_private_read_ccnt(); //finally, read CCNT
+   uint32_t ccnt;
+   SEL4BENCH_READ_CCNT(ccnt); //finally, read CCNT
 
 	sel4bench_private_write_cntens(enable_word); //start the counters again
 

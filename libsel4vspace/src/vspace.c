@@ -91,7 +91,7 @@ vspace_share_mem(vspace_t *from, vspace_t *to, void *start, int num_pages, size_
 }
 
 void *
-vspace_map_pages(vspace_t *vspace, seL4_CPtr caps[], uint32_t cookies[], seL4_CapRights rights,
+vspace_map_pages(vspace_t *vspace, seL4_CPtr caps[], uintptr_t cookies[], seL4_CapRights rights,
                  size_t num_caps, size_t size_bits, int cacheable)
 {
 

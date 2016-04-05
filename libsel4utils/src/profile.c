@@ -10,6 +10,7 @@
 
 #include <sel4utils/profile.h>
 #include <stdio.h>
+#include <inttypes.h>
 
 /*
  *  __start_SECTION_NAME and __stop_SECTION_NAME are magic symbols inserted by the gcc
@@ -20,11 +21,11 @@ extern profile_var_t __stop__profile_var[];
 
 void profile_print32(uint32_t value, const char *varname, const char *description, void *cookie)
 {
-    printf("%s: %u %s\n", varname, value, description);
+    printf("%s: %"PRIu32" %s\n", varname, value, description);
 }
 void profile_print64(uint64_t value, const char *varname, const char *description, void *cookie)
 {
-    printf("%s: %llu %s\n", varname, value, description);
+    printf("%s: %"PRIu64" %s\n", varname, value, description);
 }
 
 void profile_scrape(profile_callback32 callback32, profile_callback64 callback64, void *cookie)
@@ -39,7 +40,7 @@ void profile_scrape(profile_callback32 callback32, profile_callback64 callback64
             callback64(*(uint64_t*)i->var, i->varname, i->description, cookie);
             break;
         default:
-            LOG_ERROR("Unknown profile var. Probable memory corruption or linker failure!");
+            ZF_LOGE("Unknown profile var. Probable memory corruption or linker failure!");
             break;
         }
     }
@@ -57,7 +58,7 @@ void profile_reset(void)
             *(uint64_t*)i->var = 0;
             break;
         default:
-            LOG_ERROR("Unknown profile var. Probable memory corruption or linker failure!");
+            ZF_LOGE("Unknown profile var. Probable memory corruption or linker failure!");
             break;
         }
     }

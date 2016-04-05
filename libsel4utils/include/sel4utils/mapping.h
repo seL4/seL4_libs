@@ -14,12 +14,34 @@
 #include <autoconf.h>
 #include <utils/util.h>
 #include <sel4/sel4.h>
+#include <sel4/sel4_arch/mapping.h>
 #include <sel4utils/arch/mapping.h>
 
 #ifdef CONFIG_LIB_SEL4_VKA
 
 #include <vka/vka.h>
 #include <vka/object.h>
+
+/*
+ * Create and map the paging object for a particular level of the hierarchy
+ * This is an architecturarly implemented function, prototyped here to
+ * define its interface
+ *
+ * @param vka a vka compliant allocator
+ * @param failed_bits Number of bits left to translate in the vspace hierarchy.
+ *                    This is the value returned by seL4_ARCH_Page_Map when a
+ *                    seL4_InvalidLookup error occurs
+ * @param objects Pointer to a list of objects that may be partially filled already
+ *                The created paging object (if any) will be added to the next
+ *                free location in this array
+ * @param num_objects Pointer to how many objects in the `objects` parameter have
+ *                    been defined. If an object is added to the `objects` list
+ *                    will be incremented
+ * @param vaddr virtual address to map the object at
+ * @param vspace_root cap to a root vspace object to map into
+ */
+static int
+sel4utils_create_object_at_level(vka_t *vka, seL4_Word failed_bits, vka_object_t *objects, int *num_objects, void *vaddr, seL4_CPtr vspace_root);
 
 /* Map a page to a virtual address, allocating a page table if necessary.
 *

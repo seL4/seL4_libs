@@ -11,5 +11,16 @@
 #define _SEL4UTILS_ARCH_MAPPING_H
 
 #include <vspace/page.h>
+#include <vka/vka.h>
+#include <vka/object.h>
+
+static inline int
+sel4utils_create_object_at_level(vka_t *vka, seL4_Word failed_bits, vka_object_t *objects, int *num_objects, void *vaddr, seL4_CPtr vspace_root)
+{
+    /* we have no objects other than the page table, that should already have been
+     * handled, so calling this function is an error */
+     ZF_LOGF("Should no be called");
+     return seL4_InvalidArgument;
+}
 
 #endif /* _SEL4UTILS_ARCH_MAPPING_H */

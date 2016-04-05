@@ -19,6 +19,12 @@
 
 #define SEL4BENCH_API static __attribute__((unused))
 
+
+/* The fence is designed to try and prevent the compiler optimizing across code boundaries
+   that we don't want it to. The reason for preventing optimization is so that things like
+   overhead calculations aren't unduly influenced */
+#define SEL4BENCH_FENCE() asm volatile("" ::: "memory")
+
 /**
  * @file
  * 

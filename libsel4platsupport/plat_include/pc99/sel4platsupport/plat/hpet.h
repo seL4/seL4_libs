@@ -40,6 +40,4 @@ typedef timer_common_data_t hpet_data;
 seL4_timer_t *sel4platsupport_get_hpet(vspace_t *vspace, simple_t *simple, acpi_t *acpi,
                                        vka_t *vka, seL4_CPtr notification, uint32_t irq_number);
 
-/* Clean up and stop the timer */
-void sel4platsupport_destroy_hpet(seL4_timer_t *timer, vka_t *vka, vspace_t *vspace);
 #endif /* __SEL4_PLATSUPPORT_HPET_H */

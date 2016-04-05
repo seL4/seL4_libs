@@ -70,7 +70,7 @@ sel4utils_configure_thread_config(simple_t *simple, vka_t *vka, vspace_t *parent
 
     int error = vka_alloc_tcb(vka, &res->tcb);
     if (error == -1) {
-        LOG_ERROR("vka_alloc tcb failed");
+        ZF_LOGE("vka_alloc tcb failed");
         sel4utils_clean_up_thread(vka, alloc, res);
         return -1;
     }
@@ -78,12 +78,12 @@ sel4utils_configure_thread_config(simple_t *simple, vka_t *vka, vspace_t *parent
     res->ipc_buffer_addr = (seL4_Word) vspace_new_ipc_buffer(alloc, &res->ipc_buffer);
 
     if (res->ipc_buffer_addr == 0) {
-        LOG_ERROR("ipc buffer allocation failed");
+        ZF_LOGE("ipc buffer allocation failed");
         return -1;
     }
 
     if (write_ipc_buffer_user_data(vka, parent, res->ipc_buffer, res->ipc_buffer_addr)) {
-        LOG_ERROR("failed to set user data word in IPC buffer");
+        ZF_LOGE("failed to set user data word in IPC buffer");
         return -1;
     }
 
@@ -123,7 +123,7 @@ sel4utils_configure_thread_config(simple_t *simple, vka_t *vka, vspace_t *parent
                                prio, res->sched_context.cptr, config.cspace, config.cspace_root_data, vspace_get_root(alloc), null_cap_data, res->ipc_buffer_addr, res->ipc_buffer);
 
     if (error != seL4_NoError) {
-        LOG_ERROR("TCB configure failed with seL4 error code %d", error);
+        ZF_LOGE("TCB configure failed with seL4 error code %d", error);
         sel4utils_clean_up_thread(vka, alloc, res);
         return -1;
     }
@@ -131,7 +131,7 @@ sel4utils_configure_thread_config(simple_t *simple, vka_t *vka, vspace_t *parent
     res->stack_top = vspace_new_stack(alloc);
 
     if (res->stack_top == NULL) {
-        LOG_ERROR("Stack allocation failed!");
+        ZF_LOGE("Stack allocation failed!");
         sel4utils_clean_up_thread(vka, alloc, res);
         return -1;
     }
@@ -249,7 +249,7 @@ sel4utils_start_fault_handler(seL4_CPtr fault_endpoint, simple_t *simple, vka_t 
                                            cap_data, res);
 
     if (error) {
-        LOG_ERROR("Failed to configure fault handling thread\n");
+        ZF_LOGE("Failed to configure fault handling thread\n");
         return -1;
     }
 
@@ -269,7 +269,7 @@ sel4utils_checkpoint_thread(sel4utils_thread_t *thread, sel4utils_checkpoint_t *
     error = seL4_TCB_ReadRegisters(thread->tcb.cptr, suspend, 0, sizeof(seL4_UserContext) / sizeof(seL4_Word), 
             &checkpoint->regs);
     if (error) {
-        LOG_ERROR("Failed to read registers of tcb while checkpointing\n");
+        ZF_LOGE("Failed to read registers of tcb while checkpointing\n");
         return error;
     }
     
@@ -277,7 +277,7 @@ sel4utils_checkpoint_thread(sel4utils_thread_t *thread, sel4utils_checkpoint_t *
     
     checkpoint->stack = (void *) malloc(stack_size);
     if (checkpoint->stack == NULL) {
-        LOG_ERROR("Failed to malloc stack of size %u\n", stack_size);
+        ZF_LOGE("Failed to malloc stack of size %zu\n", stack_size);
         return -1;
     }
 
@@ -302,7 +302,7 @@ sel4utils_checkpoint_restore(sel4utils_checkpoint_t *checkpoint, bool free_memor
             sizeof(seL4_UserContext) / sizeof (seL4_Word), 
             &checkpoint->regs);
     if (error) {
-        LOG_ERROR("Failed to restore registers of tcb while restoring checkpoint\n");
+        ZF_LOGE("Failed to restore registers of tcb while restoring checkpoint\n");
         return error;
     }
 

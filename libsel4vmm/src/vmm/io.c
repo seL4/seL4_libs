@@ -118,8 +118,8 @@ int vmm_io_instruction_handler(vmm_vcpu_t *vcpu) {
     }
 
     if (ret) {
-        LOG_ERROR("vm exit io request: handler returned error.");
-        LOG_ERROR("vm exit io ERROR: string %d  in %d rep %d  port no 0x%x (%s) size %d", 0,
+        ZF_LOGE("vm exit io request: handler returned error.");
+        ZF_LOGE("vm exit io ERROR: string %d  in %d rep %d  port no 0x%x (%s) size %d", 0,
                 is_in, 0, port_no, vmm_debug_io_portno_desc(&vcpu->vmm->io_port, port_no), size);
         return -1;
     }
@@ -133,7 +133,7 @@ static int add_io_port_range(vmm_io_port_list_t *io_list, ioport_range_t port) {
     /* ensure this range does not overlap */
     for (int i = 0; i < io_list->num_ioports; i++) {
         if (io_list->ioports[i].port_end >= port.port_start && io_list->ioports[i].port_start <= port.port_end) {
-            LOG_ERROR("Requested ioport range 0x%x-0x%x for %s overlaps with existing range 0x%x-0x%x for %s",
+            ZF_LOGE("Requested ioport range 0x%x-0x%x for %s overlaps with existing range 0x%x-0x%x for %s",
                 port.port_start, port.port_end, port.desc ? port.desc : "Unknown IO Port", io_list->ioports[i].port_start, io_list->ioports[i].port_end, io_list->ioports[i].desc ? io_list->ioports[i].desc : "Unknown IO Port");
             return -1;
         }
@@ -168,7 +168,7 @@ int vmm_io_port_init_guest(vmm_io_port_list_t *io_list, simple_t *simple, seL4_C
             DPRINTF(1, "vmm io port: setting %s IO port 0x%x - 0x%x to passthrough\n", port->desc, port->port_start, port->port_end);
             seL4_CPtr ioport = simple_get_IOPort_cap(simple, port->port_start, port->port_end);
             if (!ioport) {
-                LOG_ERROR("Failed to get \"%s\" io port from simple for range 0x%x - 0x%x", port->desc, port->port_start, port->port_end);
+                ZF_LOGE("Failed to get \"%s\" io port from simple for range 0x%x - 0x%x", port->desc, port->port_start, port->port_end);
                 return -1;
             }
             error = seL4_IA32_VCPU_SetIOPort(vcpu, ioport);

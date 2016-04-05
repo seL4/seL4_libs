@@ -14,6 +14,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include <inttypes.h>
 #include <elf.h>
 #include <sel4/sel4.h>
 #include <vka/object.h>
@@ -26,15 +27,15 @@
 #include <sel4utils/mapping.h>
 #include "helpers.h"
 
-static int recurse = 0;
+static bool recurse = false;
 
 void
 sel4utils_allocated_object(void *cookie, vka_object_t object)
 {
-    if (recurse == 1) {
-        assert(!"VSPACE RECURSION ON MALLOC, YOU ARE DEAD\n");
+    if (recurse) {
+        ZF_LOGF("VSPACE RECURSION ON MALLOC, YOU ARE DEAD\n");
     }
-    recurse = 1;
+    recurse = true;
 
     sel4utils_process_t *process = (sel4utils_process_t *) cookie;
 
@@ -45,7 +46,7 @@ sel4utils_allocated_object(void *cookie, vka_object_t object)
     node->next = process->allocated_object_list_head;
     process->allocated_object_list_head = node;
 
-    recurse = 0;
+    recurse = false;
 }
 
 static void
@@ -86,7 +87,6 @@ allocate_next_slot(sel4utils_process_t *process)
     process->cspace_next_free++;
 }
 
-
 void
 sel4utils_create_word_args(char strings[][WORD_STRING_SIZE], char *argv[], int argc, ...)
 {
@@ -96,7 +96,7 @@ sel4utils_create_word_args(char strings[][WORD_STRING_SIZE], char *argv[], int a
     for (int i = 0; i < argc; i++) {
         seL4_Word arg = va_arg(args, seL4_Word);
         argv[i] = strings[i];
-        snprintf(argv[i], WORD_STRING_SIZE, "%d", arg);
+        snprintf(argv[i], WORD_STRING_SIZE, "%"PRIiPTR"", arg);
 
     }
 
@@ -141,6 +141,27 @@ sel4utils_copy_cap_to_process(sel4utils_process_t *process, cspacepath_t src)
     return dest.capPtr;
 }
 
+seL4_CPtr
+sel4utils_move_cap_to_process(sel4utils_process_t *process, cspacepath_t src, vka_t *from_vka)
+{
+    cspacepath_t dest;
+    if (next_free_slot(process, &dest) == -1) {
+        return 0;
+    }
+
+    int error = vka_cnode_move(&dest, &src);
+    if (error != seL4_NoError) {
+        ZF_LOGE("Failed to move cap\n");
+        return 0;
+    }
+
+    /* free slot in previous vka */
+    vka_cspace_free(from_vka, src.capPtr);
+
+    /* success */
+    allocate_next_slot(process);
+    return dest.capPtr;
+}
 int
 sel4utils_stack_write(vspace_t *current_vspace, vspace_t *target_vspace,
                       vka_t *vka, void *buf, size_t len, uintptr_t *stack_top)
@@ -228,7 +249,7 @@ sel4utils_spawn_process(sel4utils_process_t *process, vka_t *vka, vspace_t *vspa
     seL4_UserContext context = {0};
     size_t context_size = sizeof(seL4_UserContext) / sizeof(seL4_Word);
 
-    error = sel4utils_arch_init_context_with_args(process->entry_point, (void *) argc,
+    error = sel4utils_arch_init_context_with_args(process->entry_point, (void *) (uintptr_t)argc,
                                         (void *) new_process_argv,
                                         (void *) process->thread.ipc_buffer_addr, false,
                                         (void *) stack_top,
@@ -247,7 +268,7 @@ sel4utils_spawn_process_v(sel4utils_process_t *process, vka_t *vka, vspace_t *vs
     /* define an envp and auxp */
     int envc = 1;
     char ipc_buf_env[WORD_STRING_SIZE];
-    sprintf(ipc_buf_env, "IPCBUFFER=0x%x", process->thread.ipc_buffer_addr);
+    sprintf(ipc_buf_env, "IPCBUFFER=0x%"PRIxPTR"", process->thread.ipc_buffer_addr);
     char *envp[] = {ipc_buf_env};
     int auxc = process->sysinfo ? 1 : 0;
     Elf_auxv_t auxv[] = { {.a_type = AT_SYSINFO, .a_un = {process->sysinfo}}};
@@ -376,30 +397,33 @@ create_reservations(vspace_t *vspace, int num, sel4utils_elf_region_t regions[])
     return 0;
 }
 
-#ifndef CONFIG_KERNEL_STABLE
-static int
-assign_asid_pool(seL4_CPtr asid_pool, seL4_CPtr pd)
+static seL4_CPtr 
+get_asid_pool(seL4_CPtr asid_pool) 
 {
-
-    int error;
-
     if (asid_pool == 0) {
         ZF_LOGW("This method will fail if run in a thread that is not in the root server cspace\n");
         asid_pool = seL4_CapInitThreadASIDPool;
     }
 
-    error = seL4_ARCH_ASIDPool_Assign(asid_pool, pd);
+    return asid_pool;
+}
+
+static seL4_CPtr
+assign_asid_pool(seL4_CPtr asid_pool, seL4_CPtr pd)
+{
+
+    int error;
+    error = seL4_ARCH_ASIDPool_Assign(get_asid_pool(asid_pool), pd);
     if (error) {
         ZF_LOGE("Failed to assign asid pool\n");
     }
 
     return error;
 }
-#endif
 
 static int
 create_cspace(vka_t *vka, int size_bits, sel4utils_process_t *process,
-              seL4_CapData_t cspace_root_data)
+              seL4_CapData_t cspace_root_data, seL4_CPtr asid_pool)
 {
     int error;
 
@@ -415,10 +439,32 @@ create_cspace(vka_t *vka, int size_bits, sel4utils_process_t *process,
     process->cspace_next_free = 1;
 
     /*  mint the cnode cap into the process cspace */
+    UNUSED seL4_CPtr slot;
     cspacepath_t src;
     vka_cspace_make_path(vka, process->cspace.cptr, &src);
-    error = sel4utils_mint_cap_to_process(process, src, seL4_AllRights, cspace_root_data);
-    assert(error == SEL4UTILS_CNODE_SLOT);
+    slot = sel4utils_mint_cap_to_process(process, src, seL4_AllRights, cspace_root_data);
+    assert(slot == SEL4UTILS_CNODE_SLOT);
+
+    /* copy fault endpoint cap into process cspace */
+    if (process->fault_endpoint.cptr != 0) {
+        vka_cspace_make_path(vka, process->fault_endpoint.cptr, &src);
+        slot = sel4utils_copy_cap_to_process(process, src);
+        assert(slot == SEL4UTILS_ENDPOINT_SLOT);
+    } else {
+        /* no fault endpoint, update slot so next will work */
+        allocate_next_slot(process);
+    }
+
+    /* copy page directory cap into process cspace */
+    vka_cspace_make_path(vka, process->pd.cptr, &src);
+    slot = sel4utils_copy_cap_to_process(process, src);
+    assert(slot == SEL4UTILS_PD_SLOT);
+
+    if (!(config_set(CONFIG_KERNEL_STABLE) || config_set(CONFIG_X86_64))) {
+        vka_cspace_make_path(vka, get_asid_pool(asid_pool), &src);
+        slot = sel4utils_copy_cap_to_process(process, src);
+        assert(slot == SEL4UTILS_ASID_POOL_SLOT);
+    }
 
     return 0;
 }
@@ -437,7 +483,8 @@ create_fault_endpoint(vka_t *vka, sel4utils_process_t *process)
 }
 
 
-int sel4utils_configure_process_custom(sel4utils_process_t *process, simple_t *simple,  vka_t *vka,
+int 
+sel4utils_configure_process_custom(sel4utils_process_t *process, simple_t *simple,  vka_t *vka,
                                        vspace_t *spawner_vspace, sel4utils_process_config_t config)
 {
     int error;
@@ -455,25 +502,13 @@ int sel4utils_configure_process_custom(sel4utils_process_t *process, simple_t *s
             goto error;
         }
 
-#ifndef CONFIG_KERNEL_STABLE
-#ifndef CONFIG_X86_64
         /* assign an asid pool */
-        if (assign_asid_pool(config.asid_pool, process->pd.cptr) != seL4_NoError) {
+        if (!(config_set(CONFIG_KERNEL_STABLE) || config_set(CONFIG_X86_64)) &&
+              assign_asid_pool(config.asid_pool, process->pd.cptr) != seL4_NoError) {
             goto error;
         }
-#endif /* end of !CONFIG_X86_64 */
-#endif /* CONFIG_KERNEL_STABLE */
     } else {
         process->pd = config.page_dir;
-    }
-
-    process->own_cspace = config.create_cspace;
-    if (config.create_cspace) {
-        if (create_cspace(vka, config.one_level_cspace_size_bits, process, cspace_root_data) != 0) {
-            goto error;
-        }
-    } else {
-        process->cspace = config.cnode;
     }
 
     if (config.create_fault_endpoint) {
@@ -482,6 +517,16 @@ int sel4utils_configure_process_custom(sel4utils_process_t *process, simple_t *s
         }
     } else {
         process->fault_endpoint = config.fault_endpoint;
+    }
+
+    process->own_cspace = config.create_cspace;
+    if (config.create_cspace) {
+        if (create_cspace(vka, config.one_level_cspace_size_bits, process, cspace_root_data, 
+                          config.asid_pool) != 0) {
+            goto error;
+        }
+    } else {
+        process->cspace = config.cnode;
     }
 
     /* create a vspace */

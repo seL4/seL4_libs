@@ -15,34 +15,28 @@
 #include "../../helpers.h"
 
 int
-sel4utils_arch_init_context(void *entry_point, void *stack_top, seL4_userContext *context)
+sel4utils_arch_init_context(void *entry_point, void *stack_top, seL4_UserContext *context)
 {
     context->rsp = (seL4_Word) stack_top;
-    context->rip = (seL4_Word) entry_point;
     /* set edx to zero in case we are setting this when spawning a process as
-     * rdx is the atexit parameter, which we currently do not use */
+     * edx is the atexit parameter, which we currently do not use */
     context->rdx = 0;
-    if ((uintptr_t) stack_top % (sizeof(seL4_Word) * 2) != 0) {
-        ZF_LOGE("Stack %p not aligned on double word boundary", stack_top);
-        return -1;
-    }
+    context->rip = (seL4_Word) entry_point;
     return 0;
 }
 
 int
 sel4utils_arch_init_context_with_args(void *entry_point, void *arg0, void *arg1, void *arg2,
                             bool local_stack, void *stack_top, seL4_UserContext *context,
-                            vka_t *vka, vspace_t *local_vspace, vspace_t *remote_vspace);
+                            vka_t *vka, vspace_t *local_vspace, vspace_t *remote_vspace)
 {
-
+    sel4utils_arch_init_context(entry_point, stack_top, context);
     context->rdi = (seL4_Word) arg0;
     context->rsi = (seL4_Word) arg1;
     /* if we are setting args then we must not be spawning a process, therefore
      * even though rdx was set to zero by sel4utils_arch_init_context we can
      * safely put the arg in here */
     context->rdx = (seL4_Word) arg2;
-
-    return sel4utils_arch_init_context(entry_point, stack_top, context);
+    return 0;
 }
-
 

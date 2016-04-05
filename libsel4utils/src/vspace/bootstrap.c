@@ -132,7 +132,7 @@ reserve_range(vspace_t *vspace, uintptr_t start, uintptr_t end)
     }
 
     if (error) {
-        LOG_ERROR("Error reserving range between %"PRIuPTR" and %"PRIuPTR, start, end);
+        ZF_LOGE("Error reserving range between %"PRIuPTR" and %"PRIuPTR, start, end);
     }
 
     return error;
@@ -167,7 +167,7 @@ reserve_initial_task_regions(vspace_t *vspace, void *existing_frames[])
     /* this is the scope of the virtual memory used by the image, including
      * data, text and stack */
     if (reserve_range(vspace, va_start, va_end)) {
-        LOG_ERROR("Error reserving code/data segment");
+        ZF_LOGE("Error reserving code/data segment");
         return -1;
     }
 
@@ -176,7 +176,7 @@ reserve_initial_task_regions(vspace_t *vspace, void *existing_frames[])
         for (int i = 0; existing_frames[i] != NULL; i++) {
             if (reserve_range(vspace, (uintptr_t) existing_frames[i], (uintptr_t) existing_frames[i]
                         + PAGE_SIZE_4K)) {
-                LOG_ERROR("Error reserving frame at %p", existing_frames[i]);
+                ZF_LOGE("Error reserving frame at %p", existing_frames[i]);
                 return -1;
             }
         }
@@ -192,7 +192,7 @@ alloc_and_map_bootstrap_frame(vspace_t *vspace, vka_object_t *frame, void *vaddr
 
     int error = vka_alloc_frame(data->vka, seL4_PageBits, frame);
     if (error) {
-        LOG_ERROR("Failed to allocate bootstrap frame, error: %d", error);
+        ZF_LOGE("Failed to allocate bootstrap frame, error: %d", error);
         return error;
     }
 
@@ -204,7 +204,7 @@ alloc_and_map_bootstrap_frame(vspace_t *vspace, vka_object_t *frame, void *vaddr
 
     if (error) {
         vka_free_object(data->vka, frame);
-        LOG_ERROR("Failed to map bootstrap frame at %p, error: %d", vaddr, error);
+        ZF_LOGE("Failed to map bootstrap frame at %p, error: %d", vaddr, error);
         return error;
     }
 
@@ -229,7 +229,7 @@ bootstrap_create_level(vspace_t *vspace, uintptr_t vaddr)
         vka_object_t bottom_level = {0};
 
         if (alloc_and_map_bootstrap_frame(vspace, &bottom_level, (void *) pt_vaddr) != seL4_NoError) {
-            LOG_ERROR("Failed to bootstrap a level, everything is broken.");
+            ZF_LOGE("Failed to bootstrap a level, everything is broken.");
             /* leak memory, can't really recover */
             return -1;
         }
@@ -419,7 +419,7 @@ sel4utils_bootstrap_clone_into_vspace(vspace_t *current, vspace_t *clone, reserv
         error = vspace_new_pages_at_vaddr(clone, (void *) page, 1, seL4_PageBits, image);
         if (error) {
             /* vspace will be left inconsistent */
-            LOG_ERROR("Error %d while trying to map page at %"PRIuPTR, error, page);
+            ZF_LOGE("Error %d while trying to map page at %"PRIuPTR, error, page);
         }
 
         seL4_CPtr cap = vspace_get_cap(clone, (void *) page);
@@ -436,7 +436,7 @@ sel4utils_bootstrap_clone_into_vspace(vspace_t *current, vspace_t *clone, reserv
                                            1, seL4_PageBits, 1);
         if (dest_addr == NULL) {
             /* vspace will be left inconsistent */
-            LOG_ERROR("Error! Vspace mapping failed, bailing\n");
+            ZF_LOGE("Error! Vspace mapping failed, bailing\n");
             return -1;
         }
 

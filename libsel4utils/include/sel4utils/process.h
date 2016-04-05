@@ -55,10 +55,26 @@ typedef struct {
  * These are the caps
  */
 enum sel4utils_cspace_layout {
+    /* no cap in NULL */
+    SEL4UTILS_NULL_SLOT = 0,
     /*
      * The root cnode (with appropriate guard)
      */
     SEL4UTILS_CNODE_SLOT = 1,
+    /* The slot on the cspace that fault_endpoint is put if
+     * sel4utils_configure_process is used.
+     */
+    SEL4UTILS_ENDPOINT_SLOT = 2,
+    
+    /* The page directory slot */
+    SEL4UTILS_PD_SLOT = 3,
+ 
+    /* the slot for the asid pool that this thread is in and can create threads
+     * in. 0 if this kernel does not support asid pools */
+    SEL4UTILS_ASID_POOL_SLOT = 4,
+
+    /* First free slot in the cspace configured by sel4utils */
+    SEL4UTILS_FIRST_FREE = 5
 };
 
 typedef struct {
@@ -222,6 +238,21 @@ int sel4utils_configure_process_custom(sel4utils_process_t *process, simple_t *s
  * @return 0 on failure, otherwise the slot in the processes cspace.
  */
 seL4_CPtr sel4utils_copy_cap_to_process(sel4utils_process_t *process, cspacepath_t src);
+
+
+/**
+ * Move a cap into a process' cspace.
+ *
+ * This will only work if you configured the process using one of the above functions, or
+ * have mimicked their functionality.
+ *
+ * @param process process to move the cap to
+ * @param src     path in the current cspace to move the cap from
+ * @param vka     the allocator that owns the cslot the cap is currently in, so it may be freed after the move.
+ *
+ * @return 0 on failure, otherwise the slot in the processes cspace.
+ */
+seL4_CPtr sel4utils_move_cap_to_process(sel4utils_process_t *process, cspacepath_t src, vka_t *from_vka);
 
 /**
  *

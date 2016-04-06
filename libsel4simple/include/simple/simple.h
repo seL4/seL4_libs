@@ -16,15 +16,15 @@
 #include <assert.h>
 #include <sel4/sel4.h>
 #include <stdlib.h>
-
+#include <utils/util.h>
 #include <vka/cspacepath_t.h>
 
 
 /**
  * Get the cap to the physical frame of memory and put it at specified location
- * 
+ *
  * @param data cookie for the underlying implementation
- * 
+ *
  * @param page aligned physical address
  *
  * @param size of the region in bits
@@ -34,12 +34,12 @@
 typedef seL4_Error (*simple_get_frame_cap_fn)(void *data, void *paddr, int size_bits, cspacepath_t *path);
 
 /**
- * Request mapped address to a region of physical memory. 
+ * Request mapped address to a region of physical memory.
  *
  * Note: This function will only return the mapped virtual address that it knows about. It does not do any mapping its self nor can it guess where mapping functions are going to map.
  *
  * @param data cookie for the underlying implementation
- * 
+ *
  * @param page aligned physical address
  *
  * @param size of the region in bits
@@ -50,12 +50,12 @@ typedef seL4_Error (*simple_get_frame_cap_fn)(void *data, void *paddr, int size_
 typedef void *(*simple_get_frame_mapping_fn)(void *data, void *paddr, int size_bits);
 
 /**
- * Request data to a region of physical memory. 
+ * Request data to a region of physical memory.
  *
  * Note: This function will only return the mapped virtual address that it knows about. It does not do any mapping its self nor can it guess where mapping functions are going to map.
  *
  * @param data cookie for the underlying implementation
- * 
+ *
  * @param page aligned physical address for the frame
  *
  * @param size of the region in bits
@@ -129,7 +129,7 @@ typedef seL4_CPtr (*simple_get_nth_cap_fn)(void *data, int n);
 typedef seL4_CPtr (*simple_get_init_cap_fn)(void *data, seL4_CPtr cap);
 
 /**
- * Get the size of the threads cnode in bits 
+ * Get the size of the threads cnode in bits
  *
  * @param data for the underlying implementation
 */
@@ -221,128 +221,271 @@ typedef struct simple_t {
 } simple_t;
 
 
-static inline void *simple_get_frame_info(simple_t *simple, void *paddr, int size_bits, seL4_CPtr *frame_cap, seL4_Word *ut_offset) {
-    assert(simple);
-    assert(simple->frame_info);
+static inline void *
+simple_get_frame_info(simple_t *simple, void *paddr, int size_bits, seL4_CPtr *frame_cap, seL4_Word *ut_offset)
+{
+    if (!simple) {
+        ZF_LOGE("Simple is NULL");
+        return NULL;
+    }
+    if (!simple->frame_info) {
+        ZF_LOGE("%s not implemented", __FUNCTION__);
+        return NULL;
+    }
+
     return simple->frame_info(simple->data, paddr, size_bits, frame_cap, ut_offset);
 }
 
-static inline seL4_Error simple_get_frame_cap(simple_t *simple, void *paddr, int size_bits, cspacepath_t *path) {
-    assert(simple);
-    assert(simple->frame_cap);
+static inline seL4_Error 
+simple_get_frame_cap(simple_t *simple, void *paddr, int size_bits, cspacepath_t *path)
+{
+    if (!simple) {
+        ZF_LOGE("Simple is NULL");
+        return -1;
+    }
+    if (!simple->frame_cap) {
+        ZF_LOGE("%s not implemented", __FUNCTION__);
+        return -1;
+    }
     return simple->frame_cap(simple->data, paddr, size_bits, path);
 }
 
-static inline void *simple_get_frame_vaddr(simple_t *simple, void *paddr, int size_bits) {
-    assert(simple);
+static inline void *
+simple_get_frame_vaddr(simple_t *simple, void *paddr, int size_bits)
+{
+    if (!simple) {
+        ZF_LOGE("Simple is NULL");
+        return NULL;
+    }
     if (simple->frame_mapping) {
         return simple->frame_mapping(simple->data, paddr, size_bits);
     } else {
+        ZF_LOGE("%s not implemented", __FUNCTION__);
         return NULL;
     }
 }
 
-static inline seL4_Error simple_get_IRQ_control(simple_t *simple, int irq, cspacepath_t path) {
-        assert(simple);
-        assert(simple->irq);
-        return simple->irq(simple->data, irq, path.root, path.capPtr, path.capDepth);
+static inline seL4_Error 
+simple_get_IRQ_control(simple_t *simple, int irq, cspacepath_t path)
+{
+    if (!simple) {
+        ZF_LOGE("Simple is NULL");
+        return -1;
+    }
+    if (!simple->irq) {
+        ZF_LOGE("%s not implemented", __FUNCTION__);
+        return -1;
+    }
+    return simple->irq(simple->data, irq, path.root, path.capPtr, path.capDepth);
 }
 
-static inline seL4_Error simple_ASIDPool_assign(simple_t *simple, seL4_CPtr vspace) {
-    assert(simple);
-    assert(simple->ASID_assign);
+static inline seL4_Error 
+simple_ASIDPool_assign(simple_t *simple, seL4_CPtr vspace)
+{
+    if (!simple) {
+        ZF_LOGE("Simple is NULL");
+        return -1;
+    }
+    if (!simple->ASID_assign) {
+        ZF_LOGE("%s not implemented", __FUNCTION__);
+        return -1;
+    }
+
     return simple->ASID_assign(simple->data, vspace);
 }
 
-static inline seL4_CPtr simple_get_IOPort_cap(simple_t *simple, uint16_t start_port, uint16_t end_port) {
-    assert(simple);
-    assert(simple->IOPort_cap);
+static inline seL4_CPtr 
+simple_get_IOPort_cap(simple_t *simple, uint16_t start_port, uint16_t end_port)
+{
+    if (!simple) {
+        ZF_LOGE("Simple is NULL");
+        return seL4_CapNull;
+    }
+    if (!simple->IOPort_cap) {
+        ZF_LOGE("%s not implemented", __FUNCTION__);
+    }
+
     return simple->IOPort_cap(simple->data, start_port, end_port);
 }
 
-static inline int simple_get_cap_count(simple_t *simple) {
-    assert(simple);
-    assert(simple->cap_count);
+static inline int 
+simple_get_cap_count(simple_t *simple)
+{
+    if (!simple) {
+        ZF_LOGE("Simple is NULL");
+        return -1;
+    }
+    if (!simple->cap_count) {
+        ZF_LOGE("%s not implemented", __FUNCTION__);
+    }
     return simple->cap_count(simple->data);
 }
 
-static inline seL4_CPtr simple_get_nth_cap(simple_t *simple, int n) {
-    assert(simple);
-    assert(simple->nth_cap);
+static inline seL4_CPtr 
+simple_get_nth_cap(simple_t *simple, int n)
+{
+    if (!simple) {
+        ZF_LOGE("Simple is NULL");
+        return seL4_CapNull;
+    }
+
+    if (!simple->nth_cap) {
+        ZF_LOGE("%s not implemented", __FUNCTION__);
+        return seL4_CapNull;
+    }
+
     return simple->nth_cap(simple->data, n);
 }
 
-static inline seL4_CPtr simple_get_cnode(simple_t *simple) {
-    assert(simple);
-    assert(simple->init_cap);
-    return simple->init_cap(simple->data,seL4_CapInitThreadCNode);
-}
+static inline int
+simple_get_cnode_size_bits(simple_t *simple)
+{
+    if (!simple) {
+        ZF_LOGE("Simple is NULL");
+        return -1;
+    }
+    if (!simple->cnode_size) {
+        ZF_LOGE("%s not implemented", __FUNCTION__);
+        return -1;
+    }
 
-static inline int simple_get_cnode_size_bits(simple_t *simple) {
-    assert(simple);
-    assert(simple->cnode_size);
     return simple->cnode_size(simple->data);
 }
 
-static inline seL4_CPtr simple_get_tcb(simple_t *simple) {
-    assert(simple);
-    assert(simple->init_cap);
-    return simple->init_cap(simple->data,seL4_CapInitThreadTCB);
+static inline seL4_CPtr
+simple_init_cap(simple_t *simple, seL4_CPtr cap)
+{
+    if (!simple) {
+        ZF_LOGE("Simple is NULL");
+        return seL4_CapNull;
+    }
+
+    if (!simple->init_cap) {
+        ZF_LOGE("%s not implemented", __FUNCTION__);
+        return seL4_CapNull;
+    }
+
+    return simple->init_cap(simple->data, cap);
 }
 
-static inline seL4_CPtr simple_get_pd(simple_t *simple) {
-    assert(simple);
-    assert(simple->init_cap);
-    return simple->init_cap(simple->data,seL4_CapInitThreadPD);
+static inline seL4_CPtr
+simple_get_cnode(simple_t *simple)
+{
+    return simple_init_cap(simple, seL4_CapInitThreadCNode);
 }
 
-static inline seL4_CPtr simple_get_irq_ctrl(simple_t *simple) {
-    assert(simple);
-    assert(simple->init_cap);
-    return simple->init_cap(simple->data,seL4_CapIRQControl);
+static inline seL4_CPtr 
+simple_get_tcb(simple_t *simple)
+{
+    return simple_init_cap(simple, seL4_CapInitThreadTCB);
 }
 
-static inline seL4_CPtr simple_get_init_cap(simple_t *simple, seL4_CPtr cap) {
-    assert(simple);
-    assert(simple->init_cap);
-    return simple->init_cap(simple->data,cap);
+static inline seL4_CPtr
+simple_get_pd(simple_t *simple)
+{
+    return simple_init_cap(simple, seL4_CapInitThreadPD);
 }
 
-static inline int simple_get_untyped_count(simple_t *simple) {
-    assert(simple);
-    assert(simple->untyped_count);
+static inline seL4_CPtr 
+simple_get_irq_ctrl(simple_t *simple)
+{
+    return simple_init_cap(simple, seL4_CapIRQControl);
+}
+
+static inline seL4_CPtr 
+simple_get_init_cap(simple_t *simple, seL4_CPtr cap)
+{
+    return simple_init_cap(simple, cap);
+}
+
+static inline int 
+simple_get_untyped_count(simple_t *simple)
+{
+    if (!simple) {
+        ZF_LOGE("Simple is NULL");
+        return -1;
+    }
+    if (!simple->untyped_count) {
+        ZF_LOGE("%s not implemented", __FUNCTION__);
+        return -1;
+    }
+
     return simple->untyped_count(simple->data);
 }
 
-static inline seL4_CPtr simple_get_nth_untyped(simple_t *simple, int n, uint32_t *size_bits, uint32_t *paddr) {
-    assert(simple);
-    assert(simple->nth_untyped);
+static inline seL4_CPtr
+simple_get_nth_untyped(simple_t *simple, int n, uint32_t *size_bits, uint32_t *paddr)
+{
+    if (!simple) {
+        ZF_LOGE("Simple is NULL");
+        return seL4_CapNull;
+    }
+    if (!simple->nth_untyped) {
+        ZF_LOGE("%s not implemented", __FUNCTION__);
+        return seL4_CapNull;
+    }
+
     return simple->nth_untyped(simple->data, n, size_bits, paddr);
 }
 
-static inline int simple_get_userimage_count(simple_t *simple) {
-    assert(simple);
-    assert(simple->userimage_count);
+static inline int 
+simple_get_userimage_count(simple_t *simple)
+{
+    if (!simple) {
+        ZF_LOGE("Simple is NULL");
+        return -1;
+    }
+    if (!simple->userimage_count) {
+        ZF_LOGE("%s not implemented", __FUNCTION__);
+        return -1;
+    }
+
     return simple->userimage_count(simple->data);
 }
 
-static inline seL4_CPtr simple_get_nth_userimage(simple_t *simple, int n) {
-    assert(simple);
-    assert(simple->nth_userimage);
+static inline seL4_CPtr
+simple_get_nth_userimage(simple_t *simple, int n)
+{
+    if (!simple) {
+        ZF_LOGE("Simple is NULL");
+        return seL4_CapNull;
+    }
+    if (!simple->nth_userimage) {
+        ZF_LOGE("%s Not implemented", __FUNCTION__);
+        return seL4_CapNull;
+    }
     return simple->nth_userimage(simple->data, n);
 }
 
 #ifdef CONFIG_IOMMU
-static inline seL4_CPtr simple_get_iospace(simple_t *simple, uint16_t domainID, uint16_t deviceID, cspacepath_t *path) {
-    assert(simple);
-    assert(simple->iospace);
+static inline seL4_CPtr 
+simple_get_iospace(simple_t *simple, uint16_t domainID, uint16_t deviceID, cspacepath_t *path)
+{
+    if (!simple) {
+        ZF_LOGE("Simple is NULL");
+        return seL4_CapNull;
+    }
+    if (!simple->iospace) {
+        ZF_LOGE("%s not implemented", __FUNCTION__);
+        return seL4_CapNull;
+    }
+
     return simple->iospace(simple->data, domainID, deviceID, path);
 }
 #endif
 
-static inline void simple_print(simple_t *simple) {
-    assert(simple);
-    assert(simple->print);
+static inline void 
+simple_print(simple_t *simple)
+{
+    if (!simple) {
+        ZF_LOGE("Simple is NULL");
+        return;
+    }
+    if (!simple->print) {
+        ZF_LOGE("%s not implemented", __FUNCTION__);
+        return;
+    }
+
     simple->print(simple->data);
 }
 #endif /* _INTERFACE_SIMPLE_H_ */

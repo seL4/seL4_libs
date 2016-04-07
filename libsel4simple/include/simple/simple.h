@@ -241,11 +241,11 @@ simple_get_frame_cap(simple_t *simple, void *paddr, int size_bits, cspacepath_t 
 {
     if (!simple) {
         ZF_LOGE("Simple is NULL");
-        return -1;
+        return seL4_InvalidArgument;
     }
     if (!simple->frame_cap) {
         ZF_LOGE("%s not implemented", __FUNCTION__);
-        return -1;
+        return seL4_InvalidArgument;
     }
     return simple->frame_cap(simple->data, paddr, size_bits, path);
 }
@@ -270,11 +270,11 @@ simple_get_IRQ_control(simple_t *simple, int irq, cspacepath_t path)
 {
     if (!simple) {
         ZF_LOGE("Simple is NULL");
-        return -1;
+        return seL4_InvalidArgument;
     }
     if (!simple->irq) {
         ZF_LOGE("%s not implemented", __FUNCTION__);
-        return -1;
+        return seL4_InvalidArgument;
     }
     return simple->irq(simple->data, irq, path.root, path.capPtr, path.capDepth);
 }
@@ -284,11 +284,11 @@ simple_ASIDPool_assign(simple_t *simple, seL4_CPtr vspace)
 {
     if (!simple) {
         ZF_LOGE("Simple is NULL");
-        return -1;
+        return seL4_InvalidArgument;
     }
     if (!simple->ASID_assign) {
         ZF_LOGE("%s not implemented", __FUNCTION__);
-        return -1;
+        return seL4_InvalidArgument;
     }
 
     return simple->ASID_assign(simple->data, vspace);

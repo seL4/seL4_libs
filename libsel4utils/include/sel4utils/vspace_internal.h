@@ -224,9 +224,9 @@ update_entries_mid(vspace_t *vspace, vspace_mid_level_t *level, int level_num, u
         if (next_table == EMPTY || next_table == RESERVED) {
             /* allocate new level */
             if (level_num == 1) {
-                next_table = (uintptr_t)create_bottom_level(vspace, EMPTY);
+                next_table = (uintptr_t)create_bottom_level(vspace, next_table);
             } else {
-                next_table = (uintptr_t)create_mid_level(vspace, EMPTY);
+                next_table = (uintptr_t)create_mid_level(vspace, next_table);
             }
             if (next_table == EMPTY) {
                 ZF_LOGE("Failed to allocate and map book keeping frames during bootstrapping");

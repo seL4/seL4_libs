@@ -73,8 +73,11 @@ enum sel4utils_cspace_layout {
      * in. 0 if this kernel does not support asid pools */
     SEL4UTILS_ASID_POOL_SLOT = 4,
 
+    /* This threads scheduling context */
+    SEL4UTILS_SCHED_CONTEXT_SLOT = 5,
+
     /* First free slot in the cspace configured by sel4utils */
-    SEL4UTILS_FIRST_FREE = 5
+    SEL4UTILS_FIRST_FREE = 6
 };
 
 typedef struct {

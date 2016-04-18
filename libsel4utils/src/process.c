@@ -592,6 +592,14 @@ sel4utils_configure_process_custom(sel4utils_process_t *process, simple_t *simpl
         goto error;
     }
 
+    if (config.create_cspace) {
+        UNUSED seL4_CPtr slot;
+        cspacepath_t src;
+        vka_cspace_make_path(vka, process->thread.sched_context.cptr, &src);
+        slot = sel4utils_copy_cap_to_process(process, src);
+        assert(slot == SEL4UTILS_SCHED_CONTEXT_SLOT);
+    }
+
     return 0;
 
 error:

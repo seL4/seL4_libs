@@ -25,10 +25,11 @@ seL4_timer_t *sel4platsupport_get_default_timer(vka_t *vka, UNUSED vspace_t *vsp
     UNUSED int error = sel4platsupport_get_io_port_ops(&ops, simple);
     assert(error == 0);
 
-    seL4_timer_t *pit = sel4platsupport_get_pit(vka, simple, &ops, notification);
-    assert(pit != NULL);
+    seL4_timer_t *timer = sel4platsupport_get_hpet(vspace, simple, NULL, vka, notification, 
+                                                   MSI_MIN);
+    assert(timer != NULL);
 
-    return pit;
+    return timer;
 }
 
 static seL4_timer_t *

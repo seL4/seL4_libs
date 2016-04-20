@@ -13,7 +13,7 @@
 #include <stdio.h>
 
 #include <sel4/sel4.h>
-#include <sel4utils/util.h>
+#include <utils/util.h>
 
 #ifdef CONFIG_USER_DEBUG_BUILD
 void

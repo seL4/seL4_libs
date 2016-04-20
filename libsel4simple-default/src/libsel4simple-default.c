@@ -17,7 +17,7 @@
 #include <assert.h>
 
 #include <sel4/sel4.h>
-
+#include <sel4debug/debug.h>
 #include <simple-default/simple-default.h>
 
 #include <vspace/page.h>
@@ -239,39 +239,12 @@ seL4_CPtr simple_default_nth_userimage(void *data, int n) {
 }
 
 void simple_default_print(void *data) {
-    assert(data);
+    if (data == NULL) {
+        ZF_LOGE("Data is null!");
+    }
 
     seL4_BootInfo *info = (seL4_BootInfo *)data;
-
-    /* Parse boot info from kernel. */
-    printf("Node ID: %d (of %d)\n",info->nodeID, info->numNodes);
-    printf("initThreadCNode size: %d slots\n", (1 << info->initThreadCNodeSizeBits) );
-
-    printf("\n--- Capability Details ---\n");
-    printf("Type              Start      End\n");
-    printf("Empty             0x%08x 0x%08x\n", info->empty.start, info->empty.end);
-    printf("Shared frames     0x%08x 0x%08x\n", info->sharedFrames.start, info->sharedFrames.end);
-    printf("User image frames 0x%08x 0x%08x\n", info->userImageFrames.start,
-            info->userImageFrames.end);
-    printf("User image paging 0x%08x 0x%08x\n", info->userImagePaging.start, info->userImagePaging.end);
-    printf("Untypeds          0x%08x 0x%08x\n", info->untyped.start, info->untyped.end);
-
-    printf("\n--- Untyped Details ---\n");
-    printf("Untyped Slot       Paddr      Bits\n");
-    for (int i = 0; i < info->untyped.end-info->untyped.start; i++) {
-        printf("%3d     0x%08x 0x%08x %d\n", i, info->untyped.start+i, info->untypedPaddrList[i],
-                info->untypedSizeBitsList[i]);
-    }
-
-    printf("\n--- Device Regions: %d ---\n", info->numDeviceRegions);
-    printf("Device Addr     Size Start      End\n");
-    for (int i = 0; i < info->numDeviceRegions; i++) {
-        printf("%2d 0x%08x %d 0x%08x 0x%08x\n", i,
-                                                info->deviceRegions[i].basePaddr,
-                                                info->deviceRegions[i].frameSizeBits,
-                                                info->deviceRegions[i].frames.start,
-                                                info->deviceRegions[i].frames.end);
-    }
+    debug_print_bootinfo(info);
 }
 
 void simple_default_init_bootinfo(simple_t *simple, seL4_BootInfo *bi) {

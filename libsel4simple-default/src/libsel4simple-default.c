@@ -10,8 +10,6 @@
 
 #include <autoconf.h>
 
-#ifndef CONFIG_KERNEL_STABLE
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
@@ -233,4 +231,3 @@ void simple_default_init_bootinfo(simple_t *simple, seL4_BootInfo *bi) {
     simple_default_init_arch_simple(&simple->arch_simple, NULL);
 }
 
-#endif /* CONFIG_KERNEL_STABLE */

@@ -30,12 +30,7 @@
 #include <vka/capops.h>
 #include <string.h>
 #include <sel4platsupport/arch/io.h>
-
-#ifdef CONFIG_KERNEL_STABLE
-#include <simple-stable/simple-stable.h>
-#else
 #include <simple-default/simple-default.h>
-#endif
 
 enum serial_setup_status {
     NOT_INITIALIZED = 0,
@@ -231,11 +226,7 @@ platsupport_serial_setup_bootinfo_failsafe(void)
     setup_status = SETUP_COMPLETE;
 #else
     setup_status = START_FAILSAFE_SETUP;
-#ifdef CONFIG_KERNEL_STABLE
-    simple_stable_init_bootinfo(&_simple_mem, seL4_GetBootInfo());
-#else
     simple_default_init_bootinfo(&_simple_mem, seL4_GetBootInfo());
-#endif
     simple = &_simple_mem;
     vka = &_vka_mem;
     simple_make_vka(simple, vka);

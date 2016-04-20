@@ -37,8 +37,15 @@ typedef seL4_CPtr (*arch_simple_get_IOPort_cap_fn)(void *data, uint16_t start_po
  * @param the index within the CNode to put cap
  * @param Depth of index
  */
-typedef seL4_Error (*arch_simple_get_msi_fn)(void *data, int irq, seL4_CNode root, seL4_Word index,
-                                             uint8_t depth);
+typedef seL4_Error (*arch_simple_get_msi_fn)(void *data, seL4_CNode root, seL4_Word index,
+                                             uint8_t depth, seL4_Word pci_bus, seL4_Word pci_dev,
+                                             seL4_Word pci_func, seL4_Word handle, 
+                                             seL4_Word vector);
+ 
+typedef seL4_Error (*arch_simple_get_ioapic_fn)(void *data, seL4_CNode root, seL4_Word index,
+                                               uint8_t depth, seL4_Word ioapic, seL4_Word pin, 
+                                               seL4_Word level, seL4_Word polarity, 
+                                               seL4_Word vector);
 
 /**
  * Request a cap to a specific IRQ number on the system
@@ -76,6 +83,7 @@ typedef struct arch_simple {
 #endif
     arch_simple_get_msi_fn msi;
     arch_simple_get_IRQ_control_fn irq;
+    arch_simple_get_ioapic_fn ioapic;
 } arch_simple_t;
 
 
@@ -96,7 +104,9 @@ arch_simple_get_IOPort_cap(arch_simple_t *arch_simple, uint16_t start_port, uint
 }
 
 static inline seL4_Error
-arch_simple_get_msi(arch_simple_t *arch_simple, int irq, cspacepath_t path) 
+arch_simple_get_msi(arch_simple_t *arch_simple, cspacepath_t path, seL4_Word pci_bus, 
+                    seL4_Word pci_dev, seL4_Word pci_func, seL4_Word handle, 
+                    seL4_Word vector) 
 {
     if (!arch_simple) {
         ZF_LOGE("Arch-simple is NULL");
@@ -107,7 +117,26 @@ arch_simple_get_msi(arch_simple_t *arch_simple, int irq, cspacepath_t path)
         ZF_LOGE("%s not implemented", __FUNCTION__);
     }
 
-    return arch_simple->msi(arch_simple->data, irq, path.root, path.capPtr, path.capDepth);
+    return arch_simple->msi(arch_simple->data, path.root, path.capPtr, path.capDepth, pci_bus, 
+                            pci_dev, pci_func, handle, vector);
+}
+
+static inline seL4_Error
+arch_simple_get_ioapic(arch_simple_t *arch_simple, cspacepath_t path, seL4_Word ioapic, 
+                       seL4_Word pin, seL4_Word level, seL4_Word polarity, 
+                       seL4_Word vector) 
+{
+    if (!arch_simple) {
+        ZF_LOGE("Arch-simple is NULL");
+        return seL4_InvalidArgument;
+    }
+
+    if (!arch_simple->ioapic) {
+        ZF_LOGE("%s not implemented", __FUNCTION__);
+    }
+
+    return arch_simple->ioapic(arch_simple->data, path.root, path.capPtr, path.capDepth, ioapic, 
+                               pin, level, polarity, vector);
 }
 
 #ifdef CONFIG_IOMMU

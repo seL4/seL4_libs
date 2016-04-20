@@ -28,7 +28,7 @@ sel4platsupport_copy_msi_cap(vka_t *vka, simple_t *simple, seL4_Word irq_number,
 
     vka_cspace_make_path(vka, irq, dest);
 
-    error = arch_simple_get_msi(&simple->arch_simple, irq_number, *dest);
+    error = arch_simple_get_msi(&simple->arch_simple, *dest, 0, 0, 0, 0, irq_number);
     if  (error != seL4_NoError) {
         ZF_LOGE("Failed to get cap to msi irq_number %u\n", irq_number);
         vka_cspace_free(vka, irq);

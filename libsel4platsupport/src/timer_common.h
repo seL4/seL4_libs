@@ -39,5 +39,7 @@ void timer_common_destroy(seL4_timer_t *timer, vka_t *vka, vspace_t *vspace);
 void timer_common_cleanup_irq(vka_t *vka, seL4_CPtr irq);
 
 void timer_common_handle_irq(seL4_timer_t *timer, uint32_t irq);
+timer_common_data_t *
+timer_common_init_frame(vspace_t *vspace, simple_t *simple, vka_t *vka, void *paddr);
 
 #endif /* _SEL4PLATSUPPORT_TIMER_INTERNAL_H */

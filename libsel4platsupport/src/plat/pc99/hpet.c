@@ -12,6 +12,7 @@
 #include <sel4/sel4.h>
 #include <platsupport/plat/hpet.h>
 #include <sel4platsupport/plat/hpet.h>
+#include <sel4platsupport/device.h>
 #include <utils/util.h>
 #include <string.h>
 #include <utils/attribute.h>
@@ -36,8 +37,8 @@ hpet_handle_irq_ioapic(seL4_timer_t *timer, uint32_t irq)
     seL4_IRQHandler_Ack(data->irq);
 }
 
-
-seL4_timer_t *sel4platsupport_get_hpet(vspace_t *vspace, simple_t *simple, acpi_t *acpi,
+seL4_timer_t *
+sel4platsupport_get_hpet(vspace_t *vspace, simple_t *simple, acpi_t *acpi,
                                        vka_t *vka, seL4_CPtr notification, uint32_t irq_number)
 {
     seL4_timer_t *hpet = NULL;
@@ -52,18 +53,6 @@ seL4_timer_t *sel4platsupport_get_hpet(vspace_t *vspace, simple_t *simple, acpi_
     }
 
     /* check what range the IRQ is in */
-#ifdef CONFIG_IRQ_IOAPIC
-    if ((int)irq_number < MSI_MIN) {
-        if (CONFIG_MAX_NUM_IOAPIC != 1) {
-            ZF_LOGE("HPET does not support > 1 IOAPIC as we do not work out which IOAPIC we are connected to");
-            goto error;
-        }
-        irq = irq_number;
-        ioapic = 1;
-        hpet->handle_irq = hpet_handle_irq_ioapic;
-    }
-#endif
-
     hpet->destroy = timer_common_destroy;
 
     if ((int)irq_number >= MSI_MIN || irq_number <= MSI_MAX) {
@@ -92,8 +81,24 @@ seL4_timer_t *sel4platsupport_get_hpet(vspace_t *vspace, simple_t *simple, acpi_
         addr = (void*) (uintptr_t)hpet_header->base_address.address;
     }
 
-    hpet_data = timer_common_init(vspace, simple, vka, notification, irq_number, addr);
+    /* initialise the hpet frame */
+    hpet_data = timer_common_init_frame(vspace, simple, vka, addr);
     if (hpet_data == NULL) {
+        goto error;
+    }
+
+    /* initialise msi irq */
+    cspacepath_t path;
+    int error = sel4platsupport_copy_msi_cap(vka, simple, irq, &path);
+    hpet_data->irq = path.capPtr;
+    if (error != seL4_NoError) {
+        ZF_LOGE("Failed to get msi cap, error %d\n", error);
+        goto error;
+    }
+
+    error = seL4_IRQHandler_SetNotification(path.capPtr, notification);
+    if (error != seL4_NoError) {
+        ZF_LOGE("seL4_IRQHandler_SetNotification failed with error %d\n", error);
         goto error;
     }
 

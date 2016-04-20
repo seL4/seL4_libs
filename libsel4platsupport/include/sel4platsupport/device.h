@@ -12,6 +12,7 @@
 #define __SEL4PLATSUPPORT_DEVICE_H__
 
 #include <sel4/sel4.h>
+#include <sel4platsupport/arch/device.h>
 #include <simple/simple.h>
 #include <vka/vka.h>
 

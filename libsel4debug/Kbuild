@@ -9,4 +9,4 @@
 #
 
 libs-$(CONFIG_LIB_SEL4_DEBUG) += libsel4debug
-libsel4debug: libutils libsel4utils libsel4 $(libc) common
+libsel4debug: libutils libsel4 $(libc) common

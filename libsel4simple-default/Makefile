@@ -13,6 +13,7 @@ TARGETS := libsel4simple-default.a
 
 # Source files required to build the target
 CFILES := $(patsubst $(SOURCE_DIR)/%,%,$(wildcard $(SOURCE_DIR)/src/*.c))
+CFILES += $(patsubst $(SOURCE_DIR)/%,%,$(wildcard ${SOURCE_DIR}/src/arch/$(ARCH)/*.c))
 
 # Header files/directories this library provides
 HDRFILES := $(wildcard $(SOURCE_DIR)/include/*)

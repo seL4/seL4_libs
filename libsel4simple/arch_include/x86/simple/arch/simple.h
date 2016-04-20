@@ -1,0 +1,130 @@
+/*
+ * Copyright 2014, NICTA
+ *
+ * This software may be distributed and modified according to the terms of
+ * the BSD 2-Clause license. Note that NO WARRANTY is provided.
+ * See "LICENSE_BSD2.txt" for details.
+ *
+ * @TAG(NICTA_BSD)
+ */
+
+#ifndef _INTERFACE_ARCH_SIMPLE_H_
+#define _INTERFACE_ARCH_SIMPLE_H_
+
+#include <autoconf.h>
+
+#include <assert.h>
+#include <sel4/sel4.h>
+#include <stdlib.h>
+#include <utils/util.h>
+#include <vka/cspacepath_t.h>
+
+/**
+ * Request a cap to the IOPorts
+ *
+ * @param data cookie for the underlying implementation
+ * @param start port number that a cap is needed to
+ * @param end port number that a cap is needed to
+ */
+typedef seL4_CPtr (*arch_simple_get_IOPort_cap_fn)(void *data, uint16_t start_port, uint16_t end_port);
+
+/**
+ * Request a cap to a specific MSI IRQ number on the system
+ *
+ * @param irq the msi irq number to get the cap for
+ * @param data cookie for the underlying implementation
+ * @param the CNode in which to put this cap
+ * @param the index within the CNode to put cap
+ * @param Depth of index
+ */
+typedef seL4_Error (*arch_simple_get_msi_fn)(void *data, int irq, seL4_CNode root, seL4_Word index,
+                                             uint8_t depth);
+
+/**
+ * Request a cap to a specific IRQ number on the system
+ *
+ * @param irq the irq number to get the cap for
+ * @param data cookie for the underlying implementation
+ * @param the CNode in which to put this cap
+ * @param the index within the CNode to put cap
+ * @param Depth of index
+ */
+typedef seL4_Error (*arch_simple_get_IRQ_control_fn)(void *data, int irq, seL4_CNode cnode, seL4_Word index, 
+                                                     uint8_t depth);
+
+
+#ifdef CONFIG_IOMMU
+/**
+ * Get the IO space capability for the specified PCI device and domain ID
+ *
+ * @param data cookie for the underlying implementation
+ * @param domainID domain ID to request
+ * @param deviceID PCI device ID
+ * @param path Path to where to put this cap
+ *
+*/
+typedef seL4_Error (*arch_simple_get_iospace_fn)(void *data, uint16_t domainID, uint16_t deviceID,
+                                                 cspacepath_t *path);
+
+#endif
+
+typedef struct arch_simple {
+    void *data;
+    arch_simple_get_IOPort_cap_fn IOPort_cap;
+#ifdef CONFIG_IOMMU
+    simple_arch_simple_get_iospace_fn iospace;
+#endif
+    arch_simple_get_msi_fn msi;
+    arch_simple_get_IRQ_control_fn irq;
+} arch_simple_t;
+
+
+static inline seL4_CPtr 
+arch_simple_get_IOPort_cap(arch_simple_t *arch_simple, uint16_t start_port, uint16_t end_port)
+{
+    if (!arch_simple) {
+        ZF_LOGE("Arch-simple is NULL");
+        return seL4_CapNull;
+    }
+
+    if (!arch_simple->IOPort_cap) {
+        ZF_LOGE("%s not implemented", __FUNCTION__);
+        return seL4_CapNull;
+    }
+
+    return arch_simple->IOPort_cap(arch_simple->data, start_port, end_port);
+}
+
+static inline seL4_Error
+arch_simple_get_msi(arch_simple_t *arch_simple, int irq, cspacepath_t path) 
+{
+    if (!arch_simple) {
+        ZF_LOGE("Arch-simple is NULL");
+        return seL4_InvalidArgument;
+    }
+
+    if (!arch_simple->msi) {
+        ZF_LOGE("%s not implemented", __FUNCTION__);
+    }
+
+    return arch_simple->msi(arch_simple->data, irq, path.root, path.capPtr, path.capDepth);
+}
+
+#ifdef CONFIG_IOMMU
+static inline seL4_CPtr 
+arch_simple_get_iospace(arch_simple_t *arch_simple, uint16_t domainID, uint16_t deviceID, cspacepath_t *path)
+{
+    if (!arch_simple) {
+        ZF_LOGE("Arch-simple is NULL");
+        return seL4_CapNull;
+    }
+    if (!arch_simple->iospace) {
+        ZF_LOGE("%s not implemented", __FUNCTION__);
+        return seL4_CapNull;
+    }
+
+    return arch_simple->iospace(arch_simple->data, domainID, deviceID, path);
+}
+#endif
+
+#endif /* _INTERFACE_ARCH_SIMPLE_H_ */

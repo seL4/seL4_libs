@@ -10,14 +10,12 @@
 
 #include <autoconf.h>
 
-#ifndef CONFIG_KERNEL_STABLE
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
 
 #include <sel4/sel4.h>
-
+#include <sel4debug/debug.h>
 #include <simple-default/simple-default.h>
 
 #include <vspace/page.h>
@@ -75,44 +73,9 @@ void *simple_default_get_frame_mapping(void *data, void *paddr, int size_bits) {
     return NULL;
 }
 
-seL4_Error simple_default_get_irq(void *data, int irq, seL4_CNode root, seL4_Word index, uint8_t depth) {
-#ifdef CONFIG_IRQ_IOAPIC
-    /* we need to try and guess how to map a requested IRQ to an IOAPIC
-     * pin, as well as what the edge and polarity detection mode is.
-     * Without any way to inspect the ACPI tables here we make the following
-     * assumptions
-     *   + There is an override for ISA-IRQ-0 -> GSI 2
-     *   + Only one IOAPIC and error on IRQs >= 24
-     *   + IRQs below 16 are ISA and edge detected polarity high
-     *   + IRQs 16 and above are PCI and level detected polarity low
-     */
-    int vector = irq;
-    if (irq == 0) {
-        irq = 2;
-    }
-    int level;
-    int low_polarity;
-    if (irq >= 16) {
-        level = 1;
-        low_polarity = 1;
-    } else {
-        level = 0;
-        low_polarity = 0;
-    }
-    return seL4_IRQControl_GetIOAPIC(seL4_CapIRQControl, root, index, depth, 0, irq, level, low_polarity, vector);
-#else
-    return seL4_IRQControl_Get(seL4_CapIRQControl, irq, root, index, depth);
-#endif
-}
-
 seL4_Error simple_default_set_ASID(void *data, seL4_CPtr vspace) {
     return seL4_ARCH_ASIDPool_Assign(seL4_CapInitThreadASIDPool, vspace);
 }
-
-seL4_CPtr simple_default_get_IOPort_cap(void *data, uint16_t start_port, uint16_t end_port) {
-    return seL4_CapIOPort;
-}
-
 
 int simple_default_cap_count(void *data) {
     assert(data);
@@ -239,39 +202,11 @@ seL4_CPtr simple_default_nth_userimage(void *data, int n) {
 }
 
 void simple_default_print(void *data) {
-    assert(data);
-
-    seL4_BootInfo *info = (seL4_BootInfo *)data;
-
-    /* Parse boot info from kernel. */
-    printf("Node ID: %d (of %d)\n",info->nodeID, info->numNodes);
-    printf("initThreadCNode size: %d slots\n", (1 << info->initThreadCNodeSizeBits) );
-
-    printf("\n--- Capability Details ---\n");
-    printf("Type              Start      End\n");
-    printf("Empty             0x%08x 0x%08x\n", info->empty.start, info->empty.end);
-    printf("Shared frames     0x%08x 0x%08x\n", info->sharedFrames.start, info->sharedFrames.end);
-    printf("User image frames 0x%08x 0x%08x\n", info->userImageFrames.start,
-            info->userImageFrames.end);
-    printf("User image paging 0x%08x 0x%08x\n", info->userImagePaging.start, info->userImagePaging.end);
-    printf("Untypeds          0x%08x 0x%08x\n", info->untyped.start, info->untyped.end);
-
-    printf("\n--- Untyped Details ---\n");
-    printf("Untyped Slot       Paddr      Bits\n");
-    for (int i = 0; i < info->untyped.end-info->untyped.start; i++) {
-        printf("%3d     0x%08x 0x%08x %d\n", i, info->untyped.start+i, info->untypedPaddrList[i],
-                info->untypedSizeBitsList[i]);
+    if (data == NULL) {
+        ZF_LOGE("Data is null!");
     }
 
-    printf("\n--- Device Regions: %d ---\n", info->numDeviceRegions);
-    printf("Device Addr     Size Start      End\n");
-    for (int i = 0; i < info->numDeviceRegions; i++) {
-        printf("%2d 0x%08x %d 0x%08x 0x%08x\n", i,
-                                                info->deviceRegions[i].basePaddr,
-                                                info->deviceRegions[i].frameSizeBits,
-                                                info->deviceRegions[i].frames.start,
-                                                info->deviceRegions[i].frames.end);
-    }
+    debug_print_bootinfo((seL4_BootInfo *) data);
 }
 
 void simple_default_init_bootinfo(simple_t *simple, seL4_BootInfo *bi) {
@@ -282,8 +217,6 @@ void simple_default_init_bootinfo(simple_t *simple, seL4_BootInfo *bi) {
     simple->frame_info = &simple_default_get_frame_info;
     simple->frame_cap = &simple_default_get_frame_cap;
     simple->frame_mapping = &simple_default_get_frame_mapping;
-    simple->IOPort_cap = &simple_default_get_IOPort_cap;
-    simple->irq = &simple_default_get_irq;
     simple->ASID_assign = &simple_default_set_ASID;
     simple->cap_count = &simple_default_cap_count;
     simple->nth_cap = &simple_default_nth_cap;
@@ -294,6 +227,6 @@ void simple_default_init_bootinfo(simple_t *simple, seL4_BootInfo *bi) {
     simple->userimage_count = &simple_default_userimage_count;
     simple->nth_userimage = &simple_default_nth_userimage;
     simple->print = &simple_default_print;
+    simple_default_init_arch_simple(&simple->arch_simple, NULL);
 }
 
-#endif

@@ -36,22 +36,25 @@
 #include <vspace/vspace.h>
 #include <vka/vka.h>
 #include <sel4utils/util.h>
+#include <sel4utils/sel4_arch/vspace.h>
 
 /* These definitions are only here so that you can take the size of them.
  * TOUCHING THESE DATA STRUCTURES IN ANY WAY WILL BREAK THE WORLD
- * */
-#ifdef CONFIG_X86_64
-#define VSPACE_LEVEL_BITS 9
-#else
-#define VSPACE_LEVEL_BITS 10
-#endif
+ */
 
 #define VSPACE_LEVEL_SIZE BIT(VSPACE_LEVEL_BITS)
 
-typedef struct bottom_level {
-    seL4_CPtr bottom_level[VSPACE_LEVEL_SIZE];
-    uint32_t  cookies[VSPACE_LEVEL_SIZE];
-} bottom_level_t;
+typedef struct vspace_mid_level {
+    /* there is a clear optimization that could be done where instead of always pointing to a
+     * sub table, there is the option of pointing directly to a page. This allows more
+     * efficient memory usage for book keeping large pages */
+    uintptr_t table[VSPACE_LEVEL_SIZE];
+} vspace_mid_level_t;
+
+typedef struct vspace_bottom_level {
+    seL4_CPtr cap[VSPACE_LEVEL_SIZE];
+    uintptr_t cookie[VSPACE_LEVEL_SIZE];
+} vspace_bottom_level_t;
 
 typedef int(*sel4utils_map_page_fn)(vspace_t *vspace, seL4_CPtr cap, void *vaddr, seL4_CapRights rights, int cacheable, size_t size_bits);
 
@@ -67,10 +70,10 @@ struct sel4utils_res {
 typedef struct sel4utils_res sel4utils_res_t;
 
 typedef struct sel4utils_alloc_data {
-    seL4_CPtr page_directory;
+    seL4_CPtr vspace_root;
     vka_t *vka;
-    bottom_level_t **top_level;
-    uintptr_t next_bottom_level_vaddr;
+    vspace_mid_level_t *top_level;
+    uintptr_t next_bootstrap_vaddr;
     uintptr_t last_allocated;
     vspace_t *bootstrap;
     sel4utils_map_page_fn map_page;
@@ -94,7 +97,7 @@ reservation_to_res(reservation_t res)
  * @param data                    uninitialised vspace data struct to populate.
  * @param vka                     initialised vka that this virtual memory allocator will use to
  *                                allocate pages and pagetables. This allocator will never invoke free.
- * @param page_directory          page directory for the new vspace.
+ * @param vspace_root             root object for the new vspace.
  * @param allocated_object_fn     function to call when objects are allocated. Can be null.
  * @param allocated_object_cookie cookie passed when the above function is called. Can be null.
  * @param map_page                Function that will be called to map seL4 pages
@@ -103,7 +106,7 @@ reservation_to_res(reservation_t res)
  */
 int
 sel4utils_get_vspace_with_map(vspace_t *loader, vspace_t *new_vspace, sel4utils_alloc_data_t *data,
-                              vka_t *vka, seL4_CPtr page_directory,
+                              vka_t *vka, seL4_CPtr vspace_root,
                               vspace_allocated_object_fn allocated_object_fn, void *allocated_object_cookie, sel4utils_map_page_fn map_page);
 
 /**
@@ -115,14 +118,14 @@ sel4utils_get_vspace_with_map(vspace_t *loader, vspace_t *new_vspace, sel4utils_
  * @param data                    uninitialised vspace data struct to populate.
  * @param vka                     initialised vka that this virtual memory allocator will use to
  *                                allocate pages and pagetables. This allocator will never invoke free.
- * @param page_directory          page directory for the new vspace.
+ * @param vspace_root             root object for the new vspace.
  * @param allocated_object_fn     function to call when objects are allocated. Can be null.
  * @param allocated_object_cookie cookie passed when the above function is called. Can be null.
  *
  * @return 0 on success.
  */
 int sel4utils_get_vspace(vspace_t *loader, vspace_t *new_vspace, sel4utils_alloc_data_t *data,
-                         vka_t *vka, seL4_CPtr page_directory, vspace_allocated_object_fn allocated_object_fn,
+                         vka_t *vka, seL4_CPtr vspace_root, vspace_allocated_object_fn allocated_object_fn,
                          void *allocated_object_cookie);
 
 #ifdef CONFIG_VTX
@@ -152,7 +155,7 @@ int sel4utils_get_vspace_ept(vspace_t *loader, vspace_t *new_vspace, vka_t *vka,
  * @param data                    uninitialised vspace data struct to populate.
  * @param vka                     initialised vka that this virtual memory allocator will use to
  *                                allocate pages and pagetables. This allocator will never invoke free.
- * @param page_directory          page directory for the new vspace.
+ * @param vspace_root             root object for the new vspace.
  * @param allocated_object_fn     function to call when objects are allocated. Can be null.
  * @param allocated_object_cookie cookie passed when the above function is called. Can be null.
  * @param existing_frames         a NULL terminated list of virtual addresses for 4K frames that are
@@ -164,7 +167,7 @@ int sel4utils_get_vspace_ept(vspace_t *loader, vspace_t *new_vspace, vka_t *vka,
  *
  */
 int sel4utils_bootstrap_vspace(vspace_t *vspace, sel4utils_alloc_data_t *data,
-                               seL4_CPtr page_directory, vka_t *vka,
+                               seL4_CPtr vspace_root, vka_t *vka,
                                vspace_allocated_object_fn allocated_object_fn, void *allocated_object_cookie,
                                void *existing_frames[]);
 
@@ -177,7 +180,7 @@ int sel4utils_bootstrap_vspace(vspace_t *vspace, sel4utils_alloc_data_t *data,
  * @param vka                     initialised vka that this virtual memory allocator will use to
  *                                allocate pages and pagetables. This allocator will never invoke free.
  * @param info                    seL4 boot info
- * @param page_directory          page directory for the new vspace.
+ * @param vspace_root             root object for the new vspace.
  * @param allocated_object_fn     function to call when objects are allocated. Can be null.
  * @param allocated_object_cookie cookie passed when the above function is called. Can be null.
  *
@@ -185,7 +188,7 @@ int sel4utils_bootstrap_vspace(vspace_t *vspace, sel4utils_alloc_data_t *data,
  *
  */
 int sel4utils_bootstrap_vspace_with_bootinfo(vspace_t *vspace, sel4utils_alloc_data_t *data,
-                                             seL4_CPtr page_directory,
+                                             seL4_CPtr vspace_root,
                                              vka_t *vka, seL4_BootInfo *info, vspace_allocated_object_fn allocated_object_fn,
                                              void *allocated_object_cookie);
 
@@ -194,34 +197,34 @@ int sel4utils_bootstrap_vspace_with_bootinfo(vspace_t *vspace, sel4utils_alloc_d
  */
 static inline int
 sel4utils_get_vspace_leaky(vspace_t *loader, vspace_t *new_vspace, sel4utils_alloc_data_t *data,
-                           vka_t *vka, seL4_CPtr page_directory)
+                           vka_t *vka, seL4_CPtr vspace_root)
 {
-    return sel4utils_get_vspace(loader, new_vspace, data, vka, page_directory,
+    return sel4utils_get_vspace(loader, new_vspace, data, vka, vspace_root,
                                 (vspace_allocated_object_fn) NULL, NULL);
 }
 
 #ifdef CONFIG_VTX
 static inline int
 sel4utils_get_vspace_ept_leaky(vspace_t *loader, vspace_t *new_vspace,
-                               vka_t *vka, seL4_CPtr page_directory)
+                               vka_t *vka, seL4_CPtr vspace_rooty)
 {
-    return sel4utils_get_vspace_ept(loader, new_vspace, vka, page_directory,
+    return sel4utils_get_vspace_ept(loader, new_vspace, vka, vspace_root,
                                     (vspace_allocated_object_fn) NULL, NULL);
 }
 #endif /* CONFIG_VTX */
 
 static inline int
-sel4utils_bootstrap_vspace_with_bootinfo_leaky(vspace_t *vspace, sel4utils_alloc_data_t *data, seL4_CPtr page_directory,
+sel4utils_bootstrap_vspace_with_bootinfo_leaky(vspace_t *vspace, sel4utils_alloc_data_t *data, seL4_CPtr vspace_root,
                                                vka_t *vka, seL4_BootInfo *info)
 {
-    return sel4utils_bootstrap_vspace_with_bootinfo(vspace, data, page_directory, vka, info, NULL, NULL);
+    return sel4utils_bootstrap_vspace_with_bootinfo(vspace, data, vspace_root, vka, info, NULL, NULL);
 }
 
 static inline int
-sel4utils_bootstrap_vspace_leaky(vspace_t *vspace, sel4utils_alloc_data_t *data, seL4_CPtr page_directory, vka_t *vka,
+sel4utils_bootstrap_vspace_leaky(vspace_t *vspace, sel4utils_alloc_data_t *data, seL4_CPtr vspace_root, vka_t *vka,
                                  void *existing_frames[])
 {
-    return sel4utils_bootstrap_vspace(vspace, data, page_directory, vka, NULL, NULL, existing_frames);
+    return sel4utils_bootstrap_vspace(vspace, data, vspace_root, vka, NULL, NULL, existing_frames);
 }
 
 /**

@@ -15,6 +15,7 @@
 
 #include <assert.h>
 #include <sel4/sel4.h>
+#include <simple/arch/simple.h>
 #include <stdlib.h>
 #include <utils/util.h>
 #include <vka/cspacepath_t.h>
@@ -66,31 +67,6 @@ typedef void *(*simple_get_frame_mapping_fn)(void *data, void *paddr, int size_b
  * Returns the vritual address to which this physical address is mapped or NULL if frame is unmapped
  */
 typedef void *(*simple_get_frame_info_fn)(void *data, void *paddr, int size_bits, seL4_CPtr *cap, seL4_Word *ut_offset);
-
-/**
- * Request a cap to a specific IRQ number on the system
- *.
- * @param data cookie for the underlying implementation
- *
- * @param the CNode in which to put this cap
- *
- * @param the index within the CNode to put cap
- *
- * @param Depth of index
- */
-typedef seL4_Error (*simple_get_IRQ_control_fn)(void *data, int irq, seL4_CNode cnode, seL4_Word index, uint8_t depth);
-
-
-/**
- * Request a cap to the IOPorts on IA32
- *.
- * @param data cookie for the underlying implementation
- *
- * @param start port number that a cap is needed to
- *
- * @param end port number that a cap is needed to
- */
-typedef seL4_CPtr (*simple_get_IOPort_cap_fn)(void *data, uint16_t start_port, uint16_t end_port);
 
 /**
  * Assign the vspace to the current threads ASID pool
@@ -203,9 +179,7 @@ typedef struct simple_t {
     simple_get_frame_cap_fn frame_cap;
     simple_get_frame_mapping_fn frame_mapping;
     simple_get_frame_info_fn frame_info;
-    simple_get_IRQ_control_fn irq;
     simple_ASIDPool_assign_fn ASID_assign;
-    simple_get_IOPort_cap_fn IOPort_cap;
     simple_get_cap_count_fn cap_count;
     simple_get_nth_cap_fn nth_cap;
     simple_get_init_cap_fn init_cap;
@@ -214,10 +188,8 @@ typedef struct simple_t {
     simple_get_nth_untyped_fn nth_untyped;
     simple_get_userimage_count_fn userimage_count;
     simple_get_nth_userimage_fn nth_userimage;
-#ifdef CONFIG_IOMMU
-    simple_get_iospace_fn iospace;
-#endif
     simple_print_fn print;
+    arch_simple_t arch_simple;
 } simple_t;
 
 
@@ -241,11 +213,11 @@ simple_get_frame_cap(simple_t *simple, void *paddr, int size_bits, cspacepath_t 
 {
     if (!simple) {
         ZF_LOGE("Simple is NULL");
-        return -1;
+        return seL4_InvalidArgument;
     }
     if (!simple->frame_cap) {
         ZF_LOGE("%s not implemented", __FUNCTION__);
-        return -1;
+        return seL4_InvalidArgument;
     }
     return simple->frame_cap(simple->data, paddr, size_bits, path);
 }
@@ -270,13 +242,13 @@ simple_get_IRQ_control(simple_t *simple, int irq, cspacepath_t path)
 {
     if (!simple) {
         ZF_LOGE("Simple is NULL");
-        return -1;
+        return seL4_InvalidArgument;
     }
-    if (!simple->irq) {
+    if (!simple->arch_simple.irq) {
         ZF_LOGE("%s not implemented", __FUNCTION__);
-        return -1;
+        return seL4_InvalidArgument;
     }
-    return simple->irq(simple->data, irq, path.root, path.capPtr, path.capDepth);
+    return simple->arch_simple.irq(simple->data, irq, path.root, path.capPtr, path.capDepth);
 }
 
 static inline seL4_Error 
@@ -284,28 +256,26 @@ simple_ASIDPool_assign(simple_t *simple, seL4_CPtr vspace)
 {
     if (!simple) {
         ZF_LOGE("Simple is NULL");
-        return -1;
+        return seL4_InvalidArgument;
     }
     if (!simple->ASID_assign) {
         ZF_LOGE("%s not implemented", __FUNCTION__);
-        return -1;
+        return seL4_InvalidArgument;
     }
 
     return simple->ASID_assign(simple->data, vspace);
 }
 
-static inline seL4_CPtr 
-simple_get_IOPort_cap(simple_t *simple, uint16_t start_port, uint16_t end_port)
+
+static inline 
+seL4_CPtr simple_get_IOPort_cap(simple_t *simple, uint16_t start_port, uint16_t end_port)
 {
     if (!simple) {
         ZF_LOGE("Simple is NULL");
         return seL4_CapNull;
     }
-    if (!simple->IOPort_cap) {
-        ZF_LOGE("%s not implemented", __FUNCTION__);
-    }
 
-    return simple->IOPort_cap(simple->data, start_port, end_port);
+    return arch_simple_get_IOPort_cap(&simple->arch_simple, start_port, end_port);
 }
 
 static inline int 
@@ -469,12 +439,12 @@ simple_get_iospace(simple_t *simple, uint16_t domainID, uint16_t deviceID, cspac
         ZF_LOGE("Simple is NULL");
         return seL4_CapNull;
     }
-    if (!simple->iospace) {
+    if (!simple->arch_simple.iospace) {
         ZF_LOGE("%s not implemented", __FUNCTION__);
         return seL4_CapNull;
     }
 
-    return simple->iospace(simple->data, domainID, deviceID, path);
+    return simple->arch_simple.iospace(simple->data, domainID, deviceID, path);
 }
 #endif
 

@@ -79,7 +79,7 @@ typedef struct arch_simple {
     void *data;
     arch_simple_get_IOPort_cap_fn IOPort_cap;
 #ifdef CONFIG_IOMMU
-    simple_arch_simple_get_iospace_fn iospace;
+    arch_simple_get_iospace_fn iospace;
 #endif
     arch_simple_get_msi_fn msi;
     arch_simple_get_IRQ_control_fn irq;

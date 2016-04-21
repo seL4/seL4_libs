@@ -129,7 +129,7 @@ vspace_new_pages(vspace_t *vspace, seL4_CapRights rights, size_t num_pages, size
         return NULL;
     }
 
-    int error = vspace_new_pages_at_vaddr(vspace, vaddr, num_pages, size_bits, res);
+    UNUSED int error = vspace_new_pages_at_vaddr(vspace, vaddr, num_pages, size_bits, res);
 
     vspace_free_reservation(vspace, res);
 

@@ -132,7 +132,7 @@ perform_reservation(vspace_t *vspace, sel4utils_res_t *reservation, uintptr_t va
 {
     assert(reservation != NULL);
 
-    int error;
+    UNUSED int error;
     reservation->start = ROUND_DOWN(vaddr, PAGE_SIZE_4K);
     reservation->end = ROUND_UP(vaddr + bytes, PAGE_SIZE_4K);
 

@@ -206,8 +206,7 @@ void simple_default_print(void *data) {
         ZF_LOGE("Data is null!");
     }
 
-    seL4_BootInfo *info = (seL4_BootInfo *)data;
-    debug_print_bootinfo(info);
+    debug_print_bootinfo((seL4_BootInfo *) data);
 }
 
 void simple_default_init_bootinfo(simple_t *simple, seL4_BootInfo *bi) {

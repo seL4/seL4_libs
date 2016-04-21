@@ -435,12 +435,12 @@ simple_get_iospace(simple_t *simple, uint16_t domainID, uint16_t deviceID, cspac
         ZF_LOGE("Simple is NULL");
         return seL4_CapNull;
     }
-    if (!simple->iospace) {
+    if (!simple->arch_simple.iospace) {
         ZF_LOGE("%s not implemented", __FUNCTION__);
         return seL4_CapNull;
     }
 
-    return simple->iospace(simple->data, domainID, deviceID, path);
+    return simple->arch_simple.iospace(simple->data, domainID, deviceID, path);
 }
 #endif
 

@@ -572,6 +572,14 @@ sel4utils_configure_process_custom(sel4utils_process_t *process, vka_t *vka,
     error = sel4utils_configure_thread(vka, spawner_vspace, &process->vspace, SEL4UTILS_ENDPOINT_SLOT,
                                        config.priority, process->cspace.cptr, cspace_root_data, &process->thread);
 
+    /* copy tcb cap to cspace */
+    if (config.create_cspace) {
+        cspacepath_t src;
+        vka_cspace_make_path(vka, process->thread.tcb.cptr, &src);
+        UNUSED seL4_CPtr slot = sel4utils_copy_cap_to_process(process, src);
+        assert(slot == SEL4UTILS_TCB_SLOT);
+    }
+
     if (error) {
         ZF_LOGE("ERROR: failed to configure thread for new process %d\n", error);
         goto error;

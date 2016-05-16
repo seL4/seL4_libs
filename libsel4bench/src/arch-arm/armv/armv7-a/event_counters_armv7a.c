@@ -8,11 +8,9 @@
  * @TAG(NICTA_BSD)
  */
 
-#if defined(ARMV7_A)
-
 #include <utils/util.h>
 
-#include "event_counters.h"
+#include "../../event_counters.h"
 
 #define NAME_EVENT(id, name) EVENT_COUNTER_FORMAT(SEL4BENCH_ARMV7A_EVENT_##id, name)
 
@@ -58,5 +56,3 @@ sel4bench_arch_get_num_counters(void)
 {
     return ARRAY_SIZE(sel4bench_arch_event_counter_data);
 }
-
-#endif /* defined(ARMV7_A) */

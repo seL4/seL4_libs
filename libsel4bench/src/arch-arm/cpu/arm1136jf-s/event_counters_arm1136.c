@@ -8,11 +8,9 @@
  * @TAG(NICTA_BSD)
  */
 
-#if defined(ARM1136J_S) || defined(ARM1136JF_S)
-
 #include <utils/util.h>
 
-#include "event_counters.h"
+#include "../../event_counters.h"
 
 #define NAME_EVENT(id, name) EVENT_COUNTER_FORMAT(SEL4BENCH_ARM1136_EVENT_##id, name)
 
@@ -54,5 +52,3 @@ sel4bench_cpu_get_num_counters(void)
 {
     return ARRAY_SIZE(sel4bench_cpu_event_counter_data);
 }
-
-#endif /* defined(ARM1136J_S) || defined(ARM1136JF_S) */

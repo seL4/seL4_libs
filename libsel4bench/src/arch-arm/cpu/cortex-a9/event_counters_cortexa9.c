@@ -8,11 +8,7 @@
  * @TAG(NICTA_BSD)
  */
 
-#include <autoconf.h>
-
-#if defined(CONFIG_ARM_CORTEX_A9)
-
-#include "event_counters.h"
+#include "../../event_counters.h"
 
 #define NAME_EVENT(id, name) EVENT_COUNTER_FORMAT(SEL4BENCH_CORTEXA9_EVENT_##id, name)
 
@@ -63,5 +59,3 @@ sel4bench_cpu_get_num_counters(void)
 {
     return ARRAY_SIZE(sel4bench_cpu_event_counter_data);
 }
-
-#endif /* defined(CONFIG_ARM_CORTEX_A9) */

@@ -358,7 +358,7 @@ sel4utils_spawn_process_v(sel4utils_process_t *process, vka_t *vka, vspace_t *vs
 
 int
 sel4utils_configure_process(sel4utils_process_t *process, vka_t *vka,
-                            vspace_t *vspace, uint8_t priority, char *image_name)
+                            vspace_t *vspace, uint8_t priority, const char *image_name)
 {
     sel4utils_process_config_t config = {
         .is_elf = true,

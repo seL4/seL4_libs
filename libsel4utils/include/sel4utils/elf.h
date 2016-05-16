@@ -53,7 +53,7 @@ typedef struct sel4utils_elf_region {
  */
 void *
 sel4utils_elf_load_record_regions(vspace_t *loadee, vspace_t *loader, vka_t *loadee_vka,
-                                  vka_t *loader_vka, char *image_name, sel4utils_elf_region_t *regions, int mapanywhere);
+                                  vka_t *loader_vka, const char *image_name, sel4utils_elf_region_t *regions, int mapanywhere);
 
 /**
  * Wrapper for sel4utils_elf_load_record_regions. Does not record/perform reservations and
@@ -69,7 +69,7 @@ sel4utils_elf_load_record_regions(vspace_t *loadee, vspace_t *loader, vka_t *loa
  */
 void *
 sel4utils_elf_load(vspace_t *loadee, vspace_t *loader, vka_t *loadee_vka,
-                   vka_t *loader_vka, char *image_name);
+                   vka_t *loader_vka, const char *image_name);
 
 /**
  * Parses an elf file but does not actually load it. Merely reserves the regions in the vspace
@@ -83,7 +83,7 @@ sel4utils_elf_load(vspace_t *loadee, vspace_t *loader, vka_t *loadee_vka,
  * @return The entry point of the elf, NULL on error
  */
 void *
-sel4utils_elf_reserve(vspace_t *loadee, char *image_name, sel4utils_elf_region_t *regions);
+sel4utils_elf_reserve(vspace_t *loadee, const char *image_name, sel4utils_elf_region_t *regions);
 
 /**
  * Parses an elf file and returns the number of loadable regions. The result of this
@@ -94,7 +94,7 @@ sel4utils_elf_reserve(vspace_t *loadee, char *image_name, sel4utils_elf_region_t
  * @return Number of loadable regions in the elf
  */
 int
-sel4utils_elf_num_regions(char *image_name);
+sel4utils_elf_num_regions(const char *image_name);
 
 /**
  * Looks for the __vsyscall section in an elf file and returns the value. This
@@ -104,7 +104,7 @@ sel4utils_elf_num_regions(char *image_name);
  *
  * @return Address of vsyscall function or 0 if not found
  */
-uintptr_t sel4utils_elf_get_vsyscall(char *image_name);
+uintptr_t sel4utils_elf_get_vsyscall(const char *image_name);
 
 #endif /* (defined CONFIG_LIB_SEL4_VKA && defined CONFIG_LIB_SEL4_VSPACE) */
 #endif /* SEL4UTILS_ELF_H */

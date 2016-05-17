@@ -57,7 +57,6 @@
 #include <allocman/mspace/fixed_pool.h>
 #include <allocman/mspace/virtual_pool.h>
 #include <allocman/utspace/twinkle.h>
-#include <allocman/utspace/trickle.h>
 #include <vspace/vspace.h>
 #include <simple/simple.h>
 /**

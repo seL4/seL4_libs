@@ -15,7 +15,6 @@
 #include <allocman/cspace/simple1level.h>
 #include <allocman/cspace/two_level.h>
 #include <allocman/mspace/dual_pool.h>
-#include <allocman/utspace/trickle.h>
 #include <allocman/utspace/split.h>
 #include <allocman/bootstrap.h>
 #include <allocman/sel4_arch/reservation.h>

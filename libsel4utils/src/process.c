@@ -369,9 +369,7 @@ sel4utils_configure_process(sel4utils_process_t *process, vka_t *vka,
         .create_vspace = true,
         .create_fault_endpoint = true,
         .priority = priority,
-#ifndef CONFIG_KERNEL_STABLE
         .asid_pool = seL4_CapInitThreadASIDPool,
-#endif
     };
 
     return sel4utils_configure_process_custom(process, vka, vspace, config);
@@ -459,7 +457,7 @@ create_cspace(vka_t *vka, int size_bits, sel4utils_process_t *process,
     slot = sel4utils_copy_cap_to_process(process, src);
     assert(slot == SEL4UTILS_PD_SLOT);
 
-    if (!(config_set(CONFIG_KERNEL_STABLE) || config_set(CONFIG_X86_64))) {
+    if (!config_set(CONFIG_X86_64)) {
         vka_cspace_make_path(vka, get_asid_pool(asid_pool), &src);
         slot = sel4utils_copy_cap_to_process(process, src);
         assert(slot == SEL4UTILS_ASID_POOL_SLOT);
@@ -501,7 +499,7 @@ sel4utils_configure_process_custom(sel4utils_process_t *process, vka_t *vka,
         }
 
         /* assign an asid pool */
-        if (!(config_set(CONFIG_KERNEL_STABLE) || config_set(CONFIG_X86_64)) &&
+        if (!config_set(CONFIG_X86_64) &&
               assign_asid_pool(config.asid_pool, process->pd.cptr) != seL4_NoError) {
             goto error;
         }

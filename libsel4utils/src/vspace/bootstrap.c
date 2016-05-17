@@ -19,10 +19,6 @@
 #include <sel4utils/vspace.h>
 #include <sel4utils/vspace_internal.h>
 
-#ifdef CONFIG_KERNEL_STABLE
-#include <sel4/arch/bootinfo.h>
-#endif
-
 /* For the initial vspace, we must always guarantee we have virtual memory available
  * for each bottom level page table. Future vspaces can then use the initial vspace
  * to allocate bottom level page tables until memory runs out.
@@ -373,9 +369,6 @@ sel4utils_bootstrap_vspace_with_bootinfo(vspace_t *vspace, sel4utils_alloc_data_
 {
     void *existing_frames[] = {
         (void *) info,
-#if defined(CONFIG_ARCH_X86) && defined(CONFIG_KERNEL_STABLE)
-        (void *) seL4_IA32_GetBootInfo(),
-#endif
         /* We assume the IPC buffer is less than a page and fits into one page */
         (void *) (seL4_Word)ROUND_DOWN(((seL4_Word)(info->ipcBuffer)), PAGE_SIZE_4K),
         NULL

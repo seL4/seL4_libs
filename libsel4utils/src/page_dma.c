@@ -112,11 +112,7 @@ static void* dma_alloc(void *cookie, size_t size, int align, int cached, ps_mem_
         if (error) {
             goto handle_error;
         }
-#ifdef CONFIG_KERNEL_STABLE
-        error = seL4_Untyped_RetypeAtOffset(ut.cptr, kobject_get_type(KOBJECT_FRAME, PAGE_BITS_4K), PAGE_SIZE_4K * i, size_bits, frames[i].root, frames[i].dest, frames[i].destDepth, frames[i].offset, 1);
-#else
         error = seL4_Untyped_Retype(ut.cptr, kobject_get_type(KOBJECT_FRAME, PAGE_BITS_4K), size_bits, frames[i].root, frames[i].dest, frames[i].destDepth, frames[i].offset, 1);
-#endif
         if (error != seL4_NoError) {
             goto handle_error;
         }

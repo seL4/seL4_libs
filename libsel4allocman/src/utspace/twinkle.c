@@ -82,15 +82,10 @@ seL4_Word _utspace_twinkle_alloc(allocman_t *alloc, void *_twinkle, size_t size_
             i = j;
         }
     }
-    /* Perform the untyped retype */
-#if defined(CONFIG_KERNEL_STABLE)
-    sel4_error = seL4_Untyped_RetypeAtOffset(twinkle->uts[i].path.capPtr, type, _round_up(twinkle->uts[i].offset, size_bits), sel4_size_bits, slot->root, slot->dest, slot->destDepth, slot->offset, 1);
-#else
     /* if using inc retype then our offset calculation is effectively emulating the kernels calculations. This
      * means we track the free space of the untyped correctly, and since we are not going to try and free then
      * allocate again, this allocator can be used with either allocation scheme */
     sel4_error = seL4_Untyped_Retype(twinkle->uts[i].path.capPtr, type, sel4_size_bits, slot->root, slot->dest, slot->destDepth, slot->offset, 1);
-#endif
     if (sel4_error != seL4_NoError) {
         /* Well this shouldn't happen */
         SET_ERROR(error, 1);

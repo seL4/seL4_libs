@@ -205,7 +205,7 @@ run_scheduler(sched_t *sched, bool (*finished)(void *cookie), void *cookie)
                 info = seL4_Recv(data->endpoint_path.capPtr, &badge);
             } else {
                 current->reply_cap_saved = false;
-                info = seL4_NBSendRecv(current->reply_path.capPtr, info, data->endpoint.cptr, &badge);
+                info = seL4_SignalRecv(current->reply_path.capPtr, data->endpoint.cptr, &badge);
             }
         } else {
             ZF_LOGD("Noone to schedule\n");

@@ -61,8 +61,7 @@ timer_common_cleanup_irq(vka_t *vka, seL4_CPtr irq)
 }
 
 timer_common_data_t *
-timer_common_init(vspace_t *vspace, simple_t *simple,
-                  vka_t *vka, seL4_CPtr notification, uint32_t irq_number, void *paddr)
+timer_common_init_frame(vspace_t *vspace, simple_t *simple, vka_t *vka, void *paddr)
 {
     int error;
     timer_common_data_t *timer_data = NULL;
@@ -88,7 +87,25 @@ timer_common_init(vspace_t *vspace, simple_t *simple,
         goto error;
     }
 
+    return timer_data;
+error:
+    timer_common_destroy_internal(timer_data, vka, vspace);
+    return NULL;
+}
+
+timer_common_data_t *
+timer_common_init(vspace_t *vspace, simple_t *simple,
+                  vka_t *vka, seL4_CPtr notification, uint32_t irq_number, void *paddr)
+{
+    int error;
     cspacepath_t path;
+    timer_common_data_t *timer_data;
+    
+    timer_data = timer_common_init_frame(vspace, simple, vka, paddr);
+    if (timer_data == NULL) {
+        goto error;
+    }
+
     error = sel4platsupport_copy_irq_cap(vka, simple, irq_number, &path);
     timer_data->irq = path.capPtr;
     if (error != seL4_NoError) {

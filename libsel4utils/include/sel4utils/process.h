@@ -75,9 +75,12 @@ enum sel4utils_cspace_layout {
 
     /* This threads scheduling context */
     SEL4UTILS_SCHED_CONTEXT_SLOT = 5,
+    
+    /* the slot for this processes tcb */
+    SEL4UTILS_TCB_SLOT = 6,
 
     /* First free slot in the cspace configured by sel4utils */
-    SEL4UTILS_FIRST_FREE = 6
+    SEL4UTILS_FIRST_FREE = 7
 };
 
 typedef struct {

@@ -449,11 +449,12 @@ create_cspace(vka_t *vka, int size_bits, sel4utils_process_t *process,
     if (process->fault_endpoint.cptr != 0) {
         vka_cspace_make_path(vka, process->fault_endpoint.cptr, &src);
         slot = sel4utils_copy_cap_to_process(process, src);
-        assert(slot == SEL4UTILS_ENDPOINT_SLOT);
     } else {
         /* no fault endpoint, update slot so next will work */
+        slot++;
         allocate_next_slot(process);
     }
+    assert(slot == SEL4UTILS_ENDPOINT_SLOT);
 
     /* copy page directory cap into process cspace */
     vka_cspace_make_path(vka, process->pd.cptr, &src);
@@ -463,8 +464,10 @@ create_cspace(vka_t *vka, int size_bits, sel4utils_process_t *process,
     if (!(config_set(CONFIG_KERNEL_STABLE) || config_set(CONFIG_X86_64))) {
         vka_cspace_make_path(vka, get_asid_pool(asid_pool), &src);
         slot = sel4utils_copy_cap_to_process(process, src);
-        assert(slot == SEL4UTILS_ASID_POOL_SLOT);
+    } else {
+        allocate_next_slot(process);
     }
+    assert(slot == SEL4UTILS_ASID_POOL_SLOT);
 
     return 0;
 }
@@ -587,17 +590,24 @@ sel4utils_configure_process_custom(sel4utils_process_t *process, simple_t *simpl
     error = sel4utils_configure_thread_config(simple, vka, spawner_vspace, &process->vspace, thread_config,
                                               &process->thread);
 
-    if (error) {
-        ZF_LOGE("ERROR: failed to configure thread for new process %d\n", error);
-        goto error;
-    }
-
     if (config.create_cspace) {
-        UNUSED seL4_CPtr slot;
         cspacepath_t src;
+        UNUSED seL4_CPtr slot;
+
+        /* copy sched context cap to cspace */
         vka_cspace_make_path(vka, process->thread.sched_context.cptr, &src);
         slot = sel4utils_copy_cap_to_process(process, src);
         assert(slot == SEL4UTILS_SCHED_CONTEXT_SLOT);
+       
+        /* copy tcb cap to cspace */
+        vka_cspace_make_path(vka, process->thread.tcb.cptr, &src);
+        slot = sel4utils_copy_cap_to_process(process, src);
+        assert(slot == SEL4UTILS_TCB_SLOT);
+    }
+
+    if (error) {
+        ZF_LOGE("ERROR: failed to configure thread for new process %d\n", error);
+        goto error;
     }
 
     return 0;

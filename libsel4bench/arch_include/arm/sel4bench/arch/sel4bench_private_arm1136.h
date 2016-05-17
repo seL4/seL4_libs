@@ -11,6 +11,7 @@
 #ifndef __SEL4BENCH_PRIVATE_H__
 #define __SEL4BENCH_PRIVATE_H__
 
+#include <stdint.h>
 #include "sel4bench_events_arm1136.h"
 
 //function attributes

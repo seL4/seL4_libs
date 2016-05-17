@@ -16,8 +16,8 @@
 
 typedef sync_bin_sem_t sync_mutex_t;
 
-static inline int sync_mutex_init(sync_mutex_t *mutex, seL4_CPtr aep) {
-    return sync_bin_sem_init(mutex, aep);
+static inline int sync_mutex_init(sync_mutex_t *mutex, seL4_CPtr notification) {
+    return sync_bin_sem_init(mutex, notification);
 }
 
 static inline int sync_mutex_lock(sync_mutex_t *mutex) {

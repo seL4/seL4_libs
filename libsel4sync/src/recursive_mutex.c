@@ -19,19 +19,19 @@ static void *thread_id(void) {
     return (void*)seL4_GetIPCBuffer();
 }
 
-int sync_recursive_mutex_init(sync_recursive_mutex_t *mutex, seL4_CPtr aep) {
+int sync_recursive_mutex_init(sync_recursive_mutex_t *mutex, seL4_CPtr notification) {
     assert(mutex != NULL);
 #ifdef SEL4_DEBUG_KERNEL
-    /* Check the cap actually is an AEP. */
-    assert(seL4_DebugCapIdentify(aep) == 3);
+    /* Check the cap actually is a notification. */
+    assert(seL4_DebugCapIdentify(notification) == 3);
 #endif
 
-    mutex->aep = aep;
+    mutex->notification = notification;
     mutex->owner = NULL;
     mutex->held = 0;
 
     /* Prime the endpoint. */
-    seL4_Signal(mutex->aep);
+    seL4_Signal(mutex->notification);
     return 0;
 }
 
@@ -39,7 +39,7 @@ int sync_recursive_mutex_lock(sync_recursive_mutex_t *mutex) {
     assert(mutex != NULL);
     if (thread_id() != mutex->owner) {
         /* We don't already have the mutex. */
-        (void)seL4_Wait(mutex->aep, NULL);
+        (void)seL4_Wait(mutex->notification, NULL);
         __atomic_thread_fence(__ATOMIC_ACQUIRE);
         assert(mutex->owner == NULL);
         mutex->owner = thread_id();
@@ -64,7 +64,7 @@ int sync_recursive_mutex_unlock(sync_recursive_mutex_t *mutex) {
     if (mutex->held == 0) {
         /* This was the outermost lock we held. Wake the next person up. */
         __atomic_store_n(&mutex->owner, NULL, __ATOMIC_RELEASE);
-        seL4_Signal(mutex->aep);
+        seL4_Signal(mutex->notification);
     }
     return 0;
 }

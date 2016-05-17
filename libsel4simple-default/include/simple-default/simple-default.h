@@ -16,5 +16,6 @@
 #include <simple/simple.h>
 
 void simple_default_init_bootinfo(simple_t *simple, seL4_BootInfo *bi);
+void simple_default_init_arch_simple(arch_simple_t *simple, void *data);
 
 #endif /* _SIMPLE_DEFAULT_H_ */

@@ -234,7 +234,7 @@ run_scheduler(sched_t *sched, bool (*finished)(void *cookie), void *cookie)
             assert(sglib_edf_rb_tree_t_is_member(data->deadline_tree, current));
             sglib_edf_rb_tree_t_delete(&data->deadline_tree, current);
 
-            error = vka_cnode_saveCaller(&current->reply_path);
+            error = vka_cnode_swapCaller(&current->reply_path);
             if (error != seL4_NoError) {
                 ZF_LOGE("Failed to save replyCap: %d\n", error);
                 return -1;

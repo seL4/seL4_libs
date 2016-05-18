@@ -12,7 +12,7 @@
 #include <stdlib.h> /* For abort() */
 #include <sel4utils/sel4_debug.h>
 
-char *sel4_errlist[] = {
+const char *sel4_errlist[] = {
     "seL4_NoError",
     "seL4_InvalidArgument",
     "seL4_InvalidCapability",
@@ -29,7 +29,7 @@ char *sel4_errlist[] = {
 
 void
 __sel4_error(int sel4_error, const char *file,
-             const char *function, int line, char * str)
+             const char *function, int line, const char * str)
 {
     fprintf(stderr, "seL4 Error: %s, function %s, file %s, line %d: %s\n",
             sel4_errlist[sel4_error],

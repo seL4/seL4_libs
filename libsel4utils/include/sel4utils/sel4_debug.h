@@ -13,8 +13,8 @@
 
 #define	sel4_error(e, str)	((e == seL4_NoError) ? (void)0 : __sel4_error(e, __FILE__, __func__, __LINE__, str))
 
-void __sel4_error(int, const char *, const char *, int, char *);
+void __sel4_error(int, const char *, const char *, int, const char *);
 
-extern char *sel4_errlist[];
+extern const char *sel4_errlist[];
 
 #endif /* _SEL4_DEBUG_ */

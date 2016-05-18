@@ -132,7 +132,7 @@ load_segment(vspace_t *loadee_vspace, vspace_t *loader_vspace,
 }
 
 int
-sel4utils_elf_num_regions(char *image_name)
+sel4utils_elf_num_regions(const char *image_name)
 {
     int i;
     unsigned long elf_size;
@@ -183,7 +183,7 @@ make_region(vspace_t *loadee, unsigned long flags, unsigned long segment_size,
 }
 
 void *
-sel4utils_elf_reserve(vspace_t *loadee, char *image_name, sel4utils_elf_region_t *regions)
+sel4utils_elf_reserve(vspace_t *loadee, const char *image_name, sel4utils_elf_region_t *regions)
 {
     unsigned long elf_size;
     char *elf_file = cpio_get_file(_cpio_archive, image_name, &elf_size);
@@ -226,7 +226,7 @@ sel4utils_elf_reserve(vspace_t *loadee, char *image_name, sel4utils_elf_region_t
 }
 
 void *
-sel4utils_elf_load_record_regions(vspace_t *loadee, vspace_t *loader, vka_t *loadee_vka, vka_t *loader_vka, char *image_name, sel4utils_elf_region_t *regions, int mapanywhere)
+sel4utils_elf_load_record_regions(vspace_t *loadee, vspace_t *loader, vka_t *loadee_vka, vka_t *loader_vka, const char *image_name, sel4utils_elf_region_t *regions, int mapanywhere)
 {
     unsigned long elf_size;
     char *elf_file = cpio_get_file(_cpio_archive, image_name, &elf_size);
@@ -288,7 +288,7 @@ sel4utils_elf_load_record_regions(vspace_t *loadee, vspace_t *loader, vka_t *loa
     return error == seL4_NoError ? (void*)(seL4_Word)entry_point : NULL;
 }
 
-uintptr_t sel4utils_elf_get_vsyscall(char *image_name)
+uintptr_t sel4utils_elf_get_vsyscall(const char *image_name)
 {
     unsigned long elf_size;
     char *elf_file = cpio_get_file(_cpio_archive, image_name, &elf_size);
@@ -307,7 +307,7 @@ uintptr_t sel4utils_elf_get_vsyscall(char *image_name)
 }
 
 void *
-sel4utils_elf_load(vspace_t *loadee, vspace_t *loader, vka_t *loadee_vka, vka_t *loader_vka, char *image_name)
+sel4utils_elf_load(vspace_t *loadee, vspace_t *loader, vka_t *loadee_vka, vka_t *loader_vka, const char *image_name)
 {
     return sel4utils_elf_load_record_regions(loadee, loader, loadee_vka, loader_vka, image_name, NULL, 0);
 }

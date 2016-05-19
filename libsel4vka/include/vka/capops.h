@@ -22,9 +22,9 @@
 #include <vka/object.h>
 
 inline static int
-vka_cnode_saveCaller(const cspacepath_t* src)
+vka_cnode_swapCaller(const cspacepath_t* src)
 {
-    return seL4_CNode_SaveCaller(
+    return seL4_CNode_SwapCaller(
                /* _service */      src->root,
                /* index */         src->capPtr,
                /* depth */         src->capDepth
@@ -32,9 +32,9 @@ vka_cnode_saveCaller(const cspacepath_t* src)
 }
 
 inline static int
-vka_cnode_saveTCBCaller(const cspacepath_t* src, vka_object_t *tcb)
+vka_cnode_swapTCBCaller(const cspacepath_t* src, vka_object_t *tcb)
 {
-    return seL4_CNode_SaveTCBCaller(
+    return seL4_CNode_SwapTCBCaller(
                /* _service */      src->root,
                /* index */         src->capPtr,
                /* depth */         src->capDepth,

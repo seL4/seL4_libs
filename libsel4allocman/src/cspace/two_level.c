@@ -28,7 +28,7 @@ cspacepath_t _cspace_two_level_make_path(void *_cspace, seL4_CPtr slot)
        could be a two level cspace and this would still work */
     if(!cspace->second_levels[l1slot]) {
         assert(!"ERROR: Tried make a path to a non existant slot\n");
-        return (cspacepath_t) {0, 0, 0, 0, 0, 0};
+        return (cspacepath_t) {0, 0, 0, 0, 0, 0, 0};
     }
     l1_path = _cspace_single_level_make_path(&cspace->first_level, l1slot);
     l2_path =_cspace_single_level_make_path(&cspace->second_levels[l1slot]->second_level, l2slot);

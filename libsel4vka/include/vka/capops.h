@@ -142,17 +142,6 @@ vka_cnode_rotate(const cspacepath_t *dest, seL4_CapData_t dest_badge, const cspa
 //TODO: implement rotate
 
 
-#ifdef CONFIG_KERNEL_STABLE
-inline static int
-vka_untyped_retypeAtOffset(vka_object_t *untyped, int type, int offset, int size_bits,
-                           int num_objects, const cspacepath_t *dest)
-{
-    size_bits = vka_get_object_size(type, size_bits);
-    return seL4_Untyped_RetypeAtOffset(untyped->cptr, type, offset, size_bits,
-                                       dest->root, dest->dest, dest->destDepth, dest->offset, num_objects);
-}
-
-#else
 /**
  * Retype num_objects objects from untyped into type starting from destination slot dest.
  *
@@ -164,6 +153,5 @@ vka_untyped_retype(vka_object_t *untyped, int type, int size_bits, int num_objec
     size_bits = vka_get_object_size(type, size_bits);
     return seL4_Untyped_Retype(untyped->cptr, type, size_bits, dest->root, dest->dest, dest->destDepth, dest->offset, num_objects);
 }
-#endif
 
 #endif /* VKA_CAPOPS_H */

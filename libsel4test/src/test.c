@@ -54,7 +54,7 @@ sel4test_printf(const char *string) {
 
 
 void 
-sel4test_start_suite(char *name) {
+sel4test_start_suite(const char *name) {
 
 #ifdef CONFIG_PRINT_XML
     buf_index = 0;
@@ -101,7 +101,7 @@ sel4test_start_test(const char *name) {
 }
 
 void 
-_sel4test_report_error(char *error, char *file, int line) {
+_sel4test_report_error(const char *error, const char *file, int line) {
 #ifdef CONFIG_PRINT_XML
     printf("\t\t<error>%s at line %d of file %s</error>\n", error, line, file);
 #else
@@ -112,7 +112,7 @@ _sel4test_report_error(char *error, char *file, int line) {
 
 
 void 
-_sel4test_failure(char *failure, char *file, int line) {
+_sel4test_failure(const char *failure, const char *file, int line) {
 #ifdef CONFIG_PRINT_XML
     printf("\t\t<failure type=\"failure\">%s at line %d of file %s</failure>\n", failure, line, file);
 #else
@@ -160,7 +160,7 @@ extern struct testcase __stop__test_case[];
 static USED SECTION("_test_case") struct {} dummy;
 
 testcase_t*
-sel4test_get_test(char *name) 
+sel4test_get_test(const char *name) 
 {
     
     for (testcase_t *t = __start__test_case; t < __stop__test_case; t++) {
@@ -174,7 +174,7 @@ sel4test_get_test(char *name)
 
 
 void
-sel4test_run_tests(char *name, int (*run_test)(struct testcase *t)) {
+sel4test_run_tests(const char *name, int (*run_test)(struct testcase *t)) {
 
     /* Count how many tests actually exist and allocate space for them */
     int max_tests = (int)(__stop__test_case - __start__test_case);

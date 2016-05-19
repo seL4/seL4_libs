@@ -106,7 +106,7 @@ sel4utils_create_word_args(char strings[][WORD_STRING_SIZE], char *argv[], int a
 seL4_CPtr
 sel4utils_mint_cap_to_process(sel4utils_process_t *process, cspacepath_t src, seL4_CapRights rights, seL4_CapData_t data)
 {
-    cspacepath_t dest;
+    cspacepath_t dest = { 0 };
     if (next_free_slot(process, &dest) == -1) {
         return 0;
     }
@@ -125,7 +125,7 @@ sel4utils_mint_cap_to_process(sel4utils_process_t *process, cspacepath_t src, se
 seL4_CPtr
 sel4utils_copy_cap_to_process(sel4utils_process_t *process, cspacepath_t src)
 {
-    cspacepath_t dest;
+    cspacepath_t dest = { 0 };
     if (next_free_slot(process, &dest) == -1) {
         return 0;
     }
@@ -144,7 +144,7 @@ sel4utils_copy_cap_to_process(sel4utils_process_t *process, cspacepath_t src)
 seL4_CPtr
 sel4utils_move_cap_to_process(sel4utils_process_t *process, cspacepath_t src, vka_t *from_vka)
 {
-    cspacepath_t dest;
+    cspacepath_t dest = { 0 };
     if (next_free_slot(process, &dest) == -1) {
         return 0;
     }
@@ -358,7 +358,7 @@ sel4utils_spawn_process_v(sel4utils_process_t *process, vka_t *vka, vspace_t *vs
 
 int
 sel4utils_configure_process(sel4utils_process_t *process, simple_t *simple, vka_t *vka,
-                            vspace_t *vspace, uint8_t priority, char *image_name)
+                            vspace_t *vspace, uint8_t priority, const char *image_name)
 {
     sel4utils_process_config_t config = {
         .is_elf = true,
@@ -370,9 +370,7 @@ sel4utils_configure_process(sel4utils_process_t *process, simple_t *simple, vka_
         .create_fault_endpoint = true,
         .priority = priority,
         .create_sc = simple != NULL,
-#ifndef CONFIG_KERNEL_STABLE
         .asid_pool = seL4_CapInitThreadASIDPool,
-#endif
     };
 
     return sel4utils_configure_process_custom(process, simple, vka, vspace, config);
@@ -461,7 +459,7 @@ create_cspace(vka_t *vka, int size_bits, sel4utils_process_t *process,
     slot = sel4utils_copy_cap_to_process(process, src);
     assert(slot == SEL4UTILS_PD_SLOT);
 
-    if (!(config_set(CONFIG_KERNEL_STABLE) || config_set(CONFIG_X86_64))) {
+    if (!config_set(CONFIG_X86_64)) {
         vka_cspace_make_path(vka, get_asid_pool(asid_pool), &src);
         slot = sel4utils_copy_cap_to_process(process, src);
     } else {
@@ -506,7 +504,7 @@ sel4utils_configure_process_custom(sel4utils_process_t *process, simple_t *simpl
         }
 
         /* assign an asid pool */
-        if (!(config_set(CONFIG_KERNEL_STABLE) || config_set(CONFIG_X86_64)) &&
+        if (!config_set(CONFIG_X86_64) &&
               assign_asid_pool(config.asid_pool, process->pd.cptr) != seL4_NoError) {
             goto error;
         }

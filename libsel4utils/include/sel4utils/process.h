@@ -87,7 +87,7 @@ typedef struct {
     /* should we handle elf logic at all? */
     bool is_elf;
     /* if so what is the image name? */
-    char *image_name;
+    const char *image_name;
     /* Do you want the elf image preloaded? */
     bool do_elf_load;
 
@@ -121,9 +121,7 @@ typedef struct {
     vka_object_t fault_endpoint;
 
     int priority;
-#ifndef CONFIG_KERNEL_STABLE
     seL4_CPtr asid_pool;
-#endif
     /* should we create a scheduling context? */
     bool create_sc;
     /* if so do you want to populate it with custom params? */
@@ -217,7 +215,7 @@ int sel4utils_spawn_process_v(sel4utils_process_t *process, vka_t *vka, vspace_t
  * @return 0 on success, -1 on error.
  */
 int sel4utils_configure_process(sel4utils_process_t *process, simple_t *simple, vka_t *vka, vspace_t *vspace,
-                                uint8_t priority, char *image_name);
+                                uint8_t priority, const char *image_name);
 
 /**
  * Configure a process with more customisations (Create your own vspace, customise cspace size).

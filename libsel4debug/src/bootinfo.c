@@ -48,19 +48,6 @@ debug_print_bootinfo(seL4_BootInfo *info)
         }
     }
 
-    /* mainline and experimental treat device regions differently*/
-#ifdef CONFIG_KERNEL_STABLE
-    ZF_LOGI("device untypeds: [%u --> %u)", info->deviceUntyped.start, info->deviceUntyped.end);
-    ZF_LOGI("List of device untypes");
-    ZF_LOGI("Paddr    | Size   ");
-    int start = info->untyped.end - info->untyped.start;
-    int size = info->deviceUntyped.end - info->deviceUntyped.start;
-    for (int i = start; i < start + size; i++) {
-        if (info->untypedPaddrList[i] != 0) {
-            ZF_LOGI("0x%08x | %u", info->untypedPaddrList[i], info->untypedSizeBitsList[i]);
-        }
-    }
-#else
     ZF_LOGI("DeviceRegions: %u\n", info->numDeviceRegions);
     printf("List of deviceRegions\n");
     printf("Paddr    | Size     | Slot Region\n");
@@ -70,7 +57,6 @@ debug_print_bootinfo(seL4_BootInfo *info)
                info->deviceRegions[i].frames.start,
                info->deviceRegions[i].frames.end);
     }
-#endif /* CONFIG_KERNEL_STABLE */
 
 }
 

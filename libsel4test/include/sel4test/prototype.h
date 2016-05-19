@@ -23,7 +23,7 @@ void sel4test_printf(const char *out);
  * 
  * @name name of test suite
  */
-void sel4test_start_suite(char *name);
+void sel4test_start_suite(const char *name);
 
 
 /**
@@ -44,14 +44,14 @@ void sel4test_start_test(const char *name);
  * Can report multiple errors.
  * This will fail a test case.
  */
-void _sel4test_report_error(char *error, char *file, int line);
+void _sel4test_report_error(const char *error, const char *file, int line);
 
 
 /*
  * Mark the current test as failed. Should
  * only be called once per test case 
  */
-void _sel4test_failure(char *failure, char *file, int line);
+void _sel4test_failure(const char *failure, const char *file, int line);
 
 /*
  * End the current test case

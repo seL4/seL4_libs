@@ -76,7 +76,7 @@ test_comparator(const void *a, const void *b)
 }
 
 /* Fails a test case, stop running the rest of the test, but keep running other tests. */
-static inline int _test_fail(char *condition, char *file, int line)
+static inline int _test_fail(const char *condition, const char *file, int line)
 {
     _sel4test_failure(condition, file, line);
 #ifdef CONFIG_TESTPRINTER_HALT_ON_TEST_FAILURE
@@ -92,7 +92,7 @@ static inline int _test_fail(char *condition, char *file, int line)
 }
 
 /* Fails a test case, keep running the rest of the test, then keep running other tests. */
-static inline void _test_error(char *condition, char *file, int line)
+static inline void _test_error(const char *condition, const char *file, int line)
 {
 
     _sel4test_report_error(condition, file, line);
@@ -109,7 +109,7 @@ static inline void _test_error(char *condition, char *file, int line)
 }
 
 /* Fails a test case, stop everything. */
-static inline void _test_abort(char *condition, char *file, int line)
+static inline void _test_abort(const char *condition, const char *file, int line)
 {
     _sel4test_failure(condition, file, line);
     printf("Halting on fatal assertion...\n");
@@ -224,7 +224,7 @@ sel4test_basic_run_test(struct testcase *t)
  * @param run_test function that runs the tests. 
  *
  */
-void sel4test_run_tests(char *name, int (*run_test)(struct testcase *t));
+void sel4test_run_tests(const char *name, int (*run_test)(struct testcase *t));
 
 /* 
  * Get a testcase.
@@ -232,7 +232,7 @@ void sel4test_run_tests(char *name, int (*run_test)(struct testcase *t));
  * @param name the name of the test to retrieve.
  * @return the test corresponding to name, NULL if test not found.
  */
-testcase_t* sel4test_get_test(char *name);
+testcase_t* sel4test_get_test(const char *name);
 
 
 bool sel4test_get_result(void);

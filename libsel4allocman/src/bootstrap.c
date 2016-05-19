@@ -15,7 +15,6 @@
 #include <allocman/cspace/simple1level.h>
 #include <allocman/cspace/two_level.h>
 #include <allocman/mspace/dual_pool.h>
-#include <allocman/utspace/trickle.h>
 #include <allocman/utspace/split.h>
 #include <allocman/bootstrap.h>
 #include <allocman/sel4_arch/reservation.h>
@@ -28,11 +27,7 @@
 #include <utils/arith.h>
 
 /* configure the choice of boot strapping allocators */
-#if defined(CONFIG_KERNEL_STABLE)
-#define UTMAN trickle
-#else
 #define UTMAN split
-#endif
 
 /*do some nasty macro expansion to get the string substitution to happen how we want */
 #define CON2(a, b,c) a##b##c
@@ -275,37 +270,6 @@ static int _remove_ut(bootstrap_info_t *bs, size_t i) {
     return 0;
 }
 
-#if defined(CONFIG_KERNEL_STABLE)
-
-static int _split_ut(bootstrap_info_t *bs, cspacepath_t ut, cspacepath_t p1, cspacepath_t p2, size_t size) {
-    int error;
-    error = seL4_Untyped_RetypeAtOffset(ut.capPtr, seL4_UntypedObject, 0, size, p1.root, p1.dest, p1.destDepth, p1.offset, 1);
-    if (error != seL4_NoError) {
-        LOG_ERROR("Failed to split untyped");
-        return 1;
-    }
-    error = seL4_Untyped_RetypeAtOffset(ut.capPtr, seL4_UntypedObject, BIT(size), size,
-                                        p2.root, p2.dest, p2.destDepth, p2.offset, 1);
-    if (error != seL4_NoError) {
-        LOG_ERROR("Failed to allocate second half of split untyped");
-        return 1;
-    }
-    return 0;
-}
-
-static int _retype_cnode(bootstrap_info_t *bs, cspacepath_t ut, cspacepath_t cnode, seL4_Word sel4_size) {
-    int error;
-    error = seL4_Untyped_RetypeAtOffset(ut.capPtr, seL4_CapTableObject, 0, sel4_size,
-                                        cnode.root, cnode.dest, cnode.destDepth, cnode.offset, 1);
-    if (error != seL4_NoError) {
-        LOG_ERROR("Failed to retype a cnode");
-        return 1;
-    }
-    return 0;
-}
-
-#else
-
 static int _split_ut(bootstrap_info_t *bs, cspacepath_t ut, cspacepath_t p1, cspacepath_t p2, size_t size) {
     int error;
     error = seL4_Untyped_Retype(ut.capPtr, seL4_UntypedObject, size, p1.root, p1.dest, p1.destDepth, p1.offset, 1);
@@ -328,8 +292,6 @@ static int _retype_cnode(bootstrap_info_t *bs, cspacepath_t ut, cspacepath_t cno
     }
     return 0;
 }
-
-#endif
 
 static int bootstrap_allocate_cnode(bootstrap_info_t *bs, size_t size, cspacepath_t *slot) {
     size_t ut_size;

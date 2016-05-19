@@ -10,6 +10,5 @@
 
 
 
-libsel4platsupport-y: libsel4simple-default
-libsel4platsupport: libutils libsel4 libsel4vspace libsel4simple libplatsupport libsel4platsupport-y $(libc) common
+libsel4platsupport: libutils libsel4 libsel4vspace libsel4simple libplatsupport libsel4simple-default $(libc) common
 libs-$(CONFIG_LIB_SEL4_PLAT_SUPPORT) += libsel4platsupport

@@ -18,23 +18,34 @@
 #ifdef CONFIG_LIB_SEL4_VSPACE
 
 static void
+timer_common_destroy_frame_internal(timer_common_data_t *data, vka_t *vka, vspace_t *vspace)
+{
+    if (data->vaddr != NULL) {
+        vspace_unmap_pages(vspace, data->vaddr, 1, seL4_PageBits, VSPACE_PRESERVE);
+    }
+    if (data->frame.capPtr != 0) {
+        vka_cnode_delete(&data->frame);
+        vka_cspace_free(vka, data->frame.capPtr);
+    }
+}
+
+void
+timer_common_destroy_frame(seL4_timer_t *timer, vka_t *vka, vspace_t *vspace)
+{
+    timer_common_data_t *timer_data = (timer_common_data_t *) timer->data;
+    if (timer_data != NULL) {
+        timer_common_destroy_frame_internal(timer_data, vka, vspace);
+    }
+}
+
+static void
 timer_common_destroy_internal(timer_common_data_t *timer_data, vka_t *vka, vspace_t *vspace)
 {
     if (timer_data != NULL) {
-
+        timer_common_destroy_frame_internal(timer_data, vka, vspace);
         if (timer_data->irq != 0) {
             seL4_IRQHandler_Clear(timer_data->irq);
-            cspacepath_t irq_path;
-            vka_cspace_make_path(vka, timer_data->irq, &irq_path);
-            vka_cnode_delete(&irq_path);
-            vka_cspace_free(vka, timer_data->irq);
-        }
-        if (timer_data->vaddr != NULL) {
-            vspace_unmap_pages(vspace, timer_data->vaddr, 1, seL4_PageBits, VSPACE_PRESERVE);
-        }
-        if (timer_data->frame.capPtr != 0) {
-            vka_cnode_delete(&timer_data->frame);
-            vka_cspace_free(vka, timer_data->frame.capPtr);
+            timer_common_cleanup_irq(vka, timer_data->irq);
         }
         free(timer_data);
     }

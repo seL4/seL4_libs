@@ -135,11 +135,7 @@ static int _refill_pool(allocman_t *alloc, utspace_split_t *split, size_t size_b
         return 1;
     }
     /* perform the first retype */
-#if defined(CONFIG_KERNEL_STABLE)
-    sel4_error = seL4_Untyped_RetypeAtOffset(node->ut.capPtr, seL4_UntypedObject, 0, size_bits, left->ut.root, left->ut.dest, left->ut.destDepth, left->ut.offset, 1);
-#else
     sel4_error = seL4_Untyped_Retype(node->ut.capPtr, seL4_UntypedObject, size_bits, left->ut.root, left->ut.dest, left->ut.destDepth, left->ut.offset, 1);
-#endif
     if (sel4_error != seL4_NoError) {
         _delete_node(alloc, left);
         _delete_node(alloc, right);
@@ -147,11 +143,7 @@ static int _refill_pool(allocman_t *alloc, utspace_split_t *split, size_t size_b
         return 1;
     }
     /* perform the second retype */
-#if defined(CONFIG_KERNEL_STABLE)
-    sel4_error = seL4_Untyped_RetypeAtOffset(node->ut.capPtr, seL4_UntypedObject, BIT(size_bits), size_bits, right->ut.root, right->ut.dest, right->ut.destDepth, right->ut.offset, 1);
-#else
     sel4_error = seL4_Untyped_Retype(node->ut.capPtr, seL4_UntypedObject, size_bits, right->ut.root, right->ut.dest, right->ut.destDepth, right->ut.offset, 1);
-#endif
     if (sel4_error != seL4_NoError) {
         vka_cnode_delete(&left->ut);
         _delete_node(alloc, left);
@@ -199,11 +191,7 @@ seL4_Word _utspace_split_alloc(allocman_t *alloc, void *_split, size_t size_bits
     /* use the first node for lack of a better one */
     node = split->heads[size_bits];
     /* Perform the untyped retype */
-#if defined(CONFIG_KERNEL_STABLE)
-    sel4_error = seL4_Untyped_RetypeAtOffset(node->ut.capPtr, type, 0, sel4_size_bits, slot->root, slot->dest, slot->destDepth, slot->offset, 1);
-#else
     sel4_error = seL4_Untyped_Retype(node->ut.capPtr, type, sel4_size_bits, slot->root, slot->dest, slot->destDepth, slot->offset, 1);
-#endif
     if (sel4_error != seL4_NoError) {
         /* Well this shouldn't happen */
         SET_ERROR(error, 1);

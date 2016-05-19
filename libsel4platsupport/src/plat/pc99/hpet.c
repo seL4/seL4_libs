@@ -37,6 +37,15 @@ hpet_handle_irq_ioapic(seL4_timer_t *timer, uint32_t irq)
     seL4_IRQHandler_Ack(data->irq);
 }
 
+static void
+hpet_destroy(seL4_timer_t *timer, vka_t *vka, vspace_t *vspace)
+{
+    timer_common_data_t *timer_data = (timer_common_data_t *) timer->data;
+    timer_common_destroy_frame(timer, vka, vspace);
+    /* clear the irq */
+    seL4_IRQHandler_Clear(timer_data->irq);
+}
+
 seL4_timer_t *
 sel4platsupport_get_hpet(vspace_t *vspace, simple_t *simple, acpi_t *acpi,
                                        vka_t *vka, seL4_CPtr notification, uint32_t irq_number)
@@ -53,7 +62,7 @@ sel4platsupport_get_hpet(vspace_t *vspace, simple_t *simple, acpi_t *acpi,
     }
 
     /* check what range the IRQ is in */
-    hpet->destroy = timer_common_destroy;
+    hpet->destroy = hpet_destroy;
 
     if ((int)irq_number >= MSI_MIN || irq_number <= MSI_MAX) {
         irq = irq_number + IRQ_OFFSET;

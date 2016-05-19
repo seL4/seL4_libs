@@ -14,4 +14,4 @@ libsel4vka-$(CONFIG_LIB_SEL4_VKA) := libsel4vka
 libplatsupport-$(CONFIG_LIB_PLATSUPPORT) := libplatsupport
 libsel4platsupport-$(CONFIG_LIB_SEL4_PLAT_SUPPORT) := libsel4platsupport
 libsel4simple-$(CONFIG_LIB_SEL4_SIMPLE) := libsel4simple
-libsel4utils: $(libsel4vspace-y) $(libsel4vka-y) $(libplatsupport-y) $(libsel4platsupport-y) libutils libelf libcpio libsel4 common $(libc) $(libsel4simple-y)
+libsel4utils: $(libsel4vspace-y) $(libsel4vka-y) $(libplatsupport-y) $(libsel4platsupport-y) libutils libelf libcpio libsel4 common $(libc) $(libsel4simple-y) libsel4bench libsel4debug

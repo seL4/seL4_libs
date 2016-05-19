@@ -28,7 +28,7 @@ struct edf_sched_add_tcb_args {
        or EDF scheduling is not guaranteed. */
     time_t budget;
     time_t period;
-    /* empty slot to save a minted endpoint cap in, threads should ReplyWait on this
+    /* empty slot to save a minted endpoint cap in, threads should Call on this
        endpoint to signal job completion and wait for next job release. */
     cspacepath_t slot;
 };
@@ -45,7 +45,7 @@ struct sched {
     void *(*add_tcb)(sched_t *sched, seL4_CPtr sched_context, void *args);
     void (*remove_tcb)(sched_t *sched, void *tcb);
     void (*reset)(sched_t *sched);
-    int (*run_scheduler)(sched_t *sched, bool (*finished)(void *cookie), void *cookie);
+    int (*run_scheduler)(sched_t *sched, bool (*finished)(void *cookie), void *cookie, void *args);
     void (*destroy_scheduler)(sched_t *sched);
     void *data;
 };
@@ -124,16 +124,16 @@ sched_reset(sched_t *sched)
  * @param finished function to call which returns true when the scheduler should
  *                 stop scheduling (can just return false for infinite scheduling)
  * @param cookie   argument to pass to the finished function, can be NULL.
- *
+ * @param args     custom argument for this specific scheduler
  * @return 0 on success, -1 on failure.
  */
 static inline int
-sched_run(sched_t *sched, bool (*finished)(void *cookie), void *cookie)
+sched_run(sched_t *sched, bool (*finished)(void *cookie), void *cookie, void *args)
 {
     assert(sched != NULL);
     assert(finished != NULL);
 
-    return sched->run_scheduler(sched, finished, cookie);
+    return sched->run_scheduler(sched, finished, cookie, args);
 }
 
 /*

@@ -7,11 +7,14 @@
  *
  * @TAG(NICTA_BSD)
  */
-
-#include <utils/sglib.h>
+#include <autoconf.h>
+#include <sel4bench/flog.h>
 #include <sel4utils/sched.h>
+#include <sel4utils/sel4_zf_logif.h>
 #include <string.h>
+#include <utils/sglib.h>
 #include <vka/capops.h>
+#include <sel4/tfIPC.h>
 
 /* define RB tree for EDF implementation */
 typedef struct rb_tree {
@@ -76,7 +79,7 @@ add_tcb(sched_t *sched, seL4_CPtr sched_context, void *params)
     edf_data_t *data = sched->data;
     struct edf_sched_add_tcb_args *args = (struct edf_sched_add_tcb_args *) params;
     int error;
-    edf_rb_tree_t *node = malloc(sizeof(edf_rb_tree_t));
+    edf_rb_tree_t *node = calloc(1, sizeof(edf_rb_tree_t));
     if (node == NULL) {
         ZF_LOGE("Failed to allocate node\n");
         return NULL;
@@ -84,13 +87,12 @@ add_tcb(sched_t *sched, seL4_CPtr sched_context, void *params)
 
     node->slot = args->slot;
     node->tcb = args->tcb;
-    node->reply_cap_saved = 0;
     node->budget = args->budget;
     node->period = args->period;
     node->id = data->next_id;
-    node->weight = timer_get_time(data->clock_timer->timer);
     node->sched_context = sched_context;
     data->next_id++;
+    node->weight = node->id;
 
     /* mint a copy of the endpoint cap into the tcb's cspace with a badge corresponding to the
      * scheduling ID of this thread */
@@ -148,25 +150,26 @@ static void
 start(edf_data_t *data, uint64_t time)
 {
     edf_rb_tree_t *current;
-    struct sglib_edf_rb_tree_t_iterator it;
 
-    current = sglib_edf_rb_tree_t_it_init(&it, data->release_tree);
+    current = head(data->release_tree);
     while (current != NULL) {
         assert(sglib_edf_rb_tree_t_is_member(data->release_tree, current));
         sglib_edf_rb_tree_t_delete(&data->release_tree, current);
         current->weight = time + current->period;
         sglib_edf_rb_tree_t_add(&data->deadline_tree, current);
-        current = sglib_edf_rb_tree_t_it_next(&it);
+        current = head(data->release_tree);
     }
 }
 
 static int
-run_scheduler(sched_t *sched, bool (*finished)(void *cookie), void *cookie)
+run_scheduler(sched_t *sched, bool (*finished)(void *cookie), void *cookie, void *args)
 {
     edf_data_t *data = (edf_data_t *) sched->data;
     seL4_Word badge;
     seL4_MessageInfo_t info;
     int error;
+    UNUSED flog_t *flog = (flog_t *) args;
+    edf_rb_tree_t *prev = NULL;
 
     /* release all threads - scheduler starts now */
     start(data, timer_get_time(data->clock_timer->timer));
@@ -180,38 +183,70 @@ run_scheduler(sched_t *sched, bool (*finished)(void *cookie), void *cookie)
         /* set timeout for next release */
         if (next_interrupt != UINT64_MAX) {
             error = timer_oneshot_relative(data->timeout_timer->timer, next_interrupt - time);
-            if (error == ETIME) {
+            if (unlikely(error == ETIME)) {
                 error = timer_oneshot_relative(data->timeout_timer->timer, 4 * NS_IN_US);
-                if (error) {
-                    ZF_LOGF("Failed to set backup timer irq %d\n", error);
-                }
-            } else if (error) {
-                ZF_LOGF("Failed to set timeout for %llu - %llu = %llu, %d\n", next_interrupt,
-                        time, next_interrupt - time, error);
+                ZF_LOGF_IF(error, "Failed to set backup timer irq");
             }
+            ZF_LOGF_IF(error, "Failed to set timeout for %llu - %llu = %llu, %d\n", next_interrupt,
+                        time, next_interrupt - time, error);
         }
 
         /* schedule a thread */
         edf_rb_tree_t *current = head(data->deadline_tree);
-        if (current != NULL) {
 
+        /* deal with previous thread */
+        if (prev != NULL) {
+           if (current == prev) {
+              prev->reply_cap_saved = true;
+           } else if (current) {
+                /* install current's reply cap in to this threads TCB reply cap slot
+                 * the previous threads reply cap (if it exists) is placed in currents->reply_path */
+                ZF_LOGD("Swapped in current, out prev");
+                error = vka_cnode_swapCaller(&current->reply_path);
+                ZF_LOGF_IFERR(error, "Failed to swap caller");
+                
+                cspacepath_t tmp = current->reply_path;
+                current->reply_path = prev->reply_path;
+                prev->reply_path = tmp;
+            } else if (!current) {
+                /* just swap null in */
+                ZF_LOGD("Swapped in null");
+                error = vka_cnode_swapCaller(&prev->reply_path);
+                ZF_LOGF_IFERR(error, "Failed to swap caller");
+            }
+            
+            prev->reply_cap_saved = true;
+        } else if (current) {
+            /* just swap null out */
+            ZF_LOGD("Swapped in current");
+            error = vka_cnode_swapCaller(&current->reply_path);
+            ZF_LOGF_IFERR(error, "Failed to swap caller");
+        }
+
+        /* schedule current thread or set timer tick for next release */
+        if (current != NULL) {
             if (!current->reply_cap_saved) {
-                ZF_LOGD("Releasing job for thread %d\n", current->id);
+                /* current was preempted */
+                ZF_LOGD("Resuming job for thread %d\n", current->id);
                 seL4_SchedContext_YieldTo_t result = seL4_SchedContext_YieldTo(current->sched_context);
-                if (result.error != seL4_NoError) {
-                    ZF_LOGE("Error: YieldTo Failed!\n");
-                    return -1;
-                }
+                ZF_LOGF_IFERR(result.error, "YieldTo failed");
+                flog_end(flog);
                 info = seL4_Recv(data->endpoint_path.capPtr, &badge);
             } else {
+                /* current is waiting for us to reply to it once its budget is refilled */
+                ZF_LOGD("Releasing job for thread %d\n", current->id);
                 current->reply_cap_saved = false;
-                info = seL4_SignalRecv(current->reply_path.capPtr, data->endpoint.cptr, &badge);
+                flog_end(flog);
+                info = seL4_ReplyRecv(data->endpoint.cptr, info, &badge);
             }
-        } else {
-            ZF_LOGD("Noone to schedule\n");
+       } else {
             /* noone to schedule */
+            ZF_LOGD("Noone to schedule\n");
+            flog_end(flog);
             info = seL4_Recv(data->endpoint.cptr, &badge);
         }
+
+        flog_start(flog);
         ZF_LOGD("awake");
 
         /* wait for message or timer irq */
@@ -219,33 +254,23 @@ run_scheduler(sched_t *sched, bool (*finished)(void *cookie), void *cookie)
         case 0:
             /* timer irq */
             ZF_LOGD("Tick\n");
+            prev = NULL;
             sel4_timer_handle_single_irq(data->timeout_timer);
             break;
         default:
-            ZF_LOGD("Message from %d\n", badge);
-            if (current == NULL) {
-                ZF_LOGE("Error, message from unknown thread, got: %d\n", badge);
-            }
-            if (current->id != badge) {
-                ZF_LOGE("Wrong thread replied!, expected %d, got %d!\n", current->id, badge);
-                return -1;
-            }
+            ZF_LOGF_IF(current == NULL, "Got message when no thread scheduled!");
+            ZF_LOGF_IF(current->id != badge, "Got message from wrong thread %d", badge);
+            ZF_LOGD("Message from %d, fault? %d\n", badge, seL4_isTemporalFault_Tag(info));
 
             assert(sglib_edf_rb_tree_t_is_member(data->deadline_tree, current));
             sglib_edf_rb_tree_t_delete(&data->deadline_tree, current);
-
-            error = vka_cnode_swapCaller(&current->reply_path);
-            if (error != seL4_NoError) {
-                ZF_LOGE("Failed to save replyCap: %d\n", error);
-                return -1;
-            }
-
-            current->reply_cap_saved = true;
             sglib_edf_rb_tree_t_add(&data->release_tree, current);
+            prev = current;
             break;
         }
     }
 
+    timer_stop(data->timeout_timer->timer);
     return 0;
 }
 
@@ -295,6 +320,7 @@ remove_all_tcbs(sched_t *sched)
     edf_data_t *data = sched->data;
     destroy_tree(data, &data->release_tree);
     destroy_tree(data, &data->deadline_tree);
+    data->next_id = 1;
 }
 
 static void
@@ -346,19 +372,18 @@ sched_new_edf(seL4_timer_t *clock_timer, seL4_timer_t *timeout_timer, vka_t *vka
     }
 
     /* create scheduler and scheduler data */
-    sched_t *sched = (sched_t *) malloc(sizeof(sched_t));
+    sched_t *sched = (sched_t *) calloc(1, sizeof(sched_t));
     if (sched == NULL) {
         ZF_LOGE("Failed to allocatec sched\n");
         return NULL;
     }
 
-    edf_data_t *edf_data = (edf_data_t *) malloc(sizeof(struct edf_data));
+    edf_data_t *edf_data = (edf_data_t *) calloc(1, sizeof(struct edf_data));
     if (edf_data == NULL) {
         ZF_LOGE("Failed to allocate edf_data\n");
         destroy_scheduler(sched);
         return NULL;
     }
-    memset(edf_data, 0, sizeof(struct edf_data));
 
     /* create an IPC endpoint for EDF threads to IPC on to signal job completion */
     if (vka_alloc_endpoint(vka, &edf_data->endpoint)) {

@@ -26,7 +26,7 @@ typedef struct {
 static inline flog_t *
 flog_init(ccnt_t *results, int length) 
 {
-    flog_t *flog = calloc(1, sizeof(flog));
+    flog_t *flog = calloc(1, sizeof(flog_t));
     if (unlikely(flog == NULL)) {
         ZF_LOGE("Failed to allocate flog");
         return NULL;
@@ -53,10 +53,17 @@ flog_start(flog_t *flog) {
     SEL4BENCH_READ_CCNT(flog->start);
 }
 
+static inline void
+flog_free(flog_t *flog)
+{
+    free(flog);
+}
+
 #else
 
-#define flog_init(r, l)
+#define flog_init(r, l) NULL
 #define flog_end(f)
 #define flog_start(f)
+#define flog_free(f)
 
 #endif /* CONFIG_FLOG */

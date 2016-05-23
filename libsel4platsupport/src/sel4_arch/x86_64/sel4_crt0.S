@@ -31,7 +31,6 @@ _sel4_start:
     leaq    _stack_top, %rsp
 
     /* Setup the global "bootinfo" structure. */
-    movq    %rbx, %rdi
     call    seL4_InitBootInfo
 
     /* Construct a System V ABI compatible stack frame so we can go to regular _start */

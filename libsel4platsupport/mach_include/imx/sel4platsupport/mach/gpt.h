@@ -20,6 +20,9 @@
 #include <sel4platsupport/timer.h>
 #include <platsupport/plat/gpt_constants.h>
 
+#define CLOCK_TIMER_PADDR GPT1_DEVICE_PADDR
+#define CLOCK_TIMER_INTERRUPT GPT1_INTERRUPT
+
 /**
  * Get an interface for an initialised gpt timer.
  *

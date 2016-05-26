@@ -651,4 +651,22 @@ sel4utils_destroy_process(sel4utils_process_t *process, vka_t *vka)
     }
 }
 
+seL4_CPtr
+sel4utils_process_init_cap(seL4_CPtr cap)
+{
+    switch (cap) {
+    case seL4_CapInitThreadTCB:
+        return SEL4UTILS_TCB_SLOT;
+    case seL4_CapInitThreadCNode:
+        return SEL4UTILS_CNODE_SLOT;
+    case seL4_CapInitThreadVSpace:
+        return SEL4UTILS_PD_SLOT;
+    case seL4_CapInitThreadASIDPool:
+        return SEL4UTILS_ASID_POOL_SLOT;
+    default:
+        ZF_LOGE("sel4utils does not copy this cap (%u) to new processes", cap);
+        return seL4_CapNull;
+    }
+};
+
 #endif /*(defined CONFIG_LIB_SEL4_VKA && defined CONFIG_LIB_SEL4_VSPACE)*/

@@ -285,5 +285,14 @@ void sel4utils_allocated_object(void *cookie, vka_object_t object);
  */
 void sel4utils_create_word_args(char strings[][WORD_STRING_SIZE], char *argv[], int argc, ...);
 
+/*
+ * Get the initial cap equivalent for a sel4utils created process.
+ * This will only work if sel4utils created the processes cspace.
+ *
+ * @param cap initial cap index from sel4/bootinfo_types.h
+ * @return the corresponding cap in a sel4utils launched process.
+ */
+seL4_CPtr sel4utils_process_init_cap(seL4_CPtr cap);
+
 #endif /* (defined CONFIG_LIB_SEL4_VSPACE && defined CONFIG_LIB_SEL4_VKA) */
 #endif /* SEL4UTILS_PROCESS_H */

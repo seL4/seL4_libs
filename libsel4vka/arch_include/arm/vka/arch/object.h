@@ -31,6 +31,12 @@ static inline int vka_alloc_vspace_root(vka_t *vka, vka_object_t *result)
     return vka_alloc_page_directory(vka, result);
 }
 
+static inline int vka_alloc_io_page_table(vka_t *vka, vka_object_t *result)
+{
+    return vka_alloc_object(vka, seL4_ARM_IOPageTableObject, seL4_IOPageTableBits, result);
+}
+
+LEAKY(io_page_table)
 /*
  * Get the size (in bits) of the untyped memory required to create an object of
  * the given size.
@@ -60,6 +66,8 @@ vka_arch_get_object_size(seL4_Word objectType)
         return seL4_PageTableBits;
     case seL4_ARM_PageDirectoryObject:
         return seL4_PageDirBits;
+    case seL4_ARM_IOPageTableObject:
+        return seL4_IOPageTableBits;
     default:
         /* Unknown object type. */
         ZF_LOGF("Unknown object type");

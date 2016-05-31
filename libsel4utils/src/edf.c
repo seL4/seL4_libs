@@ -216,7 +216,7 @@ run_scheduler(sched_t *sched, bool (*finished)(void *cookie), void *cookie, void
             }
             
             prev->reply_cap_saved = true;
-        } else if (current) {
+        } else if (current && current->reply_cap_saved) {
             /* just swap null out */
             ZF_LOGD("Swapped in current");
             error = vka_cnode_swapCaller(&current->reply_path);

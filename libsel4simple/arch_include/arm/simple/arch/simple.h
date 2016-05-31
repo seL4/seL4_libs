@@ -29,9 +29,15 @@
  */
 typedef seL4_Error (*simple_get_IRQ_control_fn)(void *data, int irq, seL4_CNode cnode, seL4_Word index, uint8_t depth);
 
+typedef seL4_Error (*simple_get_iospace_cap_count_fn)(void *data, int *count);
+typedef seL4_CPtr  (*simple_get_nth_iospace_cap_fn)(void *data, int n);
 
 typedef struct arch_simple {
     simple_get_IRQ_control_fn irq;
+#ifdef CONFIG_ARM_SMMU
+    simple_get_iospace_cap_count_fn iospace_cap_count;
+    simple_get_nth_iospace_cap_fn   iospace_get_nth_cap;
+#endif
     void *data;
 } arch_simple_t;
 

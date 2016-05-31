@@ -58,14 +58,14 @@ static FASTFN void sel4bench_private_write_intenc(uint32_t mask) {
 		);
 }
 
-static void sel4bench_private_init(void* data) {
+static inline void sel4bench_private_init(void* data) {
 	//enable user-mode performance-counter access
 	sel4bench_private_switch_user_pmc(1);
 
 	//disable overflow interrupts on all counters
 	sel4bench_private_write_intenc(-1);
 }
-static void sel4bench_private_deinit(void* data) {
+static inline void sel4bench_private_deinit(void* data) {
 	//disable user-mode performance-counter access
 	sel4bench_private_switch_user_pmc(0);
 }

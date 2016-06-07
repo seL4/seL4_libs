@@ -196,9 +196,9 @@ run_scheduler(sched_t *sched, bool (*finished)(void *cookie), void *cookie, void
 
         /* deal with previous thread */
         if (prev != NULL) {
-           if (current == prev) {
-              prev->reply_cap_saved = true;
-           } else if (current) {
+            if (current == prev) {
+                prev->reply_cap_saved = true;
+            } else if (current) {
                 /* install current's reply cap in to this threads TCB reply cap slot
                  * the previous threads reply cap (if it exists) is placed in currents->reply_path */
                 ZF_LOGD("Swapped in current, out prev");

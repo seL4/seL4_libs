@@ -91,6 +91,15 @@ typedef struct _cspacepath_t {
     seL4_Word   window;
 } cspacepath_t;
 
+
+static inline void
+cspacepath_swap(cspacepath_t *a, cspacepath_t *b)
+{
+    cspacepath_t tmp = *a;
+    *a = *b;
+    *b = tmp;
+}
+
 /// --------------------------- Debug --------------------------------
 inline static void cspacepath_t_print(const cspacepath_t* src)
 {

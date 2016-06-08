@@ -13,20 +13,19 @@
 #include <assert.h>
 #include <sel4/sel4.h>
 #include <sel4debug/sel4_debug.h>
-#include <utils/stringify.h>
 
 char *sel4_errlist[] = {
-    [seL4_NoError] = STRINGIFY(seL4_NoError),
-    [seL4_InvalidArgument] = STRINGIFY(seL4_InvalidArgument),
-    [seL4_InvalidCapability] = STRINGIFY(seL4_InvalidCapability),
-    [seL4_IllegalOperation] = STRINGIFY(seL4_IllegalOperation),
-    [seL4_RangeError] = STRINGIFY(seL4_RangeError),
-    [seL4_AlignmentError] = STRINGIFY(seL4_AlignmentError),
-    [seL4_FailedLookup] = STRINGIFY(seL4_FailedLookup),
-    [seL4_TruncatedMessage] = STRINGIFY(seL4_TruncatedMessage),
-    [seL4_DeleteFirst] = STRINGIFY(seL4_DeleteFirst),
-    [seL4_RevokeFirst] = STRINGIFY(seL4_RevokeFirst),
-    [seL4_NotEnoughMemory] = STRINGIFY(seL4_NotEnoughMemory),
+    [seL4_NoError] = "seL4_NoError",
+    [seL4_InvalidArgument] = "seL4_InvalidArgument",
+    [seL4_InvalidCapability] = "seL4_InvalidCapability",
+    [seL4_IllegalOperation] = "seL4_IllegalOperation",
+    [seL4_RangeError] = "seL4_RangeError",
+    [seL4_AlignmentError] = "seL4_AlignmentError",
+    [seL4_FailedLookup] = "seL4_FailedLookup",
+    [seL4_TruncatedMessage] = "seL4_TruncatedMessage",
+    [seL4_DeleteFirst] = "seL4_DeleteFirst",
+    [seL4_RevokeFirst] = "seL4_RevokeFirst",
+    [seL4_NotEnoughMemory] = "seL4_NotEnoughMemory",
     NULL
 };
 

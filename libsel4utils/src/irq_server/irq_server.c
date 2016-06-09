@@ -71,7 +71,7 @@ irq_server_node_handle_irq(struct irq_server_node *n, uint32_t badge)
         struct irq_data* irq;
         irq_idx = CTZ(badge);
         irq = &irqs[irq_idx];
-        DIRQSERVER("Received IRQ %d, badge 0x%x, index %d\n", irq->irq, badge, irq_idx);
+        DIRQSERVER("Received IRQ %d, badge 0x%x, index %d\n", irq->irq, (unsigned)badge, irq_idx);
         irq->cb(irq);
         badge &= ~BIT(irq_idx);
     }

@@ -14,6 +14,7 @@
 #if defined CONFIG_LIB_SEL4_VKA && defined CONFIG_LIB_SEL4_VSPACE
 
 #include <inttypes.h>
+#include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -613,9 +614,9 @@ sel4utils_move_resize_reservation(vspace_t *vspace, reservation_t reservation, v
         }
     }
 
-    char need_reinsert = 0;
+    bool need_reinsert = false;
     if (res->start != new_start) {
-        need_reinsert = 1;
+        need_reinsert = true;
     }
 
     res->start = new_start;

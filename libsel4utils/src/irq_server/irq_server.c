@@ -95,7 +95,7 @@ irq_bind(irq_t irq, seL4_CPtr notification_cap, int idx, vka_t* vka, simple_t *s
     vka_cspace_make_path(vka, irq_cap, &irq_path);
     err = simple_get_IRQ_control(simple, irq, irq_path);
     if (err != seL4_NoError) {
-        ZF_LOGE("Failed to get cap to irq_number %u\n", irq);
+        ZF_LOGE("Failed to get cap to irq_number %d\n", irq);
         vka_cspace_free(vka, irq_cap);
         return seL4_CapNull;
     }

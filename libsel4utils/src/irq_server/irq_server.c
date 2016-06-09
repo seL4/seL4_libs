@@ -288,12 +288,11 @@ struct irq_server {
 
 /* Handle an incoming IPC from a server node */
 void
-irq_server_handle_irq_ipc(irq_server_t irq_server)
+irq_server_handle_irq_ipc(irq_server_t irq_server UNUSED)
 {
     seL4_Word badge;
     uintptr_t node_ptr;
 
-    (void)irq_server;
     badge = seL4_GetMR(0);
     node_ptr = seL4_GetMR(1);
     if (node_ptr == 0) {

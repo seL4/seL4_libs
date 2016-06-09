@@ -55,8 +55,7 @@ static void unmap(client_server_vspace_t *cs_vspace, void *caddr, size_t size_bi
 
 static void unmap_many(client_server_vspace_t *cs_vspace, void *caddr, size_t num_pages, size_t size_bits)
 {
-    int i;
-    for (i = 0; i < num_pages; i++) {
+    for (int i = 0; i < num_pages; i++) {
         unmap(cs_vspace, caddr + BIT(size_bits) * i, size_bits);
     }
 }
@@ -88,9 +87,8 @@ static int dup_and_map(client_server_vspace_t *cs_vspace, seL4_CPtr cap, void *c
         return -1;
     }
     /* update our translation */
-    int i;
     uint32_t pages = BYTES_TO_4K_PAGES(BIT(size_bits));
-    for (i = 0; i < pages; i++) {
+    for (int i = 0; i < pages; i++) {
         if (update_entries(&cs_vspace->translation, ADDR(caddr, i), (seL4_CPtr)ADDR(saddr, i), PAGE_BITS_4K, 0)) {
             /* remove the entries we already put in. we can't call
              * clear_entries because the portion to remove is not
@@ -108,8 +106,7 @@ static int dup_and_map(client_server_vspace_t *cs_vspace, seL4_CPtr cap, void *c
 
 static int dup_and_map_many(client_server_vspace_t *cs_vspace, seL4_CPtr *caps, void *caddr, size_t num_pages, size_t size_bits)
 {
-    int i;
-    for (i = 0; i < num_pages; i++) {
+    for (int i = 0; i < num_pages; i++) {
         int error = dup_and_map(cs_vspace, caps[i], caddr + BIT(size_bits) * i, size_bits);
         if (error) {
             unmap_many(cs_vspace, caddr, i - 1, size_bits);
@@ -121,9 +118,8 @@ static int dup_and_map_many(client_server_vspace_t *cs_vspace, seL4_CPtr *caps, 
 
 static int find_dup_and_map_many(client_server_vspace_t *cs_vspace, void *caddr, size_t num_pages, size_t size_bits)
 {
-    int i;
     seL4_CPtr caps[num_pages];
-    for (i = 0; i < num_pages; i++) {
+    for (int i = 0; i < num_pages; i++) {
         caps[i] = vspace_get_cap(cs_vspace->client, caddr + BIT(size_bits) * i);
         assert(caps[i]);
     }
@@ -228,7 +224,6 @@ static int cs_new_pages_at_vaddr(vspace_t *vspace, void *vaddr, size_t num_pages
 
 int sel4utils_get_cs_vspace(vspace_t *vspace, vka_t *vka, vspace_t *server, vspace_t *client)
 {
-    int error;
     client_server_vspace_t *cs_vspace = malloc(sizeof(*cs_vspace));
     if (cs_vspace == NULL) {
         ZF_LOGE("Failed to create translation vspace");
@@ -238,7 +233,7 @@ int sel4utils_get_cs_vspace(vspace_t *vspace, vka_t *vka, vspace_t *server, vspa
     cs_vspace->client = client;
     cs_vspace->vka = vka;
 
-    error = sel4utils_get_vspace(server, &cs_vspace->translation, &cs_vspace->translation_data,
+    int error = sel4utils_get_vspace(server, &cs_vspace->translation, &cs_vspace->translation_data,
                                  vka, 0, NULL, NULL);
     if (error) {
         ZF_LOGE("Failed to create translation vspace");
@@ -281,10 +276,9 @@ int sel4utils_cs_vspace_for_each(vspace_t *vspace, void *addr, uint32_t len,
                                  int (*proc)(void* addr, uint32_t len, void *cookie),
                                  void *cookie)
 {
-    uintptr_t current_addr;
     uintptr_t next_addr;
     uintptr_t end_addr = (uintptr_t)(addr + len);
-    for (current_addr = (uintptr_t)addr; current_addr < end_addr; current_addr = next_addr) {
+    for (uintptr_t current_addr = (uintptr_t)addr; current_addr < end_addr; current_addr = next_addr) {
         uintptr_t current_aligned = PAGE_ALIGN_4K(current_addr);
         uintptr_t next_page_start = current_aligned + PAGE_SIZE_4K;
         next_addr = MIN(end_addr, next_page_start);

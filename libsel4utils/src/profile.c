@@ -30,8 +30,7 @@ void profile_print64(uint64_t value, const char *varname, const char *descriptio
 
 void profile_scrape(profile_callback32 callback32, profile_callback64 callback64, void *cookie)
 {
-    profile_var_t *i;
-    for (i = __start__profile_var; i < __stop__profile_var; i++) {
+    for (profile_var_t *i = __start__profile_var; i < __stop__profile_var; i++) {
         switch (i->type) {
         case PROFILE_VAR_TYPE_INT32:
             callback32(*(uint32_t*)i->var, i->varname, i->description, cookie);
@@ -48,8 +47,7 @@ void profile_scrape(profile_callback32 callback32, profile_callback64 callback64
 
 void profile_reset(void)
 {
-    profile_var_t *i;
-    for (i = __start__profile_var; i < __stop__profile_var; i++) {
+    for (profile_var_t *i = __start__profile_var; i < __stop__profile_var; i++) {
         switch (i->type) {
         case PROFILE_VAR_TYPE_INT32:
             *(uint32_t*)i->var = 0;

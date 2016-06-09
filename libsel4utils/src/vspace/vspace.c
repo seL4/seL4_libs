@@ -294,10 +294,9 @@ map_pages_at_vaddr(vspace_t *vspace, seL4_CPtr caps[], uintptr_t cookies[],
                    void *vaddr, size_t num_pages,
                    size_t size_bits, seL4_CapRights rights, int cacheable)
 {
-    int i;
     int error = seL4_NoError;
 
-    for (i = 0; i < num_pages && error == seL4_NoError; i++) {
+    for (int i = 0; i < num_pages && error == seL4_NoError; i++) {
         error = map_page(vspace, caps[i], vaddr, rights, cacheable, size_bits);
 
         if (error == seL4_NoError) {
@@ -481,17 +480,16 @@ reservation_t
 sel4utils_reserve_range_aligned(vspace_t *vspace, size_t bytes, size_t size_bits, seL4_CapRights rights,
                                 int cacheable, void **result)
 {
-    reservation_t reservation;
-    sel4utils_res_t *res;
-
-    reservation.res = NULL;
+    reservation_t reservation = {
+        .res = NULL,
+    };
 
     if (!sel4_valid_size_bits(size_bits)) {
         ZF_LOGE("Invalid size bits %zu", size_bits);
         return reservation;
     }
 
-    res = (sel4utils_res_t *) malloc(sizeof(sel4utils_res_t));
+    sel4utils_res_t *res = malloc(sizeof(sel4utils_res_t));
 
     if (res == NULL) {
         ZF_LOGE("Malloc failed");
@@ -723,8 +721,7 @@ sel4utils_tear_down(vspace_t *vspace, vka_t *vka)
 
     /* walk each level and find any pages / large pages */
     if (data->top_level) {
-        int i;
-        for (i = 0; i < BIT(VSPACE_LEVEL_BITS); i++) {
+        for (int i = 0; i < BIT(VSPACE_LEVEL_BITS); i++) {
             free_pages_at_level(vspace, vka, VSPACE_NUM_LEVELS - 1, BYTES_FOR_LEVEL(VSPACE_NUM_LEVELS - 1) * i);
         }
         vspace_unmap_pages(data->bootstrap, data->top_level, sizeof(vspace_mid_level_t) / PAGE_SIZE_4K, PAGE_BITS_4K, VSPACE_FREE);

@@ -39,11 +39,9 @@ static void dma_free(void *cookie, void *addr, size_t size)
     assert(alloc);
     assert(alloc->base == addr);
     int num_pages = BIT(alloc->ut.size_bits) / PAGE_SIZE_4K;
-    int i;
-    for (i = 0; i < num_pages; i++) {
-        seL4_CPtr frame;
+    for (int i = 0; i < num_pages; i++) {
         cspacepath_t path;
-        frame = vspace_get_cap(&dma->vspace, addr + i * PAGE_SIZE_4K);
+        seL4_CPtr frame = vspace_get_cap(&dma->vspace, addr + i * PAGE_SIZE_4K);
         vspace_unmap_pages(&dma->vspace, addr + i * PAGE_SIZE_4K, 1, PAGE_BITS_4K, NULL);
         vka_cspace_make_path(&dma->vka, frame, &path);
         vka_cnode_delete(&path);
@@ -88,14 +86,13 @@ static void* dma_alloc(void *cookie, size_t size, int align, int cached, ps_mem_
     size = BIT(size_bits);
     /* Allocate an untyped */
     vka_object_t ut;
-    error = vka_alloc_untyped(&dma->vka, size_bits, &ut);
+    int error = vka_alloc_untyped(&dma->vka, size_bits, &ut);
     if (error) {
         ZF_LOGE("Failed to allocate untyped of size %zu", size_bits);
         return NULL;
     }
     /* Get the physical address */
-    uintptr_t paddr;
-    paddr = vka_utspace_paddr(&dma->vka, ut.ut, seL4_UntypedObject, size_bits);
+    uintptr_t paddr = vka_utspace_paddr(&dma->vka, ut.ut, seL4_UntypedObject, size_bits);
     if (paddr == 0) {
         ZF_LOGE("Allocated untyped has no physical address");
         goto handle_error;

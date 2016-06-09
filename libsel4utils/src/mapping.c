@@ -81,14 +81,13 @@ sel4utils_map_iospace_page(vka_t *vka, seL4_CPtr iospace, seL4_CPtr frame, seL4_
                            vka_object_t *pts, int *num_pts)
 {
     int error;
-    int num;
     assert(vka);
     assert(iospace);
     assert(frame);
     assert(cacheable);
     assert(size_bits == seL4_PageBits);
     /* Start mapping in pages and page tables until it bloody well works */
-    num = 0;
+    int num = 0;
     while ( (error = seL4_X86_Page_MapIO(frame, iospace, rights, vaddr)) == seL4_FailedLookup && error != seL4_NoError) {
         /* Need a page table? */
         vka_object_t pt;
@@ -120,8 +119,6 @@ sel4utils_map_ept_page(vka_t *vka, seL4_CPtr pd, seL4_CPtr frame, seL4_Word vadd
                        seL4_CapRights rights, int cacheable, seL4_Word size_bits,
                        vka_object_t *pagetable, vka_object_t *pagedir)
 {
-    int ret;
-
     assert(vka);
     assert(pd);
     assert(frame);
@@ -137,7 +134,7 @@ sel4utils_map_ept_page(vka_t *vka, seL4_CPtr pd, seL4_CPtr frame, seL4_Word vadd
     }
 
     /* Try map into EPT directory first. */
-    ret = seL4_X86_Page_Map(frame, pd, vaddr, rights, attr);
+    int ret = seL4_X86_Page_Map(frame, pd, vaddr, rights, attr);
     if (ret == seL4_NoError) {
         /* Successful! */
         return ret;
@@ -218,12 +215,10 @@ sel4utils_map_ept_page(vka_t *vka, seL4_CPtr pd, seL4_CPtr frame, seL4_Word vadd
 void *
 sel4utils_dup_and_map(vka_t *vka, vspace_t *vspace, seL4_CPtr page, size_t size_bits)
 {
-    int error;
     cspacepath_t page_path;
     cspacepath_t copy_path;
-    void *mapping;
     /* First need to copy the cap */
-    error = vka_cspace_alloc_path(vka, &copy_path);
+    int error = vka_cspace_alloc_path(vka, &copy_path);
     if (error != seL4_NoError) {
         return NULL;
     }
@@ -234,7 +229,7 @@ sel4utils_dup_and_map(vka_t *vka, vspace_t *vspace, seL4_CPtr page, size_t size_
         return NULL;
     }
     /* Now map it in */
-    mapping = vspace_map_pages(vspace, &copy_path.capPtr, NULL,  seL4_AllRights, 1, size_bits, 1);
+    void *mapping = vspace_map_pages(vspace, &copy_path.capPtr, NULL,  seL4_AllRights, 1, size_bits, 1);
     if (!mapping) {
         vka_cnode_delete(&copy_path);
         vka_cspace_free(vka, copy_path.capPtr);

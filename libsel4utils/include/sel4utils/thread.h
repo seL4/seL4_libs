@@ -49,6 +49,8 @@ typedef struct sel4utils_thread_config {
     seL4_CPtr fault_endpoint;
     /* seL4 priority for the thread to be scheduled with. */
     uint8_t priority;
+    /* seL4 maximum controlled priority for the thread. */
+    uint8_t mcp;
     /* root of the cspace to start the thread in */
     seL4_CNode cspace;
     /* data for cspace access */

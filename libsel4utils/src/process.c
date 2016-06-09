@@ -27,11 +27,11 @@
 #include <sel4utils/mapping.h>
 #include "helpers.h"
 
-static bool recurse = false;
-
 void
 sel4utils_allocated_object(void *cookie, vka_object_t object)
 {
+    static bool recurse = false;
+
     if (recurse) {
         ZF_LOGF("VSPACE RECURSION ON MALLOC, YOU ARE DEAD\n");
     }

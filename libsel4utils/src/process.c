@@ -256,7 +256,7 @@ sel4utils_spawn_process(sel4utils_process_t *process, vka_t *vka, vspace_t *vspa
                                         &context, vka, vspace, &process->vspace);
     if (error) {
         return error;
-        }
+    }
 
     return seL4_TCB_WriteRegisters(process->thread.tcb.cptr, resume, 0, context_size, &context);
 }

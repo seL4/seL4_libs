@@ -35,7 +35,7 @@ write_ipc_buffer_user_data(vka_t *vka, vspace_t *vspace, seL4_CPtr ipc_buf, uint
     if (!mapping) {
         return -1;
     }
-    seL4_IPCBuffer *buffer = (seL4_IPCBuffer*)mapping;
+    seL4_IPCBuffer *buffer = mapping;
     buffer->userData = buf_loc;
     sel4utils_unmap_dup(vka, vspace, mapping, seL4_PageBits);
     return 0;
@@ -211,7 +211,7 @@ sel4utils_start_fault_handler(seL4_CPtr fault_endpoint, vka_t *vka, vspace_t *vs
         return -1;
     }
 
-    return sel4utils_start_thread(res, fault_handler, (void *) name,
+    return sel4utils_start_thread(res, fault_handler, name,
                                   (void *) fault_endpoint, 1);
 }
 
@@ -229,7 +229,7 @@ sel4utils_checkpoint_thread(sel4utils_thread_t *thread, sel4utils_checkpoint_t *
     
     size_t stack_size = (uintptr_t) thread->stack_top - (uintptr_t) sel4utils_get_sp(checkpoint->regs);
     
-    checkpoint->stack = (void *) malloc(stack_size);
+    checkpoint->stack = malloc(stack_size);
     if (checkpoint->stack == NULL) {
         ZF_LOGE("Failed to malloc stack of size %zu\n", stack_size);
         return -1;

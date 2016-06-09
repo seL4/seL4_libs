@@ -37,9 +37,9 @@ sel4utils_allocated_object(void *cookie, vka_object_t object)
     }
     recurse = true;
 
-    sel4utils_process_t *process = (sel4utils_process_t *) cookie;
+    sel4utils_process_t *process = cookie;
 
-    object_node_t *node = (object_node_t *) malloc(sizeof(object_node_t));
+    object_node_t *node = malloc(sizeof(object_node_t));
     assert(node != NULL);
     node->object = object;
 

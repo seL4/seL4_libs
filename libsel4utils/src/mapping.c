@@ -53,7 +53,7 @@ sel4utils_map_page(vka_t *vka, seL4_CPtr vspace_root, seL4_CPtr frame, void *vad
             } else {
                 (*num_objects)++;
                 if (error) {
-                    ZF_LOGE("Failed to map page table %d", (int)error);
+                    ZF_LOGE("Failed to map page table %d", error);
                     return error;
                 }
             }

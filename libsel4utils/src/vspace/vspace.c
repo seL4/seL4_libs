@@ -549,7 +549,7 @@ void
 sel4utils_free_reservation(vspace_t *vspace, reservation_t reservation)
 {
     sel4utils_alloc_data_t *data = get_alloc_data(vspace);
-    sel4utils_res_t *res = (sel4utils_res_t *)reservation.res;
+    sel4utils_res_t *res = reservation.res;
 
     clear_entries_range(vspace, res->start, res->end, true);
     remove_reservation(data, res);
@@ -563,7 +563,7 @@ sel4utils_free_reservation_by_vaddr(vspace_t *vspace, void *vaddr)
 {
 
     reservation_t reservation;
-    reservation.res = (void *) find_reserve(get_alloc_data(vspace), (uintptr_t) vaddr);
+    reservation.res = find_reserve(get_alloc_data(vspace), (uintptr_t) vaddr);
     sel4utils_free_reservation(vspace, reservation);
 }
 

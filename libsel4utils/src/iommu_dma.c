@@ -52,7 +52,7 @@ static void unmap_range(dma_man_t *dma, uintptr_t addr, size_t size)
 
 static void* dma_alloc(void *cookie, size_t size, int align, int cached, ps_mem_flags_t flags)
 {
-    dma_man_t *dma = (dma_man_t*)cookie;
+    dma_man_t *dma = cookie;
     int error;
     if (cached || flags != PS_MEM_NORMAL) {
         /* Going to ignore flags */
@@ -154,7 +154,7 @@ static void* dma_alloc(void *cookie, size_t size, int align, int cached, ps_mem_
 
 static void dma_free(void *cookie, void *addr, size_t size)
 {
-    dma_man_t *dma = (dma_man_t*)cookie;
+    dma_man_t *dma = cookie;
     unmap_range(dma, (uintptr_t)addr, size);
     free(addr);
 }

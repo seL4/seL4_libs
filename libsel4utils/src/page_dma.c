@@ -34,7 +34,7 @@ typedef struct dma_alloc {
 
 static void dma_free(void *cookie, void *addr, size_t size)
 {
-    dma_man_t *dma = (dma_man_t*)cookie;
+    dma_man_t *dma = cookie;
     dma_alloc_t *alloc = (dma_alloc_t*)vspace_get_cookie(&dma->vspace, addr);
     assert(alloc);
     assert(alloc->base == addr);
@@ -53,7 +53,7 @@ static void dma_free(void *cookie, void *addr, size_t size)
 
 static uintptr_t dma_pin(void *cookie, void *addr, size_t size)
 {
-    dma_man_t *dma = (dma_man_t*)cookie;
+    dma_man_t *dma = cookie;
     dma_alloc_t *alloc = (dma_alloc_t*)vspace_get_cookie(&dma->vspace, addr);
     if (!alloc) {
         return 0;
@@ -64,8 +64,7 @@ static uintptr_t dma_pin(void *cookie, void *addr, size_t size)
 
 static void* dma_alloc(void *cookie, size_t size, int align, int cached, ps_mem_flags_t flags)
 {
-    int error;
-    dma_man_t *dma = (dma_man_t*)cookie;
+    dma_man_t *dma = cookie;
     cspacepath_t *frames = NULL;
     reservation_t res = {NULL};
     dma_alloc_t *alloc = NULL;
@@ -164,7 +163,7 @@ static void dma_unpin(void *cookie, void *addr, size_t size)
 
 static void dma_cache_op(void *cookie, void *addr, size_t size, dma_cache_op_t op)
 {
-    dma_man_t *dma = (dma_man_t*)cookie;
+    dma_man_t *dma = cookie;
     seL4_CPtr root = vspace_get_root(&dma->vspace);
     uintptr_t end = (uintptr_t)addr + size;
     uintptr_t cur = (uintptr_t)addr;

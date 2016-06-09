@@ -161,16 +161,6 @@ __map_device_page(void* cookie, uintptr_t paddr, size_t size,
     for (;;);
 }
 
-void
-platsupport_zero_globals(void)
-{
-    setup_status = NOT_INITIALIZED;
-    device_cap = 0;
-    vspace = NULL;
-    vka = NULL;
-    vspace = NULL;
-}
-
 /*
  * This function is designed to be called when creating a new cspace/vspace,
  * and the serial port needs to be hooked in there too.

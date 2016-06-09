@@ -35,10 +35,6 @@ platsupport_serial_setup_io_ops(ps_io_ops_t* io_ops);
 void
 register_console(ps_chardevice_t* user_console);
 
-/* Do not look too closely at this function. Exists as shortest path to sanity in sel4test */
-void
-platsupport_zero_globals(void);
-
 void
 platsupport_undo_serial_setup(void);
 

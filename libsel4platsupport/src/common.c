@@ -281,10 +281,8 @@ static void __serial_setup()
      * we now need to handle this somehow */
     switch (setup_status) {
     case START_FAILSAFE_SETUP:
-        /* we're stuck. nothing to do but make some noise and hope someone hears us */
-        while (1) {
-            *(char*)0 = 0;
-        }
+        /* we're stuck. */
+        abort();
         break;
     case START_REGULAR_SETUP:
         started_regular = 1;

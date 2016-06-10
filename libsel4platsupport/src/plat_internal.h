@@ -16,8 +16,6 @@
 #include <platsupport/io.h>
 
 /* Functions provided from platform layer to arch code. */
-void
-__plat_serial_input_init_IRQ(void);
 int
 __plat_serial_init(ps_io_ops_t* io_ops);
 void

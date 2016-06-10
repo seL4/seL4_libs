@@ -185,7 +185,6 @@ platsupport_undo_serial_setup(void)
 void
 platsupport_serial_input_init_IRQ(void)
 {
-    __plat_serial_input_init_IRQ();
 }
 
 int

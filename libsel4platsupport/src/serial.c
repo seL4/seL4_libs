@@ -41,11 +41,6 @@ register_console(struct ps_chardevice* user_console)
     console = user_console;
 }
 
-void
-__plat_serial_input_init_IRQ(void)
-{
-}
-
 int
 __plat_serial_init(ps_io_ops_t* io_ops)
 {

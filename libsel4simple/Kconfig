@@ -10,7 +10,7 @@
 
 config LIB_SEL4_SIMPLE
     bool "libsel4simple"
-    depends on HAVE_LIB_SEL4 && HAVE_LIBC && HAVE_LIB_SEL4_VKA
+    depends on HAVE_LIB_SEL4 && HAVE_LIBC && HAVE_LIB_SEL4_VKA && HAVE_LIB_UTILS
     select HAVE_SEL4_LIBS
     select HAVE_LIB_SEL4_SIMPLE
     default y

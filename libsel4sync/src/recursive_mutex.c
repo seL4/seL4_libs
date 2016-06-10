@@ -23,7 +23,7 @@ int sync_recursive_mutex_init(sync_recursive_mutex_t *mutex, seL4_CPtr notificat
     assert(mutex != NULL);
 #ifdef SEL4_DEBUG_KERNEL
     /* Check the cap actually is a notification. */
-    assert(seL4_DebugCapIdentify(notification) == 3);
+    assert(seL4_DebugCapIdentify(notification) == 6);
 #endif
 
     mutex->notification = notification;

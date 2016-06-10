@@ -20,12 +20,12 @@ It can also be used as a reference for 'how-to' implement OS mechanisms on seL4.
 
 Utilities provided by this library:
 
-    * threads
-    * processes
-    * elf loading
-    * virtual memory management
-    * stack switching
-    * debugging tools
+  * threads
+  * processes
+  * elf loading
+  * virtual memory management
+  * stack switching
+  * debugging tools
 
 No allocator is provided, although any allocator that implements the seL4 vka interface can be used
 (we recommend libsel4allocman). 
@@ -40,28 +40,28 @@ Repository overview
    
 *include/sel4utils*:
 
-    * client_server_vspace.h -- a virtual address space that proxies calls between two different 
-                                vspaces
-    * elf.h -- elf loading.
-    * mapping.h -- page mapping.
-    * process.h -- process creation, deletion.
-    * profile.h -- profiling.
-    * sel4_debug.h -- for printing seL4 error codes.
-    * stack.h -- switch to a newly allocated stack. 
-    * thread.h -- threads (kernel threads) creation, deletion.
-    * util.h -- includes utilities from libutils.
-    * vspace.h -- virtual memory management (implements vspace interface)
-    * vspace_internal.h -- virtual memory management internals, for hacking the above.
+  * client_server_vspace.h -- a virtual address space that proxies calls between two different 
+                              vspaces
+  * elf.h -- elf loading.
+  * mapping.h -- page mapping.
+  * process.h -- process creation, deletion.
+  * profile.h -- profiling.
+  * sel4_debug.h -- for printing seL4 error codes.
+  * stack.h -- switch to a newly allocated stack. 
+  * thread.h -- threads (kernel threads) creation, deletion.
+  * util.h -- includes utilities from libutils.
+  * vspace.h -- virtual memory management (implements vspace interface)
+  * vspace_internal.h -- virtual memory management internals, for hacking the above.
 
 *arch_include/sel4utils*:
 
-    * util.h -- utils to assist in writing arch independent code.
+  * util.h -- utils to assist in writing arch independent code.
 
 Configuration options
 ----------------------
 
-* SEL4UTILS_STACK_SIZE -- the default stack size to use for processes and threads.
-* SEL4UTILS_CSPACE_SIZE_BITS -- the default cspace size for new processes (threads use the current
+* `SEL4UTILS_STACK_SIZE` -- the default stack size to use for processes and threads.
+* `SEL4UTILS_CSPACE_SIZE_BITS` -- the default cspace size for new processes (threads use the current
                                 cspace).
 
 License

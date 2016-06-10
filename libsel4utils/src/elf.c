@@ -134,11 +134,9 @@ load_segment(vspace_t *loadee_vspace, vspace_t *loader_vspace,
 int
 sel4utils_elf_num_regions(const char *image_name)
 {
-    int i;
     unsigned long elf_size;
-    char *elf_file;
     assert(image_name);
-    elf_file = cpio_get_file(_cpio_archive, image_name, &elf_size);
+    char *elf_file = cpio_get_file(_cpio_archive, image_name, &elf_size);
     if (elf_file == NULL) {
         ZF_LOGE("ERROR: failed to load elf file %s", image_name);
         return 0;
@@ -147,7 +145,7 @@ sel4utils_elf_num_regions(const char *image_name)
     int num_headers = elf_getNumProgramHeaders(elf_file);
     int loadable_headers = 0;
 
-    for (i = 0; i < num_headers; i++) {
+    for (int i = 0; i < num_headers; i++) {
         /* Skip non-loadable segments (such as debugging data). */
         if (elf_getProgramHeaderType(elf_file, i) == PT_LOAD) {
             loadable_headers++;

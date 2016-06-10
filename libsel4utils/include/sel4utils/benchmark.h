@@ -15,6 +15,7 @@
 /* entire ipc buffer except tag register (word 0) */
 #define MAX_IPC_BUFFER (1024 - 1)
 
+#include <inttypes.h>
 #include <stdio.h>
 
 #include <sel4/simple_types.h>
@@ -42,13 +43,14 @@ seL4_BenchmarkDumpFullLog()
         printf("\n");
         /* we filled the log buffer */
         if (requested != recorded) {
-            printf("Dumped %u of %u potential logs\n", j + recorded, potential_size);
+            printf("Dumped %" PRIu32 " of %" PRIu32 " potential logs\n", j + recorded,
+                potential_size);
             return;
         }
     }
 
     /* logged amount was smaller than log buffer */
-    printf("Dumped entire log, size %u\n", potential_size);
+    printf("Dumped entire log, size %" PRIu32 "\n", potential_size);
 }
 #endif /* CONFIG_MAX_NUM_TRACE_POINTS > 0 */
 #endif // __SEL4_BENCHMARK_H

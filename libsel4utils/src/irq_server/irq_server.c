@@ -71,7 +71,7 @@ irq_server_node_handle_irq(struct irq_server_node *n, uint32_t badge)
         struct irq_data* irq;
         irq_idx = CTZ(badge);
         irq = &irqs[irq_idx];
-        DIRQSERVER("Received IRQ %d, badge 0x%x, index %d\n", irq->irq, badge, irq_idx);
+        DIRQSERVER("Received IRQ %d, badge 0x%x, index %d\n", irq->irq, (unsigned)badge, irq_idx);
         irq->cb(irq);
         badge &= ~BIT(irq_idx);
     }
@@ -95,7 +95,7 @@ irq_bind(irq_t irq, seL4_CPtr notification_cap, int idx, vka_t* vka, simple_t *s
     vka_cspace_make_path(vka, irq_cap, &irq_path);
     err = simple_get_IRQ_control(simple, irq, irq_path);
     if (err != seL4_NoError) {
-        ZF_LOGE("Failed to get cap to irq_number %u\n", irq);
+        ZF_LOGE("Failed to get cap to irq_number %d\n", irq);
         vka_cspace_free(vka, irq_cap);
         return seL4_CapNull;
     }
@@ -288,12 +288,11 @@ struct irq_server {
 
 /* Handle an incoming IPC from a server node */
 void
-irq_server_handle_irq_ipc(irq_server_t irq_server)
+irq_server_handle_irq_ipc(irq_server_t irq_server UNUSED)
 {
     seL4_Word badge;
     uintptr_t node_ptr;
 
-    (void)irq_server;
     badge = seL4_GetMR(0);
     node_ptr = seL4_GetMR(1);
     if (node_ptr == 0) {

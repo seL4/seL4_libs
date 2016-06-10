@@ -27,19 +27,19 @@
 #include <sel4utils/mapping.h>
 #include "helpers.h"
 
-static bool recurse = false;
-
 void
 sel4utils_allocated_object(void *cookie, vka_object_t object)
 {
+    static bool recurse = false;
+
     if (recurse) {
         ZF_LOGF("VSPACE RECURSION ON MALLOC, YOU ARE DEAD\n");
     }
     recurse = true;
 
-    sel4utils_process_t *process = (sel4utils_process_t *) cookie;
+    sel4utils_process_t *process = cookie;
 
-    object_node_t *node = (object_node_t *) malloc(sizeof(object_node_t));
+    object_node_t *node = malloc(sizeof(object_node_t));
     assert(node != NULL);
     node->object = object;
 
@@ -206,10 +206,8 @@ static int
 sel4utils_stack_copy_args(vspace_t *current_vspace, vspace_t *target_vspace,
                           vka_t *vka, int argc, char *argv[], uintptr_t *dest_argv, uintptr_t *stack_top)
 {
-    int i;
-    int error;
-    for (i = 0; i < argc; i++) {
-        error = sel4utils_stack_write(current_vspace, target_vspace, vka, argv[i], strlen(argv[i]) + 1, stack_top);
+    for (int i = 0; i < argc; i++) {
+        int error = sel4utils_stack_write(current_vspace, target_vspace, vka, argv[i], strlen(argv[i]) + 1, stack_top);
         if (error) {
             return error;
         }
@@ -256,7 +254,7 @@ sel4utils_spawn_process(sel4utils_process_t *process, vka_t *vka, vspace_t *vspa
                                         &context, vka, vspace, &process->vspace);
     if (error) {
         return error;
-        }
+    }
 
     return seL4_TCB_WriteRegisters(process->thread.tcb.cptr, resume, 0, context_size, &context);
 }
@@ -277,11 +275,10 @@ sel4utils_spawn_process_v(sel4utils_process_t *process, vka_t *vka, vspace_t *vs
     uintptr_t stack_top = (uintptr_t) process->thread.stack_top - sizeof(seL4_Word);
     uintptr_t dest_argv[argc];
     uintptr_t dest_envp[envc];
-    int error;
     
     /* write all the strings into the stack */
     /* Copy over the user arguments */
-    error = sel4utils_stack_copy_args(vspace, &process->vspace, vka, argc, argv, dest_argv, &stack_top);
+    int error = sel4utils_stack_copy_args(vspace, &process->vspace, vka, argc, argv, dest_argv, &stack_top);
     if (error) {
         return -1;
     }
@@ -409,9 +406,7 @@ get_asid_pool(seL4_CPtr asid_pool)
 static seL4_CPtr
 assign_asid_pool(seL4_CPtr asid_pool, seL4_CPtr pd)
 {
-
-    int error;
-    error = seL4_ARCH_ASIDPool_Assign(get_asid_pool(asid_pool), pd);
+    int error = seL4_ARCH_ASIDPool_Assign(get_asid_pool(asid_pool), pd);
     if (error) {
         ZF_LOGE("Failed to assign asid pool\n");
     }
@@ -423,10 +418,8 @@ static int
 create_cspace(vka_t *vka, int size_bits, sel4utils_process_t *process,
               seL4_CapData_t cspace_root_data, seL4_CPtr asid_pool)
 {
-    int error;
-
     /* create a cspace */
-    error = vka_alloc_cnode_object(vka, size_bits, &process->cspace);
+    int error = vka_alloc_cnode_object(vka, size_bits, &process->cspace);
     if (error) {
         ZF_LOGE("Failed to create cspace: %d\n", error);
         return error;
@@ -437,10 +430,9 @@ create_cspace(vka_t *vka, int size_bits, sel4utils_process_t *process,
     process->cspace_next_free = 1;
 
     /*  mint the cnode cap into the process cspace */
-    UNUSED seL4_CPtr slot;
     cspacepath_t src;
     vka_cspace_make_path(vka, process->cspace.cptr, &src);
-    slot = sel4utils_mint_cap_to_process(process, src, seL4_AllRights, cspace_root_data);
+    UNUSED seL4_CPtr slot = sel4utils_mint_cap_to_process(process, src, seL4_AllRights, cspace_root_data);
     assert(slot == SEL4UTILS_CNODE_SLOT);
 
     /* copy fault endpoint cap into process cspace */

@@ -44,7 +44,7 @@ seL4_Error simple_default_get_iospace_cap_count(void *data, int *count)
         return seL4_InvalidArgument;
     }
 
-    *count = (reg.end - reg.start);
+    *count = reg.end - reg.start;
     return seL4_NoError;
 }
 

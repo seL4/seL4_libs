@@ -8,7 +8,6 @@
  * @TAG(NICTA_BSD)
  */
 #include <autoconf.h>
-#include <assert.h>
 #include <sel4platsupport/device.h>
 #include <sel4platsupport/platsupport.h>
 #include <vka/capops.h>

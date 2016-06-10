@@ -11,6 +11,7 @@
 #include "plat_internal.h"
 #include <sel4/sel4.h>
 #include <platsupport/chardev.h>
+#include <stddef.h>
 
 static ssize_t
 debug_write(ps_chardevice_t* device UNUSED, const void* vdata, size_t count,

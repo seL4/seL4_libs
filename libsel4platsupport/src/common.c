@@ -26,6 +26,7 @@
 #include <simple/simple_helpers.h>
 #include <vspace/vspace.h>
 #include "plat_internal.h"
+#include <stddef.h>
 #include <stdio.h>
 #include <vka/capops.h>
 #include <string.h>

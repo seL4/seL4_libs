@@ -9,6 +9,7 @@
  */
 
 #include "timer_common.h"
+#include <stdint.h>
 #include <string.h>
 #include <stdlib.h>
 #include <utils/util.h>

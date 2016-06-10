@@ -60,7 +60,7 @@ int simple_vka_cspace_alloc(void *data, seL4_CPtr *slot)
 {
     assert(data && slot);
 
-    simple_t *simple = (simple_t *) data;
+    simple_t *simple = data;
     seL4_CNode cnode = simple_get_cnode(simple);
     int i = 0;
 
@@ -89,7 +89,7 @@ void simple_vka_cspace_make_path(void *data, seL4_CPtr slot, cspacepath_t *path)
 {
     assert(data && path);
 
-    simple_t *simple = (simple_t *) data;
+    simple_t *simple = data;
 
     path->capPtr = slot;
     path->capDepth = seL4_WordBits;

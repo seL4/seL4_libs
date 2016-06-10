@@ -23,10 +23,10 @@ Allocation overview
 Allocation is complex due to the circular dependencies that exist on allocating resources. These dependencies
 are loosely described as
 
-    * Capability slots: Allocated from untypeds, book kept in memory
-    * Untypeds / other objects (including frame objects): Allocated from other untypeds, into capability slots,
-      book kept in memory
-    * memory: Requires frame object
+  * Capability slots: Allocated from untypeds, book kept in memory
+  * Untypeds / other objects (including frame objects): Allocated from other untypeds, into capability slots,
+    book kept in memory
+  * memory: Requires frame object
 
 Note that these dependencies and complications only exist if you want to be able to track, book keep, free and reuse 
 all allocations. If you want a simpler 'allocate only' system, that does not require book keeping to support free, 

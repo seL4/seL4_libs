@@ -378,8 +378,7 @@ static inline seL4_CPtr
 get_cap(vspace_mid_level_t *top, uintptr_t vaddr)
 {
     vspace_mid_level_t *level = top;
-    int i;
-    for (i = VSPACE_NUM_LEVELS - 1; i > 1; i--) {
+    for (int i = VSPACE_NUM_LEVELS - 1; i > 1; i--) {
         int index = INDEX_FOR_LEVEL(vaddr, i);
         uintptr_t next = level->table[index];
         if (next == EMPTY || next == RESERVED) {
@@ -399,8 +398,7 @@ static inline uintptr_t
 get_cookie(vspace_mid_level_t *top, uintptr_t vaddr)
 {
     vspace_mid_level_t *level = top;
-    int i;
-    for (i = VSPACE_NUM_LEVELS - 1; i > 1; i--) {
+    for (int i = VSPACE_NUM_LEVELS - 1; i > 1; i--) {
         int index = INDEX_FOR_LEVEL(vaddr, i);
         uintptr_t next = level->table[index];
         if (next == EMPTY || next == RESERVED) {

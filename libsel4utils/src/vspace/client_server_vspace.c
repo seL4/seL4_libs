@@ -55,8 +55,7 @@ static void unmap(client_server_vspace_t *cs_vspace, void *caddr, size_t size_bi
 
 static void unmap_many(client_server_vspace_t *cs_vspace, void *caddr, size_t num_pages, size_t size_bits)
 {
-    int i;
-    for (i = 0; i < num_pages; i++) {
+    for (int i = 0; i < num_pages; i++) {
         unmap(cs_vspace, caddr + BIT(size_bits) * i, size_bits);
     }
 }
@@ -88,9 +87,8 @@ static int dup_and_map(client_server_vspace_t *cs_vspace, seL4_CPtr cap, void *c
         return -1;
     }
     /* update our translation */
-    int i;
     uint32_t pages = BYTES_TO_4K_PAGES(BIT(size_bits));
-    for (i = 0; i < pages; i++) {
+    for (int i = 0; i < pages; i++) {
         if (update_entries(&cs_vspace->translation, ADDR(caddr, i), (seL4_CPtr)ADDR(saddr, i), PAGE_BITS_4K, 0)) {
             /* remove the entries we already put in. we can't call
              * clear_entries because the portion to remove is not
@@ -108,8 +106,7 @@ static int dup_and_map(client_server_vspace_t *cs_vspace, seL4_CPtr cap, void *c
 
 static int dup_and_map_many(client_server_vspace_t *cs_vspace, seL4_CPtr *caps, void *caddr, size_t num_pages, size_t size_bits)
 {
-    int i;
-    for (i = 0; i < num_pages; i++) {
+    for (int i = 0; i < num_pages; i++) {
         int error = dup_and_map(cs_vspace, caps[i], caddr + BIT(size_bits) * i, size_bits);
         if (error) {
             unmap_many(cs_vspace, caddr, i - 1, size_bits);
@@ -121,9 +118,8 @@ static int dup_and_map_many(client_server_vspace_t *cs_vspace, seL4_CPtr *caps, 
 
 static int find_dup_and_map_many(client_server_vspace_t *cs_vspace, void *caddr, size_t num_pages, size_t size_bits)
 {
-    int i;
     seL4_CPtr caps[num_pages];
-    for (i = 0; i < num_pages; i++) {
+    for (int i = 0; i < num_pages; i++) {
         caps[i] = vspace_get_cap(cs_vspace->client, caddr + BIT(size_bits) * i);
         assert(caps[i]);
     }
@@ -133,7 +129,7 @@ static int find_dup_and_map_many(client_server_vspace_t *cs_vspace, void *caddr,
 static reservation_t cs_reserve_range_aligned(vspace_t *vspace, size_t size, size_t size_bits, seL4_CapRights rights,
                                               int cacheable, void **result)
 {
-    client_server_vspace_t *cs_vspace = (client_server_vspace_t*)vspace->data;
+    client_server_vspace_t *cs_vspace = vspace->data;
     assert(cacheable);
     get_alloc_data(cs_vspace->client)->vspace_root = cs_vspace->translation_data.vspace_root;
     /* we are not interested in client reservations, just proxy */
@@ -143,7 +139,7 @@ static reservation_t cs_reserve_range_aligned(vspace_t *vspace, size_t size, siz
 static reservation_t cs_reserve_range_at(vspace_t *vspace, void *vaddr, size_t size, seL4_CapRights
                                          rights, int cacheable)
 {
-    client_server_vspace_t *cs_vspace = (client_server_vspace_t*)vspace->data;
+    client_server_vspace_t *cs_vspace = vspace->data;
     assert(cacheable);
     get_alloc_data(cs_vspace->client)->vspace_root = cs_vspace->translation_data.vspace_root;
     /* we are not interested in client reservations, just proxy */
@@ -152,7 +148,7 @@ static reservation_t cs_reserve_range_at(vspace_t *vspace, void *vaddr, size_t s
 
 static void cs_free_reservation(vspace_t *vspace, reservation_t reservation)
 {
-    client_server_vspace_t *cs_vspace = (client_server_vspace_t*)vspace->data;
+    client_server_vspace_t *cs_vspace = vspace->data;
     get_alloc_data(cs_vspace->client)->vspace_root = cs_vspace->translation_data.vspace_root;
     vspace_free_reservation(cs_vspace->client, reservation);
 }
@@ -160,7 +156,7 @@ static void cs_free_reservation(vspace_t *vspace, reservation_t reservation)
 static int cs_map_pages_at_vaddr(vspace_t *vspace, seL4_CPtr caps[], uintptr_t cookies[], void *vaddr,
                                  size_t num_pages, size_t size_bits, reservation_t reservation)
 {
-    client_server_vspace_t *cs_vspace = (client_server_vspace_t*)vspace->data;
+    client_server_vspace_t *cs_vspace = vspace->data;
     get_alloc_data(cs_vspace->client)->vspace_root = cs_vspace->translation_data.vspace_root;
     assert(size_bits >= 12);
     /* first map all the pages into the client */
@@ -183,7 +179,7 @@ static int cs_map_pages_at_vaddr(vspace_t *vspace, seL4_CPtr caps[], uintptr_t c
 
 static seL4_CPtr cs_get_cap(vspace_t *vspace, void *vaddr)
 {
-    client_server_vspace_t *cs_vspace = (client_server_vspace_t*)vspace->data;
+    client_server_vspace_t *cs_vspace = vspace->data;
     get_alloc_data(cs_vspace->client)->vspace_root = cs_vspace->translation_data.vspace_root;
     /* return the client cap */
     return vspace_get_cap(cs_vspace->client, vaddr);
@@ -191,13 +187,13 @@ static seL4_CPtr cs_get_cap(vspace_t *vspace, void *vaddr)
 
 static seL4_CPtr cs_get_root(vspace_t *vspace)
 {
-    client_server_vspace_t *cs_vspace = (client_server_vspace_t*)vspace->data;
+    client_server_vspace_t *cs_vspace = vspace->data;
     return cs_vspace->translation_data.vspace_root;
 }
 
 static void cs_unmap_pages(vspace_t *vspace, void *vaddr, size_t num_pages, size_t size_bits, vka_t *vka)
 {
-    client_server_vspace_t *cs_vspace = (client_server_vspace_t*)vspace->data;
+    client_server_vspace_t *cs_vspace = vspace->data;
     get_alloc_data(cs_vspace->client)->vspace_root = cs_vspace->translation_data.vspace_root;
     /* remove our mappings */
     unmap_many(cs_vspace, vaddr, num_pages, size_bits);
@@ -208,7 +204,7 @@ static void cs_unmap_pages(vspace_t *vspace, void *vaddr, size_t num_pages, size
 static int cs_new_pages_at_vaddr(vspace_t *vspace, void *vaddr, size_t num_pages,
                                  size_t size_bits, reservation_t reservation)
 {
-    client_server_vspace_t *cs_vspace = (client_server_vspace_t*)vspace->data;
+    client_server_vspace_t *cs_vspace = vspace->data;
     get_alloc_data(cs_vspace->client)->vspace_root = cs_vspace->translation_data.vspace_root;
     assert(size_bits >= 12);
     /* create new pages in the client first */
@@ -228,7 +224,6 @@ static int cs_new_pages_at_vaddr(vspace_t *vspace, void *vaddr, size_t num_pages
 
 int sel4utils_get_cs_vspace(vspace_t *vspace, vka_t *vka, vspace_t *server, vspace_t *client)
 {
-    int error;
     client_server_vspace_t *cs_vspace = malloc(sizeof(*cs_vspace));
     if (cs_vspace == NULL) {
         ZF_LOGE("Failed to create translation vspace");
@@ -238,7 +233,7 @@ int sel4utils_get_cs_vspace(vspace_t *vspace, vka_t *vka, vspace_t *server, vspa
     cs_vspace->client = client;
     cs_vspace->vka = vka;
 
-    error = sel4utils_get_vspace(server, &cs_vspace->translation, &cs_vspace->translation_data,
+    int error = sel4utils_get_vspace(server, &cs_vspace->translation, &cs_vspace->translation_data,
                                  vka, 0, NULL, NULL);
     if (error) {
         ZF_LOGE("Failed to create translation vspace");
@@ -268,7 +263,7 @@ int sel4utils_get_cs_vspace(vspace_t *vspace, vka_t *vka, vspace_t *server, vspa
 
 void *sel4utils_cs_vspace_translate(vspace_t *vspace, void *addr)
 {
-    client_server_vspace_t *cs_vspace = (client_server_vspace_t*)vspace->data;
+    client_server_vspace_t *cs_vspace = vspace->data;
 
     seL4_CPtr translation_result = get_cap(cs_vspace->translation_data.top_level, (uintptr_t) addr);
 
@@ -281,10 +276,9 @@ int sel4utils_cs_vspace_for_each(vspace_t *vspace, void *addr, uint32_t len,
                                  int (*proc)(void* addr, uint32_t len, void *cookie),
                                  void *cookie)
 {
-    uintptr_t current_addr;
     uintptr_t next_addr;
     uintptr_t end_addr = (uintptr_t)(addr + len);
-    for (current_addr = (uintptr_t)addr; current_addr < end_addr; current_addr = next_addr) {
+    for (uintptr_t current_addr = (uintptr_t)addr; current_addr < end_addr; current_addr = next_addr) {
         uintptr_t current_aligned = PAGE_ALIGN_4K(current_addr);
         uintptr_t next_page_start = current_aligned + PAGE_SIZE_4K;
         next_addr = MIN(end_addr, next_page_start);
@@ -304,7 +298,7 @@ int sel4utils_cs_vspace_set_root(vspace_t *vspace, seL4_CPtr vspace_root)
 {
     assert(vspace);
 
-    client_server_vspace_t *cs_vspace = (client_server_vspace_t*)vspace->data;
+    client_server_vspace_t *cs_vspace = vspace->data;
     cs_vspace->translation_data.vspace_root = vspace_root;
 
     return 0;

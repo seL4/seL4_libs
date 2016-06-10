@@ -34,16 +34,14 @@ typedef struct dma_alloc {
 
 static void dma_free(void *cookie, void *addr, size_t size)
 {
-    dma_man_t *dma = (dma_man_t*)cookie;
+    dma_man_t *dma = cookie;
     dma_alloc_t *alloc = (dma_alloc_t*)vspace_get_cookie(&dma->vspace, addr);
     assert(alloc);
     assert(alloc->base == addr);
     int num_pages = BIT(alloc->ut.size_bits) / PAGE_SIZE_4K;
-    int i;
-    for (i = 0; i < num_pages; i++) {
-        seL4_CPtr frame;
+    for (int i = 0; i < num_pages; i++) {
         cspacepath_t path;
-        frame = vspace_get_cap(&dma->vspace, addr + i * PAGE_SIZE_4K);
+        seL4_CPtr frame = vspace_get_cap(&dma->vspace, addr + i * PAGE_SIZE_4K);
         vspace_unmap_pages(&dma->vspace, addr + i * PAGE_SIZE_4K, 1, PAGE_BITS_4K, NULL);
         vka_cspace_make_path(&dma->vka, frame, &path);
         vka_cnode_delete(&path);
@@ -55,7 +53,7 @@ static void dma_free(void *cookie, void *addr, size_t size)
 
 static uintptr_t dma_pin(void *cookie, void *addr, size_t size)
 {
-    dma_man_t *dma = (dma_man_t*)cookie;
+    dma_man_t *dma = cookie;
     dma_alloc_t *alloc = (dma_alloc_t*)vspace_get_cookie(&dma->vspace, addr);
     if (!alloc) {
         return 0;
@@ -66,8 +64,7 @@ static uintptr_t dma_pin(void *cookie, void *addr, size_t size)
 
 static void* dma_alloc(void *cookie, size_t size, int align, int cached, ps_mem_flags_t flags)
 {
-    int error;
-    dma_man_t *dma = (dma_man_t*)cookie;
+    dma_man_t *dma = cookie;
     cspacepath_t *frames = NULL;
     reservation_t res = {NULL};
     dma_alloc_t *alloc = NULL;
@@ -88,25 +85,23 @@ static void* dma_alloc(void *cookie, size_t size, int align, int cached, ps_mem_
     size = BIT(size_bits);
     /* Allocate an untyped */
     vka_object_t ut;
-    error = vka_alloc_untyped(&dma->vka, size_bits, &ut);
+    int error = vka_alloc_untyped(&dma->vka, size_bits, &ut);
     if (error) {
         ZF_LOGE("Failed to allocate untyped of size %zu", size_bits);
         return NULL;
     }
     /* Get the physical address */
-    uintptr_t paddr;
-    paddr = vka_utspace_paddr(&dma->vka, ut.ut, seL4_UntypedObject, size_bits);
+    uintptr_t paddr = vka_utspace_paddr(&dma->vka, ut.ut, seL4_UntypedObject, size_bits);
     if (paddr == 0) {
         ZF_LOGE("Allocated untyped has no physical address");
         goto handle_error;
     }
     /* Allocate all the frames */
     num_frames = size / PAGE_SIZE_4K;
-    frames = malloc(sizeof(cspacepath_t) * num_frames);
+    frames = calloc(num_frames, sizeof(cspacepath_t));
     if (!frames) {
         goto handle_error;
     }
-    memset(frames, 0, sizeof(cspacepath_t) * num_frames);
     for (unsigned i = 0; i < num_frames; i++) {
         error = vka_cspace_alloc_path(&dma->vka, &frames[i]);
         if (error) {
@@ -167,7 +162,7 @@ static void dma_unpin(void *cookie, void *addr, size_t size)
 
 static void dma_cache_op(void *cookie, void *addr, size_t size, dma_cache_op_t op)
 {
-    dma_man_t *dma = (dma_man_t*)cookie;
+    dma_man_t *dma = cookie;
     seL4_CPtr root = vspace_get_root(&dma->vspace);
     uintptr_t end = (uintptr_t)addr + size;
     uintptr_t cur = (uintptr_t)addr;
@@ -193,11 +188,10 @@ static void dma_cache_op(void *cookie, void *addr, size_t size, dma_cache_op_t o
 
 int sel4utils_new_page_dma_alloc(vka_t *vka, vspace_t *vspace, ps_dma_man_t *dma_man)
 {
-    dma_man_t *dma = (dma_man_t*)malloc(sizeof(*dma));
+    dma_man_t *dma = calloc(1, sizeof(*dma));
     if (!dma) {
         return -1;
     }
-    memset(dma, 0, sizeof(*dma));
     dma->vka = *vka;
     dma->vspace = *vspace;
     dma_man->cookie = dma;

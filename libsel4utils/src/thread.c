@@ -35,7 +35,7 @@ write_ipc_buffer_user_data(vka_t *vka, vspace_t *vspace, seL4_CPtr ipc_buf, uint
     if (!mapping) {
         return -1;
     }
-    seL4_IPCBuffer *buffer = (seL4_IPCBuffer*)mapping;
+    seL4_IPCBuffer *buffer = mapping;
     buffer->userData = buf_loc;
     sel4utils_unmap_dup(vka, vspace, mapping, seL4_PageBits);
     return 0;
@@ -106,11 +106,10 @@ int
 sel4utils_start_thread(sel4utils_thread_t *thread, void *entry_point, void *arg0, void *arg1,
                        int resume)
 {
-    int error;
     seL4_UserContext context = {0};
     size_t context_size = sizeof(seL4_UserContext) / sizeof(seL4_Word);
 
-    error = sel4utils_arch_init_local_context(entry_point, arg0, arg1,
+    int error = sel4utils_arch_init_local_context(entry_point, arg0, arg1,
                                               (void *) thread->ipc_buffer_addr,
                                               thread->stack_top, &context);
     if (error) {
@@ -212,29 +211,25 @@ sel4utils_start_fault_handler(seL4_CPtr fault_endpoint, vka_t *vka, vspace_t *vs
         return -1;
     }
 
-    return sel4utils_start_thread(res, fault_handler, (void *) name,
+    return sel4utils_start_thread(res, fault_handler, name,
                                   (void *) fault_endpoint, 1);
 }
 
 int
 sel4utils_checkpoint_thread(sel4utils_thread_t *thread, sel4utils_checkpoint_t *checkpoint, bool suspend) 
 {
-
-    int error;
-    size_t stack_size;
-    
     assert(checkpoint != NULL);
 
-    error = seL4_TCB_ReadRegisters(thread->tcb.cptr, suspend, 0, sizeof(seL4_UserContext) / sizeof(seL4_Word), 
+    int error = seL4_TCB_ReadRegisters(thread->tcb.cptr, suspend, 0, sizeof(seL4_UserContext) / sizeof(seL4_Word), 
             &checkpoint->regs);
     if (error) {
         ZF_LOGE("Failed to read registers of tcb while checkpointing\n");
         return error;
     }
     
-    stack_size = (uintptr_t) thread->stack_top - (uintptr_t) sel4utils_get_sp(checkpoint->regs);
+    size_t stack_size = (uintptr_t) thread->stack_top - (uintptr_t) sel4utils_get_sp(checkpoint->regs);
     
-    checkpoint->stack = (void *) malloc(stack_size);
+    checkpoint->stack = malloc(stack_size);
     if (checkpoint->stack == NULL) {
         ZF_LOGE("Failed to malloc stack of size %zu\n", stack_size);
         return -1;
@@ -249,15 +244,12 @@ sel4utils_checkpoint_thread(sel4utils_thread_t *thread, sel4utils_checkpoint_t *
 int 
 sel4utils_checkpoint_restore(sel4utils_checkpoint_t *checkpoint, bool free_memory, bool resume)
 {
-    int error;
-    size_t stack_size;
-
     assert(checkpoint != NULL);
 
-    stack_size = (uintptr_t) checkpoint->thread->stack_top - (uintptr_t) sel4utils_get_sp(checkpoint->regs);
+    size_t stack_size = (uintptr_t) checkpoint->thread->stack_top - (uintptr_t) sel4utils_get_sp(checkpoint->regs);
     memcpy((void *) sel4utils_get_sp(checkpoint->regs), checkpoint->stack, stack_size);
     
-    error = seL4_TCB_WriteRegisters(checkpoint->thread->tcb.cptr, resume, 0,
+    int error = seL4_TCB_WriteRegisters(checkpoint->thread->tcb.cptr, resume, 0,
             sizeof(seL4_UserContext) / sizeof (seL4_Word), 
             &checkpoint->regs);
     if (error) {

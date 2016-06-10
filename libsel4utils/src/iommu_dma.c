@@ -52,7 +52,7 @@ static void unmap_range(dma_man_t *dma, uintptr_t addr, size_t size)
 
 static void* dma_alloc(void *cookie, size_t size, int align, int cached, ps_mem_flags_t flags)
 {
-    dma_man_t *dma = (dma_man_t*)cookie;
+    dma_man_t *dma = cookie;
     int error;
     if (cached || flags != PS_MEM_NORMAL) {
         /* Going to ignore flags */
@@ -154,7 +154,7 @@ static void* dma_alloc(void *cookie, size_t size, int align, int cached, ps_mem_
 
 static void dma_free(void *cookie, void *addr, size_t size)
 {
-    dma_man_t *dma = (dma_man_t*)cookie;
+    dma_man_t *dma = cookie;
     unmap_range(dma, (uintptr_t)addr, size);
     free(addr);
 }
@@ -181,12 +181,10 @@ static void dma_cache_op(void *cookie, void *addr, size_t size, dma_cache_op_t o
 
 int sel4utils_make_iommu_dma_alloc(vka_t *vka, vspace_t *vspace, ps_dma_man_t *dma_man, unsigned int num_iospaces, seL4_CPtr *iospaces)
 {
-    int err;
-    dma_man_t *dma = (dma_man_t*)malloc(sizeof(*dma));
+    dma_man_t *dma = calloc(1, sizeof(*dma));
     if (!dma) {
         return -1;
     }
-    memset(dma, 0, sizeof(*dma));
     dma->num_iospaces = num_iospaces;
     dma->vka = *vka;
     dma->vspace = *vspace;
@@ -206,7 +204,7 @@ int sel4utils_make_iommu_dma_alloc(vka_t *vka, vspace_t *vspace, ps_dma_man_t *d
         goto error;
     }
     for (unsigned int i = 0; i < num_iospaces; i++) {
-        err = sel4utils_get_vspace_with_map(&dma->vspace, dma->iospaces + i, dma->iospace_data + i, &dma->vka, iospaces[i], NULL, NULL, sel4utils_map_page_iommu);
+        int err = sel4utils_get_vspace_with_map(&dma->vspace, dma->iospaces + i, dma->iospace_data + i, &dma->vka, iospaces[i], NULL, NULL, sel4utils_map_page_iommu);
         if (err) {
             for (unsigned int j = 0; j < i; j++) {
                 vspace_tear_down(dma->iospaces + i, &dma->vka);

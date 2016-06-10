@@ -304,7 +304,7 @@ sel4utils_get_vspace_with_map(vspace_t *loader, vspace_t *new_vspace, sel4utils_
     data->bootstrap = loader;
 
     /* create the top level page table from the loading vspace */
-    data->top_level = (vspace_mid_level_t*) vspace_new_pages(loader, seL4_AllRights, sizeof(vspace_mid_level_t) / PAGE_SIZE_4K, seL4_PageBits);
+    data->top_level = vspace_new_pages(loader, seL4_AllRights, sizeof(vspace_mid_level_t) / PAGE_SIZE_4K, seL4_PageBits);
     if (data->top_level == NULL) {
         return -1;
     }
@@ -368,7 +368,7 @@ sel4utils_bootstrap_vspace_with_bootinfo(vspace_t *vspace, sel4utils_alloc_data_
                                          void *allocated_object_cookie)
 {
     void *existing_frames[] = {
-        (void *) info,
+        info,
         /* We assume the IPC buffer is less than a page and fits into one page */
         (void *) (seL4_Word)ROUND_DOWN(((seL4_Word)(info->ipcBuffer)), PAGE_SIZE_4K),
         NULL

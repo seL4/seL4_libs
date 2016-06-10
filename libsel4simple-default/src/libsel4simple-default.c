@@ -80,7 +80,7 @@ seL4_Error simple_default_set_ASID(void *data, seL4_CPtr vspace) {
 int simple_default_cap_count(void *data) {
     assert(data);
 
-    seL4_BootInfo * bi = (seL4_BootInfo *) data;
+    seL4_BootInfo * bi = data;
 
     int device_caps = 0;
     int i;
@@ -99,7 +99,7 @@ int simple_default_cap_count(void *data) {
 seL4_CPtr simple_default_nth_cap(void *data, int n) {
     assert(data);
 
-    seL4_BootInfo * bi = (seL4_BootInfo *) data;
+    seL4_BootInfo * bi = data;
     size_t shared_frame_range = bi->sharedFrames.end - bi->sharedFrames.start + seL4_NumInitialCaps;
     size_t user_img_frame_range = bi->userImageFrames.end - bi->userImageFrames.start + shared_frame_range;
     size_t user_img_paging_range = bi->userImagePaging.end - bi->userImagePaging.start + user_img_frame_range;
@@ -150,7 +150,7 @@ seL4_CPtr simple_default_nth_cap(void *data, int n) {
 }
 
 seL4_CPtr simple_default_init_cap(void *data, seL4_CPtr cap_pos) {
-    return (seL4_CPtr) cap_pos;
+    return cap_pos;
 }
 
 uint8_t simple_default_cnode_size(void *data) {
@@ -168,7 +168,7 @@ int simple_default_untyped_count(void *data) {
 seL4_CPtr simple_default_nth_untyped(void *data, int n, uint32_t *size_bits, uint32_t *paddr) {
     assert(data && size_bits && paddr);
 
-    seL4_BootInfo *bi = (seL4_BootInfo *)data;
+    seL4_BootInfo *bi = data;
 
     if(n < (bi->untyped.end - bi->untyped.start)) {
         if(paddr != NULL) {
@@ -192,7 +192,7 @@ int simple_default_userimage_count(void *data) {
 seL4_CPtr simple_default_nth_userimage(void *data, int n) {
     assert(data);
 
-    seL4_BootInfo *bi = (seL4_BootInfo *)data;
+    seL4_BootInfo *bi = data;
 
     if(n < (bi->userImageFrames.end - bi->userImageFrames.start)) {
         return bi->userImageFrames.start + (n);
@@ -206,7 +206,7 @@ void simple_default_print(void *data) {
         ZF_LOGE("Data is null!");
     }
 
-    debug_print_bootinfo((seL4_BootInfo *) data);
+    debug_print_bootinfo(data);
 }
 
 void simple_default_init_bootinfo(simple_t *simple, seL4_BootInfo *bi) {

@@ -27,7 +27,7 @@ seL4_Error simple_default_get_irq(void *data, int irq, seL4_CNode root, seL4_Wor
 #ifdef CONFIG_ARM_SMMU
 seL4_Error simple_default_get_iospace_cap_count(void *data, int *count)
 {
-    seL4_BootInfo *bi = (seL4_BootInfo *)data;
+    seL4_BootInfo *bi = data;
     seL4_SlotRegion reg;
 
     if (!bi) {
@@ -44,13 +44,13 @@ seL4_Error simple_default_get_iospace_cap_count(void *data, int *count)
         return seL4_InvalidArgument;
     }
 
-    *count = (reg.end - reg.start);
+    *count = reg.end - reg.start;
     return seL4_NoError;
 }
 
 seL4_CPtr simple_default_get_iospace_nth_cap(void *data, int n)
 {
-    seL4_BootInfo *bi = (seL4_BootInfo *)data;
+    seL4_BootInfo *bi = data;
     seL4_SlotRegion reg;
     seL4_CPtr cap;
 

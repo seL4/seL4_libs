@@ -34,10 +34,10 @@ struct edf_sched_add_tcb_args {
 };
 
 struct cfs_sched_add_tcb_args {
-    /* Cap to the tcb, which may already be running. This thread should be the same
-      priority as all other threads added to the CFS scheduler. The CFS scheduler
-      itself should run at the same priority threads it is scheduling. */
-    seL4_CPtr tcb;
+    /* empty slot to save a minted endpoint cap in, threads should Call on this
+       endpoint to signal job completion and wait for next job release. Only
+       used in coop cfs implementation. */
+    cspacepath_t slot;
 };
 
 /* generic scheduling interface */
@@ -66,9 +66,31 @@ struct sched {
 sched_t *sched_new_edf(seL4_timer_t *clock_timer, seL4_timer_t *timeout_timer, vka_t *vka,
                        seL4_CPtr tcb, seL4_CPtr notification);
 
-/* Create an Linux-like CFS scheduler. Multiple CFS schedulers can co-exist, however they should run on distinct
-* priorities. */
-sched_t *sched_new_cfs(void);
+/*
+ * Create a Linux-like CFS scheduler. Multiple CFS schedulers can co-exist, however they should run on distinct
+ * priorities.
+ *
+ * The preemptive CFS scheduler expects scheduling contexts to be configured with the timeslice
+ * expected for the thread. Threads will be preempted by the kernel when they run out of time.
+ * The scheduler thread should run at the same prio as the threads it is scheduling, and the
+ * caller should make sure the scheduler is at the head of the scheduling queue.
+ *
+ * @param vka vka interface to allocate objects and cslots of the scheduler
+ */
+sched_t *sched_new_preemptive_cfs(void);
+
+/*
+ * Create a Linux-like CFS scheduler. Multiple CFS schedulers can co-exist, however they should run on distinct
+ * priorities.
+ *
+ * This cooperative CFS scheduler expects threads to call on an endpoint to
+ * manually yield. Threads will be converted to passive, such that the inital sc
+ * threads start with will be unbound.
+ *
+ * @param vka           vka interface to allocate objects and cslots of the scheduler
+ * @param sched_context the scheduling context the scheduler will run on (caller of run_scheduler)
+ */
+sched_t *sched_new_cooperative_cfs(vka_t *vka, seL4_CPtr sched_context);
 
 /*
  * Add a TCB to a scheduler. The scheduler must be initialised and may or may not be running.

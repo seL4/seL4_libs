@@ -32,6 +32,7 @@
 #include <string.h>
 #include <sel4platsupport/arch/io.h>
 #include <simple-default/simple-default.h>
+#include <utils/util.h>
 
 enum serial_setup_status {
     NOT_INITIALIZED = 0,
@@ -300,13 +301,7 @@ static void __serial_setup()
     }
 }
 
-/* Squash compiler warnings (these functions are prototyped in
-* libsel4rootserver).
-*/
-void __arch_putchar(int c) __attribute__((weak, noinline));
-int __arch_getchar(void);
-
-void
+void WEAK NO_INLINE
 __arch_putchar(int c)
 {
     if (setup_status != SETUP_COMPLETE) {

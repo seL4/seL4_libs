@@ -7,10 +7,7 @@
  *
  * @TAG(NICTA_BSD)
  */
+#pragma once
 
-#ifndef _SEL4UTILS_SEL4_DEBUG_H_
-#define _SEL4UTILS_SEL4_DEBUG_H_
+#include <sel4utils/strerror.h>
 
-#include <sel4debug/sel4_debug.h>
-
-#endif /* _SEL4UTILS_SEL4_DEBUG_H_ */

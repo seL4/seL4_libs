@@ -12,7 +12,7 @@
 #define _SEL4_ZF_LOGIF_H
 
 #include <utils/zf_log.h>
-#include <sel4utils/sel4_debug.h>
+#include <sel4utils/strerror.h>
 
 /*  sel4_zf_logif.h:
  * This file contains some convenience macros built on top of the ZF_LOG

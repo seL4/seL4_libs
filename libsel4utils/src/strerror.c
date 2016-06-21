@@ -12,7 +12,7 @@
 #include <stdlib.h> /* For abort() */
 #include <assert.h>
 #include <sel4/sel4.h>
-#include <sel4debug/sel4_debug.h>
+#include <sel4utils/strerror.h>
 
 char *sel4_errlist[] = {
     [seL4_NoError] = "seL4_NoError",

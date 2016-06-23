@@ -69,7 +69,7 @@ static int free_fd_table_index;
 static int num_fds = 256;
 
 
-static void 
+static void
 add_free_fd(int fd)
 {
     free_fd_table_index++;
@@ -88,14 +88,14 @@ get_free_fd(void)
     return free_fd_table[free_fd_table_index + 1];
 }
 
-static int 
-valid_fd(int fd) 
+static int
+valid_fd(int fd)
 {
     return fd < num_fds && fd >= FIRST_USER_FD;
 }
 
 
-static int 
+static int
 allocate_file_table(void)
 {
     fd_table = malloc(FD_TABLE_SIZE(num_fds));
@@ -110,7 +110,7 @@ allocate_file_table(void)
     }
 
     free_fd_table_index = -1;
-    
+
     /* populate free list */
     for (int i = FIRST_USER_FD; i < num_fds; i++) {
         add_free_fd(i);
@@ -167,7 +167,7 @@ grow_fds(int how_much)
     return 0;
 }
 
-static int 
+static int
 allocate_fd()
 {
     if (fd_table == NULL) {
@@ -264,7 +264,7 @@ sys_close(va_list ap)
     }
 
     muslcsys_fd_t *fds = get_fd_struct(fd);
-    
+
     if (fds->filetype == FILE_TYPE_CPIO) {
         free(fds->data);
     } else {
@@ -379,7 +379,7 @@ sys_ioctl(va_list ap)
 }
 
 
-long 
+long
 sys_prlimit64(va_list ap)
 {
     pid_t pid = va_arg(ap, pid_t);

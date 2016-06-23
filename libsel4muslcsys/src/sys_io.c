@@ -35,9 +35,7 @@
 
 #include "arch_stdio.h"
 
-#define STDOUT_FD 1
-#define STDERR_FD 2
-#define FIRST_USER_FD 3
+#define FIRST_USER_FD (STDERR_FILENO + 1)
 
 #define FILE_TYPE_CPIO 0
 
@@ -307,7 +305,7 @@ sys_writev(va_list ap)
     }
 
     /* Write the buffer to console if the fd is for stdout or stderr. */
-    if (fildes == STDOUT_FD || fildes == STDERR_FD) {
+    if (fildes == STDOUT_FILENO || fildes == STDERR_FILENO) {
         for (int i = 0; i < iovcnt; i++) {
             ret += sys_platform_write(iov[i].iov_base, iov[i].iov_len);
         }
@@ -373,7 +371,7 @@ sys_ioctl(va_list ap)
     (void)request;
     /* muslc does some ioctls to stdout, so just allow these to silently
        go through */
-    if (fd == STDOUT_FD) {
+    if (fd == STDOUT_FILENO) {
         return 0;
     }
     assert(!"not implemented");

@@ -35,9 +35,7 @@
 
 #include "arch_stdio.h"
 
-#define STDOUT_FD 1
-#define STDERR_FD 2
-#define FIRST_USER_FD 3
+#define FIRST_USER_FD (STDERR_FILENO + 1)
 
 #define FILE_TYPE_CPIO 0
 
@@ -71,7 +69,7 @@ static int free_fd_table_index;
 static int num_fds = 256;
 
 
-static void 
+static void
 add_free_fd(int fd)
 {
     free_fd_table_index++;
@@ -90,14 +88,14 @@ get_free_fd(void)
     return free_fd_table[free_fd_table_index + 1];
 }
 
-static int 
-valid_fd(int fd) 
+static int
+valid_fd(int fd)
 {
     return fd < num_fds && fd >= FIRST_USER_FD;
 }
 
 
-static int 
+static int
 allocate_file_table(void)
 {
     fd_table = malloc(FD_TABLE_SIZE(num_fds));
@@ -112,7 +110,7 @@ allocate_file_table(void)
     }
 
     free_fd_table_index = -1;
-    
+
     /* populate free list */
     for (int i = FIRST_USER_FD; i < num_fds; i++) {
         add_free_fd(i);
@@ -169,7 +167,7 @@ grow_fds(int how_much)
     return 0;
 }
 
-static int 
+static int
 allocate_fd()
 {
     if (fd_table == NULL) {
@@ -266,7 +264,7 @@ sys_close(va_list ap)
     }
 
     muslcsys_fd_t *fds = get_fd_struct(fd);
-    
+
     if (fds->filetype == FILE_TYPE_CPIO) {
         free(fds->data);
     } else {
@@ -307,7 +305,7 @@ sys_writev(va_list ap)
     }
 
     /* Write the buffer to console if the fd is for stdout or stderr. */
-    if (fildes == STDOUT_FD || fildes == STDERR_FD) {
+    if (fildes == STDOUT_FILENO || fildes == STDERR_FILENO) {
         for (int i = 0; i < iovcnt; i++) {
             ret += sys_platform_write(iov[i].iov_base, iov[i].iov_len);
         }
@@ -373,7 +371,7 @@ sys_ioctl(va_list ap)
     (void)request;
     /* muslc does some ioctls to stdout, so just allow these to silently
        go through */
-    if (fd == STDOUT_FD) {
+    if (fd == STDOUT_FILENO) {
         return 0;
     }
     assert(!"not implemented");
@@ -381,7 +379,7 @@ sys_ioctl(va_list ap)
 }
 
 
-long 
+long
 sys_prlimit64(va_list ap)
 {
     pid_t pid = va_arg(ap, pid_t);

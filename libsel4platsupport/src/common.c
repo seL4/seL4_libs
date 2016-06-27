@@ -26,11 +26,13 @@
 #include <simple/simple_helpers.h>
 #include <vspace/vspace.h>
 #include "plat_internal.h"
+#include <stddef.h>
 #include <stdio.h>
 #include <vka/capops.h>
 #include <string.h>
 #include <sel4platsupport/arch/io.h>
 #include <simple-default/simple-default.h>
+#include <utils/util.h>
 
 enum serial_setup_status {
     NOT_INITIALIZED = 0,
@@ -185,7 +187,6 @@ platsupport_undo_serial_setup(void)
 void
 platsupport_serial_input_init_IRQ(void)
 {
-    __plat_serial_input_init_IRQ();
 }
 
 int
@@ -271,10 +272,8 @@ static void __serial_setup()
      * we now need to handle this somehow */
     switch (setup_status) {
     case START_FAILSAFE_SETUP:
-        /* we're stuck. nothing to do but make some noise and hope someone hears us */
-        while (1) {
-            *(char*)0 = 0;
-        }
+        /* we're stuck. */
+        abort();
         break;
     case START_REGULAR_SETUP:
         started_regular = 1;
@@ -302,13 +301,7 @@ static void __serial_setup()
     }
 }
 
-/* Squash compiler warnings (these functions are prototyped in
-* libsel4rootserver).
-*/
-void __arch_putchar(int c) __attribute__((weak, noinline));
-int __arch_getchar(void);
-
-void
+void WEAK NO_INLINE
 __arch_putchar(int c)
 {
     if (setup_status != SETUP_COMPLETE) {

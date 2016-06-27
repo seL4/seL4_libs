@@ -14,6 +14,8 @@
 #include <sel4platsupport/plat/timer.h>
 #include <sel4platsupport/arch/io.h>
 #include <simple/simple.h>
+#include <stdint.h>
+#include <stdlib.h>
 #include <utils/util.h>
 
 static ps_io_port_ops_t ops;

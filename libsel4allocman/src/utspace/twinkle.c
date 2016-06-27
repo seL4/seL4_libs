@@ -100,7 +100,7 @@ seL4_Word _utspace_twinkle_alloc(allocman_t *alloc, void *_twinkle, size_t size_
     return 0;
 }
 
-void _utspace_twinkle_free(allocman_t *alloc, void *_twinkle, size_t size_bits, seL4_Word cookie)
+void _utspace_twinkle_free(allocman_t *alloc, void *_twinkle, seL4_Word cookie, size_t size_bits)
 {
     /* Do nothing */
 }

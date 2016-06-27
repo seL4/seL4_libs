@@ -15,7 +15,8 @@ libsel4utils provides OS-like utilities for building benchmarks and applications
 Although the library attempts to be policy agnostic, some decisions must be made.
 
 This library is intended to be used to quickly get tests, benchmarks and prototypes off the ground
-with minimal effort. 
+with minimal effort. It's meant to contain commonly useful stuff, that will be actively
+maintained.
 It can also be used as a reference for 'how-to' implement OS mechanisms on seL4.
 
 Utilities provided by this library:
@@ -46,7 +47,7 @@ Repository overview
   * mapping.h -- page mapping.
   * process.h -- process creation, deletion.
   * profile.h -- profiling.
-  * sel4_debug.h -- for printing seL4 error codes.
+  * strerror.h -- for printing seL4 error codes.
   * stack.h -- switch to a newly allocated stack. 
   * thread.h -- threads (kernel threads) creation, deletion.
   * util.h -- includes utilities from libutils.

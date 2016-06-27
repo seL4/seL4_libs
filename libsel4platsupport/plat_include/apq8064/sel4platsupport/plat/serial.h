@@ -1,5 +1,5 @@
 /*
- * Copyright 2014, NICTA
+ * Copyright 2016, NICTA
  *
  * This software may be distributed and modified according to the terms of
  * the BSD 2-Clause license. Note that NO WARRANTY is provided.
@@ -7,10 +7,10 @@
  *
  * @TAG(NICTA_BSD)
  */
+#pragma once
 
-#ifndef _SEL4UTILS_SEL4_DEBUG_H_
-#define _SEL4UTILS_SEL4_DEBUG_H_
+#include <platsupport/plat/serial.h>
 
-#include <sel4debug/sel4_debug.h>
+#define DEFAULT_SERIAL_PADDR GSBI7_UART_PADDR
+#define DEFAULT_SERIAL_INTERRUPT GSBI7_UART_IRQ
 
-#endif /* _SEL4UTILS_SEL4_DEBUG_H_ */

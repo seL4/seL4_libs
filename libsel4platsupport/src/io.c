@@ -22,6 +22,7 @@
 #include <vspace/vspace.h>
 #include <vka/capops.h>
 
+#include <stdint.h>
 #include <stdlib.h>
 
 typedef struct io_mapping {

@@ -14,6 +14,7 @@
 #include <sel4platsupport/plat/hpet.h>
 #include <sel4platsupport/device.h>
 #include <utils/util.h>
+#include <stdint.h>
 #include <string.h>
 #include <utils/attribute.h>
 #include <vka/capops.h>

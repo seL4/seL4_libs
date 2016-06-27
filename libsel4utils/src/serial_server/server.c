@@ -402,7 +402,7 @@ serial_server_main(void)
     enum serial_server_funcs func;
     int keep_going = 1;
     UNUSED seL4_Error error;
-    serial_server_registry_entry_t *client_data;
+    serial_server_registry_entry_t *client_data = NULL;
     size_t buff_len, bytes_written;
 
     /* Bind to the serial driver. */

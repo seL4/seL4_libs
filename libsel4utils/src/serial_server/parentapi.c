@@ -110,7 +110,7 @@ serial_server_parent_spawn_thread(simple_t *parent_simple, vka_t *parent_vka,
         }
     }
 
-    error = sel4utils_configure_thread(parent_vka, parent_vspace, parent_vspace,
+    error = sel4utils_configure_thread(parent_simple, parent_vka, parent_vspace, parent_vspace,
                                        get_serial_server()->server_ep_obj.cptr, priority,
                                        parent_cspace_cspath.root, seL4_NilData,
                                        &get_serial_server()->server_thread);

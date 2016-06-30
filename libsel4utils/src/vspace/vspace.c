@@ -181,9 +181,10 @@ sel4utils_map_page_ept(vspace_t *vspace, seL4_CPtr cap, void *vaddr, seL4_CapRig
     struct sel4utils_alloc_data *data = get_alloc_data(vspace);
     vka_object_t pagetable = {0};
     vka_object_t pagedir = {0};
+    vka_object_t pdpt = {0};
 
     int error = sel4utils_map_ept_page(data->vka, data->vspace_root, cap,
-                                       (seL4_Word) vaddr, rights, cacheable, size_bits, &pagetable, &pagedir);
+                                       (seL4_Word) vaddr, rights, cacheable, size_bits, &pagetable, &pagedir, &pdpt);
     if (error) {
         ZF_LOGE("Error mapping pages, bailing\n");
         return -1;
@@ -197,6 +198,11 @@ sel4utils_map_page_ept(vspace_t *vspace, seL4_CPtr cap, void *vaddr, seL4_CapRig
     if (pagedir.cptr != 0) {
         vspace_maybe_call_allocated_object(vspace, pagedir);
         pagedir.cptr = 0;
+    }
+
+    if (pdpt.cptr != 0) {
+        vspace_maybe_call_allocated_object(vspace, pdpt);
+        pdpt.cptr = 0;
     }
 
     return seL4_NoError;

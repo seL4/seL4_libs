@@ -72,7 +72,7 @@ guest_vspace_map(vspace_t *vspace, seL4_CPtr cap, void *vaddr, seL4_CapRights ri
     }
     /* add translation information. give dummy cap value of 42 as it cannot be zero
      * but we really just want to store information in the cookie */
-    error = update_entries(&guest_vspace->translation_vspace, vaddr, 42, size_bits, (uint32_t)vmm_vaddr);
+    error = update_entries(&guest_vspace->translation_vspace, (uintptr_t)vaddr, 42, size_bits, (uint32_t)vmm_vaddr);
     if (error){
         ZF_LOGE("Failed to add translation information");
         return error;

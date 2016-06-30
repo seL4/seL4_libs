@@ -25,17 +25,25 @@ static inline int vka_alloc_vcpu (vka_t *vka, vka_object_t *result)
 
 static inline int vka_alloc_ept_page_directory_pointer_table (vka_t *vka, vka_object_t *result)
 {
-    return vka_alloc_object(vka, seL4_X86_EPTPageDirectoryPointerTableObject, seL4_X86_EPTPageDirectoryPointerTableBits, result);
+    return vka_alloc_object(vka, seL4_X86_EPTPDPTObject, seL4_X86_EPTPDPTBits, result);
 }
 
 static inline int vka_alloc_ept_page_directory (vka_t *vka, vka_object_t *result)
 {
-    return vka_alloc_object(vka, seL4_X86_EPTPageDirectoryObject, seL4_X86_EPTPageDirectoryBits, result);
+    return vka_alloc_object(vka, seL4_X86_EPTPDObject, seL4_X86_EPTPDBits, result);
 }
 
 static inline int vka_alloc_ept_page_table (vka_t *vka, vka_object_t *result)
 {
-    return vka_alloc_object(vka, seL4_X86_EPTPageTableObject, seL4_X86_EPTPageTableBits, result);
+    return vka_alloc_object(vka, seL4_X86_EPTPTObject, seL4_X86_EPTPTBits, result);
+}
+static inline int vka_alloc_ept_pdpt(vka_t *vka, vka_object_t *result)
+{
+    return vka_alloc_object(vka, seL4_X86_EPTPDPTObject, seL4_X86_EPTPDPTBits, result);
+}
+static inline int vka_alloc_ept_pml4(vka_t *vka, vka_object_t *result)
+{
+    return vka_alloc_object(vka, seL4_X86_EPTPML4Object, seL4_X86_EPTPML4Bits, result);
 }
 #endif /* CONFIG_VTX */
 
@@ -51,6 +59,8 @@ LEAKY(vcpu)
 LEAKY(ept_page_directory_pointer_table)
 LEAKY(ept_page_directory)
 LEAKY(ept_page_table)
+LEAKY(ept_pdpt)
+LEAKY(ept_pml4)
 #endif /* CONFIG_VTX */
 
 static inline unsigned long
@@ -69,12 +79,14 @@ vka_arch_get_object_size(seL4_Word objectType)
 #ifdef CONFIG_VTX
     case seL4_X86_VCPUObject:
         return seL4_X86_VCPUBits;
-    case seL4_X86_EPTPageDirectoryPointerTableObject:
-        return seL4_X86_EPTPageDirectoryPointerTableBits;
-    case seL4_X86_EPTPageDirectoryObject:
-        return seL4_X86_EPTPageDirectoryBits;
-    case seL4_X86_EPTPageTableObject:
-        return seL4_X86_EPTPageTableBits;
+    case seL4_X86_EPTPDPTObject:
+        return seL4_X86_EPTPDPTBits;
+    case seL4_X86_EPTPDObject:
+        return seL4_X86_EPTPDBits;
+    case seL4_X86_EPTPTObject:
+        return seL4_X86_EPTPTBits;
+    case seL4_X86_EPTPML4Object:
+        return seL4_X86_EPTPML4Bits;
 #endif
 
     case seL4_X86_IOPageTableObject:

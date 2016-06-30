@@ -34,10 +34,6 @@ typedef struct vmm_vcpu vmm_vcpu_t;
 #include "vmm/vmcall.h"
 #include "vmm/vmm_manager.h"
 
-/* TODO: Use a badge and/or this constant should be defined in libsel4 */
-#define LIB_VMM_VM_FAULT_EXIT_MSG_LEN    17
-#define LIB_VMM_VM_INT_EXIT_MSG_LEN 3
-
 /* ID of the boot vcpu in a vmm */
 #define BOOT_VCPU 0
 

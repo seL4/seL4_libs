@@ -73,7 +73,7 @@ static int vmm_init_vcpu(vmm_t *vmm, unsigned int vcpu_num, int priority) {
     }
 
     /* bind the VCPU to the VMM thread */
-    error = seL4_IA32_VCPU_SetTCB(vcpu->guest_vcpu, vmm->tcb);
+    error = seL4_X86_VCPU_SetTCB(vcpu->guest_vcpu, vmm->tcb);
     assert(error == seL4_NoError);
 
     vcpu->vmm = vmm;
@@ -101,8 +101,14 @@ int vmm_init_guest_multi(vmm_t *vmm, int priority, int num_vcpus) {
     }
 
     /* Create an EPT which is the pd for all the vcpu tcbs */
-    vmm->guest_pd = vka_alloc_ept_page_directory_pointer_table_leaky(&vmm->vka);
+    vmm->guest_pd = vka_alloc_ept_pml4_leaky(&vmm->vka);
     if (vmm->guest_pd == 0) {
+        return -1;
+    }
+    /* Assign an ASID */
+    error = simple_ASIDPool_assign(&vmm->host_simple, vmm->guest_pd);
+    if (error != seL4_NoError) {
+        ZF_LOGE("Failed to assign ASID pool to EPT root");
         return -1;
     }
     /* Install the guest PD */

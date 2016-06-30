@@ -171,9 +171,7 @@ int vmm_io_port_init_guest(vmm_io_port_list_t *io_list, simple_t *simple, seL4_C
                 ZF_LOGE("Failed to get \"%s\" io port from simple for range 0x%x - 0x%x", port->desc, port->port_start, port->port_end);
                 return -1;
             }
-            error = seL4_IA32_VCPU_SetIOPort(vcpu, ioport);
-            assert(error == seL4_NoError);
-            error = seL4_IA32_VCPU_SetIOPortMask(vcpu, port->port_start, port->port_end, 0);
+            error = seL4_X86_VCPU_EnableIOPort(vcpu, ioport, port->port_start, port->port_end);
             assert(error == seL4_NoError);
         }
     }

@@ -117,8 +117,10 @@ sel4utils_map_iospace_page(vka_t *vka, seL4_CPtr iospace, seL4_CPtr frame, seL4_
 int
 sel4utils_map_ept_page(vka_t *vka, seL4_CPtr pd, seL4_CPtr frame, seL4_Word vaddr,
                        seL4_CapRights rights, int cacheable, seL4_Word size_bits,
-                       vka_object_t *pagetable, vka_object_t *pagedir)
+                       vka_object_t *pagetable, vka_object_t *pagedir, vka_object_t *pdpt)
 {
+    int ret;
+
     assert(vka);
     assert(pd);
     assert(frame);
@@ -134,7 +136,7 @@ sel4utils_map_ept_page(vka_t *vka, seL4_CPtr pd, seL4_CPtr frame, seL4_Word vadd
     }
 
     /* Try map into EPT directory first. */
-    int ret = seL4_X86_Page_Map(frame, pd, vaddr, rights, attr);
+    ret = seL4_X86_Page_MapEPT(frame, pd, vaddr, rights, attr);
     if (ret == seL4_NoError) {
         /* Successful! */
         return ret;
@@ -153,7 +155,8 @@ sel4utils_map_ept_page(vka_t *vka, seL4_CPtr pd, seL4_CPtr frame, seL4_Word vadd
         }
 
         /* Map in the page directory. */
-        ret = seL4_X86_EPTPageDirectory_Map(pagedir->cptr, pd, vaddr, attr);
+        ret = seL4_X86_EPTPD_Map(pagedir->cptr, pd, vaddr, attr);
+
         if (ret != seL4_NoError) {
             ZF_LOGE("Failed to map EPT PD, error: %d", ret);
             return ret;
@@ -162,31 +165,47 @@ sel4utils_map_ept_page(vka_t *vka, seL4_CPtr pd, seL4_CPtr frame, seL4_Word vadd
         /* Allocate an EPT page table for a 4K entry. */
         ret = vka_alloc_ept_page_table(vka, pagetable);
         if (ret != seL4_NoError) {
-            ZF_LOGE("allocating ept page table failed\n");
+            ZF_LOGE("allocating ept page table failed");
             return ret;
         }
 
         /* Map in the EPT page table. */
-        ret = seL4_X86_EPTPageTable_Map(pagetable->cptr, pd, vaddr, attr);
+        ret = seL4_X86_EPTPT_Map(pagetable->cptr, pd, vaddr, attr);
 
         /* Mapping could fail due to missing PD. In this case, we map the PD and try again. */
         if (ret == seL4_FailedLookup) {
             /* Allocate an EPT page directory for the page table. */
             ret = vka_alloc_ept_page_directory(vka, pagedir);
             if (ret != seL4_NoError) {
-                ZF_LOGE("Allocating EPT page directory failed\n");
+                ZF_LOGE("Allocating EPT page directory failed");
                 return ret;
             }
 
             /* Map the EPT page directory in. */
-            ret = seL4_X86_EPTPageDirectory_Map(pagedir->cptr, pd, vaddr, attr);
+            ret = seL4_X86_EPTPD_Map(pagedir->cptr, pd, vaddr, attr);
+            if (ret == seL4_FailedLookup) {
+                /* Could be a missing PDPT */
+                ret = vka_alloc_ept_pdpt(vka, pdpt);
+                if (ret != seL4_NoError) {
+                    ZF_LOGE("allocating ept pdpt failed");
+                    return ret;
+                }
+                ret = seL4_X86_EPTPDPT_Map(pdpt->cptr, pd, vaddr, attr);
+                if (ret != seL4_NoError) {
+                    ZF_LOGE("Failed to map EPT PDPT, error: %d", ret);
+                    return ret;
+                }
+                /* Try to map the page directory in again */
+                ret = seL4_X86_EPTPD_Map(pagedir->cptr, pd, vaddr, attr);
+            }
+
             if (ret != seL4_NoError) {
                 ZF_LOGE("Failed to map EPT PD, error: %d", ret);
                 return ret;
             }
 
             /* Try to map the page table again. */
-            ret = seL4_X86_EPTPageTable_Map(pagetable->cptr, pd, vaddr, attr);
+            ret = seL4_X86_EPTPT_Map(pagetable->cptr, pd, vaddr, attr);
             if (ret != seL4_NoError) {
                 ZF_LOGE("Second attempt at mapping EPT PT failed, error: %d", ret);
                 return ret;
@@ -202,7 +221,7 @@ sel4utils_map_ept_page(vka_t *vka, seL4_CPtr pd, seL4_CPtr frame, seL4_Word vadd
     }
 
     /* Try to map the frame again. */
-    return seL4_X86_Page_Map(frame, pd, vaddr, rights, attr);
+    return seL4_X86_Page_MapEPT(frame, pd, vaddr, rights, attr);
 }
 
 

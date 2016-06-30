@@ -18,11 +18,11 @@
 
 int vmm_vmcs_read(seL4_CPtr vcpu, unsigned int field) {
 
-    seL4_IA32_VCPU_ReadVMCS_t result;
+    seL4_X86_VCPU_ReadVMCS_t result;
 
     assert(vcpu);
 
-    result = seL4_IA32_VCPU_ReadVMCS(vcpu, field);
+    result = seL4_X86_VCPU_ReadVMCS(vcpu, field);
     assert(result.error == seL4_NoError);
     return result.value;
 }
@@ -31,10 +31,10 @@ int vmm_vmcs_read(seL4_CPtr vcpu, unsigned int field) {
 /*write a field and its value into the VMCS*/
 void vmm_vmcs_write(seL4_CPtr vcpu, unsigned int field, unsigned int value) {
     
-    seL4_IA32_VCPU_WriteVMCS_t result;
+    seL4_X86_VCPU_WriteVMCS_t result;
     assert(vcpu);
 
-    result = seL4_IA32_VCPU_WriteVMCS(vcpu, field, value);
+    result = seL4_X86_VCPU_WriteVMCS(vcpu, field, value);
     assert(result.error == seL4_NoError);
 }
 

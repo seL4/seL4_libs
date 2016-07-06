@@ -69,16 +69,18 @@ sel4utils_configure_thread_config(vka_t *vka, vspace_t *parent, vspace_t *alloc,
         return -1;
     }
 
-    res->ipc_buffer_addr = (seL4_Word) vspace_new_ipc_buffer(alloc, &res->ipc_buffer);
+    if (!config.no_ipc_buffer) {
+        res->ipc_buffer_addr = (seL4_Word) vspace_new_ipc_buffer(alloc, &res->ipc_buffer);
 
-    if (res->ipc_buffer_addr == 0) {
-        ZF_LOGE("ipc buffer allocation failed");
-        return -1;
-    }
+        if (res->ipc_buffer_addr == 0) {
+            ZF_LOGE("ipc buffer allocation failed");
+            return -1;
+        }
 
-    if (write_ipc_buffer_user_data(vka, parent, res->ipc_buffer, res->ipc_buffer_addr)) {
-        ZF_LOGE("failed to set user data word in IPC buffer");
-        return -1;
+        if (write_ipc_buffer_user_data(vka, parent, res->ipc_buffer, res->ipc_buffer_addr)) {
+            ZF_LOGE("failed to set user data word in IPC buffer");
+            return -1;
+        }
     }
 
     seL4_CapData_t null_cap_data = {{0}};

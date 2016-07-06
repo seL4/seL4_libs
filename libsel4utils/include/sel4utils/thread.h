@@ -33,6 +33,7 @@
 typedef struct sel4utils_thread {
     vka_object_t tcb;
     void *stack_top;
+    size_t stack_size;
     seL4_CPtr ipc_buffer;
     seL4_Word ipc_buffer_addr;
     vka_object_t sched_context;
@@ -67,6 +68,10 @@ typedef struct sel4utils_thread_config {
     seL4_Time custom_period;
     /* otherwise provide a custom scheduling context cap */
     seL4_CPtr sched_context;
+    /* use a custom stack size? */
+    bool custom_stack_size;
+    /* custom stack size in 4k pages for this thread */
+    seL4_Word stack_size;
 } sel4utils_thread_config_t;
 
 typedef struct sel4utils_checkpoint {

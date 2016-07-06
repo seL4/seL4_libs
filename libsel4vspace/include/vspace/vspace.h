@@ -97,20 +97,36 @@ void *vspace_new_pages(vspace_t *vspace, seL4_CapRights rights, size_t num_pages
  * Create a stack. The determines stack size.
  *
  * @param vspace the virtual memory allocator used.
+ * @param n_pages number of 4k pages to allocate for the stack.
+ *                A 4k guard page will also be reserved in the address space
+ *                to prevent code from running off the created stack.
  *
  * @return virtual address of the top of the created stack.
  *         NULL on failure.
  */
-void *vspace_new_stack(vspace_t *vspace);
+void *vspace_new_sized_stack(vspace_t *vspace, size_t n_pages);
+
+static inline void *
+vspace_new_stack(vspace_t *vspace)
+{
+    return vspace_new_sized_stack(vspace, BYTES_TO_4K_PAGES(CONFIG_SEL4UTILS_STACK_SIZE));
+}
 
 /**
  * Free a stack. This will only free virtual resources, not physical resources.
  *
- * @param[in] vspace the virtual memory allocator used.
- * @param[out] stack_top the top of the stack.
+ * @param vspace the virtual memory allocator used.
+ * @param stack_top the top of the stack as returned by vspace_new_stack.
+ * @param n_pages number of 4k pages that were allocated for stack.
  *
  */
-void vspace_free_stack(vspace_t *vspace, void *stack_top);
+void vspace_free_sized_stack(vspace_t *vspace, void *stack_top, size_t n_pages);
+
+static inline void
+vspace_free_stack(vspace_t *vspace, void *stack_top)
+{
+    vspace_free_sized_stack(vspace, stack_top, BYTES_TO_4K_PAGES(CONFIG_SEL4UTILS_STACK_SIZE));
+}
 
 /**
  * Create an IPC buffer.

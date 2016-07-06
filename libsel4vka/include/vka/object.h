@@ -222,7 +222,7 @@ static inline int vka_alloc_frame_at(vka_t *vka, uint32_t size_bits, uintptr_t p
 
 static inline int vka_alloc_page_directory(vka_t *vka, vka_object_t *result)
 {
-    return vka_alloc_object(vka, kobject_get_type(KOBJECT_PAGE_DIRECTORY, 0), seL4_PageDirBits, result);
+    return vka_alloc_object(vka, kobject_get_type(KOBJECT_PAGE_DIRECTORY, 0), seL4_PageTableBits, result);
 }
 
 static inline int vka_alloc_page_table(vka_t *vka, vka_object_t *result)

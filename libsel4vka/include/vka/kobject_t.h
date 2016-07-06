@@ -61,7 +61,7 @@ kobject_get_size(kobject_t type, seL4_Word objectSize)
     case KOBJECT_NOTIFICATION:
         return seL4_EndpointBits;
     case KOBJECT_PAGE_DIRECTORY:
-        return seL4_PageDirBits;
+        return seL4_PageTableBits;
     case KOBJECT_PAGE_TABLE:
         return seL4_PageTableBits;
 #ifdef CONFIG_KERNEL_RT

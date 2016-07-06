@@ -57,11 +57,24 @@ sel4utils_map_page(vka_t *vka, seL4_CPtr vspace_root, seL4_CPtr frame, void *vad
                 }
             }
         } else {
-            error = sel4utils_create_object_at_level(vka, failed_bits, objects, num_objects, vaddr, vspace_root);
+            error = sel4utils_create_object_at_level(vka, failed_bits, objects, num_objects, (seL4_Word) vaddr, vspace_root);
             if (error) {
                 /* log message printed out by sel4utils_create_object_at_level */
                 return error;
             }
+
+            error = vka_alloc_page_table(vka, &objects[*num_objects]);
+            if (error) {
+                ZF_LOGE("Page table allocation failed");
+                return error;
+            }
+            error = seL4_ARCH_PageTable_Map(objects[*num_objects].cptr, vspace_root, (seL4_Word)vaddr, seL4_ARCH_Default_VMAttributes);
+            (*num_objects)++;
+            if (error) {
+                ZF_LOGE("Failed to map page table %d", error);
+                return error;
+            }
+
         }
         error = seL4_ARCH_Page_Map(frame, vspace_root, (seL4_Word) vaddr, rights, attr);
     }

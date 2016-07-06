@@ -72,6 +72,8 @@ typedef struct sel4utils_thread_config {
     bool custom_stack_size;
     /* custom stack size in 4k pages for this thread */
     seL4_Word stack_size;
+    /* true if this thread should have no ipc buffer */
+    bool no_ipc_buffer;
 } sel4utils_thread_config_t;
 
 typedef struct sel4utils_checkpoint {

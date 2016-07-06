@@ -91,7 +91,13 @@ sel4utils_configure_thread_config(vka_t *vka, vspace_t *parent, vspace_t *alloc,
         return -1;
     }
 
-    res->stack_top = vspace_new_stack(alloc);
+    if (config.custom_stack_size) {
+        res->stack_size = config.stack_size;
+    } else {
+        res->stack_size = BYTES_TO_4K_PAGES(CONFIG_SEL4UTILS_STACK_SIZE);
+    }
+
+    res->stack_top = vspace_new_sized_stack(alloc, res->stack_size);
 
     if (res->stack_top == NULL) {
         ZF_LOGE("Stack allocation failed!");
@@ -131,7 +137,7 @@ sel4utils_clean_up_thread(vka_t *vka, vspace_t *alloc, sel4utils_thread_t *threa
     }
 
     if (thread->stack_top != 0) {
-        vspace_free_stack(alloc, thread->stack_top);
+        vspace_free_sized_stack(alloc, thread->stack_top, thread->stack_size);
     }
 
     memset(thread, 0, sizeof(sel4utils_thread_t));

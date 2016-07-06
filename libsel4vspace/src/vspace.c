@@ -12,16 +12,14 @@
 #include <vspace/vspace.h>
 #include <utils/page.h>
 
-#define STACK_PAGES (BYTES_TO_4K_PAGES(CONFIG_SEL4UTILS_STACK_SIZE))
-
 void *
-vspace_new_stack(vspace_t *vspace)
+vspace_new_sized_stack(vspace_t *vspace, size_t n_pages)
 {
     int error = 0;
     void *vaddr = NULL;
 
     /* one extra page for the guard */
-    reservation_t reserve = vspace_reserve_range(vspace, (STACK_PAGES + 1) * PAGE_SIZE_4K,
+    reservation_t reserve = vspace_reserve_range(vspace, (n_pages + 1) * PAGE_SIZE_4K,
                                                  seL4_AllRights, 1, &vaddr);
 
     if (reserve.res == NULL) {
@@ -32,21 +30,21 @@ vspace_new_stack(vspace_t *vspace)
     uintptr_t stack_bottom =  (uintptr_t) vaddr + PAGE_SIZE_4K;
 
     /* create and map the pages */
-    error = vspace_new_pages_at_vaddr(vspace, (void *) stack_bottom, STACK_PAGES, seL4_PageBits, reserve);
+    error = vspace_new_pages_at_vaddr(vspace, (void *) stack_bottom, n_pages, seL4_PageBits, reserve);
 
     if (error) {
         vspace_free_reservation(vspace, reserve);
         return NULL;
     }
 
-    return (void *) (stack_bottom + CONFIG_SEL4UTILS_STACK_SIZE);
+    return (void *) (stack_bottom + (n_pages * PAGE_SIZE_4K));
 }
 
 void
-vspace_free_stack(vspace_t *vspace, void *stack_top)
+vspace_free_sized_stack(vspace_t *vspace, void *stack_top, size_t n_pages)
 {
-    uintptr_t stack_bottom = (uintptr_t) stack_top - CONFIG_SEL4UTILS_STACK_SIZE;
-    vspace_unmap_pages(vspace, (void *) stack_bottom, STACK_PAGES,
+    uintptr_t stack_bottom = (uintptr_t) stack_top - (n_pages * PAGE_SIZE_4K);
+    vspace_unmap_pages(vspace, (void *) stack_bottom, n_pages,
                        seL4_PageBits, (vka_t *) VSPACE_FREE);
     vspace_free_reservation_by_vaddr(vspace, (void *) (stack_bottom - PAGE_SIZE_4K));
 }

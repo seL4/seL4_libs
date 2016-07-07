@@ -33,7 +33,7 @@ sel4utils_arch_init_context_with_args(void *entry_point, void *arg0, void *arg1,
                             vka_t *vka, vspace_t *local_vspace, vspace_t *remote_vspace)
 {
 
-    if (local_stack) {
+    if (local_stack && stack_top) {
         seL4_Word *stack_ptr = (seL4_Word *) stack_top;
         stack_ptr[-5] = (seL4_Word) arg0;
         stack_ptr[-4] = (seL4_Word) arg1;

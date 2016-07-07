@@ -99,12 +99,14 @@ sel4utils_configure_thread_config(vka_t *vka, vspace_t *parent, vspace_t *alloc,
         res->stack_size = BYTES_TO_4K_PAGES(CONFIG_SEL4UTILS_STACK_SIZE);
     }
 
-    res->stack_top = vspace_new_sized_stack(alloc, res->stack_size);
+    if (res->stack_size > 0) {
+        res->stack_top = vspace_new_sized_stack(alloc, res->stack_size);
 
-    if (res->stack_top == NULL) {
-        ZF_LOGE("Stack allocation failed!");
-        sel4utils_clean_up_thread(vka, alloc, res);
-        return -1;
+        if (res->stack_top == NULL) {
+            ZF_LOGE("Stack allocation failed!");
+            sel4utils_clean_up_thread(vka, alloc, res);
+            return -1;
+        }
     }
 
     return 0;

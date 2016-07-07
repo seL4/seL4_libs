@@ -388,7 +388,7 @@ vspace_new_pages_at_vaddr(vspace_t *vspace, void *vaddr, size_t num_pages, size_
 
     if (num_pages == 0) {
         ZF_LOGW("attempt to create 0 pages");
-        return 0;
+        return -1;
     }
 
     if (vspace->new_pages_at_vaddr == NULL) {
@@ -410,7 +410,7 @@ vspace_map_pages_at_vaddr(vspace_t *vspace, seL4_CPtr caps[], uintptr_t cookies[
 
     if (num_pages == 0) {
         ZF_LOGW("Attempt to map 0 pages");
-        return 0;
+        return -1;
     }
 
     if (vaddr == NULL) {
@@ -631,7 +631,7 @@ vspace_share_mem_at_vaddr(vspace_t *from, vspace_t *to, void *start, int num_pag
 
     if (num_pages == 0) {
         /* nothing to do */
-        return 0;
+        return -1;
     } else if (num_pages < 0) {
         ZF_LOGE("Attempted to share %d pages\n", num_pages);
         return -1;

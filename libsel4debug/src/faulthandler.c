@@ -66,7 +66,7 @@ int debug_fault_handler(seL4_CPtr faultep,
 
         switch (label) {
 
-        case seL4_CapFault: {
+        case seL4_Fault_CapFault: {
             /* See section 5.2.1 of the manual. */
             assert(length > 4);
             printf("debug: Cap fault in %s phase from %s\n"
@@ -78,21 +78,21 @@ int debug_fault_handler(seL4_CPtr faultep,
             break;
         }
 
-        case seL4_UnknownSyscall: {
+        case seL4_Fault_UnknownSyscall: {
             /* See section 5.2.2 of the manual. */
             printf("debug: Unknown syscall from %s\n", sender_name);
             debug_unknown_syscall_message(printf, mrs);
             break;
         }
 
-        case seL4_UserException: {
+        case seL4_Fault_UserException: {
             /* See section 5.2.3 of the manual. */
             printf("debug: User exception from %s\n", sender_name);
             debug_user_exception_message(printf, mrs);
             break;
         }
 
-        case seL4_VMFault: {
+        case seL4_Fault_VMFault: {
             /* See section 5.2.4 of the manual. */
             assert(length == 4);
             printf("debug: Virtual memory %s fault from %s\n"

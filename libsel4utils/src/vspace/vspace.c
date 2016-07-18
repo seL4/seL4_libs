@@ -129,7 +129,7 @@ remove_reservation(sel4utils_alloc_data_t *data, sel4utils_res_t *reservation)
 
 static void
 perform_reservation(vspace_t *vspace, sel4utils_res_t *reservation, uintptr_t vaddr, size_t bytes,
-                    seL4_CapRights rights, int cacheable)
+                    seL4_CapRights_t rights, int cacheable)
 {
     assert(reservation != NULL);
 
@@ -151,7 +151,7 @@ perform_reservation(vspace_t *vspace, sel4utils_res_t *reservation, uintptr_t va
 }
 
 int
-sel4utils_map_page_pd(vspace_t *vspace, seL4_CPtr cap, void *vaddr, seL4_CapRights rights,
+sel4utils_map_page_pd(vspace_t *vspace, seL4_CPtr cap, void *vaddr, seL4_CapRights_t rights,
                       int cacheable, size_t size_bits)
 {
     vka_object_t objects[VSPACE_MAP_PAGING_OBJECTS];
@@ -175,7 +175,7 @@ sel4utils_map_page_pd(vspace_t *vspace, seL4_CPtr cap, void *vaddr, seL4_CapRigh
 
 #ifdef CONFIG_VTX
 int
-sel4utils_map_page_ept(vspace_t *vspace, seL4_CPtr cap, void *vaddr, seL4_CapRights rights,
+sel4utils_map_page_ept(vspace_t *vspace, seL4_CPtr cap, void *vaddr, seL4_CapRights_t rights,
                        int cacheable, size_t size_bits)
 {
     struct sel4utils_alloc_data *data = get_alloc_data(vspace);
@@ -205,7 +205,7 @@ sel4utils_map_page_ept(vspace_t *vspace, seL4_CPtr cap, void *vaddr, seL4_CapRig
 
 #ifdef CONFIG_IOMMU
 int
-sel4utils_map_page_iommu(vspace_t *vspace, seL4_CPtr cap, void *vaddr, seL4_CapRights rights,
+sel4utils_map_page_iommu(vspace_t *vspace, seL4_CPtr cap, void *vaddr, seL4_CapRights_t rights,
                          int cacheable, size_t size_bits)
 {
     struct sel4utils_alloc_data *data = get_alloc_data(vspace);
@@ -229,7 +229,7 @@ sel4utils_map_page_iommu(vspace_t *vspace, seL4_CPtr cap, void *vaddr, seL4_CapR
 #endif /* CONFIG_IOMMU */
 
 static int
-map_page(vspace_t *vspace, seL4_CPtr cap, void *vaddr, seL4_CapRights rights,
+map_page(vspace_t *vspace, seL4_CPtr cap, void *vaddr, seL4_CapRights_t rights,
          int cacheable, size_t size_bits)
 {
     sel4utils_alloc_data_t *data = get_alloc_data(vspace);
@@ -293,7 +293,7 @@ find_range(sel4utils_alloc_data_t *data, size_t num_pages, size_t size_bits)
 static int
 map_pages_at_vaddr(vspace_t *vspace, seL4_CPtr caps[], uintptr_t cookies[],
                    void *vaddr, size_t num_pages,
-                   size_t size_bits, seL4_CapRights rights, int cacheable)
+                   size_t size_bits, seL4_CapRights_t rights, int cacheable)
 {
     int error = seL4_NoError;
 
@@ -311,7 +311,7 @@ map_pages_at_vaddr(vspace_t *vspace, seL4_CPtr caps[], uintptr_t cookies[],
 
 static int
 new_pages_at_vaddr(vspace_t *vspace, void *vaddr, size_t num_pages, size_t size_bits,
-                   seL4_CapRights rights, int cacheable)
+                   seL4_CapRights_t rights, int cacheable)
 {
     sel4utils_alloc_data_t *data = get_alloc_data(vspace);
     int i;
@@ -455,7 +455,7 @@ sel4utils_new_pages_at_vaddr(vspace_t *vspace, void *vaddr, size_t num_pages,
 }
 
 int sel4utils_reserve_range_no_alloc_aligned(vspace_t *vspace, sel4utils_res_t *reservation,
-                                             size_t size, size_t size_bits, seL4_CapRights rights, int cacheable, void **result)
+                                             size_t size, size_t size_bits, seL4_CapRights_t rights, int cacheable, void **result)
 {
     sel4utils_alloc_data_t *data = get_alloc_data(vspace);
     void *vaddr = find_range(data, BYTES_TO_SIZE_BITS_PAGES(size, size_bits), size_bits);
@@ -471,14 +471,14 @@ int sel4utils_reserve_range_no_alloc_aligned(vspace_t *vspace, sel4utils_res_t *
 }
 
 int sel4utils_reserve_range_no_alloc(vspace_t *vspace, sel4utils_res_t *reservation, size_t size,
-                                     seL4_CapRights rights, int cacheable, void **result)
+                                     seL4_CapRights_t rights, int cacheable, void **result)
 {
     return sel4utils_reserve_range_no_alloc_aligned(vspace, reservation, size, seL4_PageBits,
                                                     rights, cacheable, result);
 }
 
 reservation_t
-sel4utils_reserve_range_aligned(vspace_t *vspace, size_t bytes, size_t size_bits, seL4_CapRights rights,
+sel4utils_reserve_range_aligned(vspace_t *vspace, size_t bytes, size_t size_bits, seL4_CapRights_t rights,
                                 int cacheable, void **result)
 {
     reservation_t reservation = {
@@ -510,7 +510,7 @@ sel4utils_reserve_range_aligned(vspace_t *vspace, size_t bytes, size_t size_bits
 }
 
 int sel4utils_reserve_range_at_no_alloc(vspace_t *vspace, sel4utils_res_t *reservation, void *vaddr,
-                                        size_t size, seL4_CapRights rights, int cacheable)
+                                        size_t size, seL4_CapRights_t rights, int cacheable)
 {
     sel4utils_alloc_data_t *data = get_alloc_data(vspace);
     if (!is_available_range(data->top_level, (uintptr_t) vaddr, (uintptr_t)vaddr + size)) {
@@ -523,7 +523,7 @@ int sel4utils_reserve_range_at_no_alloc(vspace_t *vspace, sel4utils_res_t *reser
 }
 
 reservation_t
-sel4utils_reserve_range_at(vspace_t *vspace, void *vaddr, size_t size, seL4_CapRights
+sel4utils_reserve_range_at(vspace_t *vspace, void *vaddr, size_t size, seL4_CapRights_t
                            rights, int cacheable)
 {
     reservation_t reservation;

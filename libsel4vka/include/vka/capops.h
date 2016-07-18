@@ -32,7 +32,7 @@ vka_cnode_saveCaller(const cspacepath_t* src)
 }
 
 inline static int
-vka_cnode_copy(const cspacepath_t* dest, const cspacepath_t* src, seL4_CapRights rights)
+vka_cnode_copy(const cspacepath_t* dest, const cspacepath_t* src, seL4_CapRights_t rights)
 {
     return seL4_CNode_Copy(
                /* _service */      dest->root,
@@ -57,7 +57,7 @@ vka_cnode_delete(const cspacepath_t* src)
 
 inline static int
 vka_cnode_mint(const cspacepath_t* dest, const cspacepath_t* src,
-               seL4_CapRights rights, seL4_CapData_t badge)
+               seL4_CapRights_t rights, seL4_CapData_t badge)
 {
     return seL4_CNode_Mint(
                /* _service */      dest->root,

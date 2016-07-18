@@ -21,13 +21,12 @@
 
 int
 sel4utils_map_page(vka_t *vka, seL4_CPtr vspace_root, seL4_CPtr frame, void *vaddr,
-                   seL4_CapRights rights, int cacheable, vka_object_t *objects, int *num_objects)
+                   seL4_CapRights_t rights, int cacheable, vka_object_t *objects, int *num_objects)
 {
     assert(vka != NULL);
     assert(vspace_root != 0);
     assert(frame != 0);
     assert(vaddr != 0);
-    assert(rights != 0);
     assert(num_objects);
 
     seL4_ARCH_VMAttributes attr = cacheable ? seL4_ARCH_Default_VMAttributes :
@@ -77,7 +76,7 @@ sel4utils_map_page(vka_t *vka, seL4_CPtr vspace_root, seL4_CPtr frame, void *vad
 #ifdef CONFIG_IOMMU
 int
 sel4utils_map_iospace_page(vka_t *vka, seL4_CPtr iospace, seL4_CPtr frame, seL4_Word vaddr,
-                           seL4_CapRights rights, int cacheable, seL4_Word size_bits,
+                           seL4_CapRights_t rights, int cacheable, seL4_Word size_bits,
                            vka_object_t *pts, int *num_pts)
 {
     int error;
@@ -116,7 +115,7 @@ sel4utils_map_iospace_page(vka_t *vka, seL4_CPtr iospace, seL4_CPtr frame, seL4_
 /*map a frame into guest os's physical address space*/
 int
 sel4utils_map_ept_page(vka_t *vka, seL4_CPtr pd, seL4_CPtr frame, seL4_Word vaddr,
-                       seL4_CapRights rights, int cacheable, seL4_Word size_bits,
+                       seL4_CapRights_t rights, int cacheable, seL4_Word size_bits,
                        vka_object_t *pagetable, vka_object_t *pagedir)
 {
     assert(vka);

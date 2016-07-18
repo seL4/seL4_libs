@@ -56,12 +56,12 @@ typedef struct vspace_bottom_level {
     uintptr_t cookie[VSPACE_LEVEL_SIZE];
 } vspace_bottom_level_t;
 
-typedef int(*sel4utils_map_page_fn)(vspace_t *vspace, seL4_CPtr cap, void *vaddr, seL4_CapRights rights, int cacheable, size_t size_bits);
+typedef int(*sel4utils_map_page_fn)(vspace_t *vspace, seL4_CPtr cap, void *vaddr, seL4_CapRights_t rights, int cacheable, size_t size_bits);
 
 struct sel4utils_res {
     uintptr_t start;
     uintptr_t end;
-    seL4_CapRights rights;
+    seL4_CapRights_t rights;
     int cacheable;
     int malloced;
     struct sel4utils_res *next;
@@ -245,13 +245,13 @@ sel4utils_bootstrap_vspace_leaky(vspace_t *vspace, sel4utils_alloc_data_t *data,
  * @return 0 on success
  */
 int sel4utils_reserve_range_no_alloc(vspace_t *vspace, sel4utils_res_t *reservation, size_t size,
-                                     seL4_CapRights rights, int cacheable, void **result);
+                                     seL4_CapRights_t rights, int cacheable, void **result);
 
 /*
  * @see sel4utils_reserve_range_no_alloc, however result is aligned to size_bits.
  */
 int sel4utils_reserve_range_no_alloc_aligned(vspace_t *vspace, sel4utils_res_t *reservation,
-                                             size_t size, size_t size_bits, seL4_CapRights rights, int cacheable, void **result);
+                                             size_t size, size_t size_bits, seL4_CapRights_t rights, int cacheable, void **result);
 
 /**
  * Attempts to create a new vspace reservation. Function behaves similarly to vspace_reserve_range_at
@@ -269,7 +269,7 @@ int sel4utils_reserve_range_no_alloc_aligned(vspace_t *vspace, sel4utils_res_t *
  * @return 0 on success
  */
 int sel4utils_reserve_range_at_no_alloc(vspace_t *vspace, sel4utils_res_t *reservation, void *vaddr,
-                                        size_t size, seL4_CapRights rights, int cacheable);
+                                        size_t size, seL4_CapRights_t rights, int cacheable);
 
 /**
  * Move and/or resizes a reservation in any direction, allowing for both start and/or end address to

@@ -415,12 +415,12 @@ get_cookie(vspace_mid_level_t *top, uintptr_t vaddr)
 }
 
 /* Internal interface functions */
-int sel4utils_map_page_pd(vspace_t *vspace, seL4_CPtr cap, void *vaddr, seL4_CapRights rights, int cacheable, size_t size_bits);
+int sel4utils_map_page_pd(vspace_t *vspace, seL4_CPtr cap, void *vaddr, seL4_CapRights_t rights, int cacheable, size_t size_bits);
 #ifdef CONFIG_VTX
-int sel4utils_map_page_ept(vspace_t *vspace, seL4_CPtr cap, void *vaddr, seL4_CapRights rights, int cacheable, size_t size_bits);
+int sel4utils_map_page_ept(vspace_t *vspace, seL4_CPtr cap, void *vaddr, seL4_CapRights_t rights, int cacheable, size_t size_bits);
 #endif /* CONFIG_VTX */
 #ifdef CONFIG_IOMMU
-int sel4utils_map_page_iommu(vspace_t *vspace, seL4_CPtr cap, void *vaddr, seL4_CapRights rights, int cacheable, size_t size_bits);
+int sel4utils_map_page_iommu(vspace_t *vspace, seL4_CPtr cap, void *vaddr, seL4_CapRights_t rights, int cacheable, size_t size_bits);
 #endif /* CONFIG_IOMMU */
 
 /* interface functions */
@@ -435,10 +435,10 @@ void sel4utils_unmap_pages(vspace_t *vspace, void *vaddr, size_t num_pages, size
 int sel4utils_new_pages_at_vaddr(vspace_t *vspace, void *vaddr, size_t num_pages,
                                  size_t size_bits, reservation_t reservation);
 
-reservation_t sel4utils_reserve_range_aligned(vspace_t *vspace, size_t size, size_t size_bits, seL4_CapRights rights,
+reservation_t sel4utils_reserve_range_aligned(vspace_t *vspace, size_t size, size_t size_bits, seL4_CapRights_t rights,
                                               int cacheable, void **vaddr);
 reservation_t sel4utils_reserve_range_at(vspace_t *vspace, void *vaddr, size_t size,
-                                         seL4_CapRights rights, int cacheable);
+                                         seL4_CapRights_t rights, int cacheable);
 void sel4utils_free_reservation(vspace_t *vspace, reservation_t reservation);
 void sel4utils_free_reservation_by_vaddr(vspace_t *vspace, void *vaddr);
 void sel4utils_tear_down(vspace_t *vspace, vka_t *vka);

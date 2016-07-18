@@ -104,7 +104,7 @@ sel4utils_create_word_args(char strings[][WORD_STRING_SIZE], char *argv[], int a
 }
 
 seL4_CPtr
-sel4utils_mint_cap_to_process(sel4utils_process_t *process, cspacepath_t src, seL4_CapRights rights, seL4_CapData_t data)
+sel4utils_mint_cap_to_process(sel4utils_process_t *process, cspacepath_t src, seL4_CapRights_t rights, seL4_CapData_t data)
 {
     cspacepath_t dest = { 0 };
     if (next_free_slot(process, &dest) == -1) {

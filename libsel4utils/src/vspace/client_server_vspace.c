@@ -126,7 +126,7 @@ static int find_dup_and_map_many(client_server_vspace_t *cs_vspace, void *caddr,
     return dup_and_map_many(cs_vspace, caps, caddr, num_pages, size_bits);
 }
 
-static reservation_t cs_reserve_range_aligned(vspace_t *vspace, size_t size, size_t size_bits, seL4_CapRights rights,
+static reservation_t cs_reserve_range_aligned(vspace_t *vspace, size_t size, size_t size_bits, seL4_CapRights_t rights,
                                               int cacheable, void **result)
 {
     client_server_vspace_t *cs_vspace = vspace->data;
@@ -136,7 +136,7 @@ static reservation_t cs_reserve_range_aligned(vspace_t *vspace, size_t size, siz
     return vspace_reserve_range_aligned(cs_vspace->client, size, size_bits, rights, cacheable, result);
 }
 
-static reservation_t cs_reserve_range_at(vspace_t *vspace, void *vaddr, size_t size, seL4_CapRights
+static reservation_t cs_reserve_range_at(vspace_t *vspace, void *vaddr, size_t size, seL4_CapRights_t
                                          rights, int cacheable)
 {
     client_server_vspace_t *cs_vspace = vspace->data;

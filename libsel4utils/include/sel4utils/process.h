@@ -252,7 +252,7 @@ seL4_CPtr sel4utils_move_cap_to_process(sel4utils_process_t *process, cspacepath
  *
  * @return 0 on failure, otherwise the slot in the cspace where the new cap is.
  */
-seL4_CPtr sel4utils_mint_cap_to_process(sel4utils_process_t *process, cspacepath_t src, seL4_CapRights rights, seL4_CapData_t data);
+seL4_CPtr sel4utils_mint_cap_to_process(sel4utils_process_t *process, cspacepath_t src, seL4_CapRights_t rights, seL4_CapData_t data);
 
 /**
  * Destroy a process.

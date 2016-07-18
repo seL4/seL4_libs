@@ -60,11 +60,11 @@ sel4utils_create_object_at_level(vka_t *vka, seL4_Word failed_bits, vka_object_t
 * @return error sel4 error code or -1 if allocation failed.
 */
 int sel4utils_map_page(vka_t *vka, seL4_CPtr pd, seL4_CPtr frame, void *vaddr,
-                       seL4_CapRights rights, int cacheable, vka_object_t *objects, int *num_objects);
+                       seL4_CapRights_t rights, int cacheable, vka_object_t *objects, int *num_objects);
 
 /** convenient wrapper this if you don't want to track allocated page tables */
 static inline int sel4utils_map_page_leaky(vka_t *vka, seL4_CPtr pd, seL4_CPtr frame, void *vaddr,
-                                           seL4_CapRights rights, int cacheable)
+                                           seL4_CapRights_t rights, int cacheable)
 {
     vka_object_t objects[3];
     int num = 3;
@@ -103,13 +103,13 @@ void sel4utils_unmap_dup(vka_t *vka, vspace_t *vspace, void *mapping, size_t siz
 
 #if defined(CONFIG_IOMMU) || defined(CONFIG_ARM_SMMU)
 int sel4utils_map_iospace_page(vka_t *vka, seL4_CPtr iospace, seL4_CPtr frame, seL4_Word vaddr,
-                               seL4_CapRights rights, int cacheable, seL4_Word size_bits,
+                               seL4_CapRights_t rights, int cacheable, seL4_Word size_bits,
                                vka_object_t *pts, int *num_pts);
 #endif /* defined(CONFIG_IOMMU) || defined(CONFIG_ARM_SMMU) */
 
 #ifdef CONFIG_VTX
 int sel4utils_map_ept_page(vka_t *vka, seL4_CPtr pd, seL4_CPtr frame, seL4_Word vaddr,
-                           seL4_CapRights rights, int cacheable, seL4_Word size_bits, vka_object_t *pagetable, vka_object_t *pagedir, vka_object_t *pdpt);
+                           seL4_CapRights_t rights, int cacheable, seL4_Word size_bits, vka_object_t *pagetable, vka_object_t *pagedir, vka_object_t *pdpt);
 
 #endif /* CONFIG_VTX */
 

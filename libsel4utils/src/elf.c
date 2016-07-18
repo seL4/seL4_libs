@@ -30,20 +30,13 @@ extern char _cpio_archive[];
  * @param permissions elf permissions
  * @return seL4 permissions
  */
-static inline seL4_CapRights
+static inline seL4_CapRights_t
 rights_from_elf(unsigned long permissions)
 {
-    seL4_CapRights result = 0;
+    bool canRead = permissions & PF_R || permissions & PF_X;
+    bool canWrite = permissions & PF_W;
 
-    if (permissions & PF_R || permissions & PF_X) {
-        result |= seL4_CanRead;
-    }
-
-    if (permissions & PF_W) {
-        result |= seL4_CanWrite;
-    }
-
-    return result;
+    return seL4_CapRights_new(false, canRead, canWrite);
 }
 
 static int

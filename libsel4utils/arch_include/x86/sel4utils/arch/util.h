@@ -12,8 +12,7 @@
 
 #include <stdint.h>
 #include <sel4/sel4.h>
-#include <sel4/arch/pfIPC.h>
-#include <sel4/arch/exIPC.h>
+#include <sel4/faults.h>
 #include <sel4utils/sel4_arch/util.h>
 
 #define ARCH_SYSCALL_INSTRUCTION_SIZE 2
@@ -21,7 +20,7 @@
 static inline int
 sel4utils_is_read_fault(void)
 {
-    seL4_Word fsr = seL4_GetMR(SEL4_PFIPC_FSR);
+    seL4_Word fsr = seL4_GetMR(seL4_VMFault_FSR);
     return (fsr & (1 << 1)) == 0;
 }
 

@@ -154,37 +154,38 @@ sel4utils_clean_up_thread(vka_t *vka, vspace_t *alloc, sel4utils_thread_t *threa
 void
 sel4utils_print_fault_message(seL4_MessageInfo_t tag, const char *thread_name)
 {
-    switch (seL4_MessageInfo_get_label(tag)) {
-    case SEL4_PFIPC_LABEL:
-        assert(seL4_MessageInfo_get_length(tag) == SEL4_PFIPC_LENGTH);
+    seL4_Fault_t fault = seL4_getFault(tag);
+    switch (seL4_Fault_get_seL4_FaultType(fault)) {
+    case seL4_Fault_VMFault:
+        assert(seL4_MessageInfo_get_length(tag) == seL4_VMFault_Length);
         printf("%sPagefault from [%s]: %s %s at PC: %p vaddr: %p%s\n",
                COLOR_ERROR,
                thread_name,
                sel4utils_is_read_fault() ? "read" : "write",
-               seL4_GetMR(SEL4_PFIPC_PREFETCH_FAULT) ? "prefetch fault" : "fault",
-               (void*)seL4_GetMR(SEL4_PFIPC_FAULT_IP),
-               (void*)seL4_GetMR(SEL4_PFIPC_FAULT_ADDR),
+               seL4_Fault_VMFault_get_PrefetchFault(fault) ? "prefetch fault" : "fault",
+               (void*)seL4_Fault_VMFault_get_IP(fault),
+               (void*)seL4_Fault_VMFault_get_Addr(fault),
                COLOR_NORMAL);
         break;
 
-    case SEL4_EXCEPT_IPC_LABEL:
-        assert(seL4_MessageInfo_get_length(tag) == SEL4_EXCEPT_IPC_LENGTH);
+    case seL4_Fault_UnknownSyscall:
+        assert(seL4_MessageInfo_get_length(tag) == seL4_UnknownSyscall_Length);
         printf("%sBad syscall from [%s]: scno %"PRIuPTR" at PC: %p%s\n",
                COLOR_ERROR,
                thread_name,
-               seL4_GetMR(EXCEPT_IPC_SYS_MR_SYSCALL),
-               (void*)seL4_GetMR(EXCEPT_IPC_SYS_MR_IP),
+               seL4_Fault_UnknownSyscall_get_Syscall(fault),
+               (void *) seL4_Fault_UnknownSyscall_get_FaultIP(fault),
                COLOR_NORMAL
               );
 
         break;
 
-    case SEL4_USER_EXCEPTION_LABEL:
-        assert(seL4_MessageInfo_get_length(tag) == SEL4_USER_EXCEPTION_LENGTH);
+    case seL4_Fault_UserException:
+        assert(seL4_MessageInfo_get_length(tag) == seL4_UserException_Length);
         printf("%sInvalid instruction from [%s] at PC: %p%s\n",
                COLOR_ERROR,
                thread_name,
-               (void*)seL4_GetMR(0),
+               (void*)seL4_GetMR(seL4_UserException_FaultIP),
                COLOR_NORMAL);
         break;
 

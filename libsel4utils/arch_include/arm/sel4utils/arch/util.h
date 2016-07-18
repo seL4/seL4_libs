@@ -11,16 +11,13 @@
 #define _SEL4UTILS_ARCH_UTIL_H
 
 #include <sel4/sel4.h>
-#include <sel4/arch/pfIPC.h>
-#include <sel4/arch/exIPC.h>
 
 #define ARCH_SYSCALL_INSTRUCTION_SIZE 4
-#define EXCEPT_IPC_SYS_MR_IP EXCEPT_IPC_SYS_MR_PC
 
 static inline int
 sel4utils_is_read_fault(void)
 {
-    seL4_Word fsr = seL4_GetMR(SEL4_PFIPC_FSR);
+    seL4_Word fsr = seL4_GetMR(seL4_VMFault_FSR);
 #if defined(ARM_HYP)
     return (fsr & (1 << 6)) == 0;
 #else

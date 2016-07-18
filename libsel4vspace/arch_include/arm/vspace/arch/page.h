@@ -12,7 +12,7 @@
 
 #include <stddef.h>
 #include <utils/attribute.h>
-#include <sel4/sel4_arch/constants.h>
+#include <sel4/sel4.h>
 
 /* ordered list of page sizes for this architecture */
 static const UNUSED size_t sel4_page_sizes[] = {

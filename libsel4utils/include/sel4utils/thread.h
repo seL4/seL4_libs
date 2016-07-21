@@ -99,7 +99,7 @@ typedef struct sel4utils_checkpoint {
  *
  * @return 0 on success, -1 on failure. Use CONFIG_DEBUG to see error messages.
  */
-int sel4utils_configure_thread(simple_t *simple, vka_t *vka, vspace_t *parent, vspace_t *alloc, 
+int sel4utils_configure_thread(simple_t *simple, vka_t *vka, vspace_t *parent, vspace_t *alloc,
                                seL4_CPtr fault_endpoint,
                                uint8_t priority, seL4_CNode cspace, seL4_CapData_t cspace_root_data,
                                sel4utils_thread_t *res);
@@ -179,22 +179,22 @@ void sel4utils_clean_up_thread(vka_t *vka, vspace_t *alloc, sel4utils_thread_t *
  *
  * @param thread     the thread to checkpoint
  * @param checkpoint pointer to uninitialised checkpoint struct
- * @param suspend    true if the thread should be suspended 
- * 
+ * @param suspend    true if the thread should be suspended
+ *
  * @return 0 on success.
  */
 int sel4utils_checkpoint_thread(sel4utils_thread_t *thread, sel4utils_checkpoint_t *checkpoint, bool suspend);
 
 /**
- * Rollback a thread to a previous checkpoint, restoring its register set and stack. 
+ * Rollback a thread to a previous checkpoint, restoring its register set and stack.
  *
- * This is not atomic and callers should make sure the target thread is stopped or that the 
- * caller is higher priority such that the target is not switched to by the kernel mid-restore. 
+ * This is not atomic and callers should make sure the target thread is stopped or that the
+ * caller is higher priority such that the target is not switched to by the kernel mid-restore.
  *
  * @param checkpoint the previously saved checkpoint to restore.
  * @param free       true if this checkpoint should free all memory allocated, i.e if the checkpoint
  *                   will not be used again.
- * @param resume     true if the thread should be resumed immediately. 
+ * @param resume     true if the thread should be resumed immediately.
  *
  * @return 0 on success.
  */

@@ -37,7 +37,7 @@ typedef struct reservation {
  * @return a reservation to use when mapping pages in the range.
  */
 reservation_t vspace_reserve_range(vspace_t *vspace, size_t bytes,
-                                   seL4_CapRights rights, int cacheable, void **vaddr);
+                                   seL4_CapRights_t rights, int cacheable, void **vaddr);
 
 
 /**
@@ -58,7 +58,7 @@ reservation_t vspace_reserve_range(vspace_t *vspace, size_t bytes,
  * @return address of shared region in to, NULL on failure.
  */
 void *vspace_share_mem(vspace_t *from, vspace_t *to, void *start, int num_pages,
-                       size_t size_bits, seL4_CapRights rights, int cacheable);
+                       size_t size_bits, seL4_CapRights_t rights, int cacheable);
 
 /**
  * Map in existing page capabilities, using contiguos virtual memory.
@@ -76,7 +76,7 @@ void *vspace_share_mem(vspace_t *from, vspace_t *to, void *start, int num_pages,
  *         NULL on failure.
  */
 void *vspace_map_pages(vspace_t *vspace, seL4_CPtr caps[], uintptr_t cookies[],
-                       seL4_CapRights rights, size_t num_pages, size_t size_bits,
+                       seL4_CapRights_t rights, size_t num_pages, size_t size_bits,
                        int cacheable);
 /**
  * Create a virtually contiguous area of mapped pages.
@@ -90,7 +90,7 @@ void *vspace_map_pages(vspace_t *vspace, seL4_CPtr caps[], uintptr_t cookies[],
  * @return vaddr at the start of the contiguous region
  *         NULL on failure.
  */
-void *vspace_new_pages(vspace_t *vspace, seL4_CapRights rights, size_t num_pages, size_t size_bits);
+void *vspace_new_pages(vspace_t *vspace, seL4_CapRights_t rights, size_t num_pages, size_t size_bits);
 
 
 /**
@@ -258,7 +258,7 @@ typedef void (*vspace_tear_down_fn)(vspace_t *vspace, vka_t *free);
  * @return a reservation to use when mapping pages in the range.
  */
 typedef reservation_t (*vspace_reserve_range_aligned_fn)(vspace_t *vspace, size_t bytes, size_t size_bits,
-                                                         seL4_CapRights rights, int cacheable, void **vaddr);
+                                                         seL4_CapRights_t rights, int cacheable, void **vaddr);
 
 /**
  * Reserve a range to map memory in to later at a specific address.
@@ -273,7 +273,7 @@ typedef reservation_t (*vspace_reserve_range_aligned_fn)(vspace_t *vspace, size_
  * @return a reservation to use when mapping pages in the range.
  */
 typedef reservation_t (*vspace_reserve_range_at_fn)(vspace_t *vspace, void *vaddr,
-                                                    size_t bytes, seL4_CapRights rights, int cacheable);
+                                                    size_t bytes, seL4_CapRights_t rights, int cacheable);
 
 /**
  * Free a reservation.
@@ -470,7 +470,7 @@ vspace_tear_down(vspace_t *vspace, vka_t *vka)
 
 static inline reservation_t
 vspace_reserve_range_aligned(vspace_t *vspace, size_t bytes, size_t size_bits,
-                             seL4_CapRights rights, int cacheable, void **vaddr)
+                             seL4_CapRights_t rights, int cacheable, void **vaddr)
 {
     reservation_t error = { .res = 0 };
 
@@ -499,7 +499,7 @@ vspace_reserve_range_aligned(vspace_t *vspace, size_t bytes, size_t size_bits,
 
 static inline reservation_t
 vspace_reserve_range_at(vspace_t *vspace, void *vaddr,
-                        size_t bytes, seL4_CapRights rights, int cacheable)
+                        size_t bytes, seL4_CapRights_t rights, int cacheable)
 {
     reservation_t error = { .res = 0 };
 

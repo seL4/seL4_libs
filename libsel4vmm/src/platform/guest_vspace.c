@@ -40,7 +40,7 @@ typedef struct guest_vspace {
 } guest_vspace_t;
 
 static int
-guest_vspace_map(vspace_t *vspace, seL4_CPtr cap, void *vaddr, seL4_CapRights rights,
+guest_vspace_map(vspace_t *vspace, seL4_CPtr cap, void *vaddr, seL4_CapRights_t rights,
         int cacheable, size_t size_bits) {
     struct sel4utils_alloc_data *data = get_alloc_data(vspace);
     int error;

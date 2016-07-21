@@ -41,9 +41,9 @@ write_ipc_buffer_user_data(vka_t *vka, vspace_t *vspace, seL4_CPtr ipc_buf, uint
     return 0;
 }
 
-int sel4utils_configure_thread(simple_t *simple, vka_t *vka, vspace_t *parent, vspace_t *alloc, 
+int sel4utils_configure_thread(simple_t *simple, vka_t *vka, vspace_t *parent, vspace_t *alloc,
                                seL4_CPtr fault_endpoint,
-                               uint8_t priority, seL4_CNode cspace, 
+                               uint8_t priority, seL4_CNode cspace,
                                seL4_CapData_t cspace_root_data, sel4utils_thread_t *res)
 {
 
@@ -104,7 +104,7 @@ sel4utils_configure_thread_config(simple_t *simple, vka_t *vka, vspace_t *parent
             period = config.custom_period;
         }
 
-        error = seL4_SchedControl_Configure(simple_get_sched_ctrl(simple), 
+        error = seL4_SchedControl_Configure(simple_get_sched_ctrl(simple),
                                             res->sched_context.cptr, budget, period, 0);
         if (error) {
             ZF_LOGW("Failed to configure sched context");
@@ -191,37 +191,38 @@ sel4utils_clean_up_thread(vka_t *vka, vspace_t *alloc, sel4utils_thread_t *threa
 void
 sel4utils_print_fault_message(seL4_MessageInfo_t tag, const char *thread_name)
 {
-    switch (seL4_MessageInfo_get_label(tag)) {
-    case SEL4_PFIPC_LABEL:
-        assert(seL4_MessageInfo_get_length(tag) == SEL4_PFIPC_LENGTH);
+    seL4_Fault_t fault = seL4_getFault(tag);
+    switch (seL4_Fault_get_seL4_FaultType(fault)) {
+    case seL4_Fault_VMFault:
+        assert(seL4_MessageInfo_get_length(tag) == seL4_VMFault_Length);
         printf("%sPagefault from [%s]: %s %s at PC: %p vaddr: %p%s\n",
                COLOR_ERROR,
                thread_name,
                sel4utils_is_read_fault() ? "read" : "write",
-               seL4_GetMR(SEL4_PFIPC_PREFETCH_FAULT) ? "prefetch fault" : "fault",
-               (void*)seL4_GetMR(SEL4_PFIPC_FAULT_IP),
-               (void*)seL4_GetMR(SEL4_PFIPC_FAULT_ADDR),
+               seL4_Fault_VMFault_get_PrefetchFault(fault) ? "prefetch fault" : "fault",
+               (void*)seL4_Fault_VMFault_get_IP(fault),
+               (void*)seL4_Fault_VMFault_get_Addr(fault),
                COLOR_NORMAL);
         break;
 
-    case SEL4_EXCEPT_IPC_LABEL:
-        assert(seL4_MessageInfo_get_length(tag) == SEL4_EXCEPT_IPC_LENGTH);
+    case seL4_Fault_UnknownSyscall:
+        assert(seL4_MessageInfo_get_length(tag) == seL4_UnknownSyscall_Length);
         printf("%sBad syscall from [%s]: scno %"PRIuPTR" at PC: %p%s\n",
                COLOR_ERROR,
                thread_name,
-               seL4_GetMR(EXCEPT_IPC_SYS_MR_SYSCALL),
-               (void*)seL4_GetMR(EXCEPT_IPC_SYS_MR_IP),
+               seL4_Fault_UnknownSyscall_get_Syscall(fault),
+               (void *) seL4_Fault_UnknownSyscall_get_FaultIP(fault),
                COLOR_NORMAL
               );
 
         break;
 
-    case SEL4_USER_EXCEPTION_LABEL:
-        assert(seL4_MessageInfo_get_length(tag) == SEL4_USER_EXCEPTION_LENGTH);
+    case seL4_Fault_UserException:
+        assert(seL4_MessageInfo_get_length(tag) == seL4_UserException_Length);
         printf("%sInvalid instruction from [%s] at PC: %p%s\n",
                COLOR_ERROR,
                thread_name,
-               (void*)seL4_GetMR(0),
+               (void*)seL4_GetMR(seL4_UserException_FaultIP),
                COLOR_NORMAL);
         break;
 
@@ -267,19 +268,19 @@ sel4utils_start_fault_handler(seL4_CPtr fault_endpoint, simple_t *simple, vka_t 
 }
 
 int
-sel4utils_checkpoint_thread(sel4utils_thread_t *thread, sel4utils_checkpoint_t *checkpoint, bool suspend) 
+sel4utils_checkpoint_thread(sel4utils_thread_t *thread, sel4utils_checkpoint_t *checkpoint, bool suspend)
 {
     assert(checkpoint != NULL);
 
-    int error = seL4_TCB_ReadRegisters(thread->tcb.cptr, suspend, 0, sizeof(seL4_UserContext) / sizeof(seL4_Word), 
+    int error = seL4_TCB_ReadRegisters(thread->tcb.cptr, suspend, 0, sizeof(seL4_UserContext) / sizeof(seL4_Word),
             &checkpoint->regs);
     if (error) {
         ZF_LOGE("Failed to read registers of tcb while checkpointing\n");
         return error;
     }
-    
+
     size_t stack_size = (uintptr_t) thread->stack_top - (uintptr_t) sel4utils_get_sp(checkpoint->regs);
-    
+
     checkpoint->stack = malloc(stack_size);
     if (checkpoint->stack == NULL) {
         ZF_LOGE("Failed to malloc stack of size %zu\n", stack_size);
@@ -292,16 +293,16 @@ sel4utils_checkpoint_thread(sel4utils_thread_t *thread, sel4utils_checkpoint_t *
     return error;
 }
 
-int 
+int
 sel4utils_checkpoint_restore(sel4utils_checkpoint_t *checkpoint, bool free_memory, bool resume)
 {
     assert(checkpoint != NULL);
 
     size_t stack_size = (uintptr_t) checkpoint->thread->stack_top - (uintptr_t) sel4utils_get_sp(checkpoint->regs);
     memcpy((void *) sel4utils_get_sp(checkpoint->regs), checkpoint->stack, stack_size);
-    
+
     int error = seL4_TCB_WriteRegisters(checkpoint->thread->tcb.cptr, resume, 0,
-            sizeof(seL4_UserContext) / sizeof (seL4_Word), 
+            sizeof(seL4_UserContext) / sizeof (seL4_Word),
             &checkpoint->regs);
     if (error) {
         ZF_LOGE("Failed to restore registers of tcb while restoring checkpoint\n");

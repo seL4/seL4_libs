@@ -8,13 +8,13 @@
  * @TAG(NICTA_BSD)
  */
 #include <autoconf.h>
+#include <sel4/sel4.h>
 #include <sel4bench/flog.h>
 #include <sel4utils/sched.h>
 #include <sel4utils/sel4_zf_logif.h>
 #include <string.h>
 #include <utils/sglib.h>
 #include <vka/capops.h>
-#include <sel4/tfIPC.h>
 
 /* define RB tree for EDF implementation */
 typedef struct rb_tree {
@@ -260,7 +260,7 @@ run_scheduler(sched_t *sched, bool (*finished)(void *cookie), void *cookie, void
         default:
             ZF_LOGF_IF(current == NULL, "Got message when no thread scheduled!");
             ZF_LOGF_IF(current->id != badge, "Got message from wrong thread %d", badge);
-            ZF_LOGD("Message from %d, fault? %d\n", badge, seL4_isTemporalFault_Tag(info));
+            ZF_LOGD("Message from %d, fault? %d\n", badge, seL4_isTemporalFault_tag(info));
 
             assert(sglib_edf_rb_tree_t_is_member(data->deadline_tree, current));
             sglib_edf_rb_tree_t_delete(&data->deadline_tree, current);

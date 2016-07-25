@@ -429,7 +429,7 @@ static int vmm_load_guest_segment(vmm_t *vmm, seL4_Word source_offset,
 
     size_t current = 0;
     size_t remain = file_size;
-    while (current < file_size) {
+    while (current < segment_size) {
         /* Retrieve the mapping */
         seL4_CPtr cap;
         cap = vspace_get_cap(&vmm->guest_mem.vspace, (void*)dest_addr);
@@ -454,20 +454,25 @@ static int vmm_load_guest_segment(vmm_t *vmm, seL4_Word source_offset,
         void *copy_vaddr = map_vaddr + offset;
         size_t copy_len = (1 << page_size) - offset;
 
-        if (copy_len > remain) {
-            /* Don't copy past end of data. */
-            copy_len = remain;
+        if (remain > 0) {
+            if (copy_len > remain) {
+                /* Don't copy past end of data. */
+                copy_len = remain;
+            }
+
+            DPRINTF(5, "load page src 0x%x dest 0x%x remain 0x%x offset 0x%x copy vaddr %p "
+                    "copy len 0x%x\n", source_offset, dest_addr, remain, offset, copy_vaddr, copy_len);
+
+            vmm->plat_callbacks.read(copy_vaddr, fd, source_offset, copy_len);
+            source_offset += copy_len;
+            remain -= copy_len;
+        } else {
+            memset(copy_vaddr, 0, copy_len);
         }
 
-        DPRINTF(5, "load page src 0x%x dest 0x%x remain 0x%x offset 0x%x copy vaddr %p "
-                "copy len 0x%x\n", source_offset, dest_addr, remain, offset, copy_vaddr, copy_len);
-
-        vmm->plat_callbacks.read(copy_vaddr, fd, source_offset, copy_len);
-        source_offset += copy_len;
         dest_addr += copy_len;
 
         current += copy_len;
-        remain -= copy_len;
 
         /* Unamp the page and delete the temporary cap */
         vspace_unmap_pages(&vmm->host_vspace, map_vaddr, 1, page_size, NULL);

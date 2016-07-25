@@ -26,9 +26,10 @@
 #include "vmm/processor/apicdef.h"
 #include "vmm/processor/lapic.h"
 
-int vmm_init(vmm_t *vmm, simple_t simple, vka_t vka, vspace_t vspace, platform_callbacks_t callbacks) {
+int vmm_init(vmm_t *vmm, allocman_t *allocman, simple_t simple, vka_t vka, vspace_t vspace, platform_callbacks_t callbacks) {
     int err;
     memset(vmm, 0, sizeof(vmm_t));
+    vmm->allocman = allocman;
     vmm->vka = vka;
     vmm->host_simple = simple;
     vmm->host_vspace = vspace;

@@ -10,7 +10,7 @@
 
 menuconfig LIB_SEL4_VMM
     bool "seL4 VMM Library"
-    depends on LIB_SEL4 && HAVE_LIBC && LIB_PCI && LIB_CPIO
+    depends on LIB_SEL4 && HAVE_LIBC && LIB_PCI && LIB_CPIO && LIB_SEL4_ALLOCMAN
     select HAVE_SEL4_LIBS
     default y
     help

@@ -18,6 +18,7 @@
 #include <vka/vka.h>
 #include <simple/simple.h>
 #include <vspace/vspace.h>
+#include <allocman/allocman.h>
 
 typedef struct vmm vmm_t;
 typedef struct vmm_vcpu vmm_vcpu_t;
@@ -109,6 +110,8 @@ typedef struct vmm {
     vka_t vka;
     simple_t host_simple;
     vspace_t host_vspace;
+    /* due ot limitation of the vka interface we still need an explicit allocman */
+    allocman_t *allocman;
 
     /* TCB of the VMM thread
      * TODO: Should eventually have one vmm thread per vcpu */

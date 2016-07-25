@@ -315,6 +315,7 @@ int vmm_alloc_guest_ram(vmm_t *vmm, size_t bytes, int onetoone) {
     guest_memory_t *guest_memory = &vmm->guest_mem;
     int page_size = vmm->page_size;
     uintptr_t base;
+    int error;
     int num_pages = ROUND_UP(bytes, BIT(page_size)) >> page_size;
     reservation_t reservation = vspace_reserve_range(&guest_memory->vspace, num_pages * BIT(page_size), seL4_AllRights, 1, (void**)&base);
     if (!reservation.res) {
@@ -322,10 +323,24 @@ int vmm_alloc_guest_ram(vmm_t *vmm, size_t bytes, int onetoone) {
         return -1;
     }
     /* Create pages */
-    int error = vspace_new_pages_at_vaddr(&guest_memory->vspace, (void*)base, num_pages, page_size, reservation);
-    if (error) {
-        ZF_LOGE("Failed to create %d pages of size %d for guest memory", num_pages, page_size);
-        return error;
+    for (int i = 0 ; i < num_pages; i++) {
+        seL4_Word cookie;
+        cspacepath_t path;
+        error = vka_cspace_alloc_path(&vmm->vka, &path);
+        if (error) {
+            ZF_LOGE("Failed to allocate path");
+            return -1;
+        }
+        cookie = allocman_utspace_alloc(vmm->allocman, page_size, kobject_get_type(KOBJECT_FRAME, page_size), &path, true, &error);
+        if (error) {
+            ZF_LOGE("Failed to allocate page");
+            return -1;
+        }
+        error = vspace_map_pages_at_vaddr(&guest_memory->vspace, &path.capPtr, &cookie, (void*)(base + i * BIT(page_size)), 1, page_size, reservation);
+        if (error) {
+            ZF_LOGE("Failed to map page");
+            return -1;
+        }
     }
     error = expand_guest_ram_region(&vmm->guest_mem, base, bytes);
     if (error) {

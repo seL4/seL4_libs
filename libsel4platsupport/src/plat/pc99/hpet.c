@@ -65,7 +65,7 @@ sel4platsupport_get_hpet(vspace_t *vspace, simple_t *simple, acpi_t *acpi,
     /* check what range the IRQ is in */
     hpet->destroy = hpet_destroy;
 
-    if ((int)irq_number >= MSI_MIN || irq_number <= MSI_MAX) {
+    if ((int)irq_number >= MSI_MIN && irq_number <= MSI_MAX) {
         irq = irq_number + IRQ_OFFSET;
         ioapic = 0;
         hpet->handle_irq = hpet_handle_irq_msi;

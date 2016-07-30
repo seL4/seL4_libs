@@ -56,22 +56,22 @@ static inline int sel4utils_ia32_tcb_set_tls_base(seL4_CPtr tcb_cap, seL4_Word t
     seL4_MessageInfo_t tag = seL4_MessageInfo_new(TCBWriteRegisters, 0, 0, ecx + 2); /* message length is user context + 2 arguments */
     asm volatile(
         /* eax is what we want for tls_base, so write this first so we can reuse eax */
-        "movl %%eax, %%gs:24 \n"
-        "movl %%eax, %%gs:52 \n"
+        "movl %%eax, %%fs:24 \n"
+        "movl %%eax, %%fs:52 \n"
         /* Get a copy of the stack pointer */
         "movl %%esp, %%eax \n"
         /* The value we want to be set is the current value - 4, as we will push to it in the invocation stub */
         "subl $4, %%eax \n"
-        "movl %%eax, %%gs:16 \n"
+        "movl %%eax, %%fs:16 \n"
         /* The kernel should not let us overwrite our own EIP, but set
          * something sensible anyway */
         "leal 2f, %%eax \n"
-        "movl %%eax, %%gs:12 \n"
-        /* Set fs and gs. We set FS to the correct tls selector, and leave gs unchanged */
+        "movl %%eax, %%fs:12 \n"
+        /* Set fs and gs. We set GS to the correct tls selector, and leave fs unchanged */
+        "movl %%fs, %%eax \n"
+        "movl %%eax, %%fs:56 \n"
         "movl %[tls], %%eax \n"
-        "movl %%eax, %%gs:56 \n"
-        "movl %%gs, %%eax \n"
-        "movl %%eax, %%gs:60 \n"
+        "movl %%eax, %%fs:60 \n"
         /* No point saving any other registers as they are going to get reset
          * as a result of the syscall anyway */
         /* Now the syscall invocation */

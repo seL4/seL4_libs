@@ -21,7 +21,7 @@ sel4utils_arch_init_context(void *entry_point, void *stack_top, seL4_UserContext
     /* set edx to zero in case we are setting this when spawning a process as
      * edx is the atexit parameter, which we currently do not use */
     context->edx = 0;
-    context->gs  = IPCBUF_GDT_SELECTOR;
+    context->fs  = IPCBUF_GDT_SELECTOR;
     context->eip = (seL4_Word) entry_point;
 
     return 0;
@@ -50,5 +50,3 @@ sel4utils_arch_init_context_with_args(void *entry_point, void *arg0, void *arg1,
 
     return sel4utils_arch_init_context(entry_point, stack_top, context);
 }
-
-

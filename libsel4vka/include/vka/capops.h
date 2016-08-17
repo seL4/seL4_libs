@@ -12,7 +12,7 @@
 #define VKA_CAPOPS_H
 
 /* This file provides convenient wrappers around seL4 invocations (on CNodes and Untypeds)
- * such that allocator operations are allocator independant.
+ * such that allocator operations are allocator independent.
  *
  * Use these and you will never have
  * to look at the cspacepath_t definition again!

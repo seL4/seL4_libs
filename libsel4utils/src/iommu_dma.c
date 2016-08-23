@@ -18,6 +18,7 @@
 #include <stdlib.h>
 #include <vka/capops.h>
 #include <string.h>
+#include <utils/zf_log.h>
 
 typedef struct dma_man {
     vka_t vka;
@@ -134,8 +135,8 @@ static int iommu_dma_alloc_iospace(void* cookie, void *vaddr, size_t size)
             }
         }
     }
-    return 0;
 
+    return 0;
 }
 
 static void* dma_alloc(void *cookie, size_t size, int align, int cached, ps_mem_flags_t flags)

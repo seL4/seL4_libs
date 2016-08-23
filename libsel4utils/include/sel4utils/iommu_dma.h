@@ -38,5 +38,24 @@
  */
 int sel4utils_make_iommu_dma_alloc(vka_t *vka, vspace_t *vspace, ps_dma_man_t *dma_man, unsigned int num_iospaces, seL4_CPtr *iospaces);
 
+/**
+ * Variant of ps_dma_alloc that allows the caller to allocate memory in their address space for use
+ * as the dma buffer. This function takes a description of a region of (virtual) memory, and maps
+ * the frames that back the region into the dma manager's iospace such that the iovaddr of each frame
+ * corresponds to its vaddr.
+ *
+ * The intended use case for this function is in environments without a dynamic heap (that is, where
+ * malloc is not backed by a vspace). The dma_man argument must be a pointer to a dma manager that
+ * was created using sel4utils_make_iommu_dma_alloc. The vspace argument to sel4utils_make_iommu_dma_alloc
+ * must be able to resolve vaddrs within the specified buffer to frame caps with its get_cap function.
+ *
+ * @param dma_man A dma manager initialised with sel4utils_make_iommu_dma_alloc.
+ * @param vaddr A pointer to a region of memory to use as the dma buffer. The vspace given to
+ *              sel4utils_make_iommu_dma_alloc to initialise dma_man must be able to resolve
+ *              addresses in this buffer to frame caps with its get_cap function.
+ * @param size The size of the region of memory pointed to by vaddr.
+ * @return 0 on success
+ */
+int sel4utils_iommu_dma_alloc_iospace(ps_dma_man_t *dma_man, void *vaddr, size_t size);
 #endif /* CONFIG_LIB_SEL4_VSPACE && CONFIG_LIB_SEL4_VKA && CONFIG_LIB_PLATSUPPORT && CONFIG_IOMMU */
 #endif /* SEL4_UTILS_IOMMU_DMA_H */

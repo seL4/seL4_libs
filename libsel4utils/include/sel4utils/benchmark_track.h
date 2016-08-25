@@ -30,7 +30,7 @@ seL4_BenchmarkTrackDumpSummary(benchmark_track_kernel_entry_t *logBuffer, size_t
      */
     FILE *fd = stdout;
 
-    while (logBuffer[index].start_time != 0 && (index + 1) * sizeof(benchmark_track_kernel_entry_t) <= logSize) {
+    while (logBuffer[index].start_time != 0 && (index * sizeof(benchmark_track_kernel_entry_t)) < logSize) {
         if (logBuffer[index].entry.path == Entry_Syscall) {
             syscall_entries++;
         } else if (logBuffer[index].entry.path == Entry_Interrupt) {
@@ -63,7 +63,7 @@ seL4_BenchmarkTrackDumpFullSyscallLog(benchmark_track_kernel_entry_t *logBuffer,
             "Invocation Tag",  "Fastpath?");
     fprintf(fd, "-----------------------------------------------------------------------------------------------------------------------------\n");
 
-    while (logBuffer[index].start_time != 0 && (index + 1) * sizeof(benchmark_track_kernel_entry_t) <= logSize) {
+    while (logBuffer[index].start_time != 0 && (index * sizeof(benchmark_track_kernel_entry_t)) < logSize) {
         if (logBuffer[index].entry.path == Entry_Syscall) {
             fprintf(fd, "|     %-15d|     %-15d|     %-15llu|     %-15d|     %-15d|     %-15d|     %-15d|\n",
                     index,
@@ -91,7 +91,7 @@ seL4_BenchmarkTrackDumpFullInterruptLog(benchmark_track_kernel_entry_t *logBuffe
             "Duration");
     fprintf(fd, "-----------------------------------------------------------------------------------------------------------------------------\n");
 
-    while (logBuffer[index].start_time != 0 && (index + 1) * sizeof(benchmark_track_kernel_entry_t) <= logSize) {
+    while (logBuffer[index].start_time != 0 && (index * sizeof(benchmark_track_kernel_entry_t)) < logSize) {
         if (logBuffer[index].entry.path == Entry_Interrupt) {
             fprintf(fd, "|     %-15d|     %-15d|     %-15llu|     %-15d|\n", \
                     index,

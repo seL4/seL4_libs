@@ -8,19 +8,18 @@
  * @TAG(NICTA_BSD)
  */
 
-#ifndef __KERNEL_LOGGING_H__
-#define __KERNEL_LOGGING_H__
-
-/* Utilities for extracting logs from the kernel */
+#pragma once
 
 #include <sel4/types.h>
 #include <sel4/arch/constants.h>
 #include <sel4/simple_types.h>
+#include <sel4/benchmark_tracepoints_types.h>
 #include <sel4/arch/syscalls.h>
+#include <inttypes.h>
 
 #if CONFIG_MAX_NUM_TRACE_POINTS > 0
-#define KERNEL_MAX_NUM_LOG_ENTRIES (seL4_LogBufferSize / sizeof(seL4_LogEntry))
-typedef seL4_LogEntry kernel_log_entry_t;
+#define KERNEL_MAX_NUM_LOG_ENTRIES (BIT(seL4_LargePageBits) / sizeof(benchmark_tracepoint_log_entry_t))
+typedef benchmark_tracepoint_log_entry_t  kernel_log_entry_t;
 #else
 #define KERNEL_MAX_NUM_LOG_ENTRIES 0
 typedef void *kernel_log_entry_t;
@@ -36,7 +35,7 @@ static inline seL4_Word
 kernel_logging_entry_get_key(kernel_log_entry_t *entry)
 {
 #if CONFIG_MAX_NUM_TRACE_POINTS > 0
-    return entry->key;
+    return entry->id;
 #else
     return 0;
 #endif
@@ -47,7 +46,7 @@ static inline void
 kernel_logging_entry_set_key(kernel_log_entry_t *entry, seL4_Word key)
 {
 #if CONFIG_MAX_NUM_TRACE_POINTS > 0
-    entry->key = key;
+    entry->id = key;
 #endif
 }
 
@@ -56,7 +55,7 @@ static inline seL4_Word
 kernel_logging_entry_get_data(kernel_log_entry_t *entry)
 {
 #if CONFIG_MAX_NUM_TRACE_POINTS > 0
-    return entry->data;
+    return entry->duration;
 #else
     return 0;
 #endif
@@ -67,17 +66,17 @@ static inline void
 kernel_logging_entry_set_data(kernel_log_entry_t *entry, seL4_Word data)
 {
 #if CONFIG_MAX_NUM_TRACE_POINTS > 0
-    entry->data = data;
+    entry->duration = data;
 #endif
 }
 
-/* Resets the in-kernel log buffer to contain no entries. */
+/* Resets the log buffer to contain no entries. */
 static inline void
 kernel_logging_reset_log(void)
 {
-#if CONFIG_MAX_NUM_TRACE_POINTS > 0
+#ifdef CONFIG_ENABLE_BENCHMARKS
     seL4_BenchmarkResetLog();
-#endif
+#endif /* CONFIG_ENABLE_BENCHMARKS */
 }
 
 /* Calls to kernel_logging_sync_log will extract entries created before
@@ -86,35 +85,21 @@ kernel_logging_reset_log(void)
 static inline void
 kernel_logging_finalize_log(void)
 {
-#if CONFIG_MAX_NUM_TRACE_POINTS > 0
+#ifdef CONFIG_ENABLE_BENCHMARKS
     seL4_BenchmarkFinalizeLog();
-#endif
+#endif /* CONFIG_ENABLE_BENCHMARKS */
 }
 
-/* Returns the number of log entries that were stored in the kernel's log buffer
- * last time kernel_logging_finalize_log was called. */
-static inline unsigned int
-kernel_logging_log_size(void)
+/* Tell the kernel about the allocated user-level buffer
+ * so that it can write to it. Note, this function has to
+ * be called before kernel_logging_reset_log.
+ *
+ * @logBuffer_cap should be a cap of a large frame size.
+ */
+static inline seL4_Error
+kernel_logging_set_log_buffer(seL4_CPtr logBuffer_cap)
 {
-#if CONFIG_MAX_NUM_TRACE_POINTS > 0
-    return seL4_BenchmarkLogSize();
-#else
-    return 0;
-#endif
+#ifdef CONFIG_BENCHMARK_USE_KERNEL_LOG_BUFFER
+    return seL4_BenchmarkSetLogBuffer(logBuffer_cap);
+#endif /* CONFIG_BENCHMARK_USE_KERNEL_LOG_BUFFER */
 }
-
-/* Copies "size" entries from the kernel's log buffer, starting with the "start-th" entry,
- * into the ipc buffer, returning the number of entries that were copied. Log entries
- * consist of a key (the tracepoint id) and a value. Entries are copied in the format
- * "key, value, key, value, ..." with each value being preceded by its key. */
-static inline unsigned int
-kernel_logging_dump_log(unsigned int start, unsigned int size)
-{
-#if CONFIG_MAX_NUM_TRACE_POINTS > 0
-    return seL4_BenchmarkDumpLog(start, size);
-#else
-    return 0;
-#endif
-}
-
-#endif

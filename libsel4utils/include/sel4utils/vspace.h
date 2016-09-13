@@ -206,7 +206,7 @@ sel4utils_get_vspace_leaky(vspace_t *loader, vspace_t *new_vspace, sel4utils_all
 #ifdef CONFIG_VTX
 static inline int
 sel4utils_get_vspace_ept_leaky(vspace_t *loader, vspace_t *new_vspace,
-                               vka_t *vka, seL4_CPtr vspace_rooty)
+                               vka_t *vka, seL4_CPtr vspace_root)
 {
     return sel4utils_get_vspace_ept(loader, new_vspace, vka, vspace_root,
                                     (vspace_allocated_object_fn) NULL, NULL);

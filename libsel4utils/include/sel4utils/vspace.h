@@ -301,7 +301,7 @@ int sel4utils_bootstrap_clone_into_vspace(vspace_t *current, vspace_t *clone, re
  * @param va_start return va_start.
  * @param va_end return va_end.
  */
-void sel4utils_get_image_region(seL4_Word *va_start, seL4_Word *va_end);
+void sel4utils_get_image_region(uintptr_t *va_start, uintptr_t *va_end);
 
 #endif /* CONFIG_LIB_SEL4_VSPACE && CONFIG_LIB_SEL4_VKA */
 #endif /* _UTILS_VSPACE_H */

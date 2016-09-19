@@ -101,5 +101,7 @@ kernel_logging_set_log_buffer(seL4_CPtr logBuffer_cap)
 {
 #ifdef CONFIG_BENCHMARK_USE_KERNEL_LOG_BUFFER
     return seL4_BenchmarkSetLogBuffer(logBuffer_cap);
+#else
+    return seL4_NoError;
 #endif /* CONFIG_BENCHMARK_USE_KERNEL_LOG_BUFFER */
 }

@@ -164,12 +164,12 @@ sel4utils_move_cap_to_process(sel4utils_process_t *process, cspacepath_t src, vk
 }
 int
 sel4utils_stack_write(vspace_t *current_vspace, vspace_t *target_vspace,
-                      vka_t *vka, void *buf, size_t len, uintptr_t *stack_top)
+                      vka_t *vka, void *buf, size_t len, uintptr_t *initial_stack_pointer)
 {
     size_t remaining = len;
     size_t written = 0;
-    uintptr_t new_stack_top = (*stack_top) - len;
-    uintptr_t current_dest = new_stack_top;
+    uintptr_t new_stack_pointer = (*initial_stack_pointer) - len;
+    uintptr_t current_dest = new_stack_pointer;
     while (remaining > 0) {
         /* How many can we write on the current page ? */
         size_t towrite = MIN(ROUND_UP(current_dest, PAGE_SIZE_4K) - current_dest, remaining);
@@ -191,28 +191,28 @@ sel4utils_stack_write(vspace_t *current_vspace, vspace_t *target_vspace,
         written += towrite;
         current_dest += towrite;
     }
-    *stack_top = new_stack_top;
+    *initial_stack_pointer = new_stack_pointer;
     return 0;
 }
 
 static int
 sel4utils_stack_write_constant(vspace_t *current_vspace, vspace_t *target_vspace,
-                               vka_t *vka, long value, uintptr_t *stack_top)
+                               vka_t *vka, long value, uintptr_t *initial_stack_pointer)
 {
-    return sel4utils_stack_write(current_vspace, target_vspace, vka, &value, sizeof(value), stack_top);
+    return sel4utils_stack_write(current_vspace, target_vspace, vka, &value, sizeof(value), initial_stack_pointer);
 }
 
 static int
 sel4utils_stack_copy_args(vspace_t *current_vspace, vspace_t *target_vspace,
-                          vka_t *vka, int argc, char *argv[], uintptr_t *dest_argv, uintptr_t *stack_top)
+                          vka_t *vka, int argc, char *argv[], uintptr_t *dest_argv, uintptr_t *initial_stack_pointer)
 {
     for (int i = 0; i < argc; i++) {
-        int error = sel4utils_stack_write(current_vspace, target_vspace, vka, argv[i], strlen(argv[i]) + 1, stack_top);
+        int error = sel4utils_stack_write(current_vspace, target_vspace, vka, argv[i], strlen(argv[i]) + 1, initial_stack_pointer);
         if (error) {
             return error;
         }
-        dest_argv[i] = *stack_top;
-        *stack_top = ROUND_DOWN(*stack_top, 4);
+        dest_argv[i] = *initial_stack_pointer;
+        *initial_stack_pointer = ROUND_DOWN(*initial_stack_pointer, 4);
     }
     return 0;
 }
@@ -221,28 +221,28 @@ int
 sel4utils_spawn_process(sel4utils_process_t *process, vka_t *vka, vspace_t *vspace, int argc,
                         char *argv[], int resume)
 {
-    uintptr_t stack_top = (uintptr_t)process->thread.stack_top - 4;
+    uintptr_t initial_stack_pointer = (uintptr_t)process->thread.initial_stack_pointer - 4;
     uintptr_t new_process_argv = 0;
     int error;
     /* write all the strings into the stack */
     if (argc > 0) {
         uintptr_t dest_argv[argc];
         /* Copy over the user arguments */
-        error = sel4utils_stack_copy_args(vspace, &process->vspace, vka, argc, argv, dest_argv, &stack_top);
+        error = sel4utils_stack_copy_args(vspace, &process->vspace, vka, argc, argv, dest_argv, &initial_stack_pointer);
         if (error) {
             return -1;
         }
         /* Put the new argv array on as well */
-        error = sel4utils_stack_write(vspace, &process->vspace, vka, dest_argv, sizeof(dest_argv), &stack_top);
+        error = sel4utils_stack_write(vspace, &process->vspace, vka, dest_argv, sizeof(dest_argv), &initial_stack_pointer);
         if (error) {
             return -1;
         }
-        new_process_argv = stack_top;
+        new_process_argv = initial_stack_pointer;
     }
     /* move the stack pointer down to a place we can write to.
      * to be compatible with as many architectures as possible
      * we need to ensure double word alignment */
-    stack_top = ROUND_DOWN(stack_top - sizeof(seL4_Word), sizeof(seL4_Word) * 2);
+    initial_stack_pointer = ROUND_DOWN(initial_stack_pointer - sizeof(seL4_Word), sizeof(seL4_Word) * 2);
 
     seL4_UserContext context = {0};
     size_t context_size = sizeof(seL4_UserContext) / sizeof(seL4_Word);
@@ -250,11 +250,13 @@ sel4utils_spawn_process(sel4utils_process_t *process, vka_t *vka, vspace_t *vspa
     error = sel4utils_arch_init_context_with_args(process->entry_point, (void *) (uintptr_t)argc,
                                         (void *) new_process_argv,
                                         (void *) process->thread.ipc_buffer_addr, false,
-                                        (void *) stack_top,
+                                        (void *) initial_stack_pointer,
                                         &context, vka, vspace, &process->vspace);
     if (error) {
         return error;
     }
+
+    process->thread.initial_stack_pointer = (void *) initial_stack_pointer;
 
     return seL4_TCB_WriteRegisters(process->thread.tcb.cptr, resume, 0, context_size, &context);
 }
@@ -272,19 +274,19 @@ sel4utils_spawn_process_v(sel4utils_process_t *process, vka_t *vka, vspace_t *vs
     Elf_auxv_t auxv[] = { {.a_type = AT_SYSINFO, .a_un = {process->sysinfo}}};
     seL4_UserContext context = {0};
 
-    uintptr_t stack_top = (uintptr_t) process->thread.stack_top - sizeof(seL4_Word);
+    uintptr_t initial_stack_pointer = (uintptr_t) process->thread.initial_stack_pointer - sizeof(seL4_Word);
     uintptr_t dest_argv[argc];
     uintptr_t dest_envp[envc];
     
     /* write all the strings into the stack */
     /* Copy over the user arguments */
-    int error = sel4utils_stack_copy_args(vspace, &process->vspace, vka, argc, argv, dest_argv, &stack_top);
+    int error = sel4utils_stack_copy_args(vspace, &process->vspace, vka, argc, argv, dest_argv, &initial_stack_pointer);
     if (error) {
         return -1;
     }
 
     /* copy the environment */
-    error = sel4utils_stack_copy_args(vspace, &process->vspace, vka, envc, envp, dest_envp, &stack_top);
+    error = sel4utils_stack_copy_args(vspace, &process->vspace, vka, envc, envp, dest_envp, &initial_stack_pointer);
     if (error) {
         return -1;
     }
@@ -295,58 +297,60 @@ sel4utils_spawn_process_v(sel4utils_process_t *process, vka_t *vka, vspace_t *vs
                     sizeof(auxv[0]) * auxc + /* aux */
                     sizeof(dest_argv) + /* args */
                     sizeof(dest_envp); /* env */
-    uintptr_t hypothetical_stack_top = stack_top - to_push;
-    uintptr_t rounded_stack_top = ROUND_DOWN(hypothetical_stack_top, sizeof(seL4_Word) * 2);
-    ptrdiff_t stack_rounding = hypothetical_stack_top - rounded_stack_top;
-    stack_top -= stack_rounding;
+    uintptr_t hypothetical_stack_pointer = initial_stack_pointer - to_push;
+    uintptr_t rounded_stack_pointer = ROUND_DOWN(hypothetical_stack_pointer, sizeof(seL4_Word) * 2);
+    ptrdiff_t stack_rounding = hypothetical_stack_pointer - rounded_stack_pointer;
+    initial_stack_pointer -= stack_rounding;
 
     /* construct initial stack frame */
     /* Null terminate aux */
-    error = sel4utils_stack_write_constant(vspace, &process->vspace, vka, 0, &stack_top);
+    error = sel4utils_stack_write_constant(vspace, &process->vspace, vka, 0, &initial_stack_pointer);
     if (error) {
         return -1;
     }
-    error = sel4utils_stack_write_constant(vspace, &process->vspace, vka, 0, &stack_top);
+    error = sel4utils_stack_write_constant(vspace, &process->vspace, vka, 0, &initial_stack_pointer);
     if (error) {
         return -1;
     }
     /* write aux */
-    error = sel4utils_stack_write(vspace, &process->vspace, vka, auxv, sizeof(auxv[0]) * auxc, &stack_top);
+    error = sel4utils_stack_write(vspace, &process->vspace, vka, auxv, sizeof(auxv[0]) * auxc, &initial_stack_pointer);
     if (error) {
         return -1;
     }
     /* Null terminate environment */
-    error = sel4utils_stack_write_constant(vspace, &process->vspace, vka, 0, &stack_top);
+    error = sel4utils_stack_write_constant(vspace, &process->vspace, vka, 0, &initial_stack_pointer);
     if (error) {
         return -1;
     }
     /* write environment */
-    error = sel4utils_stack_write(vspace, &process->vspace, vka, dest_envp, sizeof(dest_envp), &stack_top);
+    error = sel4utils_stack_write(vspace, &process->vspace, vka, dest_envp, sizeof(dest_envp), &initial_stack_pointer);
     if (error) {
         return -1;
     }
     /* Null terminate arguments */
-    error = sel4utils_stack_write_constant(vspace, &process->vspace, vka, 0, &stack_top);
+    error = sel4utils_stack_write_constant(vspace, &process->vspace, vka, 0, &initial_stack_pointer);
     if (error) {
         return -1;
     }
     /* write arguments */
-    error = sel4utils_stack_write(vspace, &process->vspace, vka, dest_argv, sizeof(dest_argv), &stack_top);
+    error = sel4utils_stack_write(vspace, &process->vspace, vka, dest_argv, sizeof(dest_argv), &initial_stack_pointer);
     if (error) {
         return -1;
     }
     /* Push argument count */
-    error = sel4utils_stack_write_constant(vspace, &process->vspace, vka, argc, &stack_top);
+    error = sel4utils_stack_write_constant(vspace, &process->vspace, vka, argc, &initial_stack_pointer);
     if (error) {
         return -1;
     }
 
-    ZF_LOGD("Starting process at %p, stack %p\n", process->entry_point, (void *) stack_top);
-    assert(stack_top % (2 * sizeof(seL4_Word)) == 0);
-    error = sel4utils_arch_init_context(process->entry_point, (void *) stack_top, &context);
+    ZF_LOGD("Starting process at %p, stack %p\n", process->entry_point, (void *) initial_stack_pointer);
+    assert(initial_stack_pointer % (2 * sizeof(seL4_Word)) == 0);
+    error = sel4utils_arch_init_context(process->entry_point, (void *) initial_stack_pointer, &context);
     if (error) {
         return error;
     }
+
+    process->thread.initial_stack_pointer = (void *) initial_stack_pointer;
 
     /* Write the registers */
     return seL4_TCB_WriteRegisters(process->thread.tcb.cptr, resume, 0, sizeof(context) / sizeof(seL4_Word), 

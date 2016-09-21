@@ -107,6 +107,8 @@ sel4utils_configure_thread_config(vka_t *vka, vspace_t *parent, vspace_t *alloc,
             sel4utils_clean_up_thread(vka, alloc, res);
             return -1;
         }
+
+        res->initial_stack_pointer = res->stack_top;
     }
 
     return 0;
@@ -121,7 +123,7 @@ sel4utils_start_thread(sel4utils_thread_t *thread, void *entry_point, void *arg0
 
     int error = sel4utils_arch_init_local_context(entry_point, arg0, arg1,
                                               (void *) thread->ipc_buffer_addr,
-                                              thread->stack_top, &context);
+                                              thread->initial_stack_pointer, &context);
     if (error) {
         return error;
     }

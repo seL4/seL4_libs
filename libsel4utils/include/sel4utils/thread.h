@@ -38,6 +38,7 @@
 typedef struct sel4utils_thread {
     vka_object_t tcb;
     void *stack_top;
+    void *initial_stack_pointer;
     size_t stack_size;
     seL4_CPtr ipc_buffer;
     seL4_Word ipc_buffer_addr;

@@ -29,6 +29,12 @@
 
 #include <vspace/vspace.h>
 
+#ifdef CONFIG_DEBUG_BUILD
+#define NAME_THREAD(_tcbcap, _name)   seL4_DebugNameThread(_tcbcap, _name);
+#else
+#define NAME_THREAD(_tcbcap, _name)
+#endif
+
 typedef struct sel4utils_thread {
     vka_object_t tcb;
     void *stack_top;

@@ -49,6 +49,7 @@ int vmm_rdmsr_handler(vmm_vcpu_t *vcpu) {
         case MSR_P6_PERFCTR1:
         case MSR_P6_EVNTSEL0:
         case MSR_P6_EVNTSEL1:
+        case MSR_IA32_PERF_GLOBAL_STATUS_SET:
             /* performance counters not supported. */
             data = 0;
             break;
@@ -102,6 +103,7 @@ int vmm_wrmsr_handler(vmm_vcpu_t *vcpu) {
         case MSR_P6_PERFCTR1:
         case MSR_P6_EVNTSEL0:
         case MSR_P6_EVNTSEL1:
+        case MSR_IA32_PERF_GLOBAL_STATUS_SET:
             /* performance counters not supported. */
             break;
         

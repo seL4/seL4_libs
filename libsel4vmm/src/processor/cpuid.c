@@ -83,12 +83,12 @@ static int vmm_cpuid_virt(unsigned int function, unsigned int index, struct cpui
         F(XSTORE) | F(XSTORE_EN) | F(XCRYPT) | F(XCRYPT_EN) |
         F(ACE2) | F(ACE2_EN) | F(PHE) | F(PHE_EN) |
         F(PMM) | F(PMM_EN);
+#endif
 
     /* cpuid 7.0.ebx */
     const unsigned int kvm_supported_word9_x86_features =
         F(FSGSBASE) | F(BMI1) | F(HLE) | F(AVX2) | F(SMEP) |
-        F(BMI2) | F(ERMS) | 0 /*invpcid*/| F(RTM);
-#endif
+        F(BMI2) | F(ERMS) | 0 /*F(INVPCID)*/| F(RTM);
 
     /* Virtualize the return value according to the function. */
 
@@ -113,6 +113,7 @@ static int vmm_cpuid_virt(unsigned int function, unsigned int index, struct cpui
             break;
 
         case 7: /* Extended flags */
+            ebx &= kvm_supported_word9_x86_features;
             break;
 
         case 0xa: /* disable performance monitoring */

@@ -92,7 +92,7 @@ def main():
     # Parse the input as HTML even though BS supports XML. It seems the XML
     # parser is a bit more precious about the input.
     try:
-        soup = bs4.BeautifulSoup(data)
+        soup = bs4.BeautifulSoup(data, "lxml")
     except Exception as inst:
         print >>sys.stderr, 'Failed to parse input: %s' % inst
         return -1

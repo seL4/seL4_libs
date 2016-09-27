@@ -34,16 +34,18 @@ debug_print_bootinfo(seL4_BootInfo *info)
     ZF_LOGI("------------------");
     ZF_LOGI("Paddr    | Size   | Device");
 
-    int sizes[32] = {0};
+    int sizes[CONFIG_WORD_SIZE] = {0};
     for (int i = 0; i < CONFIG_MAX_NUM_BOOTINFO_UNTYPED_CAPS && i < (info->untyped.end - info->untyped.start); i++) {
         if (info->untypedList[i].paddr != 0) {
-            sizes[info->untypedList[i].sizeBits]++;
+            int index = info->untypedList[i].sizeBits;
+            assert(index < ARRAY_SIZE(sizes));
+            sizes[index]++;
             ZF_LOGI("%p | %zu | %d", (void*)info->untypedList[i].paddr, (size_t)info->untypedList[i].sizeBits, (int)info->untypedList[i].isDevice);
         }
     }
 
     ZF_LOGI("Untyped summary\n");
-    for (int i = 0; i < 32; i++) {
+    for (int i = 0; i < ARRAY_SIZE(sizes); i++) {
         if (sizes[i] != 0) {
             printf("%d untypeds of size %d\n", sizes[i], i);
         }

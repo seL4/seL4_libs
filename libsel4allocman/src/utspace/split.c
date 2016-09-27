@@ -45,7 +45,7 @@ static struct utspace_split_node *_new_node(allocman_t *alloc) {
     struct utspace_split_node *node;
     node = (struct utspace_split_node*) allocman_mspace_alloc(alloc, sizeof(*node), &error);
     if (error) {
-        ZF_LOGV("Failed to allocate node of size %d", sizeof(*node));
+        ZF_LOGV("Failed to allocate node of size %zu", sizeof(*node));
         return NULL;
     }
     error = allocman_cspace_alloc(alloc, &node->ut);
@@ -68,7 +68,7 @@ static int _insert_new_node(allocman_t *alloc, struct utspace_split_node **head,
     struct utspace_split_node *node;
     node = (struct utspace_split_node*) allocman_mspace_alloc(alloc, sizeof(*node), &error);
     if (error) {
-        ZF_LOGV("Failed to allocate node of size %d", sizeof(*node));
+        ZF_LOGV("Failed to allocate node of size %zu", sizeof(*node));
         return 1;
     }
     node->parent = NULL;

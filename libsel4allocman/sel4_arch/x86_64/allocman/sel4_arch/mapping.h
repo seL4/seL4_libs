@@ -31,7 +31,7 @@ static inline seL4_Error allocman_sel4_arch_create_object_at_level(allocman_t *a
     struct object *obj = &objects[bits];
     int error;
     seL4_Word cookie;
-    cookie = allocman_utspace_alloc(alloc, obj->bits, obj->type, path, &error);
+    cookie = allocman_utspace_alloc(alloc, obj->bits, obj->type, path, false, &error);
     if (error) {
         ZF_LOGV("Failed to allocate object %d of size %d, got error %d", (int)obj->type, (int)obj->bits, error);
         return seL4_NotEnoughMemory;

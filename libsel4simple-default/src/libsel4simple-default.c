@@ -13,6 +13,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
+#include <inttypes.h>
 
 #include <sel4/sel4.h>
 #include <sel4debug/debug.h>
@@ -123,7 +124,7 @@ int simple_default_untyped_count(void *data) {
     return ((seL4_BootInfo *)data)->untyped.end - ((seL4_BootInfo *)data)->untyped.start;
 }
 
-seL4_CPtr simple_default_nth_untyped(void *data, int n, uint32_t *size_bits, uint32_t *paddr, bool *device) {
+seL4_CPtr simple_default_nth_untyped(void *data, int n, size_t *size_bits, uintptr_t *paddr, bool *device) {
     assert(data && size_bits && paddr);
 
     seL4_BootInfo *bi = data;

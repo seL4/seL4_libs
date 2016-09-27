@@ -133,7 +133,7 @@ typedef int (*simple_get_untyped_count_fn)(void *data);
  * @param the physical address of the returned cap
 */
 
-typedef seL4_CPtr (*simple_get_nth_untyped_fn)(void *data, int n, uint32_t *size_bits, uint32_t *paddr, bool *device);
+typedef seL4_CPtr (*simple_get_nth_untyped_fn)(void *data, int n, size_t *size_bits, uintptr_t *paddr, bool *device);
 
 /**
  * Get the amount of user image caps available
@@ -384,7 +384,7 @@ simple_get_untyped_count(simple_t *simple)
 }
 
 static inline seL4_CPtr
-simple_get_nth_untyped(simple_t *simple, int n, uint32_t *size_bits, uint32_t *paddr, bool *device)
+simple_get_nth_untyped(simple_t *simple, int n, size_t *size_bits, uintptr_t *paddr, bool *device)
 {
     if (!simple) {
         ZF_LOGE("Simple is NULL");

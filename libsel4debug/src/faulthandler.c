@@ -45,9 +45,9 @@ int debug_fault_handler(seL4_CPtr faultep,
         seL4_MessageInfo_t info = seL4_Recv(faultep, &sender);
 
         /* Get the fault type (see section 5.2 of the manual). */
-        uint32_t label = seL4_MessageInfo_get_label(info);
+        seL4_Word label = seL4_MessageInfo_get_label(info);
 
-        uint32_t length = seL4_MessageInfo_get_length(info);
+        seL4_Word length = seL4_MessageInfo_get_length(info);
 
         /* Save the message registers before doing anything else. This is under
          * the assumption printf() or senders() may clobber them.
@@ -112,7 +112,7 @@ int debug_fault_handler(seL4_CPtr faultep,
                 printf(" mr%u = %p\n", i, (void*)mrs[i]);
             }
             if (length > USED_MRS) {
-                printf("  further %u registers not shown\n",
+                printf("  further %zu registers not shown\n",
                        length - USED_MRS);
             }
         }

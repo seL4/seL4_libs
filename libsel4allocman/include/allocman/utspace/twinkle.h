@@ -40,7 +40,7 @@ void _utspace_twinkle_free(struct allocman *alloc, void *_twinkle, seL4_Word coo
 
 static inline uintptr_t _utspace_twinkle_paddr(void *_twinkle, seL4_Word cookie, size_t size_bits) {
     assert(!"not implemented");
-    return 0;
+    return ALLOCMAN_NO_PADDR;
 }
 
 static inline struct utspace_interface utspace_twinkle_make_interface(utspace_twinkle_t *twinkle) {

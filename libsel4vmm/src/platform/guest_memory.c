@@ -179,7 +179,7 @@ static int vmm_alloc_guest_ram_one_to_one(vmm_t *vmm, size_t bytes) {
     for (i = 0; i < num_pages; i++) {
         /* Get its physical address */
         uintptr_t paddr = vka_object_paddr(&vmm->vka, &objects[i]);
-        if (paddr == 0) {
+        if (paddr == VKA_NO_PADDR) {
             ZF_LOGE("Allocated frame has no physical address");
             return -1;
         }

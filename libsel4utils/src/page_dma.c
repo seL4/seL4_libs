@@ -92,7 +92,7 @@ static void* dma_alloc(void *cookie, size_t size, int align, int cached, ps_mem_
     }
     /* Get the physical address */
     uintptr_t paddr = vka_utspace_paddr(&dma->vka, ut.ut, seL4_UntypedObject, size_bits);
-    if (paddr == 0) {
+    if (paddr == VKA_NO_PADDR) {
         ZF_LOGE("Allocated untyped has no physical address");
         goto handle_error;
     }

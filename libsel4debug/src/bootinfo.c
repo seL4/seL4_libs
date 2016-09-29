@@ -36,12 +36,10 @@ debug_print_bootinfo(seL4_BootInfo *info)
 
     int sizes[CONFIG_WORD_SIZE] = {0};
     for (int i = 0; i < CONFIG_MAX_NUM_BOOTINFO_UNTYPED_CAPS && i < (info->untyped.end - info->untyped.start); i++) {
-        if (info->untypedList[i].paddr != 0) {
-            int index = info->untypedList[i].sizeBits;
-            assert(index < ARRAY_SIZE(sizes));
-            sizes[index]++;
-            ZF_LOGI("%p | %zu | %d", (void*)info->untypedList[i].paddr, (size_t)info->untypedList[i].sizeBits, (int)info->untypedList[i].isDevice);
-        }
+        int index = info->untypedList[i].sizeBits;
+        assert(index < ARRAY_SIZE(sizes));
+        sizes[index]++;
+        ZF_LOGI("%p | %zu | %d", (void*)info->untypedList[i].paddr, (size_t)info->untypedList[i].sizeBits, (int)info->untypedList[i].isDevice);
     }
 
     ZF_LOGI("Untyped summary\n");

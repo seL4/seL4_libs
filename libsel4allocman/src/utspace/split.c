@@ -107,7 +107,7 @@ int _utspace_split_add_uts(allocman_t *alloc, void *_split, size_t num, const cs
             return -1;
     }
     for (i = 0; i < num; i++) {
-        error = _insert_new_node(alloc, &list[size_bits[i]], uts[i], paddr ? paddr[i] : 0);
+        error = _insert_new_node(alloc, &list[size_bits[i]], uts[i], paddr ? paddr[i] : ALLOCMAN_NO_PADDR);
         if (error) {
             return error;
         }
@@ -186,11 +186,11 @@ static int _refill_pool(allocman_t *alloc, utspace_split_t *split, struct utspac
     left->parent = right->parent = node;
     left->sibling = right;
     right->sibling = left;
-    if (node->paddr) {
+    if (node->paddr != ALLOCMAN_NO_PADDR) {
         left->paddr = node->paddr;
         right->paddr = node->paddr + BIT(size_bits);
     } else {
-        left->paddr = right->paddr = 0;
+        left->paddr = right->paddr = ALLOCMAN_NO_PADDR;
     }
     /* insert in this order so that we end up pulling the untypeds off in order of contiugous
      * physical address. This makes various allocation problems slightly less likely to happen */

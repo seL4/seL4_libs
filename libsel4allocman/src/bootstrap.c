@@ -187,7 +187,7 @@ int bootstrap_add_untypeds(bootstrap_info_t *bs, size_t num, const cspacepath_t 
     size_t i;
     int error;
     for (i = 0; i < num; i++) {
-        error = _add_ut(bs, uts[i], size_bits[i], paddr ? paddr[i] : 0, isDevice);
+        error = _add_ut(bs, uts[i], size_bits[i], paddr ? paddr[i] : ALLOCMAN_NO_PADDR, isDevice);
         if (error) {
             return error;
         }
@@ -372,7 +372,7 @@ static int bootstrap_allocate_cnode(bootstrap_info_t *bs, size_t size, cspacepat
             return error;
         }
         best_size--;
-        best_paddr = best_paddr ? best_paddr + BIT(best_size) : 0;
+        best_paddr = best_paddr == ALLOCMAN_NO_PADDR ? best_paddr : best_paddr + BIT(best_size);
         best_path = slot2;
     }
     error = bs->boot_cspace.alloc(bs->alloc, bs->boot_cspace.cspace, slot);

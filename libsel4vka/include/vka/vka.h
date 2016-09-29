@@ -91,9 +91,11 @@ typedef void (*vka_utspace_free_fn)(void *data, seL4_Word type, seL4_Word size_b
  * @param target cookie to the allocation as given by the utspace alloc function
  * @param type the seL4 object type that was allocated (as passed to Untyped_Retype)
  * @param size_bits the size of the object that was allocated (as passed to Untyped_Retype)
- * @return paddr of object, or NULL on error
+ * @return paddr of object, or VKA_NO_PADDR on error
  */
 typedef uintptr_t (*vka_utspace_paddr_fn)(void *data, seL4_Word target, seL4_Word type, seL4_Word size_bits);
+
+#define VKA_NO_PADDR 1
 
 /*
  * Generic Virtual Kernel Allocator (VKA) data structure.
@@ -258,12 +260,12 @@ vka_utspace_paddr(vka_t *vka, seL4_Word target, seL4_Word type, seL4_Word size_b
 
     if (!vka) {
         ZF_LOGE("vka is NULL");
-        return -1;
+        return VKA_NO_PADDR;
     }
 
     if (!vka->utspace_paddr) {
         ZF_LOGE("Not implemented");
-        return -1;
+        return VKA_NO_PADDR;
     }
 
     return vka->utspace_paddr(vka->data, target, type, size_bits);

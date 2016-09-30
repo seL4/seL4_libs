@@ -29,6 +29,8 @@ struct utspace_split_node {
     struct utspace_split_node *sibling;
     /* which (if any) free list this is in */
     struct utspace_split_node **head;
+    /* which free list this should go back into */
+    struct utspace_split_node **origin_head;
     /* physical address of the node */
     uintptr_t paddr;
     /* if this node is not allocated then these are the next/previous pointers in the free list */

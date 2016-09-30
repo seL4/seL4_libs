@@ -21,6 +21,7 @@ static void _remove_node(struct utspace_split_node **head, struct utspace_split_
     if (node->prev) {
         node->prev->next = node->next;
     } else {
+        assert(*head == node);
         *head = node->next;
     }
     if (node->next) {
@@ -74,6 +75,7 @@ static int _insert_new_node(allocman_t *alloc, struct utspace_split_node **head,
     node->parent = NULL;
     node->ut = ut;
     node->paddr = paddr;
+    node->origin_head = head;
     _insert_node(head, node);
     return 0;
 }
@@ -185,6 +187,8 @@ static int _refill_pool(allocman_t *alloc, utspace_split_t *split, struct utspac
     _remove_node(&heads[size_bits + 1], node);
     left->parent = right->parent = node;
     left->sibling = right;
+    left->origin_head = &heads[size_bits];
+    right->origin_head = &heads[size_bits];
     right->sibling = left;
     if (node->paddr != ALLOCMAN_NO_PADDR) {
         left->paddr = node->paddr;
@@ -298,7 +302,7 @@ void _utspace_split_free(allocman_t *alloc, void *_split, seL4_Word cookie, size
     /* see if our sibling is also free */
     if (parent && !node->sibling->head) {
         /* remove sibling from free list */
-        _remove_node(&split->heads[size_bits], node->sibling);
+        _remove_node(node->sibling->origin_head, node->sibling);
         /* delete both of us */
         _delete_node(alloc, node->sibling);
         _delete_node(alloc, node);

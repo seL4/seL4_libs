@@ -303,5 +303,12 @@ int sel4utils_bootstrap_clone_into_vspace(vspace_t *current, vspace_t *clone, re
  */
 void sel4utils_get_image_region(uintptr_t *va_start, uintptr_t *va_end);
 
+/**
+ *
+ * @return the physical address that vaddr is mapped to.
+ *         VKA_NO_PADDR if there is no mapping
+ */
+uintptr_t sel4utils_get_paddr(vspace_t *vspace, void *vaddr, seL4_Word type, seL4_Word size_bits);
+
 #endif /* CONFIG_LIB_SEL4_VSPACE && CONFIG_LIB_SEL4_VKA */
 #endif /* _UTILS_VSPACE_H */

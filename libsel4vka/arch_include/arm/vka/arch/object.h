@@ -51,20 +51,13 @@ vka_arch_get_object_size(seL4_Word objectType)
     case seL4_ARM_SmallPageObject:
         return seL4_PageBits;
     case seL4_ARM_LargePageObject:
-        return 16;
-#ifdef ARM_HYP
+        return seL4_LargePageBits;
     case seL4_ARM_SectionObject:
-        return 21;
+        return seL4_SectionBits;
     case seL4_ARM_SuperSectionObject:
-        return 25;
+        return seL4_SuperSectionBits;
     case seL4_ARM_VCPUObject:
         return seL4_ARM_VCPUBits;
-#else /* ARM_HYP */
-    case seL4_ARM_SectionObject:
-        return 20;
-    case seL4_ARM_SuperSectionObject:
-        return 24;
-#endif /* ARM_HYP */
     case seL4_ARM_PageTableObject:
         return seL4_PageTableBits;
     case seL4_ARM_PageDirectoryObject:

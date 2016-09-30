@@ -33,38 +33,78 @@ typedef struct io_mapping {
     void *returned_addr;
     /* base address of the mapping with respect to the vspace */
     void *mapped_addr;
-    int num_pages;
-    int page_size;
+    size_t num_pages;
+    size_t page_size;
+    size_t page_size_bits;
+    /* caps for the mappings (s) */
     seL4_CPtr *caps;
+    /* allocation cookie for allocation(s) */
+    seL4_Word *alloc_cookies;
     struct io_mapping *next, *prev;
 } io_mapping_t;
 
 typedef struct sel4platsupport_io_mapper_cookie {
     vspace_t vspace;
-    simple_t simple;
     vka_t vka;
     io_mapping_t *head;
 } sel4platsupport_io_mapper_cookie_t;
 
-static io_mapping_t *new_unmapped_node(void *addr)
+static void
+free_node(io_mapping_t *node)
 {
-    io_mapping_t *ret = (io_mapping_t*)malloc(sizeof(*ret));
+    assert(node);
+    if (node->caps) {
+        free(node->caps);
+    }
+    if (node->alloc_cookies) {
+        free(node->alloc_cookies);
+    }
+    free(node);
+}
+
+static io_mapping_t *
+new_node(size_t num_pages)
+{
+    io_mapping_t *ret = calloc(1, sizeof(io_mapping_t));
+
     if (!ret) {
         return NULL;
     }
-    *ret = (io_mapping_t) {
-        .was_mapped = 0,
-         .returned_addr = addr,
-          .next = NULL,
-           .prev = NULL,
-            .caps = NULL,
-             .mapped_addr = NULL
-    };
+
+    ret->caps = calloc(num_pages, sizeof(seL4_CPtr));
+    if (!ret->caps) {
+        free_node(ret);
+        return NULL;
+    }
+
+    ret->alloc_cookies = calloc(num_pages, sizeof(seL4_Word));
+    if (!ret->alloc_cookies) {
+        free_node(ret);
+        return NULL;
+    }
+
+    ret->num_pages = num_pages;
     return ret;
 }
 
 static void
-_insert_node(sel4platsupport_io_mapper_cookie_t *io_mapper, io_mapping_t *node)
+destroy_node(vka_t *vka, io_mapping_t *mapping)
+{
+    cspacepath_t path;
+    for (size_t i = 0; i < mapping->num_pages; i++) {
+        /* free the allocation */
+        vka_utspace_free(vka, kobject_get_type(KOBJECT_FRAME, mapping->page_size_bits),
+                         mapping->page_size_bits, mapping->alloc_cookies[i]);
+        /* free the caps */
+       vka_cspace_make_path(vka, mapping->caps[i], &path);
+       vka_cnode_delete(&path);
+       vka_cspace_free(vka, mapping->caps[i]);
+    }
+    free_node(mapping);
+}
+
+static void
+insert_node(sel4platsupport_io_mapper_cookie_t *io_mapper, io_mapping_t *node)
 {
     node->prev = NULL;
     node->next = io_mapper->head;
@@ -75,7 +115,7 @@ _insert_node(sel4platsupport_io_mapper_cookie_t *io_mapper, io_mapping_t *node)
 }
 
 static io_mapping_t *
-_find_node(sel4platsupport_io_mapper_cookie_t *io_mapper, void *returned_addr)
+find_node(sel4platsupport_io_mapper_cookie_t *io_mapper, void *returned_addr)
 {
     io_mapping_t *current;
     for (current = io_mapper->head; current; current = current->next) {
@@ -87,7 +127,7 @@ _find_node(sel4platsupport_io_mapper_cookie_t *io_mapper, void *returned_addr)
 }
 
 static void
-_remove_node(sel4platsupport_io_mapper_cookie_t *io_mapper, io_mapping_t *node)
+remove_node(sel4platsupport_io_mapper_cookie_t *io_mapper, io_mapping_t *node)
 {
     if (node->prev) {
         node->prev->next = node->next;
@@ -100,29 +140,12 @@ _remove_node(sel4platsupport_io_mapper_cookie_t *io_mapper, io_mapping_t *node)
     }
 }
 
-static void
-_free_node(io_mapping_t *node)
-{
-    if (node->caps) {
-        free(node->caps);
-    }
-    free(node);
-}
-
-static void
-_remove_free_node(sel4platsupport_io_mapper_cookie_t *io_mapper, io_mapping_t *node)
-{
-    _remove_node(io_mapper, node);
-    _free_node(node);
-}
-
 static void *
-sel4platsupport_map_paddr_with_page_size(sel4platsupport_io_mapper_cookie_t *io_mapper, uintptr_t paddr, size_t size, int page_size_bits, int cached)
+sel4platsupport_map_paddr_with_page_size(sel4platsupport_io_mapper_cookie_t *io_mapper, uintptr_t paddr, size_t size, size_t page_size_bits, bool cached)
 {
 
     vka_t *vka = &io_mapper->vka;
     vspace_t *vspace = &io_mapper->vspace;
-    simple_t *simple = &io_mapper->simple;
 
     /* search at start of page */
     int page_size = BIT(page_size_bits);
@@ -130,26 +153,19 @@ sel4platsupport_map_paddr_with_page_size(sel4platsupport_io_mapper_cookie_t *io_
     uintptr_t offset = paddr - start;
     size += offset;
 
-    /* calculate number of pages */
-    unsigned int num_pages = ROUND_UP(size, page_size) >> page_size_bits;
-    assert(num_pages << page_size_bits >= size);
-
-    seL4_CPtr *frames = (seL4_CPtr*)malloc(sizeof(*frames) * num_pages);
-    if (!frames) {
-        ZF_LOGE("Failed to allocate array of size %zu", sizeof(*frames) * num_pages);
+    io_mapping_t *mapping = new_node(BYTES_TO_SIZE_BITS_PAGES(size, page_size_bits));
+    assert(mapping->num_pages << page_size_bits >= size);
+    if (!mapping) {
+        ZF_LOGE("Failed to allocate node for %zu pages", mapping->num_pages);
         return NULL;
     }
-    io_mapping_t *node = (io_mapping_t*)malloc(sizeof(*node));
-    if (!node) {
-        ZF_LOGE("Failed to malloc of size %zu", sizeof(*node));
-        free(frames);
-        return NULL;
-    }
+    mapping->page_size_bits = page_size_bits;
 
-    /* get all of the physical frame caps */
-    for (unsigned int i = 0; i < num_pages; i++) {
+    seL4_Word type = kobject_get_type(KOBJECT_FRAME, mapping->page_size_bits);
+    /* allocate all of the physical frame caps */
+    for (unsigned int i = 0; i < mapping->num_pages; i++) {
         /* allocate a cslot */
-        int error = vka_cspace_alloc(vka, &frames[i]);
+        int error = vka_cspace_alloc(vka, &mapping->caps[i]);
         if (error) {
             ZF_LOGE("cspace alloc failed");
             assert(error == 0);
@@ -159,97 +175,39 @@ sel4platsupport_map_paddr_with_page_size(sel4platsupport_io_mapper_cookie_t *io_
 
         /* create a path */
         cspacepath_t path;
-        vka_cspace_make_path(vka, frames[i], &path);
+        vka_cspace_make_path(vka, mapping->caps[i], &path);
 
-        error = simple_get_frame_cap(simple, (void*)start + (i * page_size), page_size_bits, &path);
-
+        /* allocate the frame */
+        error = vka_utspace_alloc_at(vka, &path, type, page_size_bits, start + (i * page_size),
+                                    &mapping->alloc_cookies[i]);
         if (error) {
             /* free this slot, and then do general cleanup of the rest of the slots.
              * this avoids a needless seL4_CNode_Delete of this slot, as there is no
              * cap in it */
-            vka_cspace_free(vka, frames[i]);
-            num_pages = i;
+            vka_cspace_free(vka, mapping->caps[i]);
+            mapping->num_pages = i;
             goto error;
         }
-
     }
 
     /* Now map the frames in */
-    void *vaddr = vspace_map_pages(vspace, frames, NULL, seL4_AllRights, num_pages, page_size_bits, cached);
-    if (vaddr) {
-        /* fill out and insert the node */
-        *node = (io_mapping_t) {
-            .mapped_addr = vaddr,
-             .returned_addr = vaddr + offset,
-              .num_pages = num_pages,
-               .page_size = page_size_bits,
-                .caps = frames
-        };
-        _insert_node(io_mapper, node);
-        return vaddr + offset;
+    mapping->mapped_addr = vspace_map_pages(vspace, mapping->caps, mapping->alloc_cookies, seL4_AllRights, mapping->num_pages,
+                                      mapping->page_size_bits, cached);
+    if (mapping->mapped_addr != NULL) {
+        /* fill out and insert node */
+        mapping->returned_addr = mapping->mapped_addr + offset;
+        insert_node(io_mapper, mapping);
+        return mapping->returned_addr;
     }
 error:
-    for (unsigned int i = 0; i < num_pages; i++) {
-        cspacepath_t path;
-        vka_cspace_make_path(vka, frames[i], &path);
-        vka_cnode_delete(&path);
-        vka_cspace_free(vka, frames[i]);
-    }
-    free(frames);
-    free(node);
+    destroy_node(vka, mapping);
     return NULL;
 }
 
 static void *
-sel4platsupport_get_vaddr_with_page_size(sel4platsupport_io_mapper_cookie_t *io_mapper, uintptr_t paddr, size_t size, int page_size_bits)
+sel4platsupport_map_paddr(void *cookie, uintptr_t paddr, size_t size, int cached, UNUSED ps_mem_flags_t flags)
 {
-    simple_t *simple = &io_mapper->simple;
-
-    /* search at start of page */
-    int page_size = BIT(page_size_bits);
-    uintptr_t start = ROUND_DOWN(paddr, page_size);
-    uintptr_t offset = paddr - start;
-    size += offset;
-
-    /* calculate number of pages */
-    unsigned int num_pages = ROUND_UP(size, page_size) >> page_size_bits;
-    assert(num_pages << page_size_bits >= size);
-
-    void *first_vaddr = simple_get_frame_vaddr(simple, (void*)start, page_size_bits);
-    if (!first_vaddr) {
-        return NULL;
-    }
-    for (unsigned int i = 1; i < num_pages; i++) {
-        void *vaddr = simple_get_frame_vaddr(simple, (void*)start + (i * page_size), page_size_bits);
-        if (first_vaddr + (i * page_size) != vaddr) {
-            return NULL;
-        }
-    }
-    io_mapping_t *node = new_unmapped_node(first_vaddr + offset);
-    if (!node) {
-        ZF_LOGE("Failed to allocate node to track mapping");
-        return NULL;
-    }
-    _insert_node(io_mapper, node);
-    return first_vaddr + offset;
-}
-
-static void *
-sel4platsupport_map_paddr(void *cookie, uintptr_t paddr, size_t size, int cached, ps_mem_flags_t flags)
-{
-    (void)flags; // we don't support these
-    /* The simple interface supports two ways of getting physical addresses.
-     * Unfortunately it tends that precisely one of them will actually be
-     * implemented.
-     * One gives us the cap and we have to map it in, the other gives us the
-     * mapped address. We try the getting the cap technique first as that gives
-     * us better control since we can ensure the correct caching policy.
-     * If that fails then we attempt to get the mappings and ensure that they
-     * are in contiguous virtual address if there is more than one.
-     * In both cases we will try and use the largest frame size possible */
     sel4platsupport_io_mapper_cookie_t* io_mapper = (sel4platsupport_io_mapper_cookie_t*)cookie;
-
-
     int frame_size_index = 0;
     /* find the largest reasonable frame size */
     while (frame_size_index + 1 < SEL4_NUM_PAGE_SIZES) {
@@ -267,92 +225,65 @@ sel4platsupport_map_paddr(void *cookie, uintptr_t paddr, size_t size, int cached
         }
     }
 
-    /* try the get_frame_vaddr technique */
-    for (int i = frame_size_index; i >= 0; i--) {
-        void *result = sel4platsupport_get_vaddr_with_page_size(io_mapper, paddr, size, sel4_page_sizes[i]);
-        if (result) {
-            return result;
-        }
-    }
-
     /* shit out of luck */
     ZF_LOGE("Failed to find a way to map address %p", (void *)paddr);
     return NULL;
 }
 
 static void
-sel4platsupport_unmap_vaddr(void *cookie, void *vaddr, size_t size)
+sel4platsupport_unmap_vaddr(void * cookie, void *vaddr, UNUSED size_t size)
 {
-    (void)size;
-    sel4platsupport_io_mapper_cookie_t* io_mapper = (sel4platsupport_io_mapper_cookie_t*)cookie;
+    sel4platsupport_io_mapper_cookie_t* io_mapper = cookie;
 
-    io_mapping_t *mapping;
+    vspace_t *vspace = &io_mapper->vspace;
+    vka_t *vka = &io_mapper->vka;
+    io_mapping_t *mapping = find_node(io_mapper, vaddr);
 
-    mapping = _find_node(io_mapper, vaddr);
     if (!mapping) {
         ZF_LOGF("Tried to unmap vaddr %p, which was never mapped in", vaddr);
         return;
     }
-    if (!mapping->was_mapped) {
-        /* this vaddr was given directly from simple, so nothing to unmap */
-        _remove_free_node(io_mapper, mapping);
-        return;
-    }
 
-    vspace_t *vspace = &io_mapper->vspace;
-    vka_t *vka = &io_mapper->vka;
-
-    vspace_unmap_pages(vspace, mapping->mapped_addr, mapping->num_pages, mapping->page_size,
+    /* unmap the pages */
+    vspace_unmap_pages(vspace, mapping->mapped_addr, mapping->num_pages, mapping->page_size_bits,
                        VSPACE_PRESERVE);
 
-    for (int i = 0; i < mapping->num_pages; i++) {
-        cspacepath_t path;
-        vka_cspace_make_path(vka, mapping->caps[i], &path);
-        vka_cnode_delete(&path);
-        vka_cspace_free(vka, mapping->caps[i]);
-    }
-
-    _remove_free_node(io_mapper, mapping);
+    /* clean up the node */
+    remove_node(io_mapper, mapping);
+    destroy_node(vka, mapping);
 }
 
 int
-sel4platsupport_new_io_mapper(simple_t simple, vspace_t vspace, vka_t vka, ps_io_mapper_t *io_mapper)
+sel4platsupport_new_io_mapper(UNUSED simple_t simple, vspace_t vspace, vka_t vka, ps_io_mapper_t *io_mapper)
 {
-    sel4platsupport_io_mapper_cookie_t *cookie;
-    cookie = (sel4platsupport_io_mapper_cookie_t*)malloc(sizeof(*cookie));
+    sel4platsupport_io_mapper_cookie_t *cookie = malloc(sizeof(sel4platsupport_io_mapper_cookie_t));
     if (!cookie) {
-        ZF_LOGE("Failed to allocate %zu bytes", sizeof(*cookie));
+        ZF_LOGE("Failed to allocate %zu bytes", sizeof(sel4platsupport_io_mapper_cookie_t));
         return -1;
     }
-    *cookie = (sel4platsupport_io_mapper_cookie_t) {
-        .vspace = vspace,
-         .simple = simple,
-          .vka = vka
-    };
-    *io_mapper = (ps_io_mapper_t) {
-        .cookie = cookie,
-         .io_map_fn = sel4platsupport_map_paddr,
-          .io_unmap_fn = sel4platsupport_unmap_vaddr
-    };
+
+    cookie->vspace = vspace;
+    cookie->vka = vka;
+    io_mapper->cookie = cookie;
+    io_mapper->io_map_fn = sel4platsupport_map_paddr;
+    io_mapper->io_unmap_fn = sel4platsupport_unmap_vaddr;
+
     return 0;
 }
 
 int
 sel4platsupport_new_io_ops(simple_t simple, vspace_t vspace, vka_t vka, ps_io_ops_t *io_ops)
 {
-    int err;
-    err = sel4platsupport_new_io_mapper(simple, vspace, vka, &io_ops->io_mapper);
+    int err = sel4platsupport_new_io_mapper(simple, vspace, vka, &io_ops->io_mapper);
     if (err) {
         return err;
     }
 #ifdef ARCH_ARM
-    /* We don't consider these as failures */
-    err = clock_sys_init(io_ops, &io_ops->clock_sys);
-    (void)err;
-    err = mux_sys_init(io_ops, &io_ops->mux_sys);
-    (void)err;
+    clock_sys_init(io_ops, &io_ops->clock_sys);
+    mux_sys_init(io_ops, &io_ops->mux_sys);
 #endif
-    return 0;
+
+    return err;
 }
 
 

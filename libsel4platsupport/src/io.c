@@ -96,9 +96,9 @@ destroy_node(vka_t *vka, io_mapping_t *mapping)
         vka_utspace_free(vka, kobject_get_type(KOBJECT_FRAME, mapping->page_size_bits),
                          mapping->page_size_bits, mapping->alloc_cookies[i]);
         /* free the caps */
-       vka_cspace_make_path(vka, mapping->caps[i], &path);
-       vka_cnode_delete(&path);
-       vka_cspace_free(vka, mapping->caps[i]);
+        vka_cspace_make_path(vka, mapping->caps[i], &path);
+        vka_cnode_delete(&path);
+        vka_cspace_free(vka, mapping->caps[i]);
     }
     free_node(mapping);
 }
@@ -179,7 +179,7 @@ sel4platsupport_map_paddr_with_page_size(sel4platsupport_io_mapper_cookie_t *io_
 
         /* allocate the frame */
         error = vka_utspace_alloc_at(vka, &path, type, page_size_bits, start + (i * page_size),
-                                    &mapping->alloc_cookies[i]);
+                                     &mapping->alloc_cookies[i]);
         if (error) {
             /* free this slot, and then do general cleanup of the rest of the slots.
              * this avoids a needless seL4_CNode_Delete of this slot, as there is no
@@ -192,7 +192,7 @@ sel4platsupport_map_paddr_with_page_size(sel4platsupport_io_mapper_cookie_t *io_
 
     /* Now map the frames in */
     mapping->mapped_addr = vspace_map_pages(vspace, mapping->caps, mapping->alloc_cookies, seL4_AllRights, mapping->num_pages,
-                                      mapping->page_size_bits, cached);
+                                            mapping->page_size_bits, cached);
     if (mapping->mapped_addr != NULL) {
         /* fill out and insert node */
         mapping->returned_addr = mapping->mapped_addr + offset;

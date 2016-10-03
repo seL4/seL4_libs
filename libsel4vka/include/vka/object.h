@@ -26,7 +26,7 @@
 
 typedef struct vka_object {
     seL4_CPtr cptr;
-    uint32_t ut;
+    seL4_Word ut;
     seL4_Word type;
     seL4_Word size_bits;
 } vka_object_t;

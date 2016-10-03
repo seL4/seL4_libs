@@ -52,7 +52,7 @@ typedef struct {
     struct obj {
         seL4_Word type;
         seL4_Word size_bits;
-        uint32_t cookie;
+        seL4_Word cookie;
     } *live_objs;
     size_t live_objs_sz;
 
@@ -169,7 +169,7 @@ static void cspace_make_path(void *data, seL4_CPtr slot, cspacepath_t *res)
  * track_slot. Refer to the comments in it for explanations.
  */
 static void track_obj(state_t *state, seL4_Word type, seL4_Word size_bits,
-                      uint32_t cookie)
+                      seL4_Word cookie)
 {
     assert(state != NULL);
 

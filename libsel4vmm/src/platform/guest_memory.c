@@ -346,6 +346,7 @@ int vmm_alloc_guest_ram(vmm_t *vmm, size_t bytes, int onetoone) {
     if (error) {
         return error;
     }
+    vspace_free_reservation(&guest_memory->vspace, reservation);
     printf("Guest RAM regions after allocating range 0x%x-0x%x:\n", (unsigned int)base, (unsigned int)(base + bytes));
     print_guest_ram_regions(&vmm->guest_mem);
     return 0;

@@ -186,7 +186,6 @@ typedef int (*vspace_new_pages_at_vaddr_fn)(vspace_t *vspace, void *vaddr, size_
  * @param reservation reservation to the range the allocation will take place in.
  *
  * @return seL4_NoError on success. -1 on failure.
- *         NULL on failure.
  */
 typedef int (*vspace_map_pages_at_vaddr_fn)(vspace_t *vspace, seL4_CPtr caps[], uintptr_t cookies[],
                                             void *vaddr, size_t num_pages,

@@ -15,6 +15,7 @@
 #include <vka/vka.h>
 #include <vka/kobject_t.h>
 #include <stdio.h>
+#include <string.h>
 #include <utils/util.h>
 
 /*
@@ -35,28 +36,53 @@ typedef struct vka_object {
  * Generic object allocator used by functions below, can also be used directly
  */
 static inline int
-vka_alloc_object(vka_t *vka, seL4_Word type, seL4_Word size_bits, vka_object_t *result)
+vka_alloc_object_at(vka_t *vka, seL4_Word type, seL4_Word size_bits, uintptr_t paddr,
+                    vka_object_t *result)
 {
-    seL4_CPtr cptr;
-    seL4_Word ut;
-    int error;
+
+    int error = vka_cspace_alloc(vka, &result->cptr);
+    if (unlikely(error)) {
+        result->cptr = 0;
+        ZF_LOGE("Failed to allocate cslot: error %d\n", error);
+        goto error;
+    }
+
     cspacepath_t path;
+    vka_cspace_make_path(vka, result->cptr, &path);
 
-    if ( (error = vka_cspace_alloc(vka, &cptr)) != 0) {
-        return error;
+    if (paddr == VKA_NO_PADDR) {
+        error = vka_utspace_alloc(vka, &path, type, size_bits, &result->ut);
+        if (unlikely(error)) {
+            ZF_LOGE("Failed to allocate object of size %lu, error %d\n",
+                     BIT(size_bits), error);
+            goto error;
+        }
+    } else {
+        error = vka_utspace_alloc_at(vka, &path, type, size_bits, paddr, &result->ut);
+        if (unlikely(error)) {
+            ZF_LOGE("Failed to allocate object of size %lu at paddr %x, error %d\n",
+                    BIT(size_bits), paddr, error);
+            goto error;
+        }
     }
 
-    vka_cspace_make_path(vka, cptr, &path);
-    if ( (error = vka_utspace_alloc(vka, &path, type, size_bits, &ut)) != 0) {
-        ZF_LOGE("Failed to allocate object of size %lu, error %d\n", BIT(size_bits), error);
-        vka_cspace_free(vka, cptr);
-        return error;
-    }
-    result->cptr = cptr;
-    result->ut = ut;
     result->type = type;
     result->size_bits = size_bits;
     return 0;
+
+error:
+    if (result->cptr) {
+        vka_cspace_free(vka, result->cptr);
+    }
+    /* don't return garbage to the caller */
+    memset(result, 0, sizeof(*result));
+    return error;
+}
+
+static inline int
+vka_alloc_object(vka_t *vka, seL4_Word type, seL4_Word size_bits, vka_object_t *result)
+{
+    return vka_alloc_object_at(vka, type, size_bits, VKA_NO_PADDR, result);
 }
 
 /* convenient wrapper that throws away the vka_object_t and just returns the cptr -
@@ -98,6 +124,13 @@ static inline int vka_alloc_untyped(vka_t *vka, uint32_t size_bits, vka_object_t
 {
     return vka_alloc_object(vka, seL4_UntypedObject, size_bits, result);
 }
+
+static inline int vka_alloc_untyped_at(vka_t *vka, uint32_t size_bits, uintptr_t paddr,
+                                       vka_object_t *result)
+{
+    return vka_alloc_object_at(vka, seL4_UntypedObject, size_bits, paddr, result);
+}
+
 static inline int vka_alloc_tcb(vka_t *vka, vka_object_t *result)
 {
     return vka_alloc_object(vka, seL4_TCBObject, seL4_TCBBits, result);
@@ -128,6 +161,14 @@ static inline int vka_alloc_frame(vka_t *vka, uint32_t size_bits, vka_object_t *
 {
     return vka_alloc_object(vka, kobject_get_type(KOBJECT_FRAME, size_bits), size_bits, result);
 }
+
+static inline int vka_alloc_frame_at(vka_t *vka, uint32_t size_bits, uintptr_t paddr,
+                                     vka_object_t *result)
+{
+    return vka_alloc_object_at(vka, kobject_get_type(KOBJECT_FRAME, size_bits), size_bits,
+                               paddr, result);
+}
+
 
 static inline int vka_alloc_page_directory(vka_t *vka, vka_object_t *result)
 {

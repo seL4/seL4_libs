@@ -37,9 +37,9 @@ arch_kobject_get_size(kobject_t type, seL4_Word objectSize)
     case KOBJECT_FRAME:
         switch (objectSize) {
         case seL4_PageBits:
-        case 16:
-        case 20:
-        case 24:
+        case seL4_LargePageBits:
+        case seL4_SectionBits:
+        case seL4_SuperSectionBits:
             return objectSize;
         default:
             return 0;
@@ -65,19 +65,12 @@ arch_kobject_get_type(kobject_t type, seL4_Word objectSize)
         switch (objectSize) {
         case seL4_PageBits:
             return seL4_ARM_SmallPageObject;
-        case 16:
+        case seL4_LargePageBits:
             return seL4_ARM_LargePageObject;
-#if defined(ARM_HYP)
-        case 21:
+        case seL4_SectionBits:
             return seL4_ARM_SectionObject;
-        case 25:
+        case seL4_SuperSectionBits:
             return seL4_ARM_SuperSectionObject;
-#else
-        case 20:
-            return seL4_ARM_SectionObject;
-        case 24:
-            return seL4_ARM_SuperSectionObject;
-#endif
         default:
             ZF_LOGE("Unknown object type");
             return -1;

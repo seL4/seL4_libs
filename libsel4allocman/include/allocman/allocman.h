@@ -381,7 +381,7 @@ int allocman_configure_max_freed_untyped_chunks(allocman_t *alloc, size_t num);
  * @param uts Path to each of the untyped to add. untyped is assumed to be at depth 32 from this threads cspace_root
  * @param size_bits Size, in bits, of each of the untypeds
  * @param paddr Optional parameter specifying the physical address of each of the untypeds
- * @param utType The type of all untypeds being added. One of (ALLOCMAN_UT_KERNEL, ALLOCMAN_UT_DEV, ALLOCMAN_UT_DEV_RAM)
+ * @param utType The type of all untypeds being added. One of (ALLOCMAN_UT_KERNEL, ALLOCMAN_UT_DEV, ALLOCMAN_UT_DEV_MEM)
  *
  * @return returns 0 on success
  */

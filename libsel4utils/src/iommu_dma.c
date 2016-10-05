@@ -140,7 +140,6 @@ static int iommu_dma_alloc_iospace(void* cookie, void *vaddr, size_t size)
 
 static void* dma_alloc(void *cookie, size_t size, int align, int cached, ps_mem_flags_t flags)
 {
-    dma_man_t *dma = cookie;
     int error;
     if (cached || flags != PS_MEM_NORMAL) {
         /* Going to ignore flags */

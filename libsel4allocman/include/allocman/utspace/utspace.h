@@ -18,8 +18,23 @@
 #include <vka/vka.h>
 #include <vka/object.h>
 
+/*
+ * Marks an untyped as being usable for creating arbitrary kernel objects. Objects
+ * created from such untypeds have no restrictions and can be used for anything
+ */
 #define ALLOCMAN_UT_KERNEL 0
+/*
+ * Marks an untyped as being a device region. Device regions will never be used
+ * for an allocation unless explicitly requested by physical address
+ */
 #define ALLOCMAN_UT_DEV 1
+/*
+ * Marks an untyped as being from a device region, but also usable RAM. Objects can
+ * be created from these untypeds if the 'canBeDev' parameter in 'alloc' is set
+ * to true. An object created from one of these untypeds may have restrictions
+ * in what it can be used for and may not be zeroed, as it cannot be written by
+ * the kernel.
+ */
 #define ALLOCMAN_UT_DEV_MEM 2
 
 /* Use the value of 1 internally to indicate the absence of a physical address.

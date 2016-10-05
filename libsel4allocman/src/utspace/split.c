@@ -172,6 +172,7 @@ static int _refill_pool(allocman_t *alloc, utspace_split_t *split, struct utspac
         _delete_node(alloc, left);
         _delete_node(alloc, right);
         /* Well this shouldn't happen */
+        ZF_LOGE("Failed to retype untyped, error %d\n", sel4_error);
         return 1;
     }
     /* perform the second retype */
@@ -181,6 +182,7 @@ static int _refill_pool(allocman_t *alloc, utspace_split_t *split, struct utspac
         _delete_node(alloc, left);
         _delete_node(alloc, right);
         /* Well this shouldn't happen */
+        ZF_LOGE("Failed to retype untyped, error %d\n", sel4_error);
         return 1;
     }
     /* all is done. remove the parent and insert the children */
@@ -284,6 +286,7 @@ seL4_Word _utspace_split_alloc(allocman_t *alloc, void *_split, size_t size_bits
     sel4_error = seL4_Untyped_Retype(node->ut.capPtr, type, sel4_size_bits, slot->root, slot->dest, slot->destDepth, slot->offset, 1);
     if (sel4_error != seL4_NoError) {
         /* Well this shouldn't happen */
+        ZF_LOGE("Failed to retype untyped, error %d\n", sel4_error);
         SET_ERROR(error, 1);
         return 0;
     }

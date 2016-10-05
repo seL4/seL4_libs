@@ -46,7 +46,7 @@ static enum serial_setup_status setup_status = NOT_INITIALIZED;
  * passing parameters down to the platform code for backwards compatibility reasons. This
  * is strictly to avoid refactoring all existing platform code */
 static vspace_t *vspace = NULL;
-static simple_t *simple = NULL;
+static UNUSED simple_t *simple = NULL;
 static vka_t *vka = NULL;
 
 /* To keep failsafe setup we need actual memory for a simple and a vka */
@@ -95,18 +95,19 @@ __map_device_page_failsafe(void* cookie UNUSED, uintptr_t paddr, size_t size,
     int bits = CTZ(size);
     int error;
     seL4_Word vaddr = 0;
-    cspacepath_t dest;
+    vka_object_t dest;
 
     if (device_cap != 0) {
         /* we only support a single page for the serial */
         for (;;);
     }
-    error = sel4platsupport_copy_frame_cap(vka, simple, (void *) paddr, bits, &dest);
+
+    error = sel4platsupport_alloc_frame_at(vka, paddr, bits, &dest);
     if (error != seL4_NoError) {
         goto error;
     }
-    device_cap = dest.capPtr;
-    
+    device_cap = dest.cptr;
+
     vaddr = platsupport_alloc_device_vaddr(bits);
     error =
         seL4_ARCH_Page_Map(
@@ -133,19 +134,19 @@ __map_device_page_regular(void* cookie UNUSED, uintptr_t paddr, size_t size,
     int bits = CTZ(size);
     void *vaddr;
     int error;
-    cspacepath_t dest;
+    vka_object_t dest;
 
-    error = sel4platsupport_copy_frame_cap(vka, simple, (void *) paddr, bits, &dest);
+    error = sel4platsupport_alloc_frame_at(vka, paddr, bits, &dest);
     if (error) {
         ZF_LOGF("Failed to get cap for serial device frame");
     }
 
-    vaddr = vspace_map_pages(vspace, &dest.capPtr, NULL, seL4_AllRights, 1, bits, 0);
+    vaddr = vspace_map_pages(vspace, &dest.cptr, NULL, seL4_AllRights, 1, bits, 0);
     if (!vaddr) {
         ZF_LOGF("Failed to map serial device :(\n");
         for (;;);
     }
-    device_cap = dest.capPtr;
+    device_cap = dest.cptr;
 
     return (void*)vaddr;
 }

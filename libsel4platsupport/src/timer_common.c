@@ -24,9 +24,8 @@ timer_common_destroy_frame_internal(timer_common_data_t *data, vka_t *vka, vspac
     if (data->vaddr != NULL) {
         vspace_unmap_pages(vspace, data->vaddr, 1, seL4_PageBits, VSPACE_PRESERVE);
     }
-    if (data->frame.capPtr != 0) {
-        vka_cnode_delete(&data->frame);
-        vka_cspace_free(vka, data->frame.capPtr);
+    if (data->frame.cptr != 0) {
+        vka_free_object(vka, &data->frame);
     }
 }
 
@@ -73,26 +72,24 @@ timer_common_cleanup_irq(vka_t *vka, seL4_CPtr irq)
 }
 
 timer_common_data_t *
-timer_common_init_frame(vspace_t *vspace, simple_t *simple, vka_t *vka, void *paddr)
+timer_common_init_frame(vspace_t *vspace, vka_t *vka, uintptr_t paddr)
 {
     int error;
-    timer_common_data_t *timer_data = NULL;
+    timer_common_data_t *timer_data = calloc(1, sizeof(timer_common_data_t));
 
-    timer_data = malloc(sizeof(timer_common_data_t));
     if (timer_data == NULL) {
         ZF_LOGE("Failed to allocate timer_common_data_t size: %zu\n", sizeof(timer_common_data_t));
         goto error;
     }
-    memset(timer_data, 0, sizeof(timer_common_data_t));
- 
-    error = sel4platsupport_copy_frame_cap(vka, simple, paddr, seL4_PageBits, &timer_data->frame);
+
+    error = sel4platsupport_alloc_frame_at(vka, (uintptr_t) paddr, seL4_PageBits, &timer_data->frame);
     if (error != seL4_NoError) {
         goto error;
     }
 
     /* map in the frame */
-    timer_data->vaddr = vspace_map_pages(vspace, &timer_data->frame.capPtr, NULL, seL4_AllRights,
-                                         1, seL4_PageBits, 0);
+    timer_data->vaddr = vspace_map_pages(vspace, &timer_data->frame.cptr,
+            (uintptr_t *) &timer_data->frame, seL4_AllRights, 1, seL4_PageBits, 0);
     ZF_LOGV("Mapped timer at %p\n", timer_data->vaddr);
     if (timer_data->vaddr == NULL) {
         ZF_LOGE("Failed to map page at vaddr %p\n", timer_data->vaddr);
@@ -112,8 +109,8 @@ timer_common_init(vspace_t *vspace, simple_t *simple,
     int error;
     cspacepath_t path;
     timer_common_data_t *timer_data;
-    
-    timer_data = timer_common_init_frame(vspace, simple, vka, paddr);
+
+    timer_data = timer_common_init_frame(vspace, vka, (uintptr_t) paddr);
     if (timer_data == NULL) {
         goto error;
     }

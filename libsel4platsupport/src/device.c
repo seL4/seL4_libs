@@ -37,24 +37,14 @@ sel4platsupport_copy_irq_cap(vka_t *vka, simple_t *simple, seL4_Word irq_number,
 
     return seL4_NoError;
 }
- 
-seL4_Error
-sel4platsupport_copy_frame_cap(vka_t *vka, simple_t *simple, void *paddr, size_t size_bits, cspacepath_t *dest)
-{
-    /* allocate a cslot for the frame */
-    seL4_CPtr frame_cap;
-    int error = vka_cspace_alloc(vka, &frame_cap);
-    if (error) {
-        ZF_LOGE("Failed to allocate cslot for frame cap\n");
-        return error;
-    }
 
+seL4_Error
+sel4platsupport_alloc_frame_at(vka_t *vka, uintptr_t paddr, size_t size_bits, vka_object_t *frame)
+{
     /* find the physical frame */
-    vka_cspace_make_path(vka, frame_cap, dest);
-    error = simple_get_frame_cap(simple, paddr, size_bits, dest);
+    int error = vka_alloc_frame_at(vka, size_bits, paddr, frame);
     if (error) {
-        ZF_LOGE("Failed to find frame at paddr %p\n", paddr);
-        return error;
+        ZF_LOGE("Failed to find frame at paddr %x\n", paddr);
     }
 
     return error;

@@ -8,26 +8,24 @@
  * @TAG(NICTA_BSD)
  */
 
-#ifndef __SEL4PLATSUPPORT_DEVICE_H__
-#define __SEL4PLATSUPPORT_DEVICE_H__
+#pragma once
 
 #include <sel4/sel4.h>
 #include <sel4platsupport/arch/device.h>
 #include <simple/simple.h>
 #include <vka/vka.h>
-
-/*  
+#include <vka/object.h>
+/*
  * Allocate a cslot for a physical frame and get the cap for that frame.
- * 
- * @param vka to allocate slot with
- * @param simple to get the cap from
+ *
+ * @param vka to allocate slot and cap to frame
  * @param paddr to get the cap for
  * @param size_bits size of frame in bits
- * @param[out] dest empty path struct to return path to frame cap in. 
+ * @param[out] dest returned vka object for frame
  * @return 0 on success
  */
-seL4_Error sel4platsupport_copy_frame_cap(vka_t *vka, simple_t *simple, void *paddr, 
-                                          size_t size_bits, cspacepath_t *dest);
+seL4_Error sel4platsupport_alloc_frame_at(vka_t *vka, uintptr_t paddr,
+                                          size_t size_bits, vka_object_t *dest);
 
 /*
  * Allocate a cslot for an irq and get the cap for an irq.
@@ -40,4 +38,3 @@ seL4_Error sel4platsupport_copy_frame_cap(vka_t *vka, simple_t *simple, void *pa
  */
 seL4_Error sel4platsupport_copy_irq_cap(vka_t *vka, simple_t *simple, seL4_Word irq, 
                                        cspacepath_t *dest);
-#endif /* __SEL4PLATSUPPORT_DEVICE_H__ */

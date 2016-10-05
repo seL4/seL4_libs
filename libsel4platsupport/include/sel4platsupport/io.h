@@ -13,7 +13,6 @@
 
 #include <vka/vka.h>
 #include <vspace/vspace.h>
-#include <simple/simple.h>
 #include <platsupport/io.h>
 
 #include <stdio.h>
@@ -24,27 +23,25 @@
  * Creates a new implementation of the platsupport io_mapper interface using a
  * provided simple, vspace and vka
  *
- * @param simple Simple interface for getting the physical frames
  * @param vspace VSpace interface to use for mapping
- * @param vka VKA interface for allocating any extra objects or cslots
+ * @param vka VKA interface for allocating physical frames, and any extra objects or cslots
  * @param io_mapper Interface to fill in
  *
  * @return returns 0 on success
  */
-int sel4platsupport_new_io_mapper(simple_t simple, vspace_t vspace, vka_t vka, ps_io_mapper_t *io_mapper);
+int sel4platsupport_new_io_mapper(vspace_t vspace, vka_t vka, ps_io_mapper_t *io_mapper);
 
 /**
  * Creates a new implementation of the platsupport io_ops interface using a
- * provided simple, vspace and vka
+ * provided vspace and vka
  *
- * @param simple Simple interface for getting the physical frames
  * @param vspace VSpace interface to use for mapping
- * @param vka VKA interface for allocating any extra objects or cslots
+ * @param vka VKA interface for allocating physical frames, and any extra objects or cslots
  * @param io_ops Interface to fill in
  *
  * @return returns 0 on success
  */
-int sel4platsupport_new_io_ops(simple_t simple, vspace_t vspace, vka_t vka, ps_io_ops_t *io_ops);
+int sel4platsupport_new_io_ops(vspace_t vspace, vka_t vka, ps_io_ops_t *io_ops);
 
 #endif /* _SEL4_PLATSUPPORT_IO_H */
 

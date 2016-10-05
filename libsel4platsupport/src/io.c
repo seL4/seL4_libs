@@ -10,7 +10,6 @@
 
 #include <autoconf.h>
 
-#include <simple/simple.h>
 #include <sel4platsupport/io.h>
 #ifdef ARCH_ARM
 #include <platsupport/clock.h>
@@ -26,9 +25,6 @@
 #include <stdlib.h>
 
 typedef struct io_mapping {
-    /* 1 if we mapped this into the vspace ourselves, or 0
-     * if simple just gave us the vaddr */
-    int was_mapped;
     /* address we returned to the user */
     void *returned_addr;
     /* base address of the mapping with respect to the vspace */
@@ -254,7 +250,7 @@ sel4platsupport_unmap_vaddr(void * cookie, void *vaddr, UNUSED size_t size)
 }
 
 int
-sel4platsupport_new_io_mapper(UNUSED simple_t simple, vspace_t vspace, vka_t vka, ps_io_mapper_t *io_mapper)
+sel4platsupport_new_io_mapper(vspace_t vspace, vka_t vka, ps_io_mapper_t *io_mapper)
 {
     sel4platsupport_io_mapper_cookie_t *cookie = malloc(sizeof(sel4platsupport_io_mapper_cookie_t));
     if (!cookie) {
@@ -272,9 +268,9 @@ sel4platsupport_new_io_mapper(UNUSED simple_t simple, vspace_t vspace, vka_t vka
 }
 
 int
-sel4platsupport_new_io_ops(simple_t simple, vspace_t vspace, vka_t vka, ps_io_ops_t *io_ops)
+sel4platsupport_new_io_ops(vspace_t vspace, vka_t vka, ps_io_ops_t *io_ops)
 {
-    int err = sel4platsupport_new_io_mapper(simple, vspace, vka, &io_ops->io_mapper);
+    int err = sel4platsupport_new_io_mapper(vspace, vka, &io_ops->io_mapper);
     if (err) {
         return err;
     }

@@ -8,7 +8,11 @@
  * @TAG(NICTA_BSD)
  */
 
+#include <vka/vka.h>
+#include <vspace/vspace.h>
+
 #include <sel4platsupport/timer.h>
+#include <sel4platsupport/plat/timer.h>
 #include <platsupport/arch/generic_timer.h>
 
 #include <stdlib.h>
@@ -32,3 +36,8 @@ sel4platsupport_get_generic_timer(void)
 #endif /* CONFIG_ARM_CORTEX_A15 */
 #endif /* CONFIG_ARCH_ARM_V7A */
 
+uintptr_t
+sel4platsupport_get_default_timer_paddr(UNUSED vka_t *vka, UNUSED vspace_t *vspace)
+{
+    return DEFAULT_TIMER_PADDR;
+}

@@ -19,8 +19,6 @@
 #include <sel4platsupport/timer.h>
 #include <platsupport/plat/pit.h>
 
-#define DEFAULT_TIMER_PADDR 0
-#define DEFAULT_TIMER_INTERRUPT PIT_INTERRUPT
 #define PIT_IO_PORT_MIN 0x40
 #define PIT_IO_PORT_MAX 0x43
 

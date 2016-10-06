@@ -24,11 +24,10 @@
 seL4_timer_t *
 sel4platsupport_get_default_timer(vka_t *vka, vspace_t *vspace, simple_t *simple, seL4_CPtr notification)
 {
-    void *paddr = (void *)DEFAULT_TIMER_PADDR;
-    uint32_t irq = DEFAULT_TIMER_INTERRUPT;
-    sel4_timer_t *timer = timer_common_init(vspace, simple, vka, notification, irq, paddr);
+    seL4_timer_t *timer = timer_common_init(vspace, simple, vka, notification,
+                                            DEFAULT_TIMER_INTERRUPT, (void *) DEFAULT_TIMER_PADDR);
 
-    if (timer->data == NULL) {
+    if (timer == NULL) {
         return NULL;
     }
 
@@ -36,7 +35,7 @@ sel4platsupport_get_default_timer(vka_t *vka, vspace_t *vspace, simple_t *simple
         .vaddr = timer->vaddr + TMR1_OFFSET,
         .tmrus_vaddr = timer->vaddr + TMRUS_OFFSET,
         .shared_vaddr = timer->vaddr + TMR_SHARED_OFFSET,
-        .irq = irq
+        .irq = DEFAULT_TIMER_INTERRUPT
     };
     timer->timer = tk1_get_timer(&config);
     if (timer->timer == NULL) {

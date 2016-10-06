@@ -7,7 +7,7 @@
  *
  * @TAG(NICTA_BSD)
  */
-
+#include <autoconf.h>
 #include <vka/vka.h>
 #include <vspace/vspace.h>
 
@@ -19,6 +19,7 @@
 
 #ifdef CONFIG_ARCH_ARM_V7A
 #ifdef CONFIG_ARM_CORTEX_A15
+#ifdef CONFIG_EXPORT_PCNT_USER
 
 seL4_timer_t *
 sel4platsupport_get_generic_timer(void)
@@ -33,6 +34,7 @@ sel4platsupport_get_generic_timer(void)
     return timer;
 }
 
+#endif /* CONFIG_EXPORT_PCNT_USER */
 #endif /* CONFIG_ARM_CORTEX_A15 */
 #endif /* CONFIG_ARCH_ARM_V7A */
 

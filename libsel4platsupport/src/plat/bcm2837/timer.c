@@ -21,7 +21,6 @@ seL4_timer_t *
 sel4platsupport_get_timer(enum timer_id id, vka_t *vka, vspace_t *vspace,
                           simple_t *simple, seL4_CPtr notification)
 {
-    timer->handle_irq = timer_common_handle_irq;
     seL4_timer_t *timer = timer_common_init(vspace, simple, vka, notification,
                              bcm_timer_irqs[id],
                              (void*)bcm_timer_paddrs[id]);

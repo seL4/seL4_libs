@@ -26,8 +26,6 @@
 
 #define DEFAULT_TIMER_INTERRUPT MSI_MIN
 
-typedef timer_common_data_t hpet_data;
-
 /**
  * Initialise the hpet timer by parsing the acpi tables and do all seL4 specific set up.
  *

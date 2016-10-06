@@ -24,39 +24,24 @@
 seL4_timer_t *
 sel4platsupport_get_default_timer(vka_t *vka, vspace_t *vspace, simple_t *simple, seL4_CPtr notification)
 {
-    seL4_timer_t *timer = calloc(1, sizeof(seL4_timer_t));
-    if (timer == NULL) {
-        LOG_ERROR("Failed to allocate object of size %u\n" ,sizeof(seL4_timer_t));
-        goto error;
-    }
-
     void *paddr = (void *)DEFAULT_TIMER_PADDR;
     uint32_t irq = DEFAULT_TIMER_INTERRUPT;
-    timer_common_data_t *data = timer_common_init(vspace, simple, vka, notification, irq, paddr);
-    timer->data = data;
+    sel4_timer_t *timer = timer_common_init(vspace, simple, vka, notification, irq, paddr);
 
     if (timer->data == NULL) {
-        goto error;
+        return NULL;
     }
 
-    timer->handle_irq = timer_common_handle_irq;
     nv_tmr_config_t config = {
-        .vaddr = data->vaddr + TMR1_OFFSET,
-        .tmrus_vaddr = data->vaddr + TMRUS_OFFSET,
-        .shared_vaddr = data->vaddr + TMR_SHARED_OFFSET,
+        .vaddr = timer->vaddr + TMR1_OFFSET,
+        .tmrus_vaddr = timer->vaddr + TMRUS_OFFSET,
+        .shared_vaddr = timer->vaddr + TMR_SHARED_OFFSET,
         .irq = irq
     };
-    timer->timer = tk1_get_timer(&config); 
+    timer->timer = tk1_get_timer(&config);
     if (timer->timer == NULL) {
-        goto error;
+        timer_common_destroy(timer, vka, vspace);
     }
     return timer;
-
-error:
-    if (timer != NULL) {
-        timer_common_destroy(timer->data, vka, vspace);
-        free(timer);
-    }
-    return NULL;
 }
 

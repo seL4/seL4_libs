@@ -12,6 +12,7 @@
 #include <sel4/sel4.h>
 #include <platsupport/plat/hpet.h>
 #include <sel4platsupport/plat/hpet.h>
+#include <sel4platsupport/plat/pit.h>
 #include <sel4platsupport/device.h>
 #include <sel4platsupport/io.h>
 #include <utils/util.h>
@@ -26,26 +27,23 @@
 static void
 hpet_handle_irq_msi(seL4_timer_t *timer, uint32_t irq)
 {
-    timer_common_data_t *data = (timer_common_data_t *) timer->data;
     timer_handle_irq(timer->timer, irq + IRQ_OFFSET);
-    seL4_IRQHandler_Ack(data->irq);
+    seL4_IRQHandler_Ack(timer->irq);
 }
 
 static void UNUSED
 hpet_handle_irq_ioapic(seL4_timer_t *timer, uint32_t irq)
 {
-    timer_common_data_t *data = (timer_common_data_t *) timer->data;
     timer_handle_irq(timer->timer, irq);
-    seL4_IRQHandler_Ack(data->irq);
+    seL4_IRQHandler_Ack(timer->irq);
 }
 
 static void
 hpet_destroy(seL4_timer_t *timer, vka_t *vka, vspace_t *vspace)
 {
-    timer_common_data_t *timer_data = (timer_common_data_t *) timer->data;
     timer_common_destroy_frame(timer, vka, vspace);
     /* clear the irq */
-    seL4_IRQHandler_Clear(timer_data->irq);
+    seL4_IRQHandler_Clear(timer->irq);
 }
 
 static uintptr_t
@@ -94,24 +92,23 @@ seL4_timer_t *
 sel4platsupport_get_hpet_paddr(vspace_t *vspace, simple_t *simple, vka_t *vka,
                                uintptr_t paddr, seL4_CPtr notification, uint32_t irq_number)
 {
-    seL4_timer_t *hpet = NULL;
     int ioapic = 0;
     int irq = -1;
 
-    hpet = (seL4_timer_t *)calloc(1, sizeof(seL4_timer_t));
+    seL4_timer_t *hpet = calloc(1, sizeof(seL4_timer_t));
     if (hpet == NULL) {
         ZF_LOGE("Failed to allocate hpet_t of size %zu\n", sizeof(seL4_timer_t));
-        goto error;
+        return NULL;
     }
 
-    timer_common_data_t *hpet_data = timer_common_init_frame(vspace, vka, paddr);
-    if (hpet_data == NULL) {
-        goto error;
+    if (timer_common_init_frame(hpet, vspace, vka, paddr) != 0) {
+        free(hpet);
+        return NULL;
     }
 
-    /* check what range the IRQ is in */
     hpet->destroy = hpet_destroy;
 
+    /* check what range the IRQ is in */
     if ((int)irq_number >= MSI_MIN && irq_number <= MSI_MAX) {
         irq = irq_number + IRQ_OFFSET;
         ioapic = 0;
@@ -119,43 +116,42 @@ sel4platsupport_get_hpet_paddr(vspace_t *vspace, simple_t *simple, vka_t *vka,
     }
     if (irq == -1) {
         ZF_LOGE("IRQ %u is not valid\n", irq_number);
-        goto error;
+        timer_common_destroy(hpet, vka, vspace);
+        return NULL;
+
     }
     /* initialise msi irq */
     cspacepath_t path;
     int error = sel4platsupport_copy_msi_cap(vka, simple, irq, &path);
-    hpet_data->irq = path.capPtr;
+    hpet->irq = path.capPtr;
     if (error != seL4_NoError) {
         ZF_LOGE("Failed to get msi cap, error %d\n", error);
-        goto error;
+        timer_common_destroy(hpet, vka, vspace);
+        return NULL;
     }
 
     error = seL4_IRQHandler_SetNotification(path.capPtr, notification);
     if (error != seL4_NoError) {
         ZF_LOGE("seL4_IRQHandler_SetNotification failed with error %d\n", error);
-        goto error;
+        timer_common_destroy(hpet, vka, vspace);
+        return NULL;
     }
-
-    hpet->data = (void *) hpet_data;
 
     /* finall initialise the timer */
     hpet_config_t config = {
-        .vaddr = hpet_data->vaddr,
+        .vaddr = hpet->vaddr,
         .irq = irq,
         .ioapic_delivery = ioapic,
     };
 
     hpet->timer = hpet_get_timer(&config);
     if (hpet->timer == NULL) {
-        goto error;
+        timer_common_destroy(hpet, vka, vspace);
+        return NULL;
     }
 
     /* success */
     return hpet;
-
-error:
-    timer_common_destroy(hpet, vka, vspace);
-    return NULL;
 }
 
 seL4_timer_t *

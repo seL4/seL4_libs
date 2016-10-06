@@ -25,58 +25,42 @@ sel4platsupport_get_epit(vspace_t *vspace, simple_t *simple, vka_t *vka, seL4_CP
                          uint32_t prescaler, epit_id_t epit_id)
 {
 
-    seL4_timer_t *timer = calloc(1, sizeof(seL4_timer_t));
-    if (timer == NULL) {
-        ZF_LOGE("Failed to allocate object of size %u\n", sizeof(seL4_timer_t));
-        goto error;
-    }
-
 #ifdef CONFIG_PLAT_IMX31
     if (epit_id == EPIT1) {
         ZF_LOGE("Epit1 is taken by the kernel\n");
-        goto error;
+        return NULL;
     }
 #endif
 
     /* check the id */
     if (epit_id != EPIT1 && epit_id != EPIT2) {
         ZF_LOGE("Invalid epit id %d\n", epit_id);
-        goto error;
+        return NULL;
     }
 
     /* find paddr/irq */
     void *paddr = (void *) (epit_id == EPIT1 ? EPIT1_DEVICE_PADDR : EPIT2_DEVICE_PADDR);
     uint32_t irq = (epit_id == EPIT1 ? EPIT1_INTERRUPT : EPIT2_INTERRUPT);
 
-    timer_common_data_t *data = timer_common_init(vspace, simple, vka, notification, irq, paddr);
-    timer->data = data;
-
-    if (timer->data == NULL) {
-        goto error;
+    seL4_timer_t *timer = timer_common_init(vspace, simple, vka, notification, irq, paddr);
+    if (timer == NULL) {
+        return NULL;
     }
-
-    timer->handle_irq = timer_common_handle_irq;
-    timer->destroy = timer_common_destroy;
 
     /* do hardware init */
     epit_config_t config = {
-        .vaddr = data->vaddr,
+        .vaddr = timer->vaddr,
         .irq = irq,
         .prescaler = prescaler
     };
 
     timer->timer = epit_get_timer(&config);
     if (timer->timer == NULL) {
-        goto error;
+        timer_common_destroy(timer, vka, vspace);
+        return NULL;
     }
 
     /* success */
     return timer;
-error:
-    if (timer != NULL) {
-        timer_common_destroy(timer, vka, vspace);
-    }
-
-    return NULL;
 }
 

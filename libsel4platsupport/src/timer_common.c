@@ -18,45 +18,37 @@
 
 #ifdef CONFIG_LIB_SEL4_VSPACE
 
-static void
-timer_common_destroy_frame_internal(timer_common_data_t *data, vka_t *vka, vspace_t *vspace)
-{
-    if (data->vaddr != NULL) {
-        vspace_unmap_pages(vspace, data->vaddr, 1, seL4_PageBits, VSPACE_PRESERVE);
-    }
-    if (data->frame.cptr != 0) {
-        vka_free_object(vka, &data->frame);
-    }
-}
-
 void
 timer_common_destroy_frame(seL4_timer_t *timer, vka_t *vka, vspace_t *vspace)
 {
-    timer_common_data_t *timer_data = (timer_common_data_t *) timer->data;
-    if (timer_data != NULL) {
-        timer_common_destroy_frame_internal(timer_data, vka, vspace);
+    if (timer == NULL) {
+        return;
+    }
+
+    if (timer->vaddr != NULL) {
+        vspace_unmap_pages(vspace, timer->vaddr, 1, seL4_PageBits, VSPACE_PRESERVE);
+    }
+    if (timer->frame.cptr != 0) {
+        vka_free_object(vka, &timer->frame);
     }
 }
 
 static void
-timer_common_destroy_internal(timer_common_data_t *timer_data, vka_t *vka, vspace_t *vspace)
+timer_common_destroy_internal(seL4_timer_t *timer, vka_t *vka, vspace_t *vspace)
 {
-    if (timer_data != NULL) {
-        timer_common_destroy_frame_internal(timer_data, vka, vspace);
-        if (timer_data->irq != 0) {
-            seL4_IRQHandler_Clear(timer_data->irq);
-            timer_common_cleanup_irq(vka, timer_data->irq);
-        }
-        free(timer_data);
+    timer_common_destroy_frame(timer, vka, vspace);
+    if (timer->irq != 0) {
+        seL4_IRQHandler_Clear(timer->irq);
+        timer_common_cleanup_irq(vka, timer->irq);
     }
+    free(timer);
 }
 
 void
 timer_common_handle_irq(seL4_timer_t *timer, uint32_t irq)
 {
-    timer_common_data_t *data = (timer_common_data_t *) timer->data;
     timer_handle_irq(timer->timer, irq);
-    int error = seL4_IRQHandler_Ack(data->irq);
+    int error = seL4_IRQHandler_Ack(timer->irq);
     if (error != seL4_NoError) {
         ZF_LOGE("Failed to ack irq %d, error %d", irq, error);
     }
@@ -71,83 +63,73 @@ timer_common_cleanup_irq(vka_t *vka, seL4_CPtr irq)
     vka_cspace_free(vka, irq);
 }
 
-timer_common_data_t *
-timer_common_init_frame(vspace_t *vspace, vka_t *vka, uintptr_t paddr)
+int
+timer_common_init_frame(seL4_timer_t *timer, vspace_t *vspace, vka_t *vka, uintptr_t paddr)
 {
-    int error;
-    timer_common_data_t *timer_data = calloc(1, sizeof(timer_common_data_t));
-
-    if (timer_data == NULL) {
-        ZF_LOGE("Failed to allocate timer_common_data_t size: %zu\n", sizeof(timer_common_data_t));
-        goto error;
-    }
-
-    error = sel4platsupport_alloc_frame_at(vka, (uintptr_t) paddr, seL4_PageBits, &timer_data->frame);
+    int error = sel4platsupport_alloc_frame_at(vka, (uintptr_t) paddr, seL4_PageBits,
+                                           &timer->frame);
     if (error != seL4_NoError) {
-        goto error;
+        return -1;
     }
 
     /* map in the frame */
-    timer_data->vaddr = vspace_map_pages(vspace, &timer_data->frame.cptr,
-            (uintptr_t *) &timer_data->frame, seL4_AllRights, 1, seL4_PageBits, 0);
-    ZF_LOGV("Mapped timer at %p\n", timer_data->vaddr);
-    if (timer_data->vaddr == NULL) {
-        ZF_LOGE("Failed to map page at vaddr %p\n", timer_data->vaddr);
-        goto error;
+    timer->vaddr = vspace_map_pages(vspace, &timer->frame.cptr,
+            (uintptr_t *) &timer->frame, seL4_AllRights, 1, seL4_PageBits, 0);
+    ZF_LOGV("Mapped timer at %p\n", timer->vaddr);
+    if (timer->vaddr == NULL) {
+        timer_common_destroy_frame(timer, vka, vspace);
+        ZF_LOGE("Failed to map page at vaddr %p\n", timer->vaddr);
+        return -1;
     }
 
-    return timer_data;
-error:
-    timer_common_destroy_internal(timer_data, vka, vspace);
-    return NULL;
+    return 0;
 }
 
-timer_common_data_t *
+seL4_timer_t *
 timer_common_init(vspace_t *vspace, simple_t *simple,
                   vka_t *vka, seL4_CPtr notification, uint32_t irq_number, void *paddr)
 {
-    int error;
+    seL4_timer_t *timer = calloc(1, sizeof(seL4_timer_t));
+    if (timer == NULL) {
+        return NULL;
+    }
+
+    /* default functions - users can override */
+    timer->handle_irq = timer_common_handle_irq;
+    timer->destroy = timer_common_destroy;
+
+    if (timer_common_init_frame(timer, vspace, vka, (uintptr_t) paddr)) {
+        timer_common_destroy(timer, vka, vspace);
+        return NULL;
+    }
+
     cspacepath_t path;
-    timer_common_data_t *timer_data;
-
-    timer_data = timer_common_init_frame(vspace, vka, (uintptr_t) paddr);
-    if (timer_data == NULL) {
-        goto error;
+    if (sel4platsupport_copy_irq_cap(vka, simple, irq_number, &path)) {
+        timer_common_destroy(timer, vka, vspace);
+        return NULL;
     }
+    timer->irq = path.capPtr;
 
-    error = sel4platsupport_copy_irq_cap(vka, simple, irq_number, &path);
-    timer_data->irq = path.capPtr;
-    if (error != seL4_NoError) {
-        goto error;
-    }
-
-    /* set the end point */
-    error = seL4_IRQHandler_SetNotification(timer_data->irq, notification);
+    /* set the endpoint */
+    int error = seL4_IRQHandler_SetNotification(timer->irq, notification);
     if (error != seL4_NoError) {
         ZF_LOGE("seL4_IRQHandler_SetNotification failed with error %d\n", error);
-        goto error;
+        timer_common_destroy(timer, vka, vspace);
+        return NULL;
     }
 
     ZF_LOGV("Timer initialised\n");
     /* success */
-    return timer_data;
-
-error:
-    /* clean up on failure */
-    timer_common_destroy_internal(timer_data, vka, vspace);
-
-    return NULL;
+    return timer;
 }
 
-void 
+void
 timer_common_destroy(seL4_timer_t *timer, vka_t *vka, vspace_t *vspace)
 {
-    timer_common_data_t *data = (timer_common_data_t *) timer->data;
     if (timer->timer) {
         timer_stop(timer->timer);
     }
-    timer_common_destroy_internal(data, vka, vspace);
-    free(timer);
+    timer_common_destroy_internal(timer, vka, vspace);
 }
 
 #endif /* CONFIG_LIB_SEL4_VSPACE */

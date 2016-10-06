@@ -29,8 +29,6 @@
 #define DEFAULT_TIMER_PADDR GPT1_DEVICE_PADDR
 #define DEFAULT_TIMER_INTERRUPT GPT1_INTERRUPT
 
-typedef timer_common_data_t gpt_data;
-
 /**
  * Get an interface for an initialised gpt timer.
  *

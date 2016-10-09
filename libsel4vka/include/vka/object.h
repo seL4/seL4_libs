@@ -60,8 +60,8 @@ vka_alloc_object_at(vka_t *vka, seL4_Word type, seL4_Word size_bits, uintptr_t p
     } else {
         error = vka_utspace_alloc_at(vka, &path, type, size_bits, paddr, &result->ut);
         if (unlikely(error)) {
-            ZF_LOGE("Failed to allocate object of size %lu at paddr %x, error %d\n",
-                    BIT(size_bits), paddr, error);
+            ZF_LOGE("Failed to allocate object of size %lu at paddr %p, error %d\n",
+                    BIT(size_bits), (void*)paddr, error);
             goto error;
         }
     }

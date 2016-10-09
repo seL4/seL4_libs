@@ -660,7 +660,7 @@ sel4utils_process_init_cap(seL4_CPtr cap)
     case seL4_CapInitThreadASIDPool:
         return SEL4UTILS_ASID_POOL_SLOT;
     default:
-        ZF_LOGE("sel4utils does not copy this cap (%u) to new processes", cap);
+        ZF_LOGE("sel4utils does not copy this cap (%zu) to new processes", cap);
         return seL4_CapNull;
     }
 };

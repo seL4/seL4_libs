@@ -113,8 +113,8 @@ serial_server_client_connect(seL4_CPtr badged_server_ep_cap,
 
         if (error == (int)SERIAL_SERVER_ERROR_SHMEM_TOO_LARGE) {
             ZF_LOGE(SERSERVC"connect: Your requested shmem mapping size is too "
-                    "large.\n\tServer's max shmem size is %dB.",
-                    seL4_GetMR(SSMSGREG_CONNECT_ACK_MAX_SHMEM_SIZE));
+                    "large.\n\tServer's max shmem size is %luB.",
+                    (long)seL4_GetMR(SSMSGREG_CONNECT_ACK_MAX_SHMEM_SIZE));
         }
         goto out;
     }
@@ -193,8 +193,8 @@ serial_server_printf(serial_client_context_t *conn, const char *fmt, ...)
     }
 
     if ((size_t)expanded_fmt_length >= conn->shmem_size) {
-        ZF_LOGE(SERSERVC"printf: This printf call's total expanded length (%d) "
-            "exceeds your %d bytes shmem buffer.\n\tMessage not sent to "
+        ZF_LOGE(SERSERVC"printf: This printf call's total expanded length (%zd) "
+            "exceeds your %zd bytes shmem buffer.\n\tMessage not sent to "
             "server.",
             expanded_fmt_length,
             conn->shmem_size);

@@ -104,7 +104,7 @@ serial_server_parent_spawn_thread(simple_t *parent_simple, vka_t *parent_vka,
                                       &get_serial_server()->frame_cap_recv_cspaths[i]);
         if (error != 0) {
             ZF_LOGE(SERSERVP"spawn_thread: Failed to alloc enough cnode slots "
-                "to receive shmem frame caps equal to %d bytes.",
+                "to receive shmem frame caps equal to %zd bytes.",
                 shmem_max_size);
             goto out;
         }

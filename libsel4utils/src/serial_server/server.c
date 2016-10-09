@@ -250,8 +250,8 @@ serial_server_func_connect(seL4_MessageInfo_t tag,
                                       &client_frame_cspath_tmp);
         if (error != 0) {
             ZF_LOGE(SERSERVS"connect: Failed to alloc CSpace slot for frame "
-                    "%d of %d received from client badge %x.",
-                    i + 1, client_shmem_n_pages, client_badge_value);
+                    "%zd of %zd received from client badge %lx.",
+                    i + 1, client_shmem_n_pages, (long)client_badge_value);
             goto out;
         }
 
@@ -259,8 +259,8 @@ serial_server_func_connect(seL4_MessageInfo_t tag,
         error = vka_cnode_move(&client_frame_cspath_tmp,
                                &get_serial_server()->frame_cap_recv_cspaths[i]);
         if (error != 0) {
-            ZF_LOGE(SERSERVS"connect: Failed to move %dth frame-cap received "
-                    " from client badge %x.", i + 1, client_badge_value);
+            ZF_LOGE(SERSERVS"connect: Failed to move %zuth frame-cap received "
+                    " from client badge %lx.", i + 1, (long)client_badge_value);
             goto out;
         }
 

@@ -184,7 +184,7 @@ static void track_obj(state_t *state, seL4_Word type, seL4_Word size_bits,
     unsigned int available = 0;
     for (unsigned int i = 0; i < state->live_objs_sz; i++) {
         if (state->live_objs[i].cookie == cookie) {
-            fatal("allocator attempted to hand out an object with a cookie %u "
+            fatal("allocator attempted to hand out an object with a cookie %zu "
                   "that is currently in use", cookie);
         } else if (available == i && state->live_objs[i].cookie != 0) {
             available++;

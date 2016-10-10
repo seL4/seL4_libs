@@ -25,43 +25,28 @@ sel4platsupport_get_gpt(vspace_t *vspace, simple_t *simple, vka_t *vka, seL4_CPt
                         uint32_t prescaler)
 {
 
-    seL4_timer_t *timer = calloc(1, sizeof(seL4_timer_t));
-    if (timer == NULL) {
-        ZF_LOGE("Failed to allocate object of size %u\n", sizeof(seL4_timer_t));
-        goto error;
-    }
-
     void *paddr =  (void *) GPT1_DEVICE_PADDR;
     uint32_t irq = GPT1_INTERRUPT;
 
-    timer_common_data_t *data = timer_common_init(vspace, simple, vka, notification, irq, paddr);
-    timer->data = data;
-
-    if (timer->data == NULL) {
-        goto error;
+    seL4_timer_t *timer = timer_common_init(vspace, simple, vka, notification, irq, paddr);
+    if (timer == NULL) {
+        ZF_LOGE("Failed to allocate object of size %u\n", sizeof(seL4_timer_t));
+        return NULL;
     }
-
-    timer->handle_irq = timer_common_handle_irq;
-    timer->destroy = timer_common_destroy;
 
     /* do hardware init */
     gpt_config_t config = {
-        .vaddr = data->vaddr,
+        .vaddr = timer->vaddr,
         .prescaler = prescaler
     };
 
     timer->timer = gpt_get_timer(&config);
     if (timer->timer == NULL) {
-        goto error;
+        timer_common_destroy(timer, vka, vspace);
+        return NULL;
     }
 
     /* success */
     return timer;
-error:
-    if (timer != NULL) {
-        timer_common_destroy(timer, vka, vspace);
-    }
-
-    return NULL;
 }
 

@@ -12,7 +12,6 @@
 
 #include <platsupport/arch/tsc.h>
 #include <sel4platsupport/plat/hpet.h>
-#include <sel4platsupport/plat/pit.h>
 
 /**
  * Get a tsc backed seL4_timer_t;

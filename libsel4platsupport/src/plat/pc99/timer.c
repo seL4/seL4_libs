@@ -18,22 +18,6 @@
 #include <stdlib.h>
 #include <utils/util.h>
 
-static ps_io_port_ops_t ops;
-
-seL4_timer_t *sel4platsupport_get_default_timer(vka_t *vka, UNUSED vspace_t *vspace,
-                                                simple_t *simple, seL4_CPtr notification)
-{
-
-    UNUSED int error = sel4platsupport_get_io_port_ops(&ops, simple);
-    assert(error == 0);
-
-    seL4_timer_t *timer = sel4platsupport_get_hpet(vspace, simple, NULL, vka, notification, 
-                                                   MSI_MIN);
-    assert(timer != NULL);
-
-    return timer;
-}
-
 static seL4_timer_t *
 finish_get_tsc(seL4_timer_t *seL4_timer, pstimer_t *ps_timer)
 {

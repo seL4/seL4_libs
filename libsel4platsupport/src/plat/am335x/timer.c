@@ -33,28 +33,20 @@ sel4platsupport_get_timer(enum timer_id id, vka_t *vka, vspace_t *vspace,
         return NULL;
     }
 
-    seL4_timer_t *timer = calloc(1, sizeof(seL4_timer_t));
+    seL4_timer_t *timer = timer_common_init(vspace, simple, vka, notification,
+                                            dm_timer_irqs[id], (void*)dm_timer_paddrs[id]);
     if (timer == NULL) {
-        ZF_LOGE("Failed to allocate object of size %u\n", sizeof(seL4_timer_t));
-        return NULL;
-    }
-
-    timer->handle_irq = timer_common_handle_irq;
-    timer_common_data_t *data = timer_common_init(vspace, simple, vka, notification,
-                                                  dm_timer_irqs[id], (void*)dm_timer_paddrs[id]);
-    timer->data = data;
-    if (timer->data == NULL) {
-        free(timer);
         return NULL;
     }
 
     timer_config_t config = {
-        .vaddr = data->vaddr,
+        .vaddr = timer->vaddr,
         .irq = dm_timer_irqs[id],
     };
+
     timer->timer = ps_get_timer(id, &config);
     if (timer->timer == NULL) {
-        timer_common_destroy(timer->data, vka, vspace);
+        timer_common_destroy(timer, vka, vspace);
         free(timer);
         return NULL;
     }

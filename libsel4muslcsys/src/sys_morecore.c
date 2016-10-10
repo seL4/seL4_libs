@@ -79,13 +79,13 @@ sys_mmap2(va_list ap)
     (void)fd;
     (void)offset;
     if (flags & MAP_ANONYMOUS) {
-        /* Steal from the top */
-        uintptr_t base = morecore_top - length;
-        if (base < morecore_base) {
+        /* Check that we don't try and allocate more than exists */
+        if (length > morecore_top - morecore_base) {
             return -ENOMEM;
         }
-        morecore_top = base;
-        return base;
+        /* Steal from the top */
+        morecore_top -= length;
+        return morecore_top;
     }
     assert(!"not implemented");
     return -ENOMEM;

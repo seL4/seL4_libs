@@ -206,7 +206,7 @@ sel4utils_get_vspace_leaky(vspace_t *loader, vspace_t *new_vspace, sel4utils_all
 #ifdef CONFIG_VTX
 static inline int
 sel4utils_get_vspace_ept_leaky(vspace_t *loader, vspace_t *new_vspace,
-                               vka_t *vka, seL4_CPtr vspace_rooty)
+                               vka_t *vka, seL4_CPtr vspace_root)
 {
     return sel4utils_get_vspace_ept(loader, new_vspace, vka, vspace_root,
                                     (vspace_allocated_object_fn) NULL, NULL);
@@ -301,7 +301,14 @@ int sel4utils_bootstrap_clone_into_vspace(vspace_t *current, vspace_t *clone, re
  * @param va_start return va_start.
  * @param va_end return va_end.
  */
-void sel4utils_get_image_region(seL4_Word *va_start, seL4_Word *va_end);
+void sel4utils_get_image_region(uintptr_t *va_start, uintptr_t *va_end);
+
+/**
+ *
+ * @return the physical address that vaddr is mapped to.
+ *         VKA_NO_PADDR if there is no mapping
+ */
+uintptr_t sel4utils_get_paddr(vspace_t *vspace, void *vaddr, seL4_Word type, seL4_Word size_bits);
 
 #endif /* CONFIG_LIB_SEL4_VSPACE && CONFIG_LIB_SEL4_VKA */
 #endif /* _UTILS_VSPACE_H */

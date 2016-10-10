@@ -795,4 +795,12 @@ sel4utils_share_mem_at_vaddr(vspace_t *from, vspace_t *to, void *start, int num_
     return error;
 }
 
+uintptr_t
+sel4utils_get_paddr(vspace_t *vspace, void *vaddr, seL4_Word type, seL4_Word size_bits)
+{
+    vka_t *vka = get_alloc_data(vspace)->vka;
+    return vka_utspace_paddr(vka, vspace_get_cookie(vspace, vaddr), type, size_bits);
+
+}
+
 #endif /* CONFIG_LIB_SEL4_VKA && CONFIG_LIB_SEL4_VSPACE */

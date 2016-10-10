@@ -7,9 +7,9 @@
  *
  * @TAG(NICTA_BSD)
  */
-#ifndef __SEL4_PLAT_SUPPORT_ARCH_TIMER_H
-#define __SEL4_PLAT_SUPPORT_ARCH_TIMER_H
+#pragma once
 
+#include <autoconf.h>
 #include <sel4platsupport/timer.h>
 #include <platsupport/timer.h>
 #include <platsupport/plat/timer.h>
@@ -21,5 +21,3 @@ seL4_timer_t *sel4platsupport_get_generic_timer(void);
 
 #endif /* CONFIG_ARM_CORTEX_A15 */
 #endif /* CONFIG_ARCH_ARM_V7A */
-
-#endif /* __SEL4_PLAT_SUPPORT_ARCH_TIMER_H */

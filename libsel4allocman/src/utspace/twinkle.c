@@ -32,11 +32,15 @@ void utspace_twinkle_create(utspace_twinkle_t *twinkle)
     twinkle->uts = NULL;
 }
 
-int _utspace_twinkle_add_uts(allocman_t *alloc, void *_twinkle, size_t num, const cspacepath_t *uts, size_t *size_bits, uintptr_t *paddr) {
+int _utspace_twinkle_add_uts(allocman_t *alloc, void *_twinkle, size_t num, const cspacepath_t *uts, size_t *size_bits, uintptr_t *paddr, int utType) {
     utspace_twinkle_t *twinkle = (utspace_twinkle_t*) _twinkle;
     struct utspace_twinkle_ut *new_uts;
     int error;
     size_t i;
+    if (utType != ALLOCMAN_UT_KERNEL) {
+        ZF_LOGE("Twinkle does not support device untypeds");
+        return -1;
+    }
     new_uts = allocman_mspace_alloc(alloc, sizeof(struct utspace_twinkle_ut) * (num + twinkle->num_uts), &error);
     if (error) {
         return error;
@@ -52,12 +56,16 @@ int _utspace_twinkle_add_uts(allocman_t *alloc, void *_twinkle, size_t num, cons
     return 0;
 }
 
-seL4_Word _utspace_twinkle_alloc(allocman_t *alloc, void *_twinkle, size_t size_bits, seL4_Word type, const cspacepath_t *slot, int *error)
+seL4_Word _utspace_twinkle_alloc(allocman_t *alloc, void *_twinkle, size_t size_bits, seL4_Word type, const cspacepath_t *slot, uintptr_t paddr, bool canBeDev, int *error)
 {
     utspace_twinkle_t *twinkle = (utspace_twinkle_t*)_twinkle;
     size_t sel4_size_bits;
     int sel4_error;
     size_t i, j;
+    if (paddr != ALLOCMAN_NO_PADDR) {
+        ZF_LOGE("Twinkle does not support allocating explicit physical addresses");
+        return -1;
+    }
     /* get size of untyped call */
     sel4_size_bits = get_sel4_object_size(type, size_bits);
     if (size_bits != vka_get_object_size(type, sel4_size_bits) || size_bits == 0) {

@@ -13,60 +13,43 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
+#include <inttypes.h>
 
 #include <sel4/sel4.h>
 #include <sel4debug/debug.h>
 #include <simple-default/simple-default.h>
 
 #include <vspace/page.h>
+#include <vka/kobject_t.h>
 
 void *simple_default_get_frame_info(void *data, void *paddr, int size_bits, seL4_CPtr *frame_cap, seL4_Word *offset) {
-    assert(data && paddr && frame_cap);
-
+    unsigned int i;
     seL4_BootInfo *bi = (seL4_BootInfo *) data;
+    assert(bi && paddr && offset && frame_cap);
 
-    int i;
-    seL4_DeviceRegion* region;
-
-    *offset = 0;
-    *frame_cap = seL4_CapNull;
-    region = bi->deviceRegions;
-    for(i = 0; i < bi->numDeviceRegions; i++, region++){
-        seL4_Word region_start = region->basePaddr;
-        seL4_Word n_caps = region->frames.end - region->frames.start;
-        seL4_Word region_end = region_start + (n_caps << region->frameSizeBits);
-        if(region_start <= (seL4_Word) paddr &&
-           (seL4_Word) paddr < region_end &&
-           region->frameSizeBits == size_bits) {
-
-            *frame_cap =  region->frames.start + (((seL4_Word) paddr - region->basePaddr) >> region->frameSizeBits);
-            i = bi->numDeviceRegions;
+    for (i = 0; i < bi->untyped.end - bi->untyped.start; i++) {
+        if (bi->untypedList[i].paddr <= (seL4_Word)paddr &&
+            bi->untypedList[i].paddr + BIT(bi->untypedList[i].sizeBits) >= (seL4_Word)paddr + BIT(size_bits)) {
+            *frame_cap = bi->untyped.start + i;
+            *offset = (seL4_Word)paddr - bi->untypedList[i].paddr;
+            break;
         }
     }
-
     return NULL;
 }
 seL4_Error simple_default_get_frame_cap(void *data, void *paddr, int size_bits, cspacepath_t *path) {
-    assert(data && paddr);
+    unsigned int i;
+    seL4_BootInfo *bi = (seL4_BootInfo *) data;
+    assert(bi && paddr);
 
-    seL4_CPtr frame_cap;
-    seL4_Word offset;
-    simple_default_get_frame_info(data,paddr, size_bits, &frame_cap, &offset);
-    if (frame_cap == seL4_CapNull) {
-        return seL4_FailedLookup;
+    for (i = 0; i < bi->untyped.end - bi->untyped.start; i++) {
+        if (bi->untypedList[i].paddr == (seL4_Word)paddr &&
+            bi->untypedList[i].sizeBits >= size_bits) {
+            return seL4_Untyped_Retype(bi->untyped.start + i, kobject_get_type(KOBJECT_FRAME, size_bits),
+                                       size_bits, path->root, path->dest, path->destDepth, path->offset, 1);
+        }
     }
-    return seL4_CNode_Copy(path->root, path->capPtr, path->capDepth, seL4_CapInitThreadCNode, frame_cap, 32, seL4_AllRights);
-}
-
-seL4_CPtr simple_default_get_ut_cap(void *data, void *paddr, int size_bits) {
-    assert(data && paddr);
-
-    seL4_CPtr frame_cap;
-    seL4_Word offset;
-
-    simple_default_get_frame_info(data, paddr, size_bits, &frame_cap, &offset);
-
-    return frame_cap;
+    return seL4_FailedLookup;
 }
 
 void *simple_default_get_frame_mapping(void *data, void *paddr, int size_bits) {
@@ -82,14 +65,7 @@ int simple_default_cap_count(void *data) {
 
     seL4_BootInfo * bi = data;
 
-    int device_caps = 0;
-    int i;
-    for(i = 0; i < bi->numDeviceRegions; i++) {
-        device_caps += bi->deviceRegions[i].frames.end - bi->deviceRegions[i].frames.start;
-    }
-
-    return (device_caps)
-           + (bi->sharedFrames.end - bi->sharedFrames.start)
+    return   (bi->sharedFrames.end - bi->sharedFrames.start)
            + (bi->userImageFrames.end - bi->userImageFrames.start)
            + (bi->userImagePaging.end - bi->userImagePaging.start)
            + (bi->untyped.end - bi->untyped.start)
@@ -105,15 +81,7 @@ seL4_CPtr simple_default_nth_cap(void *data, int n) {
     size_t user_img_paging_range = bi->userImagePaging.end - bi->userImagePaging.start + user_img_frame_range;
     size_t untyped_range = bi->untyped.end - bi->untyped.start + user_img_paging_range;
 
-    int i;
-    int device_caps = 0;
     seL4_CPtr true_return = seL4_CapNull;
-
-    for(i = 0; i < bi->numDeviceRegions; i++) {
-        device_caps += bi->deviceRegions[i].frames.end - bi->deviceRegions[i].frames.start;
-    }
-
-    size_t device_range = device_caps + untyped_range;
 
     if (n < seL4_CapInitThreadASIDPool) {
         true_return = (seL4_CPtr) n+1;
@@ -135,15 +103,6 @@ seL4_CPtr simple_default_nth_cap(void *data, int n) {
         return bi->userImagePaging.start + (n - user_img_frame_range);
     } else if (n < untyped_range) {
         return bi->untyped.start + (n - user_img_paging_range);
-    } else if (n < device_range) {
-        i = 0;
-        int current_count = 0;
-        while((bi->deviceRegions[i].frames.end - bi->deviceRegions[i].frames.start) +
-               current_count < (n - untyped_range)) {
-            current_count += bi->deviceRegions[i].frames.end - bi->deviceRegions[i].frames.start;
-            i++;
-        }
-        return bi->deviceRegions[i].frames.start + (n - untyped_range - current_count);
     }
 
     return true_return;
@@ -165,17 +124,20 @@ int simple_default_untyped_count(void *data) {
     return ((seL4_BootInfo *)data)->untyped.end - ((seL4_BootInfo *)data)->untyped.start;
 }
 
-seL4_CPtr simple_default_nth_untyped(void *data, int n, uint32_t *size_bits, uint32_t *paddr) {
+seL4_CPtr simple_default_nth_untyped(void *data, int n, size_t *size_bits, uintptr_t *paddr, bool *device) {
     assert(data && size_bits && paddr);
 
     seL4_BootInfo *bi = data;
 
     if(n < (bi->untyped.end - bi->untyped.start)) {
         if(paddr != NULL) {
-            *paddr = bi->untypedPaddrList[n];
+            *paddr = bi->untypedList[n].paddr;
         }
         if(size_bits != NULL) {
-            *size_bits = bi->untypedSizeBitsList[n];
+            *size_bits = bi->untypedList[n].sizeBits;
+        }
+        if (device != NULL) {
+            *device = (bool)bi->untypedList[n].isDevice;
         }
         return bi->untyped.start + (n);
     }

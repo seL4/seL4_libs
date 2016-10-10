@@ -20,44 +20,33 @@ void
 debug_print_bootinfo(seL4_BootInfo *info)
 {
 
-    ZF_LOGI("Node %u of %u", info->nodeID, info->numNodes);
-    ZF_LOGI("IOPT levels:     %u", info->numIOPTLevels);
+    ZF_LOGI("Node %lu of %lu", (long)info->nodeID, (long)info->numNodes);
+    ZF_LOGI("IOPT levels:     %u", (int)info->numIOPTLevels);
     ZF_LOGI("IPC buffer:      %p", info->ipcBuffer);
-    ZF_LOGI("Empty slots:     [%u --> %u)", info->empty.start, info->empty.end);
-    ZF_LOGI("sharedFrames:    [%u --> %u)", info->sharedFrames.start, info->sharedFrames.end);
-    ZF_LOGI("userImageFrames: [%u --> %u)", info->userImageFrames.start, info->userImageFrames.end);
-    ZF_LOGI("userImagePaging: [%u --> %u)", info->userImagePaging.start, info->userImagePaging.end);
-    ZF_LOGI("untypeds:        [%u --> %u)", info->untyped.start, info->untyped.end);
+    ZF_LOGI("Empty slots:     [%lu --> %lu)", (long)info->empty.start, (long)info->empty.end);
+    ZF_LOGI("sharedFrames:    [%lu --> %lu)", (long)info->sharedFrames.start, (long)info->sharedFrames.end);
+    ZF_LOGI("userImageFrames: [%lu --> %lu)", (long)info->userImageFrames.start, (long)info->userImageFrames.end);
+    ZF_LOGI("userImagePaging: [%lu --> %lu)", (long)info->userImagePaging.start, (long)info->userImagePaging.end);
+    ZF_LOGI("untypeds:        [%lu --> %lu)", (long)info->untyped.start, (long)info->untyped.end);
     ZF_LOGI("Initial thread cnode size: %u", info->initThreadCNodeSizeBits);
     ZF_LOGI("List of untypeds");
     ZF_LOGI("------------------");
-    ZF_LOGI("Paddr    | Size   ");
+    ZF_LOGI("Paddr    | Size   | Device");
 
-    int sizes[32] = {0};
+    int sizes[CONFIG_WORD_SIZE] = {0};
     for (int i = 0; i < CONFIG_MAX_NUM_BOOTINFO_UNTYPED_CAPS && i < (info->untyped.end - info->untyped.start); i++) {
-        if (info->untypedPaddrList[i] != 0) {
-            sizes[info->untypedSizeBitsList[i]]++;
-            ZF_LOGI("0x%08x | %u", info->untypedPaddrList[i], info->untypedSizeBitsList[i]);
-        }
+        int index = info->untypedList[i].sizeBits;
+        assert(index < ARRAY_SIZE(sizes));
+        sizes[index]++;
+        ZF_LOGI("%p | %zu | %d", (void*)info->untypedList[i].paddr, (size_t)info->untypedList[i].sizeBits, (int)info->untypedList[i].isDevice);
     }
 
     ZF_LOGI("Untyped summary\n");
-    for (int i = 0; i < 32; i++) {
+    for (int i = 0; i < ARRAY_SIZE(sizes); i++) {
         if (sizes[i] != 0) {
             printf("%d untypeds of size %d\n", sizes[i], i);
         }
     }
-
-    ZF_LOGI("DeviceRegions: %u\n", info->numDeviceRegions);
-    printf("List of deviceRegions\n");
-    printf("Paddr    | Size     | Slot Region\n");
-    for (int i = 0; i < info->numDeviceRegions; i++) {
-        printf("0x%08x | %08u | [%u <--> %u ]\n", info->deviceRegions[i].basePaddr,
-               info->deviceRegions[i].frameSizeBits,
-               info->deviceRegions[i].frames.start,
-               info->deviceRegions[i].frames.end);
-    }
-
 }
 
 #endif  /* CONFIG_USER_DEBUG_BUILD */

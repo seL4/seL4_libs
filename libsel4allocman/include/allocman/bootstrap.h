@@ -210,10 +210,11 @@ int bootstrap_set_boot_cspace(bootstrap_info_t *bs, cspace_interface_t cspace, c
  * @param uts Path to each of the untypeds
  * @param size_bits Size of each of the untypeds
  * @param paddr Optional physical address of each of the untypeds
+ * @param isDevice whether this untyped is for a device region or not
  *
  * @return returns 0 on success
  */
-int bootstrap_add_untypeds(bootstrap_info_t *bs, size_t num, const cspacepath_t *uts, size_t *size_bits, uintptr_t *paddr);
+int bootstrap_add_untypeds(bootstrap_info_t *bs, size_t num, const cspacepath_t *uts, size_t *size_bits, uintptr_t *paddr, bool isDevice);
 
 /**
  * Adds knowledge of all the untypeds of bootinfo to the bootstrapper. These will

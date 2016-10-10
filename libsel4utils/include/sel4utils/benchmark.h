@@ -8,20 +8,14 @@
  * @TAG(NICTA_BSD)
  */
 
-#ifndef __SEL4_BENCHMARK_H
-#define __SEL4_BENCHMARK_H
-#if CONFIG_MAX_NUM_TRACE_POINTS > 0
-
-/* entire ipc buffer except tag register (word 0) */
-#define MAX_IPC_BUFFER (1024 - 1)
-
+#pragma once
+#include <autoconf.h>
+#ifdef CONFIG_BENCHMARK_TRACEPOINTS
 #include <inttypes.h>
 #include <stdio.h>
 
 #include <sel4/simple_types.h>
-
-// Include seL4_BenchmarkLogSize and seL4_BenchmarkDumpLog.
-#include <sel4/arch/syscalls.h>
+#include <sel4/benchmark_tracepoints_types.h>
 
 /**
  * Dump the benchmark log. The kernel must be compiled with CONFIG_MAX_NUM_TRACE_POINTS > 0,
@@ -29,29 +23,18 @@
  * "Kernel" -> "seL4 System Parameters" -> "Adds a log buffer to the kernel for instrumentation."
  */
 static inline void
-seL4_BenchmarkDumpFullLog()
+seL4_BenchmarkTraceDumpFullLog(benchmark_tracepoint_log_entry_t *logBuffer, size_t logSize)
 {
-    seL4_Uint32 potential_size = seL4_BenchmarkLogSize();
+    seL4_Word index = 0;
+    FILE *fd = stdout;
 
-    for (seL4_Uint32 j = 0; j < potential_size; j += MAX_IPC_BUFFER) {
-        seL4_Uint32 chunk = potential_size - j;
-        seL4_Uint32 requested = chunk > MAX_IPC_BUFFER ? MAX_IPC_BUFFER : chunk;
-        seL4_Uint32 recorded = seL4_BenchmarkDumpLog(j, requested);
-        for (seL4_Uint32 i = 0; i < recorded; i++) {
-            printf("%u\t", seL4_GetMR(i));
-        }
-        printf("\n");
-        /* we filled the log buffer */
-        if (requested != recorded) {
-            printf("Dumped %" PRIu32 " of %" PRIu32 " potential logs\n", j + recorded,
-                potential_size);
-            return;
-        }
+    while ((index * sizeof(benchmark_tracepoint_log_entry_t)) < logSize) {
+            if(logBuffer[index].duration != 0) {
+                fprintf(fd, "tracepoint id = %u \tduration = %u\n", logBuffer[index].id, logBuffer[index].duration);
+            }
+        index++;
     }
 
-    /* logged amount was smaller than log buffer */
-    printf("Dumped entire log, size %" PRIu32 "\n", potential_size);
+    fprintf(fd, "Dumped entire log, size %" PRIu32 "\n", index);
 }
-#endif /* CONFIG_MAX_NUM_TRACE_POINTS > 0 */
-#endif // __SEL4_BENCHMARK_H
-
+#endif /* CONFIG_BENCHMARK_TRACEPOINTS */

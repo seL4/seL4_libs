@@ -32,31 +32,21 @@ sel4platsupport_get_gpt_impl(vspace_t *vspace, simple_t *simple, vka_t *vka, seL
         return NULL;
     }
 
-    seL4_timer_t *timer = calloc(1, sizeof(seL4_timer_t));
-    if (timer == NULL) {
-        ZF_LOGE("Failed to allocate object of size %u\n", sizeof(seL4_timer_t));
-        goto error;
-    }
-
     /* find paddr/irq */
     void *paddr = omap_get_gpt_paddr(gpt_id);
     uint32_t irq = omap_get_gpt_irq(gpt_id);
 
-    timer_common_data_t *data = timer_common_init(vspace, simple, vka, notification, irq, paddr);
-    timer->data = data;
-
-    if (timer->data == NULL) {
-        goto error;
+    seL4_timer_t *timer = timer_common_init(vspace, simple, vka, notification, irq, paddr);
+    if (timer == NULL) {
+        ZF_LOGE("Failed to allocate object of size %u\n", sizeof(seL4_timer_t));
+        return NULL;
     }
-
-    timer->handle_irq = timer_common_handle_irq;
-    timer->destroy = timer_common_destroy;
 
     /* do hardware init */
     gpt_config_t config = {
         .id = gpt_id,
         .prescaler = prescaler,
-        .vaddr = data->vaddr 
+        .vaddr = timer->vaddr
     };
 
     if (relative) {
@@ -66,17 +56,11 @@ sel4platsupport_get_gpt_impl(vspace_t *vspace, simple_t *simple, vka_t *vka, seL
     }
 
     if (timer->timer == NULL) {
-        goto error;
-    }
-
-    /* success */
-    return timer;
-error:
-    if (timer != NULL) {
         timer_common_destroy(timer, vka, vspace);
+        return NULL;
     }
 
-    return NULL;
+    return timer;
 }
 
 DEPRECATED("use sel4platsupport_get_rel_gpt") seL4_timer_t *

@@ -22,8 +22,6 @@
 #include <vka/vka.h>
 #include <simple/simple.h>
 
-typedef timer_common_data_t pwm_data;
-
 
 #define DEFAULT_TIMER_PADDR PWM_TIMER_PADDR
 #define DEFAULT_TIMER_INTERRUPT PWM_T4_INTERRUPT

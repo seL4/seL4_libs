@@ -96,7 +96,35 @@ static int am_vka_utspace_alloc (void *data, const cspacepath_t *dest, seL4_Word
      * as passed to Untyped_Retype, so do a conversion here */
     size_bits = vka_get_object_size(type, size_bits);
 
-    *res = allocman_utspace_alloc((allocman_t *) data, size_bits, type, (cspacepath_t*)dest, &error);
+    *res = allocman_utspace_alloc((allocman_t *) data, size_bits, type, (cspacepath_t*)dest, false, &error);
+
+    return error;
+}
+
+/**
+ * Allocate a portion of an untyped into an object
+ *
+ * @param data cookie for the underlying allocator
+ * @param dest path to an empty cslot to place the cap to the allocated object
+ * @param type the seL4 object type to allocate (as passed to Untyped_Retype)
+ * @param size_bits the size of the object to allocate (as passed to Untyped_Retype)
+ * @param paddr the desired physical address of the start of the allocated object
+ * @param res pointer to a location to store the cookie representing this allocation
+ * @return 0 on success
+ */
+static int am_vka_utspace_alloc_at (void *data, const cspacepath_t *dest, seL4_Word type, seL4_Word size_bits, uintptr_t paddr, seL4_Word *res)
+{
+    int error;
+
+    assert(data);
+    assert(res);
+    assert(dest);
+
+    /* allocman uses the size in memory internally, where as vka expects size_bits
+     * as passed to Untyped_Retype, so do a conversion here */
+    size_bits = vka_get_object_size(type, size_bits);
+
+    *res = allocman_utspace_alloc_at((allocman_t *) data, size_bits, type, (cspacepath_t*)dest, paddr, true, &error);
 
     return error;
 }
@@ -147,6 +175,7 @@ void allocman_make_vka(vka_t *vka, allocman_t *alloc)
     vka->cspace_alloc = &am_vka_cspace_alloc;
     vka->cspace_make_path = &am_vka_cspace_make_path;
     vka->utspace_alloc = &am_vka_utspace_alloc;
+    vka->utspace_alloc_at = &am_vka_utspace_alloc_at;
     vka->cspace_free = &am_vka_cspace_free;
     vka->utspace_free = &am_vka_utspace_free;
     vka->utspace_paddr = &am_vka_utspace_paddr;

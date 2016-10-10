@@ -50,9 +50,96 @@ static void unmap_range(dma_man_t *dma, uintptr_t addr, size_t size)
     }
 }
 
+static int iommu_dma_alloc_iospace(void* cookie, void *vaddr, size_t size)
+{
+    dma_man_t *dma = (dma_man_t*)cookie;
+    int error;
+
+    /* for each page duplicate and map it into all the iospaces */
+    uintptr_t start = ROUND_DOWN((uintptr_t)vaddr, PAGE_SIZE_4K);
+    uintptr_t end = (uintptr_t)vaddr + size;
+    seL4_CPtr last_page = 0;
+    for (uintptr_t addr = start; addr < end; addr += PAGE_SIZE_4K) {
+        cspacepath_t page_path;
+        seL4_CPtr page = vspace_get_cap(&dma->vspace, (void*)addr);
+        if (!page) {
+            ZF_LOGE("Failed to retrieve frame cap for malloc region. "
+                    "Is your malloc backed by the correct vspace? "
+                    "If you allocated your own buffer, does the dma manager's vspace "
+                    "know about the caps to the frames that back the buffer?");
+            unmap_range(dma, start, addr + 1);
+            return -1;
+        }
+        if (page == last_page) {
+            ZF_LOGE("Found the same frame two pages in a row. We only support 4K mappings");
+            unmap_range(dma, start, addr + 1);
+            return -1;
+        }
+        last_page = page;
+        vka_cspace_make_path(&dma->vka, page, &page_path);
+        /* work out the size of this page */
+        for (int i = 0; i < dma->num_iospaces; i++) {
+            /* see if its already mapped */
+            uintptr_t *cookie = (uintptr_t*)vspace_get_cookie(dma->iospaces + i, (void*)addr);
+            if (cookie) {
+                /* increment the counter */
+                (*cookie)++;
+            } else {
+                cspacepath_t copy_path;
+                /* allocate slot for the cap */
+                error = vka_cspace_alloc_path(&dma->vka, &copy_path);
+                if (error) {
+                    ZF_LOGE("Failed to allocate slot");
+                    unmap_range(dma, start, addr + 1);
+                    return -1;
+                }
+                /* copy the cap */
+                error = vka_cnode_copy(&copy_path, &page_path, seL4_AllRights);
+                if (error) {
+                    ZF_LOGE("Failed to copy frame cap");
+                    vka_cspace_free(&dma->vka, copy_path.capPtr);
+                    unmap_range(dma, start, addr + 1);
+                    return -1;
+                }
+                /* now map it in */
+                reservation_t res = vspace_reserve_range_at(dma->iospaces + i, (void*)addr, PAGE_SIZE_4K, seL4_AllRights, 1);
+                if (!res.res) {
+                    ZF_LOGE("Failed to create a reservation");
+                    vka_cnode_delete(&copy_path);
+                    vka_cspace_free(&dma->vka, copy_path.capPtr);
+                    unmap_range(dma, start, addr + 1);
+                    return -1;
+                }
+                cookie = malloc(sizeof(*cookie));
+                if (!cookie) {
+                    ZF_LOGE("Failed to malloc %zu bytes", sizeof(*cookie));
+                    vspace_free_reservation(dma->iospaces + i, res);
+                    vka_cnode_delete(&copy_path);
+                    vka_cspace_free(&dma->vka, copy_path.capPtr);
+                    unmap_range(dma, start, addr + 1);
+                    return -1;
+                }
+                *cookie = 1;
+                error = vspace_map_pages_at_vaddr(dma->iospaces + i, &copy_path.capPtr, (uintptr_t*)&cookie, (void*)addr, 1, seL4_PageBits, res);
+                if (error) {
+                    ZF_LOGE("Failed to map frame into iospace");
+                    free(cookie);
+                    vspace_free_reservation(dma->iospaces + i, res);
+                    vka_cnode_delete(&copy_path);
+                    vka_cspace_free(&dma->vka, copy_path.capPtr);
+                    unmap_range(dma, start, addr + 1);
+                    return -1;
+                }
+                vspace_free_reservation(dma->iospaces + i, res);
+            }
+        }
+    }
+    return 0;
+
+}
+
 static void* dma_alloc(void *cookie, size_t size, int align, int cached, ps_mem_flags_t flags)
 {
-    dma_man_t *dma = cookie;
     int error;
     if (cached || flags != PS_MEM_NORMAL) {
         /* Going to ignore flags */
@@ -61,88 +148,10 @@ static void* dma_alloc(void *cookie, size_t size, int align, int cached, ps_mem_
         if (error) {
             return NULL;
         }
-        /* for each page duplicate and map it into all the iospaces */
-        uintptr_t start = ROUND_DOWN((uintptr_t)ret, PAGE_SIZE_4K);
-        uintptr_t end = (uintptr_t)ret + size;
-        seL4_CPtr last_page = 0;
-        for (uintptr_t addr = start; addr < end; addr += PAGE_SIZE_4K) {
-            cspacepath_t page_path;
-            seL4_CPtr page = vspace_get_cap(&dma->vspace, (void*)addr);
-            if (!page) {
-                ZF_LOGE("Failed to retrieve frame cap for malloc region. Is your malloc backed by the correct vspace?");
-                unmap_range(dma, start, addr + 1);
-                free(ret);
-                return NULL;
-            }
-            if (page == last_page) {
-                ZF_LOGE("Found the same frame two pages in a row. We only support 4K mappings");
-                unmap_range(dma, start, addr + 1);
-                free(ret);
-                return NULL;
-            }
-            last_page = page;
-            vka_cspace_make_path(&dma->vka, page, &page_path);
-            /* work out the size of this page */
-            for (int i = 0; i < dma->num_iospaces; i++) {
-                /* see if its already mapped */
-                uintptr_t *cookie = (uintptr_t*)vspace_get_cookie(dma->iospaces + i, (void*)addr);
-                if (cookie) {
-                    /* increment the counter */
-                    (*cookie)++;
-                } else {
-                    cspacepath_t copy_path;
-                    /* allocate slot for the cap */
-                    error = vka_cspace_alloc_path(&dma->vka, &copy_path);
-                    if (error) {
-                        ZF_LOGE("Failed to allocate slot");
-                        unmap_range(dma, start, addr + 1);
-                        free(ret);
-                        return NULL;
-                    }
-                    /* copy the cap */
-                    error = vka_cnode_copy(&copy_path, &page_path, seL4_AllRights);
-                    if (error) {
-                        ZF_LOGE("Failed to copy frame cap");
-                        vka_cspace_free(&dma->vka, copy_path.capPtr);
-                        unmap_range(dma, start, addr + 1);
-                        free(ret);
-                        return NULL;
-                    }
-                    /* now map it in */
-                    reservation_t res = vspace_reserve_range_at(dma->iospaces + i, (void*)addr, PAGE_SIZE_4K, seL4_AllRights, 1);
-                    if (!res.res) {
-                        ZF_LOGE("Failed to create a reservation");
-                        vka_cnode_delete(&copy_path);
-                        vka_cspace_free(&dma->vka, copy_path.capPtr);
-                        unmap_range(dma, start, addr + 1);
-                        free(ret);
-                        return NULL;
-                    }
-                    cookie = malloc(sizeof(*cookie));
-                    if (!cookie) {
-                        ZF_LOGE("Failed to malloc %zu bytes", sizeof(*cookie));
-                        vspace_free_reservation(dma->iospaces + i, res);
-                        vka_cnode_delete(&copy_path);
-                        vka_cspace_free(&dma->vka, copy_path.capPtr);
-                        unmap_range(dma, start, addr + 1);
-                        free(ret);
-                        return NULL;
-                    }
-                    *cookie = 1;
-                    error = vspace_map_pages_at_vaddr(dma->iospaces + i, &copy_path.capPtr, (uintptr_t*)&cookie, (void*)addr, 1, seL4_PageBits, res);
-                    if (error) {
-                        ZF_LOGE("Failed to map frame into iospace");
-                        free(cookie);
-                        vspace_free_reservation(dma->iospaces + i, res);
-                        vka_cnode_delete(&copy_path);
-                        vka_cspace_free(&dma->vka, copy_path.capPtr);
-                        unmap_range(dma, start, addr + 1);
-                        free(ret);
-                        return NULL;
-                    }
-                    vspace_free_reservation(dma->iospaces + i, res);
-                }
-            }
+        error = iommu_dma_alloc_iospace(cookie, ret, size);
+        if (error) {
+            free(ret);
+            return NULL;
         }
         return ret;
     } else {
@@ -224,6 +233,24 @@ error:
         free(dma);
     }
     return -1;
+}
+
+int sel4utils_iommu_dma_alloc_iospace(ps_dma_man_t *dma_man, void *vaddr, size_t size)
+{
+    if (dma_man == NULL) {
+        ZF_LOGE("DMA manager is null.");
+        return -1;
+    }
+    if (dma_man->cookie == NULL) {
+        ZF_LOGE("DMA manager uninitialised.");
+        return -1;
+    }
+    if (dma_man->dma_alloc_fn != dma_alloc) {
+        ZF_LOGE("Incorrect implementation of DMA manager. "
+                "IOMMU DMA manager must be used.");
+        return -1;
+    }
+    return iommu_dma_alloc_iospace(dma_man->cookie, vaddr, size);
 }
 
 #endif /* CONFIG_LIB_SEL4_VSPACE && CONFIG_LIB_SEL4_VKA && CONFIG_LIB_PLATSUPPORT && CONFIG_IOMMU */

@@ -11,13 +11,16 @@
 
 import argparse, bs4, functools, re, sys
 
+SYS_OUT = 'system-out'
+XML_SPECIAL_CHARS = {'<':"&lt;",'&':"&amp;",'>':"&gt;",'"':"&quot;","'":"&apos;"}
+
 TAG_WHITELIST = {
     # Keys are tags to be emitted, values are whether to emit their inner text.
     'error':True,
     'failure':True,
     'testsuite':False,
     'testcase':False,
-    'system-out':True,
+    SYS_OUT:True,
 }
 
 TOP_TAG = 'testsuite'
@@ -31,8 +34,17 @@ def print_tag(f, tag):
 
     # If we want the inner text, just blindly dump the soup.
     if TAG_WHITELIST[tag.name]:
-        print >>f, tag
-
+        if tag.name != SYS_OUT:
+            print >>f, tag
+        else:
+            print >>f, '<%s>' % tag.name
+            text = tag.get_text()
+            for ch in text:
+                if ch not in XML_SPECIAL_CHARS:
+                    f.write(ch)
+                else:
+                    f.write(XML_SPECIAL_CHARS[ch])
+            print >>f, '</%s>' % tag.name
     else:
         print >>f, '<%(name)s %(attrs)s>' % {
             'name':tag.name,
@@ -80,7 +92,7 @@ def main():
     # Parse the input as HTML even though BS supports XML. It seems the XML
     # parser is a bit more precious about the input.
     try:
-        soup = bs4.BeautifulSoup(data)
+        soup = bs4.BeautifulSoup(data, "lxml")
     except Exception as inst:
         print >>sys.stderr, 'Failed to parse input: %s' % inst
         return -1

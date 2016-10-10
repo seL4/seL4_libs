@@ -61,6 +61,19 @@ typedef void (*vka_cspace_free_fn)(void *data, seL4_CPtr slot);
 typedef int (*vka_utspace_alloc_fn)(void *data, const cspacepath_t *dest, seL4_Word type, seL4_Word size_bits, seL4_Word *res);
 
 /**
+ * Allocate a portion of an untyped into an object
+ *
+ * @param data cookie for the underlying allocator
+ * @param dest path to an empty cslot to place the cap to the allocated object
+ * @param type the seL4 object type to allocate (as passed to Untyped_Retype)
+ * @param size_bits the size of the object to allocate (as passed to Untyped_Retype)
+ * @param paddr The desired physical address that this object should start at
+ * @param cookie pointer to a location to store the cookie representing this allocation
+ * @return 0 on success
+ */
+typedef int (*vka_utspace_alloc_at_fn)(void *data, const cspacepath_t *dest, seL4_Word type, seL4_Word size_bits, uintptr_t paddr, seL4_Word *cookie);
+
+/**
  * Free a portion of an allocated untyped. Is the responsibility of the caller to
  * have already deleted the object (by deleting all capabilities) first
  *
@@ -78,9 +91,11 @@ typedef void (*vka_utspace_free_fn)(void *data, seL4_Word type, seL4_Word size_b
  * @param target cookie to the allocation as given by the utspace alloc function
  * @param type the seL4 object type that was allocated (as passed to Untyped_Retype)
  * @param size_bits the size of the object that was allocated (as passed to Untyped_Retype)
- * @return paddr of object, or NULL on error
+ * @return paddr of object, or VKA_NO_PADDR on error
  */
 typedef uintptr_t (*vka_utspace_paddr_fn)(void *data, seL4_Word target, seL4_Word type, seL4_Word size_bits);
+
+#define VKA_NO_PADDR 1
 
 /*
  * Generic Virtual Kernel Allocator (VKA) data structure.
@@ -97,6 +112,7 @@ typedef struct vka {
     vka_cspace_alloc_fn cspace_alloc;
     vka_cspace_make_path_fn cspace_make_path;
     vka_utspace_alloc_fn utspace_alloc;
+    vka_utspace_alloc_at_fn utspace_alloc_at;
     vka_cspace_free_fn cspace_free;
     vka_utspace_free_fn utspace_free;
     vka_utspace_paddr_fn utspace_paddr;
@@ -193,9 +209,30 @@ vka_utspace_alloc(vka_t *vka, const cspacepath_t *dest, seL4_Word type, seL4_Wor
 
     if (!vka->utspace_alloc) {
         ZF_LOGE("Not implemented");
+        return -1;
     }
 
     return vka->utspace_alloc(vka->data, dest, type, size_bits, res);
+}
+
+static inline int
+vka_utspace_alloc_at(vka_t *vka, const cspacepath_t *dest, seL4_Word type, seL4_Word size_bits,
+                     uintptr_t paddr, seL4_Word *cookie)
+{
+    if (!vka) {
+        ZF_LOGE("vka is NULL");
+        return -1;
+    }
+    if (!cookie) {
+        ZF_LOGE("cookie is NULL");
+        return -1;
+    }
+    if (!vka->utspace_alloc_at) {
+        ZF_LOGE("Not implemented");
+        return -1;
+    }
+
+    return vka->utspace_alloc_at(vka->data, dest, type, size_bits, paddr, cookie);
 }
 
 static inline void
@@ -223,12 +260,12 @@ vka_utspace_paddr(vka_t *vka, seL4_Word target, seL4_Word type, seL4_Word size_b
 
     if (!vka) {
         ZF_LOGE("vka is NULL");
-        return -1;
+        return VKA_NO_PADDR;
     }
 
     if (!vka->utspace_paddr) {
         ZF_LOGE("Not implemented");
-        return -1;
+        return VKA_NO_PADDR;
     }
 
     return vka->utspace_paddr(vka->data, target, type, size_bits);

@@ -22,39 +22,24 @@ seL4_timer_t *
 sel4platsupport_get_pwm(vspace_t *vspace, simple_t *simple, vka_t *vka, seL4_CPtr notification)
 {
 
-    seL4_timer_t *timer = calloc(1, sizeof(seL4_timer_t));
+    seL4_timer_t *timer = timer_common_init(vspace, simple, vka, notification,
+                                            PWM_T4_INTERRUPT, (void *) PWM_TIMER_PADDR);
+
     if (timer == NULL) {
-        ZF_LOGE("Failed to allocate object of size %u\n", sizeof(seL4_timer_t));
-        goto error;
+        timer_common_destroy(timer, vka, vspace);
+        return NULL;
     }
-
-    timer_common_data_t *data = timer_common_init(vspace, simple, vka, notification, PWM_T4_INTERRUPT,
-                                                  (void *) PWM_TIMER_PADDR);
-    timer->data = data;
-
-    if (timer->data == NULL) {
-        goto error;
-    }
-
-    timer->handle_irq = timer_common_handle_irq;
-    timer->destroy = timer_common_destroy;
 
     /* do hardware init */
     pwm_config_t config = {
-        .vaddr = data->vaddr,
+        .vaddr = timer->vaddr,
     };
 
     timer->timer = pwm_get_timer(&config);
     if (timer->timer == NULL) {
-        goto error;
-    }
-
-    /* success */
-    return timer;
-error:
-    if (timer != NULL) {
         timer_common_destroy(timer, vka, vspace);
+        return NULL;
     }
 
-    return NULL;
+    return timer;
 }

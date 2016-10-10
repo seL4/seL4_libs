@@ -34,8 +34,6 @@ typedef enum {
 } epit_id_t;
 
 
-typedef timer_common_data_t epit_data;
-
 /**
  * Get an interface for an initialised epit timer.
  *

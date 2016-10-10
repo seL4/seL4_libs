@@ -30,9 +30,16 @@
 
 #include <vspace/vspace.h>
 
+#ifdef CONFIG_DEBUG_BUILD
+#define NAME_THREAD(_tcbcap, _name)   seL4_DebugNameThread(_tcbcap, _name);
+#else
+#define NAME_THREAD(_tcbcap, _name)
+#endif
+
 typedef struct sel4utils_thread {
     vka_object_t tcb;
     void *stack_top;
+    void *initial_stack_pointer;
     size_t stack_size;
     seL4_CPtr ipc_buffer;
     seL4_Word ipc_buffer_addr;
@@ -47,7 +54,7 @@ typedef struct sel4utils_thread_config {
     seL4_CPtr timeout_fault_endpoint;
     /* seL4 priority for the thread to be scheduled with. */
     uint8_t priority;
-    /* max priority for that the thread can create and set other threads to */
+    /* seL4 maximum controlled priority for the thread. */
     uint8_t mcp;
     /* seL4 criticality for the thread to be scheduled with. */
     uint8_t criticality;

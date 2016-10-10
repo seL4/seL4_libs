@@ -29,7 +29,7 @@
  * @param paddr the paddr that the timer needs mapped in.
  * @param notification the badged notification object that the irq should be delivered to.
  */
-timer_common_data_t *timer_common_init(vspace_t *vspace, simple_t *simple,
+seL4_timer_t *timer_common_init(vspace_t *vspace, simple_t *simple,
                                        vka_t *vka, seL4_CPtr notification, uint32_t irq_number, void *paddr);
 
 /*
@@ -40,7 +40,6 @@ void timer_common_destroy(seL4_timer_t *timer, vka_t *vka, vspace_t *vspace);
 void timer_common_cleanup_irq(vka_t *vka, seL4_CPtr irq);
 
 void timer_common_handle_irq(seL4_timer_t *timer, uint32_t irq);
-timer_common_data_t *
-timer_common_init_frame(vspace_t *vspace, simple_t *simple, vka_t *vka, void *paddr);
+int timer_common_init_frame(seL4_timer_t *timer, vspace_t *vspace, vka_t *vka, uintptr_t paddr);
 
 #endif /* _SEL4PLATSUPPORT_TIMER_INTERNAL_H */

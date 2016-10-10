@@ -67,7 +67,7 @@ static int _create_second_level(allocman_t *alloc, cspace_two_level_t *cspace, s
     }
     if (alloc_node) {
         cspacepath_t path = _cspace_single_level_make_path(&cspace->first_level, index);
-        cspace->second_levels[index]->cookie = allocman_utspace_alloc(alloc, cspace->config.level_two_bits + seL4_SlotBits, seL4_CapTableObject, &path, &error);
+        cspace->second_levels[index]->cookie = allocman_utspace_alloc(alloc, cspace->config.level_two_bits + seL4_SlotBits, seL4_CapTableObject, &path, false, &error);
         cspace->second_levels[index]->cookie_valid = 1;
     } else {
         cspace->second_levels[index]->cookie_valid = 0;

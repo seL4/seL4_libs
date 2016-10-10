@@ -259,7 +259,7 @@ static int _allocman_cspace_alloc(allocman_t *alloc, cspacepath_t *slot, int use
     }
 }
 
-static seL4_Word _allocman_utspace_alloc(allocman_t *alloc, size_t size_bits, seL4_Word type, const cspacepath_t *path, int *_error, int use_watermark)
+static seL4_Word _allocman_utspace_alloc(allocman_t *alloc, size_t size_bits, seL4_Word type, const cspacepath_t *path, uintptr_t paddr, bool canBeDev, int *_error, int use_watermark)
 {
     int root_op;
     int error;
@@ -271,7 +271,7 @@ static seL4_Word _allocman_utspace_alloc(allocman_t *alloc, size_t size_bits, se
     }
     /* Check that we are permitted to utspace_alloc here */
     if (!_can_alloc(alloc->utspace.properties, alloc->utspace_alloc_depth, alloc->utspace_free_depth)) {
-        if (use_watermark) {
+        if (use_watermark && paddr == ALLOCMAN_NO_PADDR) {
             ret = _try_watermark_utspace(alloc, size_bits, type, path, _error);
             if (ret == 0) {
                 ZF_LOGI("Failed to allocate utspace from watermark. size %zu type %ld\n", size_bits, (long)type);
@@ -285,7 +285,7 @@ static seL4_Word _allocman_utspace_alloc(allocman_t *alloc, size_t size_bits, se
     root_op = _start_operation(alloc);
     /* Attempt the allocation */
     alloc->utspace_alloc_depth++;
-    ret = alloc->utspace.alloc(alloc, alloc->utspace.utspace, size_bits, type, path, &error);
+    ret = alloc->utspace.alloc(alloc, alloc->utspace.utspace, size_bits, type, path, paddr, canBeDev, &error);
     alloc->utspace_alloc_depth--;
     if (!error) {
         _end_operation(alloc, root_op);
@@ -294,7 +294,7 @@ static seL4_Word _allocman_utspace_alloc(allocman_t *alloc, size_t size_bits, se
     }
     /* We encountered some fail. We will try and allocate from the watermark pool.
        Does not matter what the error or outcome is, just propogate back up*/
-    if (use_watermark) {
+    if (use_watermark && paddr == ALLOCMAN_NO_PADDR) {
         ret = _try_watermark_utspace(alloc, size_bits, type, path, _error);
         _end_operation(alloc, root_op);
         if (ret == 0) {
@@ -318,9 +318,9 @@ int allocman_cspace_alloc(allocman_t *alloc, cspacepath_t *slot)
     return _allocman_cspace_alloc(alloc, slot, 1);
 }
 
-seL4_Word allocman_utspace_alloc(allocman_t *alloc, size_t size_bits, seL4_Word type, const cspacepath_t *path, int *_error)
+seL4_Word allocman_utspace_alloc_at(allocman_t *alloc, size_t size_bits, seL4_Word type, const cspacepath_t *path, uintptr_t paddr, bool canBeDev, int *_error)
 {
-    return _allocman_utspace_alloc(alloc, size_bits, type, path, _error, 1);
+    return _allocman_utspace_alloc(alloc, size_bits, type, path, paddr, canBeDev, _error, 1);
 }
 
 static int _refill_watermark(allocman_t *alloc)
@@ -383,7 +383,7 @@ static int _refill_watermark(allocman_t *alloc)
                 error = allocman_cspace_alloc(alloc, &slot);
                 if (!error) {
                     /* Now try to allocate */
-                    cookie = _allocman_utspace_alloc(alloc, alloc->utspace_chunk[i].size_bits, alloc->utspace_chunk[i].type, &slot, &error, 0);
+                    cookie = _allocman_utspace_alloc(alloc, alloc->utspace_chunk[i].size_bits, alloc->utspace_chunk[i].type, &slot, ALLOCMAN_NO_PADDR, false, &error, 0);
                     if (!error) {
                         alloc->utspace_chunks[i][alloc->utspace_chunk_count[i]].cookie = cookie;
                         alloc->utspace_chunks[i][alloc->utspace_chunk_count[i]].slot = slot;

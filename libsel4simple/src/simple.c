@@ -15,9 +15,7 @@ int simple_is_untyped_cap(simple_t *simple, seL4_CPtr pos)
     int i;
 
     for (i = 0; i < simple_get_untyped_count(simple); i++) {
-        uint32_t paddr;
-        uint32_t size_bits;
-        seL4_CPtr ut_pos = simple_get_nth_untyped(simple, i, &size_bits, &paddr);
+        seL4_CPtr ut_pos = simple_get_nth_untyped(simple, i, NULL, NULL, NULL);
         if (ut_pos == pos) {
             return 1;
         }

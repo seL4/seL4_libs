@@ -184,10 +184,6 @@ clear_entries_mid(vspace_t *vspace, vspace_mid_level_t *level, int level_num, ui
         }
         start = next_start;
     }
-    sel4utils_alloc_data_t *data = get_alloc_data(vspace);
-    if (start < data->last_allocated) {
-        data->last_allocated = start;
-    }
     return 0;
 }
 
@@ -324,7 +320,16 @@ static inline int
 clear_entries_range(vspace_t *vspace, uintptr_t start, uintptr_t end, bool only_reserved)
 {
     sel4utils_alloc_data_t *data = get_alloc_data(vspace);
-    return clear_entries_mid(vspace, data->top_level, VSPACE_NUM_LEVELS - 1, start, end, only_reserved);
+    int error = clear_entries_mid(vspace, data->top_level, VSPACE_NUM_LEVELS - 1, start, end, only_reserved);
+    if (error) {
+        return error;
+    }
+
+    if (start < data->last_allocated) {
+        data->last_allocated = start;
+    }
+
+    return 0;
 }
 
 static inline int

@@ -120,7 +120,7 @@ sel4utils_configure_thread_config(simple_t *simple, vka_t *vka, vspace_t *parent
     }
 
     seL4_CapData_t null_cap_data = {{0}};
-    seL4_Prio_t prio = seL4_Prio_new(config.priority, config.mcp, config.criticality, config.mcc);
+    seL4_PrioProps_t prio = seL4_PrioProps_new(config.priority, config.mcp, config.criticality, config.mcc);
     error = seL4_TCB_Configure(res->tcb.cptr, config.fault_endpoint, config.timeout_fault_endpoint,
                                prio, res->sched_context.cptr, config.cspace, config.cspace_root_data, vspace_get_root(alloc), null_cap_data, res->ipc_buffer_addr, res->ipc_buffer);
 
@@ -144,6 +144,8 @@ sel4utils_configure_thread_config(simple_t *simple, vka_t *vka, vspace_t *parent
             sel4utils_clean_up_thread(vka, alloc, res);
             return -1;
         }
+
+        res->initial_stack_pointer = res->stack_top;
     }
 
     return 0;
@@ -158,7 +160,7 @@ sel4utils_start_thread(sel4utils_thread_t *thread, void *entry_point, void *arg0
 
     int error = sel4utils_arch_init_local_context(entry_point, arg0, arg1,
                                               (void *) thread->ipc_buffer_addr,
-                                              thread->stack_top, &context);
+                                              thread->initial_stack_pointer, &context);
     if (error) {
         return error;
     }

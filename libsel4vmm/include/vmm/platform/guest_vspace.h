@@ -38,7 +38,7 @@ int vmm_guest_vspace_touch(vspace_t *guest_vspace, uintptr_t addr, size_t size, 
 
 #ifdef CONFIG_IOMMU
 /* Attach an additional IO space to the vspace */
-int vmm_guest_vspace_add_iospace(vspace_t *vspace, seL4_CPtr iospace);
+int vmm_guest_vspace_add_iospace(vspace_t *loader, vspace_t *vspace, seL4_CPtr iospace);
 #endif
 
 #endif /* __LIB_VMM_PLATFORM_GUEST_VSPACE_H__ */

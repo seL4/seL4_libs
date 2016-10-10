@@ -20,6 +20,14 @@
 
 #include "vmm/platform/guest_vspace.h"
 
+#ifdef CONFIG_IOMMU
+typedef struct guest_iospace {
+    seL4_CPtr iospace;
+    struct sel4utils_alloc_data iospace_vspace_data;
+    vspace_t iospace_vspace;
+} guest_iospace_t;
+#endif
+
 typedef struct guest_vspace {
     /* We abuse struct ordering and this member MUST be the first
      * thing in the struct */
@@ -35,7 +43,7 @@ typedef struct guest_vspace {
     /* debug flag for checking if we add io spaces late */
     int done_mapping;
     int num_iospaces;
-    seL4_CPtr *iospaces;
+    guest_iospace_t *iospaces;
 #endif
 } guest_vspace_t;
 
@@ -88,9 +96,23 @@ guest_vspace_map(vspace_t *vspace, seL4_CPtr cap, void *vaddr, seL4_CapRights ri
             return error;
         }
         error = vka_cnode_copy(&new_path, &orig_path, seL4_AllRights);
+
+        guest_iospace_t *guest_iospace = &guest_vspace->iospaces[i];
+
         assert(error == seL4_NoError);
-        error = sel4utils_map_iospace_page(guest_vspace->vspace_data.vka, guest_vspace->iospaces[i], new_path.capPtr, (uintptr_t)vaddr, rights, cacheable, size_bits, NULL, NULL);
+        error = sel4utils_map_iospace_page(guest_vspace->vspace_data.vka, guest_iospace->iospace,
+                                           new_path.capPtr, (uintptr_t)vaddr, rights, cacheable,
+                                           size_bits, NULL, NULL);
         if (error) {
+            ZF_LOGE("Failed to map page into iospace");
+            return error;
+        }
+
+        /* Store the slot of the frame cap copy in a vspace so they can be looked up and
+         * freed when this address gets unmapped. */
+        error = update_entries(&guest_iospace->iospace_vspace, (uintptr_t)vaddr, new_path.capPtr, size_bits, 0 /* cookie */);
+        if (error) {
+            ZF_LOGE("Failed to add iospace mapping information");
             return error;
         }
     }
@@ -132,20 +154,54 @@ void guest_vspace_unmap(vspace_t *vspace, void *vaddr, size_t num_pages, size_t 
             ZF_LOGE("Failed to clear translation information");
             return;
         }
+
+#ifdef CONFIG_IOMMU
+        /* Unmap the vaddr from each iospace, freeing the cslots used to store the
+         * copy of the frame cap. */
+        for (int i = 0; i < guest_vspace->num_iospaces; i++) {
+            guest_iospace_t *guest_iospace = &guest_vspace->iospaces[i];
+            seL4_CPtr iospace_frame_cap_copy = vspace_get_cap(&guest_iospace->iospace_vspace, page_vaddr);
+
+            error = seL4_ARCH_Page_Unmap(iospace_frame_cap_copy);
+            if (error) {
+                ZF_LOGE("Failed to unmap page from iospace");
+                return;
+            }
+
+            cspacepath_t path;
+            vka_cspace_make_path(guest_vspace->vspace_data.vka, iospace_frame_cap_copy, &path);
+            error = vka_cnode_delete(&path);
+            if (error) {
+                ZF_LOGE("Failed to delete frame cap copy");
+                return;
+            }
+
+            vka_cspace_free(guest_vspace->vspace_data.vka, iospace_frame_cap_copy);
+        }
+#endif
     }
 }
 
 #ifdef CONFIG_IOMMU
-int vmm_guest_vspace_add_iospace(vspace_t *vspace, seL4_CPtr iospace) {
+int vmm_guest_vspace_add_iospace(vspace_t *loader, vspace_t *vspace, seL4_CPtr iospace) {
     struct sel4utils_alloc_data *data = get_alloc_data(vspace);
     guest_vspace_t *guest_vspace = (guest_vspace_t*) data;
 
     assert(!guest_vspace->done_mapping);
 
-    guest_vspace->iospaces = realloc(guest_vspace->iospaces, sizeof(seL4_CPtr) * (guest_vspace->num_iospaces + 1));
+    guest_vspace->iospaces = realloc(guest_vspace->iospaces, sizeof(guest_iospace_t) * (guest_vspace->num_iospaces + 1));
     assert(guest_vspace->iospaces);
 
-    guest_vspace->iospaces[guest_vspace->num_iospaces] = iospace;
+
+    guest_iospace_t *guest_iospace = &guest_vspace->iospaces[guest_vspace->num_iospaces];
+    guest_iospace->iospace = iospace;
+    int error = sel4utils_get_vspace(loader, &guest_iospace->iospace_vspace, &guest_iospace->iospace_vspace_data,
+                                     guest_vspace->vspace_data.vka, seL4_CapNull, NULL, NULL);
+    if (error) {
+        ZF_LOGE("Failed to allocate vspace for new iospace");
+        return error;
+    }
+
     guest_vspace->num_iospaces++;
     return 0;
 }

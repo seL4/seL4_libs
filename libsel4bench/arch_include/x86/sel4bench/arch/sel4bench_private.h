@@ -11,6 +11,7 @@
 #ifndef __SEL4BENCH_PRIVATE_H__
 #define __SEL4BENCH_PRIVATE_H__
 
+#include <autoconf.h>
 #include <stdint.h>
 #include <utils/util.h>
 
@@ -65,7 +66,7 @@ typedef union {
 		seL4_Word ex_family : 8;
 		seL4_Word reserved2 : 4;
 	};
-	seL4_Word raw;
+	uint32_t raw;
 } ia32_cpuid_model_info_t;
 
 //CPUID.PMC Performance-monitoring macros and types
@@ -105,13 +106,13 @@ typedef union {
 		};
 		uint8_t cmask;
 	};
-	seL4_Word raw;
+	uint32_t raw;
 } ia32_pmc_perfevtsel_t;
 
 
 //Convenient execution of CPUID instruction. The first version isn't volatile, so is for querying the processor; the second version just serialises.
 //This looks slow, but gcc inlining is smart enough to optimise away all the memory references, and takes unused information into account.
-static FASTFN void sel4bench_private_cpuid(seL4_Word leaf, seL4_Word subleaf, seL4_Word * eax, seL4_Word * ebx, seL4_Word * ecx, seL4_Word * edx) {
+static FASTFN void sel4bench_private_cpuid(uint32_t leaf, uint32_t subleaf, uint32_t * eax, uint32_t * ebx, uint32_t * ecx, uint32_t * edx) {
 	asm (
 		"cpuid"
 		: "=a"(*eax)    /* output eax */
@@ -142,41 +143,22 @@ static FASTFN void sel4bench_private_lfence() {
 
 
 static FASTFN uint64_t sel4bench_private_rdtsc() {
-	uint64_t time;
-#ifdef X86_64
-    uint64_t lo, hi;
+    uint32_t lo, hi;
     asm volatile (
             "rdtsc"
             : "=a"(lo), "=d"(hi)
             );
-    return ((hi << 32) | lo);
-#else
-	asm volatile (
-		"rdtsc"      /* Get the cycle count */
-		: "=A"(time) /* output value (edx:eax) */
-	);
-#endif
-	return time;
+    return (((uint64_t)hi << 32ull) | (uint64_t)lo);
 }
 
 static FASTFN uint64_t sel4bench_private_rdpmc(uint32_t counter) {
-#ifdef X86_64
-    uint64_t hi, lo;
+    uint32_t hi, lo;
     asm volatile (
             "rdpmc"
             : "=a"(lo), "=d"(hi)
             : "c"(counter)
             );
-    return ((hi << 32 ) | lo);
-#else
-	uint64_t counter_val;
-	asm volatile (
-		"rdpmc"             /* Read the performance counter */
-		: "=A"(counter_val) /* output value (edx:eax) */
-		: "c" (counter)     /* input counter (low 29 bits) */
-	);
-	return counter_val;
-#endif
+    return (((uint64_t)hi << 32ull) | (uint64_t)lo);
 }
 
 //Serialization instruction for before and after reading PMCs
@@ -189,7 +171,7 @@ static FASTFN uint64_t sel4bench_private_rdpmc(uint32_t counter) {
 
 //enable user-level pmc access
 static KERNELFN void sel4bench_private_enable_user_pmc(void* arg) {
-#ifdef X86_64
+#ifdef CONFIG_ARCH_X86_64
 
     uint64_t dummy;
     asm volatile (
@@ -216,7 +198,7 @@ static KERNELFN void sel4bench_private_enable_user_pmc(void* arg) {
 
 //disable user-level pmc access
 static KERNELFN void sel4bench_private_disable_user_pmc(void* arg) {
-#ifdef X86_64
+#ifdef CONFIG_ARCH_X86_64
     uint64_t dummy;
     asm volatile (
         "movq   %%cr4, %0;"
@@ -242,7 +224,7 @@ static KERNELFN void sel4bench_private_disable_user_pmc(void* arg) {
 
 //read an MSR
 static KERNELFN void sel4bench_private_rdmsr(void* arg) {
-	seL4_Word* msr = (seL4_Word*)arg;
+	uint32_t* msr = (uint32_t*)arg;
 
 	asm volatile (
 		"rdmsr"
@@ -254,7 +236,7 @@ static KERNELFN void sel4bench_private_rdmsr(void* arg) {
 
 //write an MSR
 static KERNELFN void sel4bench_private_wrmsr(void* arg) {
-	seL4_Word* msr = (seL4_Word*)arg;
+	uint32_t* msr = (uint32_t*)arg;
 
 	asm volatile (
 		"wrmsr"
@@ -312,7 +294,7 @@ static seL4_Word SEL4BENCH_IA32_HASWELL_EVENTS[5] = {
 
 static FASTFN seL4_Word sel4bench_private_lookup_event(seL4_Word event) {
 	if(SEL4BENCH_IA32_EVENT_GENERIC_MASK & event) {
-		seL4_Word dummy = 0;
+		uint32_t dummy = 0;
 		ia32_cpuid_model_info_t model_info = { .raw = 0 };
 		sel4bench_private_cpuid(IA32_CPUID_LEAF_MODEL, 0, &model_info.raw, &dummy, &dummy, &dummy);
 

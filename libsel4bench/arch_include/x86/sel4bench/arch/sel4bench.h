@@ -15,6 +15,7 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <stdbool.h>
+#include <inttypes.h>
 
 #define SEL4BENCH_READ_CCNT(var) do { \
     uint32_t low, high; \
@@ -55,7 +56,7 @@
 
 #include "sel4bench_private.h"
 
-#define CCNT_FORMAT "%llu"
+#define CCNT_FORMAT "%"PRIu64
 typedef uint64_t ccnt_t;
 
 /* The framework as it stands supports the following Intel processors:
@@ -63,12 +64,7 @@ typedef uint64_t ccnt_t;
  * - All processors supporting IA-32 architectural performance
  *   monitoring (that is, processors starting from the Intel Core Solo,
  *   codenamed Yonah)
- * - Note: only works if compiled -m32. -m64 will break the inline
- *   assembly.
  */
-#if __x86_64__
-    #error this code only works for a 32-bit architecture
-#endif
 
 /* Silence warnings about including the following functions when seL4_DebugRun
  * is not enabled when we are not calling them. If we actually call these
@@ -78,10 +74,10 @@ typedef uint64_t ccnt_t;
 void seL4_DebugRun(void (* userfn) (void *), void* userarg);
 
 static FASTFN void sel4bench_init() {
-	seL4_Word cpuid_eax;
-	seL4_Word cpuid_ebx;
-	seL4_Word cpuid_ecx;
-	seL4_Word cpuid_edx;
+	uint32_t cpuid_eax;
+	uint32_t cpuid_ebx;
+	uint32_t cpuid_ecx;
+	uint32_t cpuid_edx;
 	sel4bench_private_cpuid(IA32_CPUID_LEAF_BASIC, 0, &cpuid_eax, &cpuid_ebx, &cpuid_ecx, &cpuid_edx);
 
 	//check we're running on an Intel chip
@@ -110,10 +106,10 @@ static FASTFN sel4bench_counter_t sel4bench_get_cycle_count() {
 }
 
 static FASTFN seL4_Word sel4bench_get_num_counters() {
-	seL4_Word dummy;
+	uint32_t dummy;
 
 	//make sure the processor supports the PMC CPUID leaf
-	seL4_Word max_basic_leaf = 0;
+    uint32_t max_basic_leaf = 0;
 	sel4bench_private_cpuid(IA32_CPUID_LEAF_BASIC, 0, &max_basic_leaf, &dummy, &dummy, &dummy);
 	if(max_basic_leaf >= IA32_CPUID_LEAF_PMC) { //Core Solo or later supports PMC discovery via CPUID...
 		//query the processor's PMC data
@@ -139,7 +135,6 @@ static FASTFN sel4bench_counter_t sel4bench_get_counter(seL4_Word counter) {
 	return counter_val;
 }
 
-//ASSUMES x86-32 -- NEEDS A REWRITE FOR x86-64!
 static CACHESENSFN sel4bench_counter_t sel4bench_get_counters(seL4_Word counters, sel4bench_counter_t* values) {
 	unsigned char counter = 0;
 
@@ -160,7 +155,7 @@ static FASTFN void sel4bench_set_count_event(seL4_Word counter, seL4_Word event)
 	assert(counter < sel4bench_get_num_counters());
 
 	//{RD,WR}MSR support data structure
-	seL4_Word msr_data[3];
+	uint32_t msr_data[3];
 	msr_data[0] = IA32_MSR_PMC_PERFEVTSEL_BASE + counter;
 	msr_data[1] = 0;
 	msr_data[2] = 0;
@@ -169,7 +164,7 @@ static FASTFN void sel4bench_set_count_event(seL4_Word counter, seL4_Word event)
 	seL4_DebugRun(&sel4bench_private_rdmsr, msr_data);
 
 	//preserve the reserved flag, like the docs tell us
-	seL4_Word res_flag = ((ia32_pmc_perfevtsel_t)msr_data[1]).res;
+	uint32_t res_flag = ((ia32_pmc_perfevtsel_t)msr_data[1]).res;
 
 	//rewrite the MSR to what we want
 	ia32_pmc_perfevtsel_t evtsel_msr;
@@ -196,7 +191,7 @@ static FASTFN void sel4bench_set_count_intx_bits(seL4_Word counter, bool in_tx, 
 	assert( !(counter != 2 && in_txcp) );
 
 	//{RD,WR}MSR support data structure
-	seL4_Word msr_data[3];
+	uint32_t msr_data[3];
 	msr_data[0] = IA32_MSR_PMC_PERFEVTSEL_BASE + counter;
 	msr_data[1] = 0;
 	msr_data[2] = 0;
@@ -218,6 +213,7 @@ static FASTFN void sel4bench_start_counters(seL4_Word counters) {
 	 * simultaneously.
 	 * Arch PMCs are all done independently.
 	 */
+	uint32_t dummy;
 
 	seL4_Word num_counters = sel4bench_get_num_counters();
 	if(counters == ~(0UL)) {
@@ -226,9 +222,8 @@ static FASTFN void sel4bench_start_counters(seL4_Word counters) {
 		assert((~((1 << num_counters) - 1) & counters) == 0);
 	}
 
-	seL4_Word max_basic_leaf = 0;
-	sel4bench_private_cpuid(IA32_CPUID_LEAF_BASIC, 0, &max_basic_leaf, &num_counters, &num_counters, &num_counters);
-	//num_counters is now garbage
+	uint32_t max_basic_leaf = 0;
+	sel4bench_private_cpuid(IA32_CPUID_LEAF_BASIC, 0, &max_basic_leaf, &dummy, &dummy, &dummy);
 
 	if(!(max_basic_leaf >= IA32_CPUID_LEAF_PMC)) {
 		//we're P6, because otherwise the init() assertion would have tripped
@@ -240,7 +235,7 @@ static FASTFN void sel4bench_start_counters(seL4_Word counters) {
 	}
 
 	//{RD,WR}MSR support data structure
-	seL4_Word msr_data[3];
+	uint32_t msr_data[3];
 
 	seL4_Word counter;
 	//NOT your average for loop!
@@ -278,6 +273,7 @@ static FASTFN void sel4bench_stop_counters(seL4_Word counters) {
 	 * simultaneously.
 	 * Arch PMCs are all done independently.
 	 */
+	uint32_t dummy;
 
 	seL4_Word num_counters = sel4bench_get_num_counters();
 	if(counters == ~(0UL)) {
@@ -286,9 +282,8 @@ static FASTFN void sel4bench_stop_counters(seL4_Word counters) {
 		assert((~((1 << num_counters) - 1) & counters) == 0);
 	}
 
-	seL4_Word max_basic_leaf = 0;
-	sel4bench_private_cpuid(IA32_CPUID_LEAF_BASIC, 0, &max_basic_leaf, &num_counters, &num_counters, &num_counters);
-	//num_counters is now garbage
+	uint32_t max_basic_leaf = 0;
+	sel4bench_private_cpuid(IA32_CPUID_LEAF_BASIC, 0, &max_basic_leaf, &dummy, &dummy, &dummy);
 
 	if(!(max_basic_leaf >= IA32_CPUID_LEAF_PMC)) {
 		//we're P6, because otherwise the init() assertion would have tripped
@@ -297,7 +292,7 @@ static FASTFN void sel4bench_stop_counters(seL4_Word counters) {
 	}
 
 	//{RD,WR}MSR support data structure
-	seL4_Word msr_data[3];
+	uint32_t msr_data[3];
 
 	seL4_Word counter;
 	//NOT your average for loop!
@@ -332,7 +327,7 @@ static FASTFN void sel4bench_destroy() {
 }
 
 static FASTFN void sel4bench_reset_counters(seL4_Word counters) {
-	seL4_Word msr_data[3];
+	uint32_t msr_data[3];
 	msr_data[0] = IA32_MSR_PMC_PERFEVTCNT_BASE;
 	msr_data[1] = 0;
 	msr_data[2] = 0;

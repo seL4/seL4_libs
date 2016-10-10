@@ -100,6 +100,41 @@ guest_vspace_map(vspace_t *vspace, seL4_CPtr cap, void *vaddr, seL4_CapRights ri
     return 0;
 }
 
+void guest_vspace_unmap(vspace_t *vspace, void *vaddr, size_t num_pages, size_t size_bits, vka_t *vka) {
+    struct sel4utils_alloc_data *data = get_alloc_data(vspace);
+    guest_vspace_t *guest_vspace = (guest_vspace_t*) data;
+
+    int error;
+
+    // Unmap pages from EPT.
+    // vaddr is a guest physical address.
+    // This can be done in a single call as mappings are contiguous in this vspace.
+    sel4utils_unmap_pages(vspace, vaddr, num_pages, size_bits, vka);
+
+    // Each page must be unmapped individually from the vmm vspace, as mappings are not
+    // necessarily host-virtually contiguous.
+    size_t page_size = BIT(size_bits);
+
+    for (int i = 0; i < num_pages; i++) {
+
+        void *page_vaddr = (void*)(vaddr + i * page_size);
+
+        // look up vaddr in vmm vspace by consulting entry in translation vspace
+        void *vmm_vaddr = (void*)vspace_get_cookie(&guest_vspace->translation_vspace, page_vaddr);
+
+        // remove mapping from vmm vspace
+        vspace_unmap_pages(&guest_vspace->vmm_vspace, vmm_vaddr, 1 /* num pages */, size_bits, vka);
+
+        // remove mapping from translation vspace
+        error = clear_entries(&guest_vspace->translation_vspace, (uintptr_t)page_vaddr, size_bits);
+
+        if (error) {
+            ZF_LOGE("Failed to clear translation information");
+            return;
+        }
+    }
+}
+
 #ifdef CONFIG_IOMMU
 int vmm_guest_vspace_add_iospace(vspace_t *vspace, seL4_CPtr iospace) {
     struct sel4utils_alloc_data *data = get_alloc_data(vspace);
@@ -140,6 +175,9 @@ int vmm_get_guest_vspace(vspace_t *loader, vspace_t *vmm, vspace_t *new_vspace, 
         ZF_LOGE("Failed to create guest vspace");
         return error;
     }
+
+    new_vspace->unmap_pages = guest_vspace_unmap;
+
     return 0;
 }
 

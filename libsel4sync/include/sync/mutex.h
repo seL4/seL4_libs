@@ -12,6 +12,7 @@
 #define _SYNC_MUTEX_H_
 
 #include <sel4/sel4.h>
+#include <vka/vka.h>
 #include <sync/bin_sem.h>
 
 typedef sync_bin_sem_t sync_mutex_t;
@@ -28,8 +29,12 @@ static inline int sync_mutex_unlock(sync_mutex_t *mutex) {
     return sync_bin_sem_post(mutex);
 }
 
-static inline int sync_mutex_destroy(sync_mutex_t *mutex) {
-    return sync_bin_sem_destroy(mutex);
+static inline int sync_mutex_new(vka_t *vka, sync_mutex_t *mutex) {
+    return sync_bin_sem_new(vka, mutex);
+}
+
+static inline int sync_mutex_destroy(vka_t *vka, sync_mutex_t *mutex) {
+    return sync_bin_sem_destroy(vka, mutex);
 }
 
 #endif

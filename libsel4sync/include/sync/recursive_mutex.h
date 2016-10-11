@@ -22,12 +22,14 @@
 #define _SYNC_RECURSIVE_MUTEX_H_
 
 #include <sel4/sel4.h>
+#include <vka/vka.h>
+#include <vka/object.h>
 
 /* This struct is intended to be opaque, but is left here so you can
  * stack-allocate mutexes. Callers should not touch any of its members.
  */
 typedef struct {
-    seL4_CPtr notification;
+    vka_object_t notification;
     void *owner;
     unsigned int held;
 } sync_recursive_mutex_t;
@@ -35,6 +37,7 @@ typedef struct {
 int sync_recursive_mutex_init(sync_recursive_mutex_t *mutex, seL4_CPtr notification);
 int sync_recursive_mutex_lock(sync_recursive_mutex_t *mutex);
 int sync_recursive_mutex_unlock(sync_recursive_mutex_t *mutex);
-int sync_recursive_mutex_destroy(sync_recursive_mutex_t *mutex);
+int sync_recursive_mutex_new(vka_t *vka, sync_recursive_mutex_t *mutex);
+int sync_recursive_mutex_destroy(vka_t *vka, sync_recursive_mutex_t *mutex);
 
 #endif

@@ -361,5 +361,12 @@ sys_mremap(va_list ap)
     }
 }
 
-
 #endif
+
+/* This is a "dummy" implementation of sys_madvise() to satisfy free() in muslc. */
+long
+sys_madvise(va_list ap)
+{
+    ZF_LOGV("calling dummy version of sys_madvise()\n");
+    return 0;
+}

@@ -236,6 +236,8 @@ run_scheduler(sched_t *sched, bool (*finished)(void *cookie), void *cookie, void
                 /* current is waiting for us to reply to it once its budget is refilled */
                 ZF_LOGD("Releasing job for thread %d\n", current->id);
                 current->reply_cap_saved = false;
+                seL4_MessageInfo_ptr_set_label(&info, 0);
+                seL4_MessageInfo_ptr_set_length(&info, 0);
                 flog_end(flog);
                 info = seL4_ReplyRecv(data->endpoint.cptr, info, &badge);
             }

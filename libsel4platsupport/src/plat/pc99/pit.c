@@ -31,6 +31,7 @@ pit_destroyer(seL4_timer_t *pit, vka_t *vka, UNUSED vspace_t *vspace)
 
     timer_stop(pit->timer);
     timer_common_cleanup_irq(vka, pit->irq);
+    free(pit->data);
     free(pit);
 }
 
@@ -42,7 +43,27 @@ sel4platsupport_get_pit(vka_t *vka, simple_t *simple, ps_io_port_ops_t *ops, seL
         ZF_LOGE("Failed to malloc object of size %zu\n", sizeof(*pit));
         return NULL;
     }
-    
+
+    /* initialise an io port ops interface if none was provided */
+    if (ops == NULL) {
+        ops = calloc(1, sizeof(*ops));
+
+        if (ops == NULL) {
+            ZF_LOGE("Failed to malloc object of size %zu", sizeof(*ops));
+            goto error;
+        }
+
+        /* store ops pointer in pit so it can be freed later */
+        pit->data = ops;
+
+        if (sel4platsupport_get_io_port_ops(ops, simple) != 0) {
+            ZF_LOGE("Failed to initialise io port ops");
+            goto error;
+        }
+    } else {
+        pit->data = NULL;
+    }
+
     pit->destroy = pit_destroyer;
     pit->handle_irq = timer_common_handle_irq;
 
@@ -74,6 +95,7 @@ sel4platsupport_get_pit(vka_t *vka, simple_t *simple, ps_io_port_ops_t *ops, seL
 error:
     if (pit->irq != 0) {
         timer_common_cleanup_irq(vka, pit->irq);
+        free(pit->data);
         free(pit);
     }
 

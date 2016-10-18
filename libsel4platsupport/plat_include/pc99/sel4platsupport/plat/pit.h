@@ -25,6 +25,8 @@
 /*
  * Get the PIT interface.
  *
+ * @param ops io port ops interface for use by timer driver. If NULL, the provided
+ *            simple interface will be used to initialise an io port ops interface.
  * @param notification endpoint for PIT irqs to come in on.
  * @return NULL on error.
  */

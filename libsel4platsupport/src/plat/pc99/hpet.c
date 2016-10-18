@@ -174,11 +174,13 @@ sel4platsupport_get_default_timer(vka_t *vka, vspace_t *vspace,
 {
     seL4_timer_t *timer = NULL;
 
-    acpi_t *acpi = hpet_init_acpi(vka, vspace);
-    if (acpi != NULL) {
-        /* First try the HPET -> this will only work if the calling task can parse
-         * acpi */
-        timer = sel4platsupport_get_hpet(vspace, simple, acpi, vka, notification, MSI_MIN);
+    if (config_set(CONFIG_IRQ_IOAPIC)) {
+        acpi_t *acpi = hpet_init_acpi(vka, vspace);
+        if (acpi != NULL) {
+            /* First try the HPET -> this will only work if the calling task can parse
+             * acpi */
+            timer = sel4platsupport_get_hpet(vspace, simple, acpi, vka, notification, MSI_MIN);
+        }
     }
 
     if (timer == NULL) {

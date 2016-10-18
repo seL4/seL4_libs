@@ -185,10 +185,7 @@ sel4platsupport_get_default_timer(vka_t *vka, vspace_t *vspace,
 
     if (timer == NULL) {
         /* fall back to the the PIT */
-        ps_io_ops_t io_ops;
-        if (sel4platsupport_new_io_ops(*vspace, *vka, &io_ops) == 0) {
-            timer = sel4platsupport_get_pit(vka, simple, &io_ops.io_port_ops, notification);
-        }
+        timer = sel4platsupport_get_pit(vka, simple, NULL, notification);
     }
 
     if (timer == NULL) {

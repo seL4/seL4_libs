@@ -15,6 +15,7 @@
 
 #include <platsupport/plat/pit.h>
 
+#include <sel4platsupport/arch/io.h>
 #include <sel4platsupport/device.h>
 #include <sel4platsupport/plat/pit.h>
 #include <sel4platsupport/timer.h>

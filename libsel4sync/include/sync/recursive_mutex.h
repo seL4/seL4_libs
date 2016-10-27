@@ -34,10 +34,32 @@ typedef struct {
     unsigned int held;
 } sync_recursive_mutex_t;
 
+/* Initialise an unmanaged recursive mutex with a notification object
+ * @param mutex         A recursive mutex object to be initialised.
+ * @param notification  A notification object to use for the lock.
+ * @return              0 on success, an error code on failure. */
 int sync_recursive_mutex_init(sync_recursive_mutex_t *mutex, seL4_CPtr notification);
+
+/* Acquire a recursive mutex 
+ * @param mutex         An initialised recursive mutex to acquire.
+ * @return              0 on success, an error code on failure. */
 int sync_recursive_mutex_lock(sync_recursive_mutex_t *mutex);
+
+/* Release a recursive mutex
+ * @param mutex         An initialised recursive mutex to release.
+ * @return              0 on success, an error code on failure. */
 int sync_recursive_mutex_unlock(sync_recursive_mutex_t *mutex);
+
+/* Allocate and initialise a managed recursive mutex 
+ * @param vka           A VKA instance used to allocate a notification object.
+ * @param mutex         A recursive mutex object to initialise.
+ * @return              0 on success, an error code on failure. */
 int sync_recursive_mutex_new(vka_t *vka, sync_recursive_mutex_t *mutex);
+
+/* Deallocate a managed recursive mutex (do not use with sync_mutex_init)
+ * @param vka           A VKA instance used to deallocate the notification object.
+ * @param mutex         A recursive mutex object initialised by sync_recursive_mutex_new.
+ * @return              0 on success, an error code on failure. */
 int sync_recursive_mutex_destroy(vka_t *vka, sync_recursive_mutex_t *mutex);
 
 #endif

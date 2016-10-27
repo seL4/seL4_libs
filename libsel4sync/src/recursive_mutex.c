@@ -20,7 +20,10 @@ static void *thread_id(void) {
 }
 
 int sync_recursive_mutex_init(sync_recursive_mutex_t *mutex, seL4_CPtr notification) {
-    assert(mutex != NULL);
+    if (mutex == NULL) {
+        ZF_LOGE("Mutex passed to sync_recursive_mutex_init is NULL");
+        return -1;
+    }
 #ifdef SEL4_DEBUG_KERNEL
     /* Check the cap actually is a notification. */
     assert(seL4_DebugCapIdentify(notification) == 6);
@@ -36,10 +39,13 @@ int sync_recursive_mutex_init(sync_recursive_mutex_t *mutex, seL4_CPtr notificat
 }
 
 int sync_recursive_mutex_lock(sync_recursive_mutex_t *mutex) {
-    assert(mutex != NULL);
+    if (mutex == NULL) {
+        ZF_LOGE("Mutex passed to sync_recursive_mutex_lock is NULL");
+        return -1;
+    }
     if (thread_id() != mutex->owner) {
         /* We don't already have the mutex. */
-        (void)seL4_Wait(mutex->notification.cptr, NULL);
+        seL4_Wait(mutex->notification.cptr, NULL);
         __atomic_thread_fence(__ATOMIC_ACQUIRE);
         assert(mutex->owner == NULL);
         mutex->owner = thread_id();
@@ -57,7 +63,10 @@ int sync_recursive_mutex_lock(sync_recursive_mutex_t *mutex) {
 }
 
 int sync_recursive_mutex_unlock(sync_recursive_mutex_t *mutex) {
-    assert(mutex != NULL);
+    if (mutex == NULL) {
+        ZF_LOGE("Mutex passed to sync_recursive_mutex_lock is NULL");
+        return -1;
+    }
     assert(mutex->owner == thread_id());
     assert(mutex->held > 0);
     mutex->held--;
@@ -80,7 +89,6 @@ int sync_recursive_mutex_new(vka_t *vka, sync_recursive_mutex_t *mutex) {
 }
 
 int sync_recursive_mutex_destroy(vka_t *vka, sync_recursive_mutex_t *mutex) {
-    /* Nothing to be done. */
     vka_free_object(vka, &(mutex->notification));
     return 0;
 }

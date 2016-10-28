@@ -120,6 +120,14 @@ typedef struct {
 
     int priority;
     seL4_CPtr asid_pool;
+
+    /* should we create and sc for this process ?*/
+    bool create_sc;
+    /* if so, provide sched ctrl to create it with */
+    seL4_SchedControl sched_ctrl;
+    /* otherwise, use this sc */
+    seL4_SchedContext sched_context;
+
 } sel4utils_process_config_t;
 
 /**
@@ -198,11 +206,12 @@ int sel4utils_spawn_process_v(sel4utils_process_t *process, vka_t *vka, vspace_t
  * @param vspace vspace allocator for the current vspace.
  * @param priority     priority to configure the process to run as.
  * @param image_name   name of the elf image to load from the cpio archive.
+ * @param sc           the scheduling context for the process to run on (can be seL4_CapNull)
  *
  * @return 0 on success, -1 on error.
  */
 int sel4utils_configure_process(sel4utils_process_t *process, vka_t *vka, vspace_t *vspace,
-                                uint8_t priority, const char *image_name);
+                                uint8_t priority, const char *image_name, seL4_SchedContext sc);
 
 /**
  * Configure a process with more customisations (Create your own vspace, customise cspace size).

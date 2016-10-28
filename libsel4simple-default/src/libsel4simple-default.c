@@ -178,6 +178,17 @@ void simple_default_print(void *data) {
     debug_print_bootinfo(data);
 }
 
+seL4_CPtr simple_get_sched_control(void *data, seL4_Word core)
+{
+    seL4_BootInfo *bi = data;
+    seL4_CPtr sched_ctrl = bi->schedcontrol.start + core;
+    if (sched_ctrl >= bi->schedcontrol.end) {
+        ZF_LOGE("Invalid core");
+        return seL4_CapNull;
+    }
+    return sched_ctrl;
+}
+
 seL4_Word simple_default_arch_info(void *data) {
     if (data == NULL) {
         ZF_LOGE("Data is null!");
@@ -228,8 +239,10 @@ void simple_default_init_bootinfo(simple_t *simple, seL4_BootInfo *bi) {
     simple->core_count = &simple_default_core_count;
     simple->nth_userimage = &simple_default_nth_userimage;
     simple->print = &simple_default_print;
+    simple->sched_ctrl = simple_get_sched_control;
     simple->arch_info = &simple_default_arch_info;
     simple->extended_bootinfo = &simple_default_get_extended_bootinfo;
     simple_default_init_arch_simple(&simple->arch_simple, NULL);
+
 }
 

@@ -178,6 +178,11 @@ typedef int (*simple_get_core_count_fn)(void *data);
 typedef seL4_Error (*simple_get_iospace_fn)(void *data, uint16_t domainID, uint16_t deviceID, cspacepath_t *path);
 #endif
 
+/*
+ * Get the sched ctrl for the requested core (0 for uniprocessor)
+ */
+typedef seL4_CPtr (*simple_get_sched_ctrl_fn)(void *data, seL4_Word core);
+
 /**
  *
  * Get simple to print all the information it has about its environment
@@ -220,6 +225,7 @@ typedef struct simple_t {
     simple_get_nth_userimage_fn nth_userimage;
     simple_get_core_count_fn core_count;
     simple_print_fn print;
+    simple_get_sched_ctrl_fn sched_ctrl;
     simple_get_arch_info_fn arch_info;
     simple_get_extended_bootinfo_fn extended_bootinfo;
     arch_simple_t arch_simple;
@@ -563,6 +569,25 @@ simple_print(simple_t *simple)
     }
 
     simple->print(simple->data);
+}
+
+static inline seL4_CPtr
+simple_get_sched_ctrl(simple_t *simple, seL4_Word core)
+{
+    if (!simple) {
+        ZF_LOGE("Simple is NULL");
+        return seL4_CapNull;
+    }
+    if (!simple->sched_ctrl) {
+        ZF_LOGE("%s not implemented", __FUNCTION__);
+        return seL4_CapNull;
+    }
+    if (core >= CONFIG_MAX_NUM_NODES) {
+        ZF_LOGE("invalid core, must be in range 0 <-> %d", CONFIG_MAX_NUM_NODES - 1);
+        return seL4_CapNull;
+    }
+
+    return simple->sched_ctrl(simple->data, core);
 }
 
 static inline seL4_Word

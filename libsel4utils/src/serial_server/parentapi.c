@@ -110,10 +110,16 @@ serial_server_parent_spawn_thread(simple_t *parent_simple, vka_t *parent_vka,
         }
     }
 
-    error = sel4utils_configure_thread(parent_vka, parent_vspace, parent_vspace,
-                                       get_serial_server()->server_ep_obj.cptr, priority,
-                                       parent_cspace_cspath.root, seL4_NilData,
-                                       &get_serial_server()->server_thread);
+    sel4utils_thread_config_t config = {
+        .fault_endpoint = get_serial_server()->server_ep_obj.cptr,
+        .priority = priority,
+        .cspace = parent_cspace_cspath.root,
+        .cspace_root_data = seL4_NilData,
+        .create_sc = true,
+        .sched_ctrl = simple_get_sched_ctrl(parent_simple, 0)
+    };
+    error = sel4utils_configure_thread_config(parent_vka, parent_vspace, parent_vspace,
+                                              config, &get_serial_server()->server_thread);
     if (error != 0) {
         ZF_LOGE(SERSERVP"spawn_thread: sel4utils_configure_thread failed "
                 "with %d.", error);

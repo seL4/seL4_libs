@@ -37,11 +37,13 @@
 
 typedef struct sel4utils_thread {
     vka_object_t tcb;
+    vka_object_t sched_context;
     void *stack_top;
     void *initial_stack_pointer;
     size_t stack_size;
     seL4_CPtr ipc_buffer;
     seL4_Word ipc_buffer_addr;
+    bool own_sc;
 } sel4utils_thread_t;
 
 typedef struct sel4utils_thread_config {
@@ -61,6 +63,14 @@ typedef struct sel4utils_thread_config {
     seL4_Word stack_size;
     /* true if this thread should have no ipc buffer */
     bool no_ipc_buffer;
+
+    /* true if sel4utils should create an sc */
+    bool create_sc;
+    /* sel4 sched control cap for creating sc */
+    seL4_CPtr sched_ctrl;
+    /* otherwise use this provided sc */
+    seL4_CPtr sched_context;
+
 } sel4utils_thread_config_t;
 
 typedef struct sel4utils_checkpoint {
@@ -79,6 +89,7 @@ typedef void (*sel4utils_thread_entry_fn)(void *arg0, void *arg1, void *ipc_buf)
  * @param alloc initialised vspace structure to allocate virtual memory with
  * @param fault_endpoint endpoint to set as the threads fault endpoint. Can be 0.
  * @param priority seL4 priority for the thread to be scheduled with.
+ * @param sc scheduling context for this thread to run on (can be seL4_CapNull)
  * @param cspace the root of the cspace to start the thread in
  * @param cspace_root_data data for cspace access
  * @param res an uninitialised sel4utils_thread_t data structure that will be initialised
@@ -87,7 +98,7 @@ typedef void (*sel4utils_thread_entry_fn)(void *arg0, void *arg1, void *ipc_buf)
  * @return 0 on success, -1 on failure. Use CONFIG_DEBUG to see error messages.
  */
 int sel4utils_configure_thread(vka_t *vka, vspace_t *parent, vspace_t *alloc, seL4_CPtr fault_endpoint,
-                               uint8_t priority, seL4_CNode cspace, seL4_CapData_t cspace_root_data,
+                               uint8_t priority, seL4_SchedContext sc, seL4_CNode cspace, seL4_CapData_t cspace_root_data,
                                sel4utils_thread_t *res);
 
 
@@ -199,6 +210,7 @@ void sel4utils_free_checkpoint(sel4utils_checkpoint_t *checkpoint);
  * @param vka allocator
  * @param vspace vspace (this library must be mapped into that vspace).
  * @param prio the priority to run the thread at (recommend highest possible)
+ * @param sc scheduling context for this thread to run on (can be seL4_CapNull)
  * @param cspace the cspace that the fault_endpoint is in
  * @param data the cspace_data for that cspace (with correct guard)
  * @param name the name of the thread to print if it faults
@@ -207,7 +219,7 @@ void sel4utils_free_checkpoint(sel4utils_checkpoint_t *checkpoint);
  * @return 0 on success.
  */
 int sel4utils_start_fault_handler(seL4_CPtr fault_endpoint, vka_t *vka, vspace_t *vspace,
-                                  uint8_t prio, seL4_CPtr cspace, seL4_CapData_t data, char *name, sel4utils_thread_t *res);
+                                  uint8_t prio, seL4_SchedContext sc, seL4_CPtr cspace, seL4_CapData_t data, char *name, sel4utils_thread_t *res);
 
 
 /**

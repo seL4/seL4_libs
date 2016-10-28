@@ -383,13 +383,14 @@ sel4utils_spawn_process_v(sel4utils_process_t *process, vka_t *vka, vspace_t *vs
     process->thread.initial_stack_pointer = (void *) initial_stack_pointer;
 
     /* Write the registers */
-    return seL4_TCB_WriteRegisters(process->thread.tcb.cptr, resume, 0, sizeof(context) / sizeof(seL4_Word), 
+    return seL4_TCB_WriteRegisters(process->thread.tcb.cptr, resume, 0, sizeof(context) / sizeof(seL4_Word),
                                   &context);
 }
 
 int
 sel4utils_configure_process(sel4utils_process_t *process, vka_t *vka,
-                            vspace_t *vspace, uint8_t priority, const char *image_name)
+                            vspace_t *vspace, uint8_t priority, const char *image_name,
+                            seL4_SchedContext sched_context)
 {
     sel4utils_process_config_t config = {
         .is_elf = true,
@@ -401,6 +402,8 @@ sel4utils_configure_process(sel4utils_process_t *process, vka_t *vka,
         .create_fault_endpoint = true,
         .priority = priority,
         .asid_pool = seL4_CapInitThreadASIDPool,
+        .create_sc = false,
+        .sched_context = sched_context
     };
 
     return sel4utils_configure_process_custom(process, vka, vspace, config);
@@ -596,8 +599,19 @@ sel4utils_configure_process_custom(sel4utils_process_t *process, vka_t *vka,
 
     /* create the thread, do this *after* elf-loading so that we don't clobber
      * the required virtual memory*/
-    error = sel4utils_configure_thread(vka, spawner_vspace, &process->vspace, SEL4UTILS_ENDPOINT_SLOT,
-                                       config.priority, process->cspace.cptr, cspace_root_data, &process->thread);
+    sel4utils_thread_config_t thread_config = {
+        .fault_endpoint = SEL4UTILS_ENDPOINT_SLOT,
+        .priority = config.priority,
+        .mcp = config.priority,
+        .cspace = process->cspace.cptr,
+        .cspace_root_data = cspace_root_data,
+        .create_sc = config.create_sc,
+        .sched_ctrl = config.sched_ctrl,
+        .sched_context = config.sched_context
+    };
+
+    error = sel4utils_configure_thread_config(vka, spawner_vspace, &process->vspace, thread_config,
+                                       &process->thread);
 
     /* copy tcb cap to cspace */
     if (config.create_cspace) {

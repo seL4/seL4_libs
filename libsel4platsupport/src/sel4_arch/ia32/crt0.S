@@ -33,7 +33,7 @@ _start:
 
     /* Setup segment selector for IPC buffer access. */
     movw    $IPCBUF_GDT_SELECTOR, %ax
-    movw    %ax, %gs
+    movw    %ax, %fs
 
     /* Setup the global "bootinfo" structure. */
     pushl   %ebx

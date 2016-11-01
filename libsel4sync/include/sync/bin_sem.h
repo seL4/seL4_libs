@@ -13,38 +13,86 @@
 
 #include <assert.h>
 #include <sel4/sel4.h>
+#include <vka/vka.h>
+#include <vka/object.h>
 #include <stddef.h>
 #include <sync/bin_sem_bare.h>
 
 typedef struct {
-    seL4_CPtr notification;
+    vka_object_t notification;
     volatile int value;
 } sync_bin_sem_t;
 
+/* Initialise an unmanaged binary semaphore with a notification object
+ * @param sem           A semaphore object to be initialised.
+ * @param notification  A notification object to use for the lock.
+ * @return              0 on success, an error code on failure. */
 static inline int sync_bin_sem_init(sync_bin_sem_t *sem, seL4_CPtr notification) {
-    assert(sem != NULL);
+    if (sem == NULL) {
+        ZF_LOGE("Semaphore passed to sync_bin_sem_init was NULL");
+        return -1;
+    }
+
 #ifdef SEL4_DEBUG_KERNEL
     /* Check the cap actually is a notification. */
     assert(seL4_DebugCapIdentify(notification) == 6);
 #endif
 
-    sem->notification = notification;
+    sem->notification.cptr = notification;
     sem->value = 1;
     return 0;
 }
 
+/* Wait on a binary semaphore
+ * @param sem           An initialised semaphore to acquire.
+ * @return              0 on success, an error code on failure. */
 static inline int sync_bin_sem_wait(sync_bin_sem_t *sem) {
-    assert(sem != NULL);
-    return sync_bin_sem_bare_wait(sem->notification, &sem->value);
+    if (sem == NULL) {
+        ZF_LOGE("Semaphore passed to sync_bin_sem_wait was NULL");
+        return -1;
+    }
+    return sync_bin_sem_bare_wait(sem->notification.cptr, &sem->value);
 }
 
+/* Signal a binary semaphore
+ * @param sem           An initialised semaphore to release.
+ * @return              0 on success, an error code on failure. */
 static inline int sync_bin_sem_post(sync_bin_sem_t *sem) {
-    assert(sem != NULL);
-    return sync_bin_sem_bare_post(sem->notification, &sem->value);
+    if (sem == NULL) {
+        ZF_LOGE("Semaphore passed to sync_bin_sem_post was NULL");
+        return -1;
+    }
+    return sync_bin_sem_bare_post(sem->notification.cptr, &sem->value);
 }
 
-static inline int sync_bin_sem_destroy(sync_bin_sem_t *sem) {
-    assert(sem != NULL);
+/* Allocate and initialise a managed binary semaphore
+ * @param vka           A VKA instance used to allocate a notification object.
+ * @param sem           A semaphore object to initialise.
+ * @return              0 on success, an error code on failure. */
+static inline int sync_bin_sem_new(vka_t *vka, sync_bin_sem_t *sem) {
+    if (sem == NULL) {
+        ZF_LOGE("Semaphore passed to sync_bin_sem_new was NULL");
+        return -1;
+    }
+    int error = vka_alloc_notification(vka, &(sem->notification));
+    
+    if (error != 0) {
+        return error;
+    } else {
+        return sync_bin_sem_init(sem, sem->notification.cptr);
+    }
+}
+
+/* Deallocate a managed binary semaphore (do not use with sync_bin_sem_init)
+ * @param vka           A VKA instance used to deallocate the notification object.
+ * @param sem           A semaphore object initialised by sync_bin_sem_new.
+ * @return              0 on success, an error code on failure. */
+static inline int sync_bin_sem_destroy(vka_t *vka, sync_bin_sem_t *sem) {
+    if (sem == NULL) {
+        ZF_LOGE("Semaphore passed to sync_bin_sem_destroy was NULL");
+        return -1;
+    }
+    vka_free_object(vka, &(sem->notification));
     return 0;
 }
 

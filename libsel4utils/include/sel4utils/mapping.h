@@ -101,19 +101,16 @@ void sel4utils_unmap_dup(vka_t *vka, vspace_t *vspace, void *mapping, size_t siz
 #endif /* CONFIG_LIB_SEL4_VSPACE */
 #endif /* CONFIG_LIB_SEL4_VKA */
 
-#ifdef CONFIG_ARCH_X86
-
-#ifdef CONFIG_IOMMU
+#if defined(CONFIG_IOMMU) || defined(CONFIG_ARM_SMMU)
 int sel4utils_map_iospace_page(vka_t *vka, seL4_CPtr iospace, seL4_CPtr frame, seL4_Word vaddr,
                                seL4_CapRights rights, int cacheable, seL4_Word size_bits,
                                vka_object_t *pts, int *num_pts);
-#endif
+#endif /* defined(CONFIG_IOMMU) || defined(CONFIG_ARM_SMMU) */
 
 #ifdef CONFIG_VTX
 int sel4utils_map_ept_page(vka_t *vka, seL4_CPtr pd, seL4_CPtr frame, seL4_Word vaddr,
                            seL4_CapRights rights, int cacheable, seL4_Word size_bits, vka_object_t *pagetable, vka_object_t *pagedir, vka_object_t *pdpt);
 
 #endif /* CONFIG_VTX */
-#endif /* CONFIG_ARCH_IA32 */
 
 #endif /* _SEL4UTILS_MAPPING_H_ */

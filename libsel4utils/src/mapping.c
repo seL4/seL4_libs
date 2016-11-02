@@ -72,9 +72,7 @@ sel4utils_map_page(vka_t *vka, seL4_CPtr vspace_root, seL4_CPtr frame, void *vad
     return error;
 }
 
-#ifdef CONFIG_ARCH_X86
-
-#ifdef CONFIG_IOMMU
+#if defined(CONFIG_IOMMU) || defined(CONFIG_ARM_SMMU)
 int
 sel4utils_map_iospace_page(vka_t *vka, seL4_CPtr iospace, seL4_CPtr frame, seL4_Word vaddr,
                            seL4_CapRights rights, int cacheable, seL4_Word size_bits,
@@ -88,7 +86,7 @@ sel4utils_map_iospace_page(vka_t *vka, seL4_CPtr iospace, seL4_CPtr frame, seL4_
     assert(size_bits == seL4_PageBits);
     /* Start mapping in pages and page tables until it bloody well works */
     int num = 0;
-    while ( (error = seL4_X86_Page_MapIO(frame, iospace, rights, vaddr)) == seL4_FailedLookup && error != seL4_NoError) {
+    while ( (error = seL4_ARCH_Page_MapIO(frame, iospace, rights, vaddr)) == seL4_FailedLookup && error != seL4_NoError) {
         /* Need a page table? */
         vka_object_t pt;
         error = vka_alloc_io_page_table(vka, &pt);
@@ -101,7 +99,7 @@ sel4utils_map_iospace_page(vka_t *vka, seL4_CPtr iospace, seL4_CPtr frame, seL4_
             assert(num_pts);
             *num_pts = num;
         }
-        error = seL4_X86_IOPageTable_Map(pt.cptr, iospace, vaddr);
+        error = seL4_ARCH_IOPageTable_Map(pt.cptr, iospace, vaddr);
         if (error != seL4_NoError) {
             return error;
         }
@@ -109,7 +107,7 @@ sel4utils_map_iospace_page(vka_t *vka, seL4_CPtr iospace, seL4_CPtr frame, seL4_
     return error;
 }
 
-#endif
+#endif /* defined(CONFIG_IOMMU) || defined(CONFIG_ARM_SMMU) */
 
 #ifdef CONFIG_VTX
 
@@ -226,7 +224,6 @@ sel4utils_map_ept_page(vka_t *vka, seL4_CPtr pd, seL4_CPtr frame, seL4_Word vadd
 
 
 #endif /* CONFIG_VTX */
-#endif
 
 #ifdef CONFIG_LIB_SEL4_VSPACE
 

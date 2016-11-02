@@ -25,10 +25,12 @@ static const UNUSED size_t sel4_page_sizes[] = {
 };
 
 #define seL4_ARCH_Page_Map             seL4_X86_Page_Map
+#define seL4_ARCH_Page_MapIO           seL4_X86_Page_MapIO
 #define seL4_ARCH_Page_Unmap           seL4_X86_Page_Unmap
 #define seL4_ARCH_Page_GetAddress      seL4_X86_Page_GetAddress
 #define seL4_ARCH_Page_GetAddress_t    seL4_X86_Page_GetAddress_t
 #define seL4_ARCH_PageTable_Map        seL4_X86_PageTable_Map
+#define seL4_ARCH_IOPageTable_Map      seL4_X86_IOPageTable_Map
 #define seL4_ARCH_PageTable_Unmap      seL4_X86_PageTable_Unmap
 #define seL4_ARCH_ASIDPool_Assign      seL4_X86_ASIDPool_Assign
 #define seL4_ARCH_ASIDControl_MakePool seL4_X86_ASIDControl_MakePool

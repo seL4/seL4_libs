@@ -252,3 +252,27 @@ int vmm_finalize(vmm_t *vmm) {
     return 0;
 }
 
+seL4_CPtr vmm_create_async_event_notification_cap(vmm_t *vmm, seL4_Word badge) {
+
+    // notification cap
+    seL4_CPtr ntfn = vmm->plat_callbacks.get_async_event_aep();
+
+    // path to notification cap slot
+    cspacepath_t ntfn_path = {};
+    vka_cspace_make_path(&vmm->vka, ntfn, &ntfn_path);
+
+    // allocate slot to store copy
+    cspacepath_t minted_ntfn_path = {};
+    vka_cspace_alloc_path(&vmm->vka, &minted_ntfn_path);
+
+    // mint the notification cap
+    seL4_CapData_t badge_data = seL4_CapData_Badge_new(badge);
+    int error = vka_cnode_mint(&minted_ntfn_path, &ntfn_path, seL4_AllRights, badge_data);
+
+    if (error != seL4_NoError) {
+        ZF_LOGE("Failed to mint notification cap");
+        return seL4_CapNull;
+    }
+
+    return minted_ntfn_path.capPtr;
+}

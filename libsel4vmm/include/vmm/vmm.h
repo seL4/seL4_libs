@@ -158,4 +158,7 @@ void vmm_sync_guest_state(vmm_vcpu_t *vcpu);
 void vmm_sync_guest_context(vmm_vcpu_t *vcpu);
 void vmm_reply_vm_exit(vmm_vcpu_t *vcpu);
 
+/* mint a badged copy of the vmm's async event notification cap */
+seL4_CPtr vmm_create_async_event_notification_cap(vmm_t *vmm, seL4_Word badge);
+
 #endif

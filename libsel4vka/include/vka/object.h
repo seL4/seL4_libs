@@ -237,6 +237,7 @@ LEAKY(endpoint)
 LEAKY(notification)
 LEAKY(page_directory)
 LEAKY(page_table)
+LEAKY(sched_context)
 
 static inline DEPRECATED("use vka_alloc_notification_leaky") seL4_CPtr
 vka_alloc_async_endpoint_leaky(vka_t *vka)

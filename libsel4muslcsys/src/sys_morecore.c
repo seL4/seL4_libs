@@ -123,13 +123,9 @@ static uintptr_t morecore_top = 0;
 
 static uintptr_t brk_start;
 
-static long
-sys_brk_static(va_list ap)
+static void
+init_morecore_region(void)
 {
-    uintptr_t ret;
-    uintptr_t newbrk = va_arg(ap, uintptr_t);
-
-    /*if the newbrk is 0, return the bottom of the heap*/
     if (morecore_base == 0) {
         if (morecore_size == 0) {
             ZF_LOGE("Warning: static morecore size is 0");
@@ -137,7 +133,17 @@ sys_brk_static(va_list ap)
         morecore_base = (uintptr_t) morecore_area;
         morecore_top = (uintptr_t) &morecore_area[morecore_size];
     }
+}
 
+static long
+sys_brk_static(va_list ap)
+{
+    uintptr_t ret;
+    uintptr_t newbrk = va_arg(ap, uintptr_t);
+
+    /* ensure the morecore region is initialized */
+    init_morecore_region();
+    /*if the newbrk is 0, return the bottom of the heap*/
     if (!newbrk) {
         ret = morecore_base;
     } else if (newbrk < morecore_top && newbrk > (uintptr_t)&morecore_area[0]) {
@@ -213,6 +219,8 @@ sys_mmap2_static(va_list ap)
     (void)fd;
     (void)offset;
     if (flags & MAP_ANONYMOUS) {
+        /* ensure the morecore region is initialized */
+        init_morecore_region();
         /* Steal from the top */
         uintptr_t base = morecore_top - length;
         if (base < morecore_base) {

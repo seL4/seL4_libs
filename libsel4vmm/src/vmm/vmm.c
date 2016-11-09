@@ -254,6 +254,11 @@ int vmm_finalize(vmm_t *vmm) {
 
 seL4_CPtr vmm_create_async_event_notification_cap(vmm_t *vmm, seL4_Word badge) {
 
+    if (!(badge & BIT(27))) {
+        ZF_LOGE("Invalid badge");
+        return seL4_CapNull;
+    }
+
     // notification cap
     seL4_CPtr ntfn = vmm->plat_callbacks.get_async_event_aep();
 

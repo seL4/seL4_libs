@@ -44,6 +44,8 @@ typedef struct sel4utils_thread {
     seL4_CPtr ipc_buffer;
     seL4_Word ipc_buffer_addr;
     bool own_sc;
+    bool own_reply;
+    vka_object_t reply;
 } sel4utils_thread_t;
 
 typedef struct sel4utils_thread_config {
@@ -71,6 +73,10 @@ typedef struct sel4utils_thread_config {
     /* otherwise use this provided sc */
     seL4_CPtr sched_context;
 
+    /* true if sel4utils should create a reply */
+    bool create_reply;
+    /* otherwise provide one */
+    seL4_CPtr reply;
 } sel4utils_thread_config_t;
 
 typedef struct sel4utils_checkpoint {

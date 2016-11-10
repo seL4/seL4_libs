@@ -52,7 +52,8 @@ int sel4utils_configure_thread(vka_t *vka, vspace_t *parent, vspace_t *alloc, se
         .cspace = cspace,
         .cspace_root_data = cspace_root_data,
         .create_sc = false,
-        .sched_context = sc
+        .sched_context = sc,
+        .create_reply = true
     };
 
     return sel4utils_configure_thread_config(vka, parent, alloc, config, res);
@@ -84,6 +85,17 @@ sel4utils_configure_thread_config(vka_t *vka, vspace_t *parent, vspace_t *alloc,
             ZF_LOGE("failed to set user data word in IPC buffer");
             return -1;
         }
+    }
+
+    if (config.create_reply) {
+        if (vka_alloc_reply(vka, &res->reply)) {
+            ZF_LOGE("Failed to allocate reply");
+            sel4utils_clean_up_thread(vka, alloc, res);
+            return -1;
+        }
+        res->own_reply = true;
+    } else {
+        res->reply.cptr = config.reply;
     }
 
     if (config.create_sc) {
@@ -179,6 +191,10 @@ sel4utils_clean_up_thread(vka_t *vka, vspace_t *alloc, sel4utils_thread_t *threa
         vka_free_object(vka, &thread->sched_context);
     }
 
+    if (thread->own_reply && thread->reply.cptr != 0) {
+        vka_free_object(vka, &thread->reply);
+    }
+
     memset(thread, 0, sizeof(sel4utils_thread_t));
 }
 
@@ -232,13 +248,13 @@ static int
 fault_handler(char *name, seL4_CPtr endpoint)
 {
     seL4_Word badge;
-    seL4_MessageInfo_t info = seL4_Recv(endpoint, &badge);
+    seL4_MessageInfo_t info = seL4_Wait(endpoint, &badge);
 
     while (1) {
         sel4utils_print_fault_message(info, name);
 
         /* go back to sleep so other things can run */
-        seL4_Recv(endpoint, &badge);
+        seL4_Wait(endpoint, &badge);
     }
 
     return 0;

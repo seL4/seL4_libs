@@ -42,7 +42,7 @@ int debug_fault_handler(seL4_CPtr faultep,
         seL4_Word sender;
 
         /* Wait for a fault. */
-        seL4_MessageInfo_t info = seL4_Recv(faultep, &sender);
+        seL4_MessageInfo_t info = seL4_Recv(faultep, &sender, seL4_CapNull);
 
         /* Get the fault type (see section 5.2 of the manual). */
         seL4_Word label = seL4_MessageInfo_get_label(info);

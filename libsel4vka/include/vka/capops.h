@@ -22,16 +22,6 @@
 #include <vka/object.h>
 
 inline static int
-vka_cnode_saveCaller(const cspacepath_t* src)
-{
-    return seL4_CNode_SaveCaller(
-               /* _service */      src->root,
-               /* index */         src->capPtr,
-               /* depth */         src->capDepth
-           );
-}
-
-inline static int
 vka_cnode_copy(const cspacepath_t* dest, const cspacepath_t* src, seL4_CapRights_t rights)
 {
     return seL4_CNode_Copy(

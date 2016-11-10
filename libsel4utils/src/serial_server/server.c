@@ -423,11 +423,11 @@ serial_server_main(void)
      * First call seL4_Recv() to get the Reply cap back to the Parent, and then
      * seL4_Reply to report our status.
      */
-    seL4_Recv(get_serial_server()->server_ep_obj.cptr, &sender_badge);
+    seL4_Recv(get_serial_server()->server_ep_obj.cptr, &sender_badge, get_serial_server()->reply.cptr);
 
     seL4_SetMR(SSMSGREG_FUNC, FUNC_SERVER_SPAWN_SYNC_ACK);
     tag = seL4_MessageInfo_new(error, 0, 0, SSMSGREG_SPAWN_SYNC_ACK_END);
-    seL4_Reply(tag);
+    seL4_Send(get_serial_server()->reply.cptr, tag);
 
     /* If the bind failed, this thread has essentially failed its mandate, so
      * there is no reason to leave it scheduled. Kill it (to whatever extent
@@ -442,7 +442,8 @@ serial_server_main(void)
         /* Set the CNode slots where caps from clients will go */
         serial_server_set_frame_recv_path();
 
-        tag = seL4_Recv(get_serial_server()->server_ep_obj.cptr, &sender_badge);
+        tag = seL4_Recv(get_serial_server()->server_ep_obj.cptr, &sender_badge,
+                        get_serial_server()->reply.cptr);
         ZF_LOGD(SERSERVS "main: Got message from %x", sender_badge);
 
         func = seL4_GetMR(SSMSGREG_FUNC);
@@ -474,7 +475,7 @@ serial_server_main(void)
             seL4_SetMR(SSMSGREG_CONNECT_ACK_MAX_SHMEM_SIZE,
                        get_serial_server()->shmem_max_size);
             tag = seL4_MessageInfo_new(error, 0, 0, SSMSGREG_CONNECT_ACK_END);
-            seL4_Reply(tag);
+            seL4_Send(get_serial_server()->reply.cptr, tag);
             break;
 
         case FUNC_WRITE_REQ:
@@ -505,7 +506,7 @@ serial_server_main(void)
             seL4_SetMR(SSMSGREG_FUNC, FUNC_WRITE_ACK);
             seL4_SetMR(SSMSGREG_WRITE_ACK_N_BYTES_WRITTEN, bytes_written);
             tag = seL4_MessageInfo_new(error, 0, 0, SSMSGREG_WRITE_ACK_END);
-            seL4_Reply(tag);
+            seL4_Send(get_serial_server()->reply.cptr, tag);
             break;
 
         case FUNC_DISCONNECT_REQ:
@@ -515,7 +516,7 @@ serial_server_main(void)
 
             seL4_SetMR(SSMSGREG_FUNC, FUNC_DISCONNECT_ACK);
             tag = seL4_MessageInfo_new(error, 0, 0, SSMSGREG_DISCONNECT_ACK_END);
-            seL4_Reply(tag);
+            seL4_Send(get_serial_server()->reply.cptr, tag);
             break;
 
         case FUNC_KILL_REQ:
@@ -524,7 +525,7 @@ serial_server_main(void)
             /* The actual contents of the Reply don't matter here. */
             seL4_SetMR(SSMSGREG_FUNC, FUNC_KILL_ACK);
             tag = seL4_MessageInfo_new(0, 0, 0, SSMSGREG_KILL_ACK_END);
-            seL4_Reply(tag);
+            seL4_Send(get_serial_server()->reply.cptr, tag);
             /* Break out of the loop */
             keep_going = 0;
             break;

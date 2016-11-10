@@ -26,6 +26,7 @@ enum _kobject_type {
     KOBJECT_UNTYPED,
     KOBJECT_ENDPOINT,
     KOBJECT_NOTIFICATION,
+    KOBJECT_REPLY,
 #ifdef CONFIG_CACHE_COLORING
     KOBJECT_KERNEL_IMAGE,
 #endif
@@ -61,6 +62,8 @@ kobject_get_size(kobject_t type, seL4_Word objectSize)
         return seL4_PageDirBits;
     case KOBJECT_PAGE_TABLE:
         return seL4_PageTableBits;
+    case KOBJECT_REPLY:
+        return seL4_ReplyBits;
 #ifdef CONFIG_CACHE_COLORING
     case KOBJECT_KERNEL_IMAGE:
         return seL4_KernelImageBits;
@@ -88,6 +91,8 @@ kobject_get_type(kobject_t type, seL4_Word objectSize)
         return seL4_EndpointObject;
     case KOBJECT_NOTIFICATION:
         return seL4_NotificationObject;
+    case KOBJECT_REPLY:
+        return seL4_ReplyObject;
 #ifdef CONFIG_CACHE_COLORING
     case KOBJECT_KERNEL_IMAGE:
         return seL4_KernelImageObject;

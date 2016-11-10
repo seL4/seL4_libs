@@ -56,6 +56,12 @@ serial_server_parent_spawn_thread(simple_t *parent_simple, vka_t *parent_vka,
         return error;
     }
 
+    /* Allocate a reply object that the server will track replies in */
+    error = vka_alloc_reply(parent_vka, &get_serial_server()->reply);
+    if (error != 0) {
+        ZF_LOGE(SERSERVP"spawn_thread: failed to allocate reply, err=%d.", error);
+        goto out;
+    }
     /* And also allocate a badged copy of the Server's endpoint that the Parent
      * can use to send to the Server. This is used to allow the Server to report
      * back to the Parent on whether or not the Server successfully bound to a
@@ -181,6 +187,9 @@ out:
     }
     if (get_serial_server()->parent_badge_value != SERIAL_SERVER_BADGE_VALUE_EMPTY) {
         serial_server_badge_value_free(get_serial_server()->parent_badge_value);
+    }
+    if (get_serial_server()->reply.cptr != 0) {
+        vka_free_object(parent_vka, &get_serial_server()->reply);
     }
     vka_free_object(parent_vka, &get_serial_server()->server_ep_obj);
     return error;

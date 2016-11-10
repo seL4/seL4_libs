@@ -607,7 +607,8 @@ sel4utils_configure_process_custom(sel4utils_process_t *process, vka_t *vka,
         .cspace_root_data = cspace_root_data,
         .create_sc = config.create_sc,
         .sched_ctrl = config.sched_ctrl,
-        .sched_context = config.sched_context
+        .sched_context = config.sched_context,
+        .create_reply = config.create_cspace
     };
 
     error = sel4utils_configure_thread_config(vka, spawner_vspace, &process->vspace, thread_config,
@@ -619,6 +620,10 @@ sel4utils_configure_process_custom(sel4utils_process_t *process, vka_t *vka,
         vka_cspace_make_path(vka, process->thread.tcb.cptr, &src);
         UNUSED seL4_CPtr slot = sel4utils_copy_path_to_process(process, src);
         assert(slot == SEL4UTILS_TCB_SLOT);
+
+        vka_cspace_make_path(vka, process->thread.reply.cptr, &src);
+        slot = sel4utils_copy_cap_to_process(process, src);
+        assert(slot == SEL4UTILS_REPLY_SLOT);
     }
 
     if (error) {

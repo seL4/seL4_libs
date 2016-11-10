@@ -26,6 +26,7 @@ typedef struct {
 /* Initialise an unmanaged binary semaphore with a notification object
  * @param sem           A semaphore object to be initialised.
  * @param notification  A notification object to use for the lock.
+ * @param value         The initial value for the semaphore. Must be 0 or 1.
  * @return              0 on success, an error code on failure. */
 static inline int sync_bin_sem_init(sync_bin_sem_t *sem, seL4_CPtr notification, int value) {
     if (sem == NULL) {
@@ -73,6 +74,7 @@ static inline int sync_bin_sem_post(sync_bin_sem_t *sem) {
 /* Allocate and initialise a managed binary semaphore
  * @param vka           A VKA instance used to allocate a notification object.
  * @param sem           A semaphore object to initialise.
+ * @param value         The initial value for the semaphore. Must be 0 or 1.
  * @return              0 on success, an error code on failure. */
 static inline int sync_bin_sem_new(vka_t *vka, sync_bin_sem_t *sem, int value) {
     if (sem == NULL) {

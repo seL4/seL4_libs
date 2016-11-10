@@ -22,7 +22,7 @@ typedef sync_bin_sem_t sync_mutex_t;
  * @param notification  A notification object to use for the lock.
  * @return              0 on success, an error code on failure. */
 static inline int sync_mutex_init(sync_mutex_t *mutex, seL4_CPtr notification) {
-    return sync_bin_sem_init(mutex, notification);
+    return sync_bin_sem_init(mutex, notification, 1);
 }
 
 /* Acquire a mutex
@@ -44,7 +44,7 @@ static inline int sync_mutex_unlock(sync_mutex_t *mutex) {
  * @param mutex         A mutex object to initialise.
  * @return              0 on success, an error code on failure. */
 static inline int sync_mutex_new(vka_t *vka, sync_mutex_t *mutex) {
-    return sync_bin_sem_new(vka, mutex);
+    return sync_bin_sem_new(vka, mutex, 1);
 }
 
 /* Deallocate a managed mutex (do not use with sync_mutex_init)

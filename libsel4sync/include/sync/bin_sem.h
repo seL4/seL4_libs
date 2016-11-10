@@ -27,9 +27,14 @@ typedef struct {
  * @param sem           A semaphore object to be initialised.
  * @param notification  A notification object to use for the lock.
  * @return              0 on success, an error code on failure. */
-static inline int sync_bin_sem_init(sync_bin_sem_t *sem, seL4_CPtr notification) {
+static inline int sync_bin_sem_init(sync_bin_sem_t *sem, seL4_CPtr notification, int value) {
     if (sem == NULL) {
         ZF_LOGE("Semaphore passed to sync_bin_sem_init was NULL");
+        return -1;
+    }
+
+    if (value != 0 && value != 1) {
+        ZF_LOGE("Binary semaphore initial value neither 0 nor 1");
         return -1;
     }
 
@@ -39,7 +44,7 @@ static inline int sync_bin_sem_init(sync_bin_sem_t *sem, seL4_CPtr notification)
 #endif
 
     sem->notification.cptr = notification;
-    sem->value = 1;
+    sem->value = value;
     return 0;
 }
 
@@ -69,9 +74,13 @@ static inline int sync_bin_sem_post(sync_bin_sem_t *sem) {
  * @param vka           A VKA instance used to allocate a notification object.
  * @param sem           A semaphore object to initialise.
  * @return              0 on success, an error code on failure. */
-static inline int sync_bin_sem_new(vka_t *vka, sync_bin_sem_t *sem) {
+static inline int sync_bin_sem_new(vka_t *vka, sync_bin_sem_t *sem, int value) {
     if (sem == NULL) {
         ZF_LOGE("Semaphore passed to sync_bin_sem_new was NULL");
+        return -1;
+    }
+    if (value != 0 && value != 1) {
+        ZF_LOGE("Binary semaphore initial value neither 0 nor 1");
         return -1;
     }
     int error = vka_alloc_notification(vka, &(sem->notification));
@@ -79,7 +88,7 @@ static inline int sync_bin_sem_new(vka_t *vka, sync_bin_sem_t *sem) {
     if (error != 0) {
         return error;
     } else {
-        return sync_bin_sem_init(sem, sem->notification.cptr);
+        return sync_bin_sem_init(sem, sem->notification.cptr, value);
     }
 }
 

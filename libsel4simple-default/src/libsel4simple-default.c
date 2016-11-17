@@ -163,6 +163,12 @@ seL4_CPtr simple_default_nth_userimage(void *data, int n) {
     return seL4_CapNull;
 }
 
+int simple_default_core_count(void *data) {
+    assert(data);
+
+    return ((seL4_BootInfo *)data)->numNodes;
+}
+
 void simple_default_print(void *data) {
     if (data == NULL) {
         ZF_LOGE("Data is null!");
@@ -187,6 +193,7 @@ void simple_default_init_bootinfo(simple_t *simple, seL4_BootInfo *bi) {
     simple->untyped_count = &simple_default_untyped_count;
     simple->nth_untyped = &simple_default_nth_untyped;
     simple->userimage_count = &simple_default_userimage_count;
+    simple->core_count = &simple_default_core_count;
     simple->nth_userimage = &simple_default_nth_userimage;
     simple->print = &simple_default_print;
     simple_default_init_arch_simple(&simple->arch_simple, NULL);

@@ -155,6 +155,15 @@ typedef int (*simple_get_userimage_count_fn)(void *data);
 
 typedef seL4_CPtr (*simple_get_nth_userimage_fn)(void *data, int n);
 
+/**
+ * Get number of available cores
+ *
+ * @param data for the underlying implementation
+ *
+*/
+
+typedef int (*simple_get_core_count_fn)(void *data);
+
 #ifdef CONFIG_IOMMU
 /**
  * Get the IO space capability for the specified PCI device and domain ID
@@ -188,6 +197,7 @@ typedef struct simple_t {
     simple_get_nth_untyped_fn nth_untyped;
     simple_get_userimage_count_fn userimage_count;
     simple_get_nth_userimage_fn nth_userimage;
+    simple_get_core_count_fn core_count;
     simple_print_fn print;
     arch_simple_t arch_simple;
 } simple_t;
@@ -425,6 +435,21 @@ simple_get_nth_userimage(simple_t *simple, int n)
         return seL4_CapNull;
     }
     return simple->nth_userimage(simple->data, n);
+}
+
+static inline int 
+simple_get_core_count(simple_t *simple)
+{
+    if (!simple) {
+        ZF_LOGE("Simple is NULL");
+        return -1;
+    }
+    if (!simple->core_count) {
+        ZF_LOGE("%s not implemented", __FUNCTION__);
+        return -1;
+    }
+
+    return simple->core_count(simple->data);
 }
 
 #ifdef CONFIG_IOMMU

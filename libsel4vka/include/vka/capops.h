@@ -100,9 +100,9 @@ vka_cnode_mutate(const cspacepath_t* dest, const cspacepath_t* src,
 }
 
 inline static int
-vka_cnode_recycle(const cspacepath_t* src)
+vka_cnode_cancelBadgedSends(const cspacepath_t* src)
 {
-    return seL4_CNode_Recycle(
+    return seL4_CNode_CancelBadgedSends(
                /* _service */      src->root,
                /* index */         src->capPtr,
                /* depth */         src->capDepth

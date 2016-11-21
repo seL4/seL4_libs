@@ -53,7 +53,8 @@ int vmm_vmcall_handler(vmm_vcpu_t *vcpu) {
     h = get_handle(vcpu->vmm, token);
     if(h == NULL) {
         DPRINTF(2, "Failed to find handler for token:%x\n", token);
-        return -1;
+        vmm_guest_exit_next_instruction(&vcpu->guest_state, vcpu->guest_vcpu);
+        return 0;
     }
 
     res = h->func(vcpu);

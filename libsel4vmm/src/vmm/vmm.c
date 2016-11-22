@@ -156,8 +156,8 @@ void vmm_run(vmm_t *vmm) {
     vmm->vcpus[BOOT_VCPU].online = 1;
 
     /* Get our interrupt pending callback happening */
-    seL4_CPtr aep = vmm->plat_callbacks.get_async_event_aep();
-    error = seL4_TCB_BindNotification(simple_get_init_cap(&vmm->host_simple, seL4_CapInitThreadTCB), vmm->plat_callbacks.get_async_event_aep());
+    seL4_CPtr notification = vmm->plat_callbacks.get_async_event_notification();
+    error = seL4_TCB_BindNotification(simple_get_init_cap(&vmm->host_simple, seL4_CapInitThreadTCB), vmm->plat_callbacks.get_async_event_notification());
     assert(error == seL4_NoError);
 
     while (1) {
@@ -194,7 +194,7 @@ void vmm_run(vmm_t *vmm) {
                 vmm_update_guest_state_from_interrupt(vcpu, int_message);
             }
         } else {
-            seL4_Wait(aep, &badge);
+            seL4_Wait(notification, &badge);
             fault = SEL4_VMENTER_RESULT_NOTIF;
         }
 
@@ -260,7 +260,7 @@ seL4_CPtr vmm_create_async_event_notification_cap(vmm_t *vmm, seL4_Word badge) {
     }
 
     // notification cap
-    seL4_CPtr ntfn = vmm->plat_callbacks.get_async_event_aep();
+    seL4_CPtr ntfn = vmm->plat_callbacks.get_async_event_notification();
 
     // path to notification cap slot
     cspacepath_t ntfn_path = {};

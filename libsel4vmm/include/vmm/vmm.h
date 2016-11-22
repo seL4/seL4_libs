@@ -43,7 +43,7 @@ typedef struct platform_callbacks {
     int (*get_interrupt)();
     int (*has_interrupt)();
     int (*do_async)(seL4_Word badge);
-    seL4_CPtr (*get_async_event_aep)();
+    seL4_CPtr (*get_async_event_notification)();
 
     int (*open)(const char *name);
     int (*read)(void *dest, int fd, off_t offset, size_t size);

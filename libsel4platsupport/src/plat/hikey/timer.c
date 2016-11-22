@@ -18,14 +18,14 @@
 
 seL4_timer_t *
 sel4platsupport_get_timer(enum timer_id id, vka_t *vka, vspace_t *vspace,
-                          simple_t *simple, seL4_CPtr aep)
+                          simple_t *simple, seL4_CPtr notification)
 {
     if (id != DMTIMER0) {
         LOG_ERROR("Bad timer ID %d\n", id);
         return NULL;
     }
 
-    seL4_timer_t *timer = timer_common_init(vspace, simple, vka, aep,
+    seL4_timer_t *timer = timer_common_init(vspace, simple, vka, notification,
                                           dm_timer_irqs[id], (void*)dm_timer_paddrs[id]);
     if (timer == NULL) {
         return NULL;
@@ -47,8 +47,8 @@ sel4platsupport_get_timer(enum timer_id id, vka_t *vka, vspace_t *vspace,
 
 seL4_timer_t *
 sel4platsupport_get_default_timer(vka_t *vka, vspace_t *vspace, simple_t *simple,
-                                  seL4_CPtr aep)
+                                  seL4_CPtr notification)
 {
-    return sel4platsupport_get_timer(TMR_DEFAULT, vka, vspace, simple, aep);
+    return sel4platsupport_get_timer(TMR_DEFAULT, vka, vspace, simple, notification);
 }
 

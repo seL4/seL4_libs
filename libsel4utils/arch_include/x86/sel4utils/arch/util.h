@@ -16,6 +16,8 @@
 #include <sel4/arch/exIPC.h>
 #include <sel4utils/sel4_arch/util.h>
 
+#define ARCH_SYSCALL_INSTRUCTION_SIZE 2
+
 static inline int
 sel4utils_is_read_fault(void)
 {

@@ -14,6 +14,7 @@
 #include <sel4/arch/pfIPC.h>
 #include <sel4/arch/exIPC.h>
 
+#define ARCH_SYSCALL_INSTRUCTION_SIZE 4
 #define EXCEPT_IPC_SYS_MR_IP EXCEPT_IPC_SYS_MR_PC
 
 static inline int

@@ -121,7 +121,6 @@ sel4utils_map_ept_page(vka_t *vka, seL4_CPtr pd, seL4_CPtr frame, seL4_Word vadd
     assert(vka);
     assert(pd);
     assert(frame);
-    assert(rights);
     assert(size_bits);
     assert(pagetable);
     assert(pagedir);

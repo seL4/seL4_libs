@@ -56,7 +56,7 @@ typedef seL4_Error (*arch_simple_get_ioapic_fn)(void *data, seL4_CNode root, seL
  * @param the index within the CNode to put cap
  * @param Depth of index
  */
-typedef seL4_Error (*arch_simple_get_IRQ_control_fn)(void *data, int irq, seL4_CNode cnode, seL4_Word index, 
+typedef seL4_Error (*arch_simple_get_IRQ_handler_fn)(void *data, int irq, seL4_CNode cnode, seL4_Word index, 
                                                      uint8_t depth);
 
 
@@ -82,7 +82,7 @@ typedef struct arch_simple {
     arch_simple_get_iospace_fn iospace;
 #endif
     arch_simple_get_msi_fn msi;
-    arch_simple_get_IRQ_control_fn irq;
+    arch_simple_get_IRQ_handler_fn irq;
     arch_simple_get_ioapic_fn ioapic;
 } arch_simple_t;
 

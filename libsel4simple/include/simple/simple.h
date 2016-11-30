@@ -15,6 +15,7 @@
 
 #include <assert.h>
 #include <sel4/sel4.h>
+#include <sel4/macros.h>
 #include <simple/arch/simple.h>
 #include <stdlib.h>
 #include <utils/util.h>
@@ -247,8 +248,22 @@ simple_get_frame_vaddr(simple_t *simple, void *paddr, int size_bits)
     }
 }
 
-static inline seL4_Error 
+static inline seL4_Error SEL4_DEPRECATED("Use simple_get_IRQ_handler")
 simple_get_IRQ_control(simple_t *simple, int irq, cspacepath_t path)
+{
+    if (!simple) {
+        ZF_LOGE("Simple is NULL");
+        return seL4_InvalidArgument;
+    }
+    if (!simple->arch_simple.irq) {
+        ZF_LOGE("%s not implemented", __FUNCTION__);
+        return seL4_InvalidArgument;
+    }
+    return simple->arch_simple.irq(simple->data, irq, path.root, path.capPtr, path.capDepth);
+}
+
+static inline seL4_Error
+simple_get_IRQ_handler(simple_t *simple, int irq, cspacepath_t path)
 {
     if (!simple) {
         ZF_LOGE("Simple is NULL");

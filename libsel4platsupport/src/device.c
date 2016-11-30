@@ -28,7 +28,7 @@ sel4platsupport_copy_irq_cap(vka_t *vka, simple_t *simple, seL4_Word irq_number,
 
     vka_cspace_make_path(vka, irq, dest);
 
-    error = simple_get_IRQ_control(simple, irq_number, *dest);
+    error = simple_get_IRQ_handler(simple, irq_number, *dest);
     if  (error != seL4_NoError) {
         ZF_LOGE("Failed to get cap to irq_number %zu\n", irq_number);
         vka_cspace_free(vka, irq);

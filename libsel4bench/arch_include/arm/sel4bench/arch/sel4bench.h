@@ -17,6 +17,10 @@
 #include "sel4bench_armv7a.h"
 #endif //ARMV7_A
 
+#ifdef ARMV8_A
+#include "sel4bench_armv8a.h"
+#endif //ARMV8_A
+
 #if defined(ARM1136J_S) || defined(ARM1136JF_S)
 #include "sel4bench_arm1136.h"
 #endif //ARM1136JF_S

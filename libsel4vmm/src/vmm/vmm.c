@@ -77,6 +77,10 @@ static void vmm_handle_vm_exit(vmm_vcpu_t *vcpu) {
     /* Distribute the task according to the exit info. */
     vmm_print_guest_context(3, vcpu);
 
+    if (reason == -1) {
+        ZF_LOGF("Kernel failed to perform vmlaunch or vmresume, we have no recourse");
+    }
+
     if (!vcpu->vmm->vmexit_handlers[reason]) {
         printf("VM_FATAL_ERROR ::: vm exit handler is NULL for reason 0x%x.\n", reason);
         vmm_print_guest_context(0, vcpu);

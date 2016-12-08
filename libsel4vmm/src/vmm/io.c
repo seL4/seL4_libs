@@ -22,7 +22,7 @@
 #include "vmm/vmm.h"
 
 static int io_port_cmp(const void *pkey, const void *pelem) {
-    unsigned int key = (unsigned int)pkey;
+    unsigned int key = (unsigned int)(uintptr_t)pkey;
     const ioport_range_t *elem = (const ioport_range_t*)pelem;
     if (key < elem->port_start) {
         return -1;
@@ -40,7 +40,7 @@ static int io_port_cmp2(const void *a, const void *b) {
 }
 
 static ioport_range_t *search_port(vmm_io_port_list_t *io_port, unsigned int port_no) {
-    return (ioport_range_t*)bsearch((void*)port_no, io_port->ioports, io_port->num_ioports, sizeof(ioport_range_t), io_port_cmp);
+    return (ioport_range_t*)bsearch((void*)(uintptr_t)port_no, io_port->ioports, io_port->num_ioports, sizeof(ioport_range_t), io_port_cmp);
 }
 
 /* Debug helper function for port no. */

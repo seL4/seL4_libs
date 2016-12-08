@@ -321,7 +321,7 @@ static int emul_io_out(struct ethif_virtio_emul *emul, unsigned int offset, unsi
         assert(size == 4);
         int queue = emul->internal->queue;
         emul->internal->queue_pfn[queue] = value;
-        vring_init(&emul->internal->vring[queue], emul->internal->queue_size[queue], (void*)(value << 12), VIRTIO_PCI_VRING_ALIGN);
+        vring_init(&emul->internal->vring[queue], emul->internal->queue_size[queue], (void*)(uintptr_t)(value << 12), VIRTIO_PCI_VRING_ALIGN);
         break;
     }
     case VIRTIO_PCI_QUEUE_NOTIFY:

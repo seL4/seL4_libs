@@ -289,7 +289,7 @@ sys_mremap_dynamic(va_list ap)
 
     assert(flags == MREMAP_MAYMOVE);
     assert(IS_ALIGNED_4K(old_size));
-    assert(IS_ALIGNED_4K((uint32_t) old_address));
+    assert(IS_ALIGNED_4K((uintptr_t) old_address));
     assert(IS_ALIGNED_4K(new_size));
     /* we currently only support remaping to size >= original */
     assert(new_size >= old_size);

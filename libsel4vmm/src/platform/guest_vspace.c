@@ -264,7 +264,7 @@ int vmm_guest_vspace_touch(vspace_t *vspace, uintptr_t addr, size_t size, vmm_gu
         next_addr = MIN(end_addr, next_page_start);
         void *vaddr = (void*)sel4utils_get_cookie(&guest_vspace->translation_vspace, (void*)current_aligned);
         if (!vaddr) {
-            ZF_LOGE("Failed to get cookie at 0x%x", current_aligned);
+            ZF_LOGE("Failed to get cookie at %p", (void*)current_aligned);
             return -1;
         }
         int result = callback(current_addr, (void*)(vaddr + (current_addr - current_aligned)), next_addr - current_addr, current_addr - addr, cookie);

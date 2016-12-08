@@ -111,7 +111,7 @@ void print_guest_ram_regions(guest_memory_t *guest_memory) {
             size >>= 10;
             size_char = 'M';
         }
-        printf("\t0x%x-0x%x (%d%c) %s\n",
+        printf("\t0x%x-0x%x (%zu%c) %s\n",
                (unsigned int)guest_memory->ram_regions[i].start,
                (unsigned int)(guest_memory->ram_regions[i].start + guest_memory->ram_regions[i].size),
                size, size_char,
@@ -153,7 +153,7 @@ uintptr_t guest_ram_allocate(guest_memory_t *guest_memory, size_t bytes) {
             return addr;
         }
     }
-    ZF_LOGE("Failed to allocate %d bytes of guest RAM", bytes);
+    ZF_LOGE("Failed to allocate %zu bytes of guest RAM", bytes);
     return 0;
 }
 
@@ -319,7 +319,7 @@ int vmm_alloc_guest_ram(vmm_t *vmm, size_t bytes, int onetoone) {
     int num_pages = ROUND_UP(bytes, BIT(page_size)) >> page_size;
     reservation_t reservation = vspace_reserve_range(&guest_memory->vspace, num_pages * BIT(page_size), seL4_AllRights, 1, (void**)&base);
     if (!reservation.res) {
-        ZF_LOGE("Failed to create reservation for %d guest ram bytes", bytes);
+        ZF_LOGE("Failed to create reservation for %zu guest ram bytes", bytes);
         return -1;
     }
     /* Create pages */

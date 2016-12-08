@@ -153,8 +153,8 @@ int make_guest_acpi_tables(vmm_t *vmm) {
     // Copy all the tables to guest
     table_paddr = xsdt_addr;
     for (int i = 0; i < num_tables; i++) {
-        DPRINTF(2, "ACPI table \"%.4s\", addr = %08x, size = %d bytes\n",
-                (char *)tables[i], table_paddr, table_sizes[i]);
+        DPRINTF(2, "ACPI table \"%.4s\", addr = %p, size = %zu bytes\n",
+                (char *)tables[i], (void*)table_paddr, table_sizes[i]);
         err = vmm_guest_vspace_touch(&vmm->guest_mem.vspace, table_paddr,
                 table_sizes[i], make_guest_acpi_tables_continued, tables[i]);
         if (err) {
@@ -187,7 +187,7 @@ int make_guest_acpi_tables(vmm_t *vmm) {
     rsdp.checksum = acpi_calc_checksum((char *)&rsdp, 20);  
     rsdp.extended_checksum = acpi_calc_checksum((char *)&rsdp, sizeof(rsdp));
 
-    DPRINTF(2, "ACPI RSDP addr = %08x\n", rsdp_addr);
+    DPRINTF(2, "ACPI RSDP addr = %p\n", (void*)rsdp_addr);
 
     return vmm_guest_vspace_touch(&vmm->guest_mem.vspace, rsdp_addr, sizeof(rsdp),
             make_guest_acpi_tables_continued, &rsdp);

@@ -358,10 +358,10 @@ static int make_guest_boot_info(vmm_t *vmm) {
     /* TODO: Bootinfo struct needs to be allocated in location accessable by real mode? */
     uintptr_t addr = guest_ram_allocate(&vmm->guest_mem, sizeof(struct boot_params));
     if (addr == 0) {
-        ZF_LOGE("Failed to allocate %d bytes for guest boot info struct", sizeof(struct boot_params));
+        ZF_LOGE("Failed to allocate %zu bytes for guest boot info struct", sizeof(struct boot_params));
         return -1;
     }
-    printf("Guest boot info allocated at 0x%x. Populating...\n", (unsigned int)addr);
+    printf("Guest boot info allocated at %p. Populating...\n", (void*)addr);
     vmm->guest_image.boot_info = addr;
     return vmm_guest_vspace_touch(&vmm->guest_mem.vspace, addr, sizeof(struct boot_params), make_guest_boot_info_continued, vmm);
 }
@@ -434,7 +434,7 @@ static int vmm_load_guest_segment(vmm_t *vmm, seL4_Word source_offset,
         seL4_CPtr cap;
         cap = vspace_get_cap(&vmm->guest_mem.vspace, (void*)dest_addr);
         if (!cap) {
-            ZF_LOGE("Failed to find frame cap while loading elf segment at 0x%x", dest_addr);
+            ZF_LOGE("Failed to find frame cap while loading elf segment at %p", (void*)dest_addr);
             return -1;
         }
         cspacepath_t cap_path;
@@ -460,8 +460,8 @@ static int vmm_load_guest_segment(vmm_t *vmm, seL4_Word source_offset,
                 copy_len = remain;
             }
 
-            DPRINTF(5, "load page src 0x%x dest 0x%x remain 0x%x offset 0x%x copy vaddr %p "
-                    "copy len 0x%x\n", source_offset, dest_addr, remain, offset, copy_vaddr, copy_len);
+            DPRINTF(5, "load page src %zu dest %p remain %zu offset %zu copy vaddr %p "
+                    "copy len %zu\n", source_offset, (void*)dest_addr, remain, offset, copy_vaddr, copy_len);
 
             vmm->plat_callbacks.read(copy_vaddr, fd, source_offset, copy_len);
             source_offset += copy_len;

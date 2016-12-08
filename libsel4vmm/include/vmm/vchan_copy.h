@@ -71,7 +71,7 @@ typedef struct vchan_connect {
     vchan_ctrl_t v;
     int server;
     int eventfd;
-    unsigned event_mon;
+    uintptr_t event_mon;
 } vchan_connect_t;
 
 void volatile_copy(void *dest, void *rec, int size);

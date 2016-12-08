@@ -301,7 +301,7 @@ sys_mremap_dynamic(va_list ap)
     /* first find all the old caps */
     int num_pages = old_size >> seL4_PageBits;
     seL4_CPtr caps[num_pages];
-    uint32_t cookies[num_pages];
+    uintptr_t cookies[num_pages];
     int i;
     for (i = 0; i < num_pages; i++) {
         void *vaddr = old_address + i * BIT(seL4_PageBits);

@@ -16,7 +16,7 @@
 #include "vmm/vmm.h"
 #include "vmm/platform/vmcs.h"
 
-int vmm_vmcs_read(seL4_CPtr vcpu, unsigned int field) {
+int vmm_vmcs_read(seL4_CPtr vcpu, seL4_Word field) {
 
     seL4_X86_VCPU_ReadVMCS_t result;
 
@@ -29,7 +29,7 @@ int vmm_vmcs_read(seL4_CPtr vcpu, unsigned int field) {
 
 
 /*write a field and its value into the VMCS*/
-void vmm_vmcs_write(seL4_CPtr vcpu, unsigned int field, unsigned int value) {
+void vmm_vmcs_write(seL4_CPtr vcpu, seL4_Word field, seL4_Word value) {
     
     seL4_X86_VCPU_WriteVMCS_t result;
     assert(vcpu);

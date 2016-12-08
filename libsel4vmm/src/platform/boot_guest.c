@@ -195,7 +195,7 @@ static int make_guest_page_dir_continued(uintptr_t guest_phys, void *vaddr, size
     uint32_t *pd = vaddr;
     for (int i = 0; i < 1024; i++) {
         /* Present, write, user, page size 4M */
-        pd[i] = (i << seL4_4MBits) | 0x87;
+        pd[i] = (i << PAGE_BITS_4M) | 0x87;
     }
     return 0;
 }

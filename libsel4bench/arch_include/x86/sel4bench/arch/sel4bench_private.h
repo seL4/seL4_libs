@@ -50,11 +50,6 @@ enum {
 #define FAMILY(x) (  (x).family == 0xF                       ? ( (x).ex_family      + (x).family) : (x).family )
 #define MODEL(x)  ( ((x).family == 0xF || (x).family == 0x6) ? (((x).ex_model << 4) + (x).model ) : (x).model  )
 #define IA32_CPUID_FAMILY_P6 0x6
-#define IA32_CPUID_MODEL_MIN_CORE     0x0E
-#define IA32_CPUID_MODEL_MIN_CORE2    0x0F
-#define IA32_CPUID_MODEL_MIN_NEHALEM  0x1A
-#define IA32_CPUID_MODEL_MIN_WESTMERE 0x2F
-#define IA32_CPUID_MODEL_MIN_HASWELL  0x3A
 typedef union {
 	struct {
 		seL4_Word stepping  : 4;
@@ -291,9 +286,23 @@ static seL4_Word SEL4BENCH_IA32_HASWELL_EVENTS[5] = {
 	0x0049, //TLB_L1D_MISS
 	0x412E  //LLC_MISS
 };
+static seL4_Word SEL4BENCH_IA32_BROADWELL_EVENTS[5] = {
+	0x0280, //ICACHE.MISSES
+	0x0151, //L1D.REPLACEMENT
+	0x2185, //ITLB_MISSES.MISS_CAUSES_A_WALK | ITLB_MISSES.STLB_HIT_4K
+	0x0000, //No combined load/store dTLB miss counter available
+	0x412E  //LONGEST_LAT_CACHE.MISS
+};
+static seL4_Word SEL4BENCH_IA32_SKYLAKE_EVENTS[5] = {
+	0x0000, //No combined tag/data iCache miss counter available
+	0x0151, //L1D.REPLACEMENT
+	0x2185, //ITLB_MISSES.MISS_CAUSES_A_WALK | ITLB_MISSES.STLB_HIT
+	0x0000, //No combined load/store dTLB miss counter available
+	0x412E  //LONGEST_LAT_CACHE.MISS
+};
 
 static FASTFN seL4_Word sel4bench_private_lookup_event(seL4_Word event) {
-	if(SEL4BENCH_IA32_EVENT_GENERIC_MASK & event) {
+	if((SEL4BENCH_IA32_EVENT_GENERIC_MASK & event) == SEL4BENCH_IA32_EVENT_GENERIC_MASK) {
 		uint32_t dummy = 0;
 		ia32_cpuid_model_info_t model_info = { .raw = 0 };
 		sel4bench_private_cpuid(IA32_CPUID_LEAF_MODEL, 0, &model_info.raw, &dummy, &dummy, &dummy);
@@ -301,31 +310,75 @@ static FASTFN seL4_Word sel4bench_private_lookup_event(seL4_Word event) {
 		//we should be a P6
 		assert(FAMILY(model_info) == IA32_CPUID_FAMILY_P6);
 
-		event =
-			event & ~SEL4BENCH_IA32_EVENT_GENERIC_MASK;
+		uint8_t model = MODEL(model_info);
+		event = event & ~SEL4BENCH_IA32_EVENT_GENERIC_MASK;
+
+		//Using the model summary on http://www.sandpile.org/x86/cpuid.htm#level_0000_0001h
+		//Let's hope it's accurate...
+		//We are also pretending Atoms don't exist
 
 		//P3 or PM
-		if(MODEL(model_info) < IA32_CPUID_MODEL_MIN_CORE)
+		if(model <= 0x0D || model == 0x15)
 			return SEL4BENCH_IA32_P6_EVENTS[event];
 
-		//CORE
-		if(MODEL(model_info) < IA32_CPUID_MODEL_MIN_CORE2)
-			return SEL4BENCH_IA32_CORE_EVENTS[event];
+		switch(model) {
+			//CORE
+			case 0x0E:
+				return SEL4BENCH_IA32_CORE_EVENTS[event];
 
-		//CORE2
-		if(MODEL(model_info) < IA32_CPUID_MODEL_MIN_NEHALEM)
-			return SEL4BENCH_IA32_CORE2_EVENTS[event];
+			//CORE2
+			case 0x0F:
+			case 0x16:
+			case 0x17:
+			case 0x1D:
+				return SEL4BENCH_IA32_CORE2_EVENTS[event];
 
-		//NEHALEM
-		if(MODEL(model_info) < IA32_CPUID_MODEL_MIN_WESTMERE)
-			return SEL4BENCH_IA32_NEHALEM_EVENTS[event];
+			//NEHALEM
+			case 0x1A:
+			case 0x1E:
+			case 0x1F:
+			case 0x2E:
+				return SEL4BENCH_IA32_NEHALEM_EVENTS[event];
 
-		//WESTMERE
-        if(MODEL(model_info) < IA32_CPUID_MODEL_MIN_HASWELL) 
-            return SEL4BENCH_IA32_WESTMERE_EVENTS[event];
+			//WESTMERE
+			case 0x25:
+			case 0x2C:
+			case 0x2F:
+				return SEL4BENCH_IA32_WESTMERE_EVENTS[event];
 
-		//HASWELL
-		return SEL4BENCH_IA32_HASWELL_EVENTS[event];
+			//SANDY BRIDGE
+			case 0x2A:
+			case 0x2D:
+				return 0x0000; //TODO
+
+			//IVY BRIDGE
+			case 0x3A:
+			case 0x3E:
+				return 0x0000; //TODO
+
+			//HASWELL
+			case 0x3C:
+			case 0x3F:
+			case 0x45:
+			case 0x46:
+				return SEL4BENCH_IA32_HASWELL_EVENTS[event];
+
+			//BROADWELL
+			case 0x3D:
+			case 0x47:
+			case 0x4F:
+			case 0x56:
+				return SEL4BENCH_IA32_BROADWELL_EVENTS[event];
+
+			//SKYLAKE
+			case 0x4E:
+			case 0x5E:
+				return SEL4BENCH_IA32_SKYLAKE_EVENTS[event];
+
+			//Unknown
+			default:
+				return 0x0000;
+		}
 	} else {
 		return event;
 	}

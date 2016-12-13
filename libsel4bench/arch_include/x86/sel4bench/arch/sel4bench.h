@@ -168,8 +168,7 @@ static FASTFN void sel4bench_set_count_event(seL4_Word counter, seL4_Word event)
 
 	//rewrite the MSR to what we want
 	ia32_pmc_perfevtsel_t evtsel_msr;
-	evtsel_msr.raw   = 0;
-	evtsel_msr.event = sel4bench_private_lookup_event(event);
+	evtsel_msr.raw   = sel4bench_private_lookup_event(event);
 	evtsel_msr.USR   = 1;
 	evtsel_msr.OS    = 1;
 	evtsel_msr.res   = res_flag;

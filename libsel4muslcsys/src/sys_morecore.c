@@ -65,19 +65,9 @@ sys_brk(va_list ap)
 
 /* Large mallocs will result in muslc calling mmap, so we do a minimal implementation
    here to support that. We make a bunch of assumptions in the process */
-long 
-sys_mmap2(va_list ap)
+long
+sys_mmap_impl(void *addr, size_t length, int prot, int flags, int fd, off_t offset)
 {
-    void *addr = va_arg(ap, void*);
-    size_t length = va_arg(ap, size_t);
-    int prot = va_arg(ap, int);
-    int flags = va_arg(ap, int);
-    int fd = va_arg(ap, int);
-    off_t offset = va_arg(ap, off_t);
-    (void)addr;
-    (void)prot;
-    (void)fd;
-    (void)offset;
     if (flags & MAP_ANONYMOUS) {
         /* Check that we don't try and allocate more than exists */
         if (length > morecore_top - morecore_base) {
@@ -206,18 +196,8 @@ sys_brk(va_list ap)
 /* Large mallocs will result in muslc calling mmap, so we do a minimal implementation
    here to support that. We make a bunch of assumptions in the process */
 static long
-sys_mmap2_static(va_list ap)
+sys_mmap_impl_static(void *addr, size_t length, int prot, int flags, int fd, off_t offset)
 {
-    void *addr = va_arg(ap, void*);
-    size_t length = va_arg(ap, size_t);
-    int prot = va_arg(ap, int);
-    int flags = va_arg(ap, int);
-    int fd = va_arg(ap, int);
-    off_t offset = va_arg(ap, off_t);
-    (void)addr;
-    (void)prot;
-    (void)fd;
-    (void)offset;
     if (flags & MAP_ANONYMOUS) {
         /* ensure the morecore region is initialized */
         init_morecore_region();
@@ -235,18 +215,8 @@ sys_mmap2_static(va_list ap)
 
 
 static long
-sys_mmap2_dynamic(va_list ap)
+sys_mmap_impl_dynamic(void *addr, size_t length, int prot, int flags, int fd, off_t offset)
 {
-    void *addr = va_arg(ap, void*);
-    size_t length = va_arg(ap, size_t);
-    int prot = va_arg(ap, int);
-    int flags = va_arg(ap, int);
-    int fd = va_arg(ap, int);
-    off_t offset = va_arg(ap, off_t);
-    (void)addr;
-    (void)prot;
-    (void)fd;
-    (void)offset;
     if (!muslc_this_vspace || !muslc_brk_reservation.res || !muslc_brk_reservation_start) {
         ZF_LOGE("Need to assign vspace for sys_brk to work!\n");
         assert(muslc_this_vspace && muslc_brk_reservation.res && muslc_brk_reservation_start);
@@ -263,12 +233,12 @@ sys_mmap2_dynamic(va_list ap)
 }
 
 long
-sys_mmap2(va_list ap)
+sys_mmap_impl(void *addr, size_t length, int prot, int flags, int fd, off_t offset)
 {
     if (morecore_area != NULL) {
-        return sys_mmap2_static(ap);
+        return sys_mmap_impl_static(addr, length, prot, flags, fd, offset);
     } else if (muslc_this_vspace != NULL) {
-        return sys_mmap2_dynamic(ap);
+        return sys_mmap_impl_dynamic(addr, length, prot, flags, fd, offset);
     } else {
         ZF_LOGE("mmap requires morecore_area or muslc* vars to be initialised\n");
         assert(morecore_area != NULL || muslc_this_vspace != NULL);
@@ -377,4 +347,30 @@ sys_madvise(va_list ap)
 {
     ZF_LOGV("calling dummy version of sys_madvise()\n");
     return 0;
+}
+
+long
+sys_mmap(va_list ap)
+{
+    void *addr = va_arg(ap, void*);
+    size_t length = va_arg(ap, size_t);
+    int prot = va_arg(ap, int);
+    int flags = va_arg(ap, int);
+    int fd = va_arg(ap, int);
+    off_t offset = va_arg(ap, off_t);
+    return sys_mmap_impl(addr, length, prot, flags, fd, offset);
+}
+
+long
+sys_mmap2(va_list ap)
+{
+    void *addr = va_arg(ap, void*);
+    size_t length = va_arg(ap, size_t);
+    int prot = va_arg(ap, int);
+    int flags = va_arg(ap, int);
+    int fd = va_arg(ap, int);
+    off_t offset = va_arg(ap, off_t);
+    /* for now redirect to mmap. muslc always defines an off_t as being an int64
+     * so this will not overflow */
+    return sys_mmap_impl(addr, length, prot, flags, fd, offset * 4096);
 }

@@ -47,6 +47,9 @@ static long (*syscall_table[])(va_list) = {
 #ifdef __NR_mmap2
     [__NR_mmap2] = sys_mmap2,
 #endif
+#ifdef __NR_mmap
+    [__NR_mmap] = sys_mmap,
+#endif
     [__NR_mremap] = sys_mremap,
     [__NR_madvise] = sys_madvise,
 };

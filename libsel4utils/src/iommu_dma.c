@@ -51,7 +51,7 @@ static void unmap_range(dma_man_t *dma, uintptr_t addr, size_t size)
     }
 }
 
-static int iommu_dma_alloc_iospace(void* cookie, void *vaddr, size_t size)
+int sel4utils_iommu_dma_alloc_iospace(void* cookie, void *vaddr, size_t size)
 {
     dma_man_t *dma = (dma_man_t*)cookie;
     int error;
@@ -149,7 +149,7 @@ static void* dma_alloc(void *cookie, size_t size, int align, int cached, ps_mem_
         if (error) {
             return NULL;
         }
-        error = iommu_dma_alloc_iospace(cookie, ret, size);
+        error = sel4utils_iommu_dma_alloc_iospace(cookie, ret, size);
         if (error) {
             free(ret);
             return NULL;
@@ -234,24 +234,6 @@ error:
         free(dma);
     }
     return -1;
-}
-
-int sel4utils_iommu_dma_alloc_iospace(ps_dma_man_t *dma_man, void *vaddr, size_t size)
-{
-    if (dma_man == NULL) {
-        ZF_LOGE("DMA manager is null.");
-        return -1;
-    }
-    if (dma_man->cookie == NULL) {
-        ZF_LOGE("DMA manager uninitialised.");
-        return -1;
-    }
-    if (dma_man->dma_alloc_fn != dma_alloc) {
-        ZF_LOGE("Incorrect implementation of DMA manager. "
-                "IOMMU DMA manager must be used.");
-        return -1;
-    }
-    return iommu_dma_alloc_iospace(dma_man->cookie, vaddr, size);
 }
 
 #endif /* CONFIG_LIB_SEL4_VSPACE && CONFIG_LIB_SEL4_VKA && CONFIG_LIB_PLATSUPPORT && CONFIG_IOMMU */

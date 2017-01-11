@@ -194,6 +194,7 @@ update_entries_bottom(vspace_t *vspace, vspace_bottom_level_t *level, uintptr_t 
         int index = INDEX_FOR_LEVEL(start, 0);
         uintptr_t old_cap = level->cap[index];
         if (old_cap != RESERVED && old_cap != EMPTY) {
+            ZF_LOGE("Mapping neither reserved nor empty for vaddr %" PRIxPTR " (contains 0x%x)", start, old_cap);
             return -1;
         }
         level->cap[index] = cap;

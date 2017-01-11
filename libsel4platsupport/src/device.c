@@ -50,3 +50,18 @@ sel4platsupport_alloc_frame_at(vka_t *vka, uintptr_t paddr, size_t size_bits, vk
     return error;
 }
 
+void *
+sel4platsupport_map_frame_at(vka_t *vka, vspace_t *vspace, uintptr_t paddr, size_t size_bits, vka_object_t *frame)
+{
+    int error;
+    error = sel4platsupport_alloc_frame_at(vka, paddr, size_bits, frame);
+    if (error) {
+        return NULL;
+    }
+    void *vaddr = vspace_map_pages(vspace, &frame->cptr, &frame->ut, seL4_AllRights, 1, size_bits, 0);
+    if (!vaddr) {
+        ZF_LOGE("Failed to map frame at paddr %p", (void*)paddr);
+        vka_free_object(vka, frame);
+    }
+    return vaddr;
+}

@@ -15,6 +15,7 @@
 #include <simple/simple.h>
 #include <vka/vka.h>
 #include <vka/object.h>
+#include <vspace/vspace.h>
 /*
  * Allocate a cslot for a physical frame and get the cap for that frame.
  *
@@ -26,6 +27,19 @@
  */
 seL4_Error sel4platsupport_alloc_frame_at(vka_t *vka, uintptr_t paddr,
                                           size_t size_bits, vka_object_t *dest);
+
+/*
+ * Allocate a slot for a physical frame and map it into the provided vspace
+ *
+ * @param vka to allocate slot and frame object
+ * @param vspace to map allocated frame into
+ * @param paddr to map in
+ * @param size_bits size of the frame
+ * @param[out] dest returned vka object for frame
+ * @return 0 on error, otherwise virtual address returned by vspace
+*/
+void *sel4platsupport_map_frame_at(vka_t *vka, vspace_t *vspace, uintptr_t paddr,
+                                   size_t size_bits, vka_object_t *dest);
 
 /*
  * Allocate a cslot for an irq and get the cap for an irq.

@@ -24,7 +24,7 @@
 #include <vka/object.h>
 #include <vspace/vspace.h>
 
-#define DEFAULT_TIMER_INTERRUPT MSI_MIN
+#define DEFAULT_TIMER_INTERRUPT 0
 
 /**
  * Initialise the hpet timer by parsing the acpi tables and do all seL4 specific set up.

@@ -177,6 +177,12 @@ void guest_vspace_unmap(vspace_t *vspace, void *vaddr, size_t num_pages, size_t 
             }
 
             vka_cspace_free(guest_vspace->vspace_data.vka, iospace_frame_cap_copy);
+
+            error = clear_entries(&guest_iospace->iospace_vspace, (uintptr_t)page_vaddr, size_bits);
+            if (error) {
+                ZF_LOGE("Failed to clear iospace mapping information");
+                return;
+            }
         }
 #endif
     }

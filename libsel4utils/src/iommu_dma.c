@@ -34,7 +34,7 @@ static void unmap_range(dma_man_t *dma, uintptr_t addr, size_t size)
     uintptr_t end = addr + size;
     for (uintptr_t addr = start; addr < end; addr += PAGE_SIZE_4K) {
         for (int i = 0; i < dma->num_iospaces; i++) {
-            uint32_t *cookie = (uint32_t*)vspace_get_cookie(dma->iospaces + i, (void*)addr);
+            uintptr_t *cookie = (uintptr_t*)vspace_get_cookie(dma->iospaces + i, (void*)addr);
             assert(cookie);
             (*cookie)--;
             if (*cookie == 0) {

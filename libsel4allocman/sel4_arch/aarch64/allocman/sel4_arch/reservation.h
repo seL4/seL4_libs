@@ -13,5 +13,11 @@
 #ifndef __ALLOCMAN_SEL4_ARCH_RESERVATION__
 #define __ALLOCMAN_SEL4_ARCH_RESERVATION__
 
+#include <allocman/allocman.h>
+
+static inline void allocman_sel4_arch_configure_reservations(allocman_t *alloc) {
+    allocman_configure_utspace_reserve(alloc, (struct allocman_utspace_chunk) {vka_get_object_size(seL4_ARM_PageDirectoryObject, 0), seL4_ARM_PageDirectoryObject, 1});
+    allocman_configure_utspace_reserve(alloc, (struct allocman_utspace_chunk) {vka_get_object_size(seL4_ARM_PageUpperDirectoryObject, 0), seL4_ARM_PageUpperDirectoryObject, 1});
+}
 
 #endif /* __ALLOCMAN_SEL4_ARCH_RESERVATION__ */

@@ -13,6 +13,7 @@
     .global debug_trampoline
     .text
 
+#ifdef CONFIG_ARCH_AARCH32
 debug_trampoline:
     /* Give ourselves a stack. */
     ldr sp, =debug_stack_top
@@ -33,3 +34,4 @@ debug_trampoline:
     .align  8
     .space  4096
 debug_stack_top:
+#endif /* CONFIG_ARCH_AARCH64 */

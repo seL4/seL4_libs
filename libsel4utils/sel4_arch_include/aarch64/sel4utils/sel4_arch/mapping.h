@@ -10,9 +10,8 @@
  * @TAG(D61_BSD)
  */
 
-#ifndef __DEBUG_ARCH_REGISTERS_H
-#define __DEBUG_ARCH_REGISTERS_H
+#ifndef _SEL4UTILS_SEL4_ARCH_MAPPING_H
+#define _SEL4UTILS_SEL4_ARCH_MAPPING_H
 
-#include <sel4debug/sel4_arch/registers.h>
 
-#endif /* __DEBUG_ARCH_REGISTERS_H */
+#endif /* _SEL4UTILS_SEL4_ARCH_MAPPING_H */

@@ -10,9 +10,8 @@
  * @TAG(D61_BSD)
  */
 
-#ifndef __DEBUG_ARCH_REGISTERS_H
-#define __DEBUG_ARCH_REGISTERS_H
+#ifndef __ALLOCMAN_SEL4_ARCH_RESERVATION__
+#define __ALLOCMAN_SEL4_ARCH_RESERVATION__
 
-#include <sel4debug/sel4_arch/registers.h>
 
-#endif /* __DEBUG_ARCH_REGISTERS_H */
+#endif /* __ALLOCMAN_SEL4_ARCH_RESERVATION__ */

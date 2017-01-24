@@ -11,6 +11,43 @@
 #ifndef _VKA_ARCH_OBJECT_H__
 #define _VKA_ARCH_OBJECT_H__
 
+#include <vka/vka.h>
+#include <vka/kobject_t.h>
+#include <utils/util.h>
 #include <vka/sel4_arch/object.h>
+
+#ifdef CONFIG_ARM_SMMU
+static inline int vka_alloc_io_page_table(vka_t *vka, vka_object_t *result)
+{
+    return vka_alloc_object(vka, seL4_ARM_IOPageTableObject, seL4_IOPageTableBits, result);
+}
+
+LEAKY(io_page_table)
+#endif
+
+/*
+ * Get the size (in bits) of the untyped memory required to create an object of
+ * the given size.
+ */
+static inline unsigned long
+vka_arch_get_object_size(seL4_Word objectType)
+{
+    switch (objectType) {
+    case seL4_ARM_SmallPageObject:
+        return seL4_PageBits;
+    case seL4_ARM_LargePageObject:
+        return seL4_LargePageBits;
+    case seL4_ARM_PageTableObject:
+        return seL4_PageTableBits;
+    case seL4_ARM_PageDirectoryObject:
+        return seL4_PageDirBits;
+#ifdef CONFIG_ARM_SMMU
+    case seL4_ARM_IOPageTableObject:
+        return seL4_IOPageTableBits;
+#endif
+    default:
+        return vka_arm_mode_get_object_size(objectType);;
+    }
+}
 
 #endif /* _VKA_ARCH_OBJECT_H__ */

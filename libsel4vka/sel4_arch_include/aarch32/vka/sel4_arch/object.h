@@ -14,6 +14,7 @@
 #define _VKA_SEL4_ARCH_OBJECT_H__
 
 #include <vka/vka.h>
+#include <vka/kobject_t.h>
 #include <utils/util.h>
 
 /*resource allocation interfaces for virtual machine extensions on ARM */
@@ -22,9 +23,7 @@ static inline int vka_alloc_vcpu(vka_t *vka, vka_object_t *result)
 {
     return vka_alloc_object(vka, seL4_ARM_VCPUObject, seL4_ARM_VCPUBits, result);
 }
-#endif /* ARM_HYP */
 
-#ifdef ARM_HYP
 LEAKY(vcpu)
 #endif
 
@@ -33,41 +32,20 @@ static inline int vka_alloc_vspace_root(vka_t *vka, vka_object_t *result)
     return vka_alloc_page_directory(vka, result);
 }
 
-#ifdef CONFIG_ARM_SMMU
-static inline int vka_alloc_io_page_table(vka_t *vka, vka_object_t *result)
-{
-    return vka_alloc_object(vka, seL4_ARM_IOPageTableObject, seL4_IOPageTableBits, result);
-}
-
-LEAKY(io_page_table)
-#endif
-
 /*
  * Get the size (in bits) of the untyped memory required to create an object of
  * the given size.
  */
 static inline unsigned long
-vka_arch_get_object_size(seL4_Word objectType)
+vka_arm_mode_get_object_size(seL4_Word objectType)
 {
     switch (objectType) {
-    case seL4_ARM_SmallPageObject:
-        return seL4_PageBits;
-    case seL4_ARM_LargePageObject:
-        return seL4_LargePageBits;
     case seL4_ARM_SectionObject:
         return seL4_SectionBits;
     case seL4_ARM_SuperSectionObject:
         return seL4_SuperSectionBits;
     case seL4_ARM_VCPUObject:
         return seL4_ARM_VCPUBits;
-    case seL4_ARM_PageTableObject:
-        return seL4_PageTableBits;
-    case seL4_ARM_PageDirectoryObject:
-        return seL4_PageDirBits;
-#ifdef CONFIG_ARM_SMMU
-    case seL4_ARM_IOPageTableObject:
-        return seL4_IOPageTableBits;
-#endif
     default:
         /* Unknown object type. */
         ZF_LOGF("Unknown object type");

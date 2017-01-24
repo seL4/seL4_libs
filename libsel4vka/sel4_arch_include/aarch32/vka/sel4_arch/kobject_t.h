@@ -18,11 +18,9 @@
 #include <autoconf.h>
 #include <utils/util.h>
 
-enum _arm_kobject_type {
+enum _arm_mode_kobject_type {
     KOBJECT_FRAME = 0,
-    KOBJECT_PAGE_DIRECTORY,
-    KOBJECT_PAGE_TABLE,
-    KOBJECT_ARCH_NUM_TYPES,
+    KOBJECT_MODE_NUM_TYPES,
 };
 
 typedef int kobject_t;
@@ -32,14 +30,12 @@ typedef int kobject_t;
  * create an object of the given size
  */
 static inline seL4_Word
-arch_kobject_get_size(kobject_t type, seL4_Word objectSize)
+arm_mode_kobject_get_size(kobject_t type, seL4_Word objectSize)
 {
     switch (type) {
         /* ARM-specific frames. */
     case KOBJECT_FRAME:
         switch (objectSize) {
-        case seL4_PageBits:
-        case seL4_LargePageBits:
         case seL4_SectionBits:
         case seL4_SuperSectionBits:
             return objectSize;
@@ -55,29 +51,20 @@ arch_kobject_get_size(kobject_t type, seL4_Word objectSize)
 
 
 static inline seL4_Word
-arch_kobject_get_type(kobject_t type, seL4_Word objectSize)
+arm_mode_kobject_get_type(kobject_t type, seL4_Word objectSize)
 {
     switch (type) {
-    case KOBJECT_PAGE_DIRECTORY:
-        return seL4_ARM_PageDirectoryObject;
-    case KOBJECT_PAGE_TABLE:
-        return seL4_ARM_PageTableObject;
-        /* ARM-specific frames. */
     case KOBJECT_FRAME:
         switch (objectSize) {
-        case seL4_PageBits:
-            return seL4_ARM_SmallPageObject;
-        case seL4_LargePageBits:
-            return seL4_ARM_LargePageObject;
         case seL4_SectionBits:
             return seL4_ARM_SectionObject;
         case seL4_SuperSectionBits:
             return seL4_ARM_SuperSectionObject;
         default:
-            ZF_LOGE("Unknown object type");
             return -1;
         }
     default:
+        /* Unknown object type. */
         ZF_LOGE("Unknown object type");
         return -1;
     }

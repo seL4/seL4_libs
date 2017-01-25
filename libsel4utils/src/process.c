@@ -25,7 +25,7 @@
 #include <sel4utils/util.h>
 #include <sel4utils/elf.h>
 #include <sel4utils/mapping.h>
-#include "helpers.h"
+#include <sel4utils/helpers.h>
 
 void
 sel4utils_allocated_object(void *cookie, vka_object_t object)

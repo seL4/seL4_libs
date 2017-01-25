@@ -10,9 +10,8 @@
 #include <autoconf.h>
 #include <sel4/types.h>
 #include <sel4utils/thread.h>
+#include <sel4utils/helpers.h>
 #include <stdbool.h>
-
-#include "../../helpers.h"
 
 int
 sel4utils_arch_init_context(void *entry_point, void *stack_top, seL4_UserContext *context)

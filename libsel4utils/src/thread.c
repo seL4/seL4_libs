@@ -25,8 +25,7 @@
 #include <sel4utils/thread.h>
 #include <sel4utils/util.h>
 #include <sel4utils/arch/util.h>
-
-#include "helpers.h"
+#include <sel4utils/helpers.h>
 
 static int
 write_ipc_buffer_user_data(vka_t *vka, vspace_t *vspace, seL4_CPtr ipc_buf, uintptr_t buf_loc)

@@ -17,6 +17,8 @@ CFILES := $(patsubst $(SOURCE_DIR)/%,%,$(wildcard $(SOURCE_DIR)/src/*.c) $(wildc
 # Header files/directories this library provides
 HDRFILES := $(wildcard $(SOURCE_DIR)/include/*)
 
-NK_CFLAGS += -D_XOPEN_SOURCE=700
+MUSLC_HIGHEST_SYSCALL := $(shell cat $(STAGE_DIR)/include/bits/syscall.h | sed 's/^.*[^0-9]\([0-9]*\)$$/\1/' | sort -nr | head -1)
+
+NK_CFLAGS += -D_XOPEN_SOURCE=700 -DMUSLC_HIGHEST_SYSCALL=$(MUSLC_HIGHEST_SYSCALL)
 
 include $(SEL4_COMMON)/common.mk

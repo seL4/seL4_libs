@@ -32,7 +32,12 @@ static long (*syscall_table[])(va_list) = {
     [__NR_tgkill] = sys_tgkill,
     [__NR_tkill] = sys_tkill,
     [__NR_exit_group] = sys_exit_group,
+#ifdef __NR_open
     [__NR_open] = sys_open,
+#endif
+#ifdef __NR_openat
+    [__NR_openat] = sys_openat,
+#endif
     [__NR_close] = sys_close,
     [__NR_readv] = sys_readv,
     [__NR_read] = sys_read,
@@ -42,7 +47,9 @@ static long (*syscall_table[])(va_list) = {
 #ifdef __NR__llseek
     [__NR__llseek] = sys__llseek,
 #endif
+#ifdef __NR_access
     [__NR_access] = sys_access,
+#endif
     [__NR_brk] = sys_brk,
 #ifdef __NR_mmap2
     [__NR_mmap2] = sys_mmap2,

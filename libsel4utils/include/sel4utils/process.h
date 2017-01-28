@@ -41,6 +41,7 @@ typedef struct {
     vka_object_t fault_endpoint;
     void *entry_point;
     uintptr_t sysinfo;
+    seL4_Word pagesz;
     object_node_t *allocated_object_list_head;
     /* if the elf wasn't loaded into the address space, this describes the regions.
      * this permits lazy loading / copy on write / page sharing / whatever crazy thing

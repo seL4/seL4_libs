@@ -270,8 +270,18 @@ sel4utils_spawn_process_v(sel4utils_process_t *process, vka_t *vka, vspace_t *vs
     char ipc_buf_env[WORD_STRING_SIZE];
     sprintf(ipc_buf_env, "IPCBUFFER=0x%"PRIxPTR"", process->thread.ipc_buffer_addr);
     char *envp[] = {ipc_buf_env};
-    int auxc = process->sysinfo ? 1 : 0;
-    Elf_auxv_t auxv[] = { {.a_type = AT_SYSINFO, .a_un = {process->sysinfo}}};
+
+    /* initialize of aux vectors */
+    int auxc = 1;
+    Elf_auxv_t auxv[2];
+    auxv[0].a_type = AT_PAGESZ;
+    auxv[0].a_un.a_val = process->pagesz;
+    if(process->sysinfo) {
+        auxv[1].a_type = AT_SYSINFO;
+        auxv[1].a_un.a_val = process->sysinfo;
+        auxc++;
+    }
+
     seL4_UserContext context = {0};
 
     uintptr_t initial_stack_pointer = (uintptr_t) process->thread.initial_stack_pointer - sizeof(seL4_Word);
@@ -560,6 +570,9 @@ sel4utils_configure_process_custom(sel4utils_process_t *process, vka_t *vka,
         process->entry_point = config.entry_point;
         process->sysinfo = config.sysinfo;
     }
+
+    /* select the default page size of machine this process is running on */
+    process->pagesz = PAGE_SIZE_4K;
 
     /* create the thread, do this *after* elf-loading so that we don't clobber
      * the required virtual memory*/

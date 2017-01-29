@@ -10,6 +10,7 @@
 #ifndef _VSPACE_ARCH_PAGE_H
 #define _VSPACE_ARCH_PAGE_H
 
+#include <autoconf.h>
 #include <stddef.h>
 #include <utils/attribute.h>
 #include <sel4/sel4.h>
@@ -17,14 +18,13 @@
 /* ordered list of page sizes for this architecture */
 static const UNUSED size_t sel4_page_sizes[] = {
     seL4_PageBits,
-    16,
-#ifdef ARM_HYP
-    21,
-    25,
-#else
-    20,
-    24
-#endif /* ARM_HYP */
+    seL4_LargePageBits,
+#if defined(CONFIG_ARCH_AARCH32)
+    seL4_SectionBits,
+    seL4_SuperSectionBits
+#elif defined(CONFIG_ARCH_AARCH64)
+    seL4_HugePageBits
+#endif
 };
 
 #define seL4_ARCH_Uncached_VMAttributes 0

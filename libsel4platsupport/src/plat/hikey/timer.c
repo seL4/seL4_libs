@@ -20,8 +20,8 @@ seL4_timer_t *
 sel4platsupport_get_timer(enum timer_id id, vka_t *vka, vspace_t *vspace,
                           simple_t *simple, seL4_CPtr notification)
 {
-    if (id != DMTIMER0) {
-        LOG_ERROR("Bad timer ID %d\n", id);
+    if (id >= NUM_TIMERS || id < 0) {
+        ZF_LOGE("Invalid timer device ID %d.", id);
         return NULL;
     }
 

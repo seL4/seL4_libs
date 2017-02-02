@@ -33,11 +33,8 @@
 
 #include <sel4utils/util.h>
 
+#include <muslcsys/io.h>
 #include "arch_stdio.h"
-
-#define FIRST_USER_FD (STDERR_FILENO + 1)
-
-#define FILE_TYPE_CPIO 0
 
 #define FD_TABLE_SIZE(x) (sizeof(muslcsys_fd_t) * (x))
 /* this implementation does not allow users to close STDOUT or STDERR, so they can't be freed */
@@ -47,17 +44,6 @@
 #ifdef CONFIG_LIB_SEL4_MUSLC_SYS_CPIO_FS
 extern char _cpio_archive[];
 #endif
-
-typedef struct cpio_file_data {
-    char *start;
-    uint32_t size;
-    off_t current;
-} cpio_file_data_t;
-
-typedef struct muslcsys_fd {
-    int filetype;
-    void *data;
-} muslcsys_fd_t;
 
 /* file table, indexed by file descriptor */
 static muslcsys_fd_t *fd_table = NULL;
@@ -69,7 +55,7 @@ static int free_fd_table_index;
 static int num_fds = 256;
 
 
-static void
+void
 add_free_fd(int fd)
 {
     free_fd_table_index++;
@@ -77,7 +63,7 @@ add_free_fd(int fd)
     free_fd_table[free_fd_table_index] = fd;
 }
 
-static int
+int
 get_free_fd(void)
 {
     if (free_fd_table_index == -1) {
@@ -88,7 +74,7 @@ get_free_fd(void)
     return free_fd_table[free_fd_table_index + 1];
 }
 
-static int
+int
 valid_fd(int fd)
 {
     return fd < num_fds && fd >= FIRST_USER_FD;
@@ -119,7 +105,7 @@ allocate_file_table(void)
     return 0;
 }
 
-static int
+int
 grow_fds(int how_much)
 {
     int new_num_fds = num_fds + how_much;
@@ -167,7 +153,7 @@ grow_fds(int how_much)
     return 0;
 }
 
-static int
+int
 allocate_fd()
 {
     if (fd_table == NULL) {
@@ -179,7 +165,7 @@ allocate_fd()
     return get_free_fd();
 }
 
-static muslcsys_fd_t *
+muslcsys_fd_t *
 get_fd_struct(int fd)
 {
     assert(fd < num_fds && fd >= FIRST_USER_FD);

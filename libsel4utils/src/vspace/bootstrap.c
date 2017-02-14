@@ -367,12 +367,17 @@ sel4utils_bootstrap_vspace_with_bootinfo(vspace_t *vspace, sel4utils_alloc_data_
                                          vka_t *vka, seL4_BootInfo *info, vspace_allocated_object_fn allocated_object_fn,
                                          void *allocated_object_cookie)
 {
-    void *existing_frames[] = {
-        info,
-        /* We assume the IPC buffer is less than a page and fits into one page */
-        (void *) (seL4_Word)ROUND_DOWN(((seL4_Word)(info->ipcBuffer)), PAGE_SIZE_4K),
-        NULL
-    };
+    size_t extra_pages = BYTES_TO_4K_PAGES(info->extraLen, PAGE_SIZE_4K);
+    uintptr_t extra_base = (uintptr_t)info + PAGE_SIZE_4K;
+    void *existing_frames[extra_pages + 3];
+    existing_frames[0] = info;
+    /* We assume the IPC buffer is less than a page and fits into one page */
+    existing_frames[1] = (void *) (seL4_Word)ROUND_DOWN(((seL4_Word)(info->ipcBuffer)), PAGE_SIZE_4K);
+    size_t i;
+    for (i = 0; i < extra_pages; i++) {
+        existing_frames[i + 2] = (void*)(extra_base + i * PAGE_SIZE_4K);
+    }
+    existing_frames[i + 2] = NULL;
 
     return sel4utils_bootstrap_vspace(vspace, data, vspace_root, vka, allocated_object_fn,
                                       allocated_object_cookie, existing_frames);

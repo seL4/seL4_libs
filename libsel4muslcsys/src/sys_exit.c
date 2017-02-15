@@ -13,6 +13,7 @@
 #include <sel4/sel4.h>
 #include <stdlib.h>
 #include <stdarg.h>
+#include <utils/util.h>
 
 static void
 sel4_abort(void)
@@ -34,28 +35,28 @@ sys_exit(va_list ap)
 long
 sys_rt_sigprocmask(va_list ap)
 {
-    printf("Ignoring call to %s\n", __FUNCTION__);
+    ZF_LOGV("Ignoring call to %s", __FUNCTION__);
     return 0;
 }
 
 long
 sys_gettid(va_list ap)
 {
-    printf("Ignoring call to %s\n", __FUNCTION__);
+    ZF_LOGV("Ignoring call to %s", __FUNCTION__);
     return 0;
 }
 
 long
 sys_getpid(va_list ap)
 {
-    printf("Ignoring call to %s\n", __FUNCTION__);
+    ZF_LOGV("Ignoring call to %s", __FUNCTION__);
     return 0;
 }
 
 long
 sys_tgkill(va_list ap)
 {
-    printf("%s assuming self kill\n", __FUNCTION__);
+    ZF_LOGV("%s assuming self kill", __FUNCTION__);
     sel4_abort();
     return 0;
 }
@@ -63,7 +64,7 @@ sys_tgkill(va_list ap)
 long
 sys_tkill(va_list ap)
 {
-    printf("%s assuming self kill\n", __FUNCTION__);
+    ZF_LOGV("%s assuming self kill", __FUNCTION__);
     sel4_abort();
     return 0;
 }
@@ -71,6 +72,6 @@ sys_tkill(va_list ap)
 long
 sys_exit_group(va_list ap)
 {
-    printf("Ignoring call to %s\n", __FUNCTION__);
+    ZF_LOGV("Ignoring call to %s", __FUNCTION__);
     return 0;
 }

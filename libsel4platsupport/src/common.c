@@ -218,7 +218,7 @@ platsupport_serial_setup_bootinfo_failsafe(void)
     setup_status = SETUP_COMPLETE;
 #else
     setup_status = START_FAILSAFE_SETUP;
-    simple_default_init_bootinfo(&_simple_mem, seL4_GetBootInfo());
+    simple_default_init_bootinfo(&_simple_mem, platsupport_get_bootinfo());
     simple = &_simple_mem;
     vka = &_vka_mem;
     simple_make_vka(simple, vka);

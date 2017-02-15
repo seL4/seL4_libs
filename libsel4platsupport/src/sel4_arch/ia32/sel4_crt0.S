@@ -33,10 +33,14 @@ _sel4_start:
     movw    $IPCBUF_GDT_SELECTOR, %ax
     movw    %ax, %fs
 
-    /* Setup the global "bootinfo" structure. */
+    /* Construct bootinfo environment variable */
     pushl   %ebx
-    call    seL4_InitBootInfo
-    addl    $4, %esp
+    leal    bootinfo_format, %eax
+    pushl   %eax
+    leal    bootinfo_storage, %eax
+    pushl   %eax
+    call    sprintf
+    addl    $12, %esp
 
     /* Construct a System V ABI compatible stack frame so we can go to regular _start */
     /* NULL terminate auxv */
@@ -48,7 +52,10 @@ _sel4_start:
     pushl $32 /* AT_SYSINFO */
     /* Null terminate envp */
     pushl $0
-    /* Give at least one environment string */
+    /* Give bootinfo location */
+    leal bootinfo_storage, %eax
+    pushl %eax
+    /* Set the environment to seL4 */
     leal environment_string, %eax
     pushl %eax
     /* Null terminate argument vector */
@@ -67,6 +74,10 @@ _sel4_start:
     .data
     .align 4
 
+bootinfo_format:
+    .asciz "bootinfo=%p"
+bootinfo_storage:
+    .space 21
 environment_string:
     .asciz "seL4=1"
 prog_name:

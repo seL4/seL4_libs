@@ -16,6 +16,7 @@
 #include <vka/vka.h>
 #include <platsupport/io.h>
 #include <platsupport/chardev.h>
+#include <sel4platsupport/bootinfo.h>
 
 /* performs a legacy failsafe initialisation of the serial port. This will stomp
  * over your virtual address space in unpredictable ways and is generally not

@@ -30,8 +30,11 @@
 _sel4_start:
     leaq    _stack_top, %rsp
 
-    /* Setup the global "bootinfo" structure. */
-    call    seL4_InitBootInfo
+    /* Construct bootinfo environment variable */
+    movq %rdi, %rdx
+    leaq bootinfo_storage, %rdi
+    leaq bootinfo_format, %rsi
+    call sprintf
 
     /* Construct a System V ABI compatible stack frame so we can go to regular _start */
     /* NULL terminate auxv */
@@ -43,7 +46,10 @@ _sel4_start:
     pushq $32 /* AT_SYSINFO */
     /* Null terminate envp */
     pushq $0
-    /* Give at least one environment string */
+    /* Give bootinfo location */
+    leaq bootinfo_storage, %rax
+    pushq %rax
+    /* Set the environment to seL4 */
     leaq environment_string, %rax
     pushq %rax
     /* Null terminate argument vector */
@@ -62,6 +68,10 @@ _sel4_start:
     .data
     .align 4
 
+bootinfo_format:
+    .asciz "bootinfo=%p"
+bootinfo_storage:
+    .space 29
 environment_string:
     .asciz "seL4=1"
 prog_name:

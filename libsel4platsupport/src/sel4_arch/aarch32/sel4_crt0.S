@@ -25,12 +25,14 @@ _sel4_start:
     /* Setup a stack for ourselves. */
     ldr     sp, =_stack_top
 
-    /* Setup bootinfo. The pointer to the bootinfo struct starts in 'r0'. */
-    bl      seL4_InitBootInfo
+    /* Construct bootinfo environment variable. The pointer to the bootinfo struct starts in 'r0'. */
+    mov     r2, r0
+    ldr     r0, =bootinfo_storage
+    ldr     r1, =bootinfo_format
+    bl      sprintf
 
-    /* To ensure we end up with a correctly 8 byte aligned stack at the end we
-     * need to pad by one word here */
-    push    {r0}
+    /* The series of pushes below will result in the final stack being 8 byte
+     * aligned as it must be */
     /* Setup stack frame ready for jumping to _start */
     /* null terminate auxv */
     mov     r0, #0
@@ -43,7 +45,10 @@ _sel4_start:
     push    {r2}
     /* Null terminate envp */
     push    {r0}
-    /* Give an environment string */
+    /* Give bootinfo location */
+    ldr     r1, =bootinfo_storage
+    push    {r1}
+    /* Set the environment to seL4 */
     ldr     r1, =environment_string
     push    {r1}
     /* Null terminate argument vector */
@@ -63,6 +68,10 @@ _sel4_start:
     .data
     .align 4
 
+bootinfo_format:
+    .asciz "bootinfo=%p"
+bootinfo_storage:
+    .space 21
 environment_string:
     .asciz "seL4=1"
 prog_name:

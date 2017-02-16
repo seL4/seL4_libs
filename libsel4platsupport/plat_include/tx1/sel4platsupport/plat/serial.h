@@ -11,6 +11,5 @@
 #pragma once
 #include <platsupport/plat/serial.h>
 
-#define DEFAULT_SERIAL_PADDR UARTD_PADDR
-#define DEFAULT_SERIAL_INTERRUPT UARTD_IRQ
-
+#define DEFAULT_SERIAL_PADDR UARTA_PADDR
+#define DEFAULT_SERIAL_INTERRUPT UARTA_IRQ

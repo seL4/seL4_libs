@@ -9,8 +9,8 @@
  */
 
 #pragma once
-#include <platsupport/plat/serial.h>
+#include <platsupport/plat/timer.h>
 
-#define DEFAULT_SERIAL_PADDR UARTD_PADDR
-#define DEFAULT_SERIAL_INTERRUPT UARTD_IRQ
+#define DEFAULT_TIMER_INTERRUPT INT_NV_TMR1
+#define DEFAULT_TIMER_PADDR    NV_TMR_PADDR 
 

@@ -7,13 +7,9 @@
  *
  * @TAG(NICTA_BSD)
  */
-#ifndef _SEL4PLATSUPPORT_PLAT_TIMER_H
-#define _SEL4PLATSUPPORT_PLAT_TIMER_H
 
+#pragma once
 #include <platsupport/plat/timer.h>
+
 #define DEFAULT_TIMER_INTERRUPT INT_NV_TMR1
-
-#define DEFAULT_TIMER_PADDR    NV_TMR_PADDR 
-
-
-#endif /* _SEL4PLATSUPPORT_PLAT_TIMER_H */
+#define DEFAULT_TIMER_PADDR    NV_TMR_PADDR

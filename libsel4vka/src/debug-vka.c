@@ -222,6 +222,22 @@ static int utspace_alloc(void *data, const cspacepath_t *dest, seL4_Word type,
     return result;
 }
 
+static int utspace_alloc_maybe_device(void *data, const cspacepath_t *dest, seL4_Word type,
+                         seL4_Word size_bits, bool can_use_dev, seL4_Word *res)
+{
+    assert(data != NULL);
+
+    state_t *s = (state_t*)data;
+
+    vka_t *v = s->underlying;
+    int result = v->utspace_alloc_maybe_device(v->data, dest, type, size_bits, can_use_dev, res);
+    if (result == 0 && res != NULL) {
+        track_obj(s, type, size_bits, *res);
+    }
+    return result;
+}
+
+
 static int utspace_alloc_at(void *data, const cspacepath_t *dest, seL4_Word type,
                             seL4_Word size_bits, uintptr_t paddr, seL4_Word *cookie)
 {
@@ -313,6 +329,7 @@ int vka_init_debugvka(vka_t *vka, vka_t *tracee)
     vka->cspace_alloc = cspace_alloc;
     vka->cspace_make_path = cspace_make_path;
     vka->utspace_alloc = utspace_alloc;
+    vka->utspace_alloc_maybe_device = utspace_alloc_maybe_device;
     vka->utspace_alloc_at = utspace_alloc_at;
     vka->cspace_free = cspace_free;
     vka->utspace_free = utspace_free;

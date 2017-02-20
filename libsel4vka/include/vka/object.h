@@ -36,8 +36,8 @@ typedef struct vka_object {
  * Generic object allocator used by functions below, can also be used directly
  */
 static inline int
-vka_alloc_object_at(vka_t *vka, seL4_Word type, seL4_Word size_bits, uintptr_t paddr,
-                    vka_object_t *result)
+vka_alloc_object_at_maybe_dev(vka_t *vka, seL4_Word type, seL4_Word size_bits, uintptr_t paddr,
+                    bool can_use_dev, vka_object_t *result)
 {
 
     int error = vka_cspace_alloc(vka, &result->cptr);
@@ -51,7 +51,7 @@ vka_alloc_object_at(vka_t *vka, seL4_Word type, seL4_Word size_bits, uintptr_t p
     vka_cspace_make_path(vka, result->cptr, &path);
 
     if (paddr == VKA_NO_PADDR) {
-        error = vka_utspace_alloc(vka, &path, type, size_bits, &result->ut);
+        error = vka_utspace_alloc_maybe_device(vka, &path, type, size_bits, can_use_dev, &result->ut);
         if (unlikely(error)) {
             ZF_LOGE("Failed to allocate object of size %lu, error %d\n",
                      BIT(size_bits), error);
@@ -79,6 +79,12 @@ error:
     return error;
 }
 
+static inline int
+vka_alloc_object_at(vka_t *vka, seL4_Word type, seL4_Word size_bits, uintptr_t paddr,
+                    vka_object_t *result)
+{
+    return vka_alloc_object_at_maybe_dev(vka, type, size_bits, paddr, false, result);
+}
 static inline int
 vka_alloc_object(vka_t *vka, seL4_Word type, seL4_Word size_bits, vka_object_t *result)
 {
@@ -161,6 +167,14 @@ static inline int vka_alloc_frame(vka_t *vka, uint32_t size_bits, vka_object_t *
 {
     return vka_alloc_object(vka, kobject_get_type(KOBJECT_FRAME, size_bits), size_bits, result);
 }
+
+/* For arch specific allocations we call upon kobject to avoid code duplication */
+static inline int vka_alloc_frame_maybe_device(vka_t *vka, uint32_t size_bits, bool can_use_dev, vka_object_t *result)
+{
+    return vka_alloc_object_at_maybe_dev(vka, kobject_get_type(KOBJECT_FRAME, size_bits),
+                                         size_bits, VKA_NO_PADDR, can_use_dev, result);
+}
+
 
 static inline int vka_alloc_frame_at(vka_t *vka, uint32_t size_bits, uintptr_t paddr,
                                      vka_object_t *result)

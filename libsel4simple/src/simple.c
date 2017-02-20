@@ -103,6 +103,7 @@ void simple_make_vka(simple_t *simple, vka_t *vka)
     vka->cspace_alloc = &simple_vka_cspace_alloc;
     vka->cspace_make_path = &simple_vka_cspace_make_path;
     vka->utspace_alloc = NULL;
+    vka->utspace_alloc_maybe_device = NULL;
     vka->cspace_free = NULL;
     vka->utspace_free = NULL;
 }

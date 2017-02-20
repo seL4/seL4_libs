@@ -22,6 +22,7 @@ sel4utils_arch_init_context(void *entry_point, void *stack_top, seL4_UserContext
     context->edx = 0;
     context->fs  = IPCBUF_GDT_SELECTOR;
     context->eip = (seL4_Word) entry_point;
+    context->gs = TLS_GDT_SELECTOR;
 
     return 0;
 }

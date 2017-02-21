@@ -81,10 +81,12 @@ static void am_vka_cspace_free (void *data, seL4_CPtr slot)
  * @param dest path to an empty cslot to place the cap to the allocated object
  * @param type the seL4 object type to allocate (as passed to Untyped_Retype)
  * @param size_bits the size of the object to allocate (as passed to Untyped_Retype)
+ * @param can_use_dev whether the allocator can use device untyped instead of regular untyped
  * @param res pointer to a location to store the cookie representing this allocation
  * @return 0 on success
  */
-static int am_vka_utspace_alloc (void *data, const cspacepath_t *dest, seL4_Word type, seL4_Word size_bits, seL4_Word *res)
+static int am_vka_utspace_alloc_maybe_device (void *data, const cspacepath_t *dest,
+                seL4_Word type, seL4_Word size_bits, bool can_use_dev, seL4_Word *res)
 {
     int error;
 
@@ -96,10 +98,26 @@ static int am_vka_utspace_alloc (void *data, const cspacepath_t *dest, seL4_Word
      * as passed to Untyped_Retype, so do a conversion here */
     size_bits = vka_get_object_size(type, size_bits);
 
-    *res = allocman_utspace_alloc((allocman_t *) data, size_bits, type, (cspacepath_t*)dest, false, &error);
+    *res = allocman_utspace_alloc((allocman_t *) data, size_bits, type, (cspacepath_t*)dest, can_use_dev, &error);
 
     return error;
 }
+
+/**
+ * Allocate a portion of an untyped into an object
+ *
+ * @param data cookie for the underlying allocator
+ * @param dest path to an empty cslot to place the cap to the allocated object
+ * @param type the seL4 object type to allocate (as passed to Untyped_Retype)
+ * @param size_bits the size of the object to allocate (as passed to Untyped_Retype)
+ * @param res pointer to a location to store the cookie representing this allocation
+ * @return 0 on success
+ */
+static int am_vka_utspace_alloc (void *data, const cspacepath_t *dest, seL4_Word type, seL4_Word size_bits, seL4_Word *res)
+{
+    return am_vka_utspace_alloc_maybe_device(data, dest, type, size_bits, false, res);
+}
+
 
 /**
  * Allocate a portion of an untyped into an object
@@ -175,6 +193,7 @@ void allocman_make_vka(vka_t *vka, allocman_t *alloc)
     vka->cspace_alloc = &am_vka_cspace_alloc;
     vka->cspace_make_path = &am_vka_cspace_make_path;
     vka->utspace_alloc = &am_vka_utspace_alloc;
+    vka->utspace_alloc_maybe_device = &am_vka_utspace_alloc_maybe_device;
     vka->utspace_alloc_at = &am_vka_utspace_alloc_at;
     vka->cspace_free = &am_vka_cspace_free;
     vka->utspace_free = &am_vka_utspace_free;

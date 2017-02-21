@@ -35,6 +35,12 @@ static int utspace_alloc(void *data, const cspacepath_t *dest, seL4_Word type,
     return -1;
 }
 
+static int utspace_alloc_maybe_device(void *data, const cspacepath_t *dest, seL4_Word type,
+                         seL4_Word size_bits, bool can_use_dev, seL4_Word *res)
+{
+    return -1;
+}
+
 static int utspace_alloc_at(void *data, const cspacepath_t *dest, seL4_Word type,
                             seL4_Word size_bits, uintptr_t paddr, seL4_Word *res)
 {
@@ -53,6 +59,7 @@ void vka_init_nullvka(vka_t *vka)
     vka->cspace_alloc = cspace_alloc;
     vka->cspace_make_path = cspace_make_path;
     vka->utspace_alloc = utspace_alloc;
+    vka->utspace_alloc_maybe_device = utspace_alloc_maybe_device;
     vka->utspace_alloc_at = utspace_alloc_at;
     vka->cspace_free = cspace_free;
     vka->utspace_free = utspace_free;

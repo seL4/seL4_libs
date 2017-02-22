@@ -367,7 +367,7 @@ sel4utils_bootstrap_vspace_with_bootinfo(vspace_t *vspace, sel4utils_alloc_data_
                                          vka_t *vka, seL4_BootInfo *info, vspace_allocated_object_fn allocated_object_fn,
                                          void *allocated_object_cookie)
 {
-    size_t extra_pages = BYTES_TO_4K_PAGES(info->extraLen, PAGE_SIZE_4K);
+    size_t extra_pages = BYTES_TO_4K_PAGES(info->extraLen);
     uintptr_t extra_base = (uintptr_t)info + PAGE_SIZE_4K;
     void *existing_frames[extra_pages + 3];
     existing_frames[0] = info;

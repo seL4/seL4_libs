@@ -177,6 +177,14 @@ void simple_default_print(void *data) {
     debug_print_bootinfo(data);
 }
 
+seL4_Word simple_default_arch_info(void *data) {
+    if (data == NULL) {
+        ZF_LOGE("Data is null!");
+    }
+
+    return ((seL4_BootInfo *)data)->archInfo;
+}
+
 void simple_default_init_bootinfo(simple_t *simple, seL4_BootInfo *bi) {
     assert(simple);
     assert(bi);
@@ -196,6 +204,7 @@ void simple_default_init_bootinfo(simple_t *simple, seL4_BootInfo *bi) {
     simple->core_count = &simple_default_core_count;
     simple->nth_userimage = &simple_default_nth_userimage;
     simple->print = &simple_default_print;
+    simple->arch_info = &simple_default_arch_info;
     simple_default_init_arch_simple(&simple->arch_simple, NULL);
 }
 

@@ -184,6 +184,12 @@ typedef seL4_Error (*simple_get_iospace_fn)(void *data, uint16_t domainID, uint1
  */
 typedef void (*simple_print_fn)(void *data);
 
+/**
+ *
+ * Get archInfo from the bootinfo struct.  On x86 this is the tsc freq, on ARM it is unused.
+ */
+typedef seL4_Word (*simple_get_arch_info_fn)(void *data);
+
 typedef struct simple_t {
     void *data;
     simple_get_frame_cap_fn frame_cap;
@@ -200,6 +206,7 @@ typedef struct simple_t {
     simple_get_nth_userimage_fn nth_userimage;
     simple_get_core_count_fn core_count;
     simple_print_fn print;
+    simple_get_arch_info_fn arch_info;
     arch_simple_t arch_simple;
 } simple_t;
 
@@ -542,4 +549,20 @@ simple_print(simple_t *simple)
 
     simple->print(simple->data);
 }
+
+static inline seL4_Word
+simple_get_arch_info(simple_t *simple)
+{
+    if (!simple) {
+        ZF_LOGE("Simple is NULL");
+        return 0;
+    }
+    if (!simple->arch_info) {
+        ZF_LOGE("%s not implemented", __FUNCTION__);
+        return 0;
+    }
+
+    return simple->arch_info(simple->data);
+}
+
 #endif /* _INTERFACE_SIMPLE_H_ */

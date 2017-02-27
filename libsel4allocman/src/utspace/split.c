@@ -263,12 +263,13 @@ seL4_Word _utspace_split_alloc(allocman_t *alloc, void *_split, size_t size_bits
         /* if we can use device memory then preference allocating from there */
         if (canBeDev) {
             if (_refill_pool(alloc, split, split->dev_mem_heads, size_bits, ALLOCMAN_NO_PADDR)) {
-                /* out of memory? */
-                SET_ERROR(error, 1);
-                ZF_LOGV("Failed to refill pool to allocate object of size %zu", size_bits);
-                return 0;
+                /* out of memory? Try fall through */
+                ZF_LOGV("Failed to refill device memory pool to allocate object of size %zu", size_bits);
+                ZF_LOGV("Trying regular untyped pool");
+            } else {
+                head = split->dev_mem_heads;
             }
-            head = split->dev_mem_heads;
+
         }
         if (!head) {
             head = split->heads;

@@ -37,7 +37,7 @@ sel4platsupport_get_default_timer(vka_t *vka, vspace_t *vspace, simple_t *simple
         .shared_vaddr = timer->vaddr + TMR_SHARED_OFFSET,
         .irq = DEFAULT_TIMER_INTERRUPT
     };
-    timer->timer = tk1_get_timer(&config);
+    timer->timer = nv_get_timer(&config);
     if (timer->timer == NULL) {
         timer_common_destroy(timer, vka, vspace);
     }

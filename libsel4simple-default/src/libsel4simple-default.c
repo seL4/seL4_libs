@@ -14,6 +14,7 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <inttypes.h>
+#include <string.h>
 
 #include <sel4/sel4.h>
 #include <sel4debug/debug.h>
@@ -185,6 +186,29 @@ seL4_Word simple_default_arch_info(void *data) {
     return ((seL4_BootInfo *)data)->archInfo;
 }
 
+ssize_t simple_default_get_extended_bootinfo(void *data, seL4_Word type, void *dest, ssize_t max_len) {
+    assert(data);
+    seL4_BootInfo *bi = data;
+
+    if (max_len < 0) {
+        ZF_LOGE("Unexpected negative size");
+        return -1;
+    }
+    /* start of the extended bootinfo is defined to be 4K from the start of regular bootinfo */
+    uintptr_t cur = (uintptr_t)bi + PAGE_SIZE_4K;
+    uintptr_t end = cur + bi->extraLen;
+    while (cur < end) {
+        seL4_BootInfoHeader *header = (seL4_BootInfoHeader*)cur;
+        if (header->id == type) {
+            ssize_t copy_len = MIN(header->len, max_len);
+            memcpy(dest, (void*)cur, copy_len);
+            return copy_len;
+        }
+        cur += header->len;
+    }
+    return -1;
+}
+
 void simple_default_init_bootinfo(simple_t *simple, seL4_BootInfo *bi) {
     assert(simple);
     assert(bi);
@@ -205,6 +229,7 @@ void simple_default_init_bootinfo(simple_t *simple, seL4_BootInfo *bi) {
     simple->nth_userimage = &simple_default_nth_userimage;
     simple->print = &simple_default_print;
     simple->arch_info = &simple_default_arch_info;
+    simple->extended_bootinfo = &simple_default_get_extended_bootinfo;
     simple_default_init_arch_simple(&simple->arch_simple, NULL);
 }
 

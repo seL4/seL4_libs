@@ -32,9 +32,7 @@
 #include "vmm/platform/elf_helper.h"
 #include "vmm/platform/acpi.h"
 
-#ifdef CONFIG_VMM_VESA_FRAMEBUFFER
-#include <sel4/arch/bootinfo.h>
-#endif
+#include <sel4/arch/bootinfo_types.h>
 
 #define VMM_VMCS_CR0_MASK           (X86_CR0_PG | X86_CR0_PE)
 #define VMM_VMCS_CR0_SHADOW         (X86_CR0_PG | X86_CR0_PE)
@@ -181,10 +179,9 @@ int vmm_guest_load_boot_module(vmm_t *vmm, const char *name) {
 }
 
 #ifdef CONFIG_VMM_VESA_FRAMEBUFFER
-/* TODO: Broken on camkes */
-static inline uint32_t vmm_plat_vesa_fbuffer_size(seL4_IA32_BootInfo *bi) {
-    assert(bi);
-    return ALIGN_UP(bi->vbeModeInfoBlock.bytesPerScanLine * bi->vbeModeInfoBlock.yRes, 65536);
+static inline uint32_t vmm_plat_vesa_fbuffer_size(seL4_VBEModeInfoBlock_t *block) {
+    assert(block);
+    return ALIGN_UP(block->bytesPerScanLine * block->yRes, 65536);
 }
 #endif
 
@@ -234,32 +231,35 @@ static int make_guest_cmd_line(vmm_t *vmm, const char *cmdline) {
     return vmm_guest_vspace_touch(&vmm->guest_mem.vspace, cmd_addr, len + 1, make_guest_cmd_line_continued, (void*)cmdline);
 }
 
-/* TODO: Broken on camkes */
 static void make_guest_screen_info(vmm_t *vmm, struct screen_info *info) {
     /* VESA information */
-#ifdef CONFIG_VMM_VESA_FRAMEBUFFER
-    seL4_IA32_BootInfo *bi = seL4_IA32_GetBootInfo(seL4_GetBootInfo());
-    info->orig_video_isVGA = 0x23; // Tell Linux it's a VESA mode
-    info->lfb_width = bi->vbeModeInfoBlock.xRes;
-    info->lfb_height = bi->vbeModeInfoBlock.yRes;
-    info->lfb_depth = bi->vbeModeInfoBlock.bitsPerPixel;
-    info->lfb_base = bi->vbeModeInfoBlock.physBasePtr + VMM_PCI_DEFAULT_MAP_OFFSET;
-    info->lfb_size = vmm_plat_vesa_fbuffer_size(bi) >> 16;
-    info->lfb_linelength = bi->vbeModeInfoBlock.bytesPerScanLine;
+    seL4_X86_BootInfo_VBE vbeinfo;
+    ssize_t result;
+    result = simple_get_extended_bootinfo(&vmm->host_simple, SEL4_BOOTINFO_HEADER_X86_VBE, &vbeinfo, sizeof(seL4_X86_BootInfo_VBE));
+    if (config_set(CONFIG_VMM_VESA_FRAMEBUFFER) && result != -1) {
+        info->orig_video_isVGA = 0x23; // Tell Linux it's a VESA mode
+        info->lfb_width = vbeinfo.vbeModeInfoBlock.xRes;
+        info->lfb_height = vbeinfo.vbeModeInfoBlock.yRes;
+        info->lfb_depth = vbeinfo.vbeModeInfoBlock.bitsPerPixel;
+        size_t fbuffer_size = vmm_plat_vesa_fbuffer_size(&vbeinfo.vbeModeInfoBlock);
+        uintptr_t base = vmm_map_guest_device(vmm, vbeinfo.vbeModeInfoBlock.physBasePtr, fbuffer_size, PAGE_SIZE_4K);
+        info->lfb_base = base;
+        info->lfb_size = fbuffer_size >> 16;
+        info->lfb_linelength = vbeinfo.vbeModeInfoBlock.bytesPerScanLine;
 
-    info->red_size = bi->vbeModeInfoBlock.redLen;
-    info->red_pos = bi->vbeModeInfoBlock.redOff;
-    info->green_size = bi->vbeModeInfoBlock.greenLen;
-    info->green_pos = bi->vbeModeInfoBlock.greenOff;
-    info->blue_size = bi->vbeModeInfoBlock.blueLen;
-    info->blue_pos = bi->vbeModeInfoBlock.blueOff;
-    info->rsvd_size = bi->vbeModeInfoBlock.rsvdLen;
-    info->rsvd_pos = bi->vbeModeInfoBlock.rsvdOff;
-    info->vesapm_seg = bi->vbeInterfaceSeg;
-    info->vesapm_off = bi->vbeInterfaceOff;
-#else
-    memset(info, 0, sizeof(*info));
-#endif
+        info->red_size = vbeinfo.vbeModeInfoBlock.redLen;
+        info->red_pos = vbeinfo.vbeModeInfoBlock.redOff;
+        info->green_size = vbeinfo.vbeModeInfoBlock.greenLen;
+        info->green_pos = vbeinfo.vbeModeInfoBlock.greenOff;
+        info->blue_size = vbeinfo.vbeModeInfoBlock.blueLen;
+        info->blue_pos = vbeinfo.vbeModeInfoBlock.blueOff;
+        info->rsvd_size = vbeinfo.vbeModeInfoBlock.rsvdLen;
+        info->rsvd_pos = vbeinfo.vbeModeInfoBlock.rsvdOff;
+        info->vesapm_seg = vbeinfo.vbeInterfaceSeg;
+        info->vesapm_off = vbeinfo.vbeInterfaceOff;
+    } else {
+        memset(info, 0, sizeof(*info));
+    }
 }
 
 static int make_guest_e820_map(struct e820entry *e820, guest_memory_t *guest_memory) {

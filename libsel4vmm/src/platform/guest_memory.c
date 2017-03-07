@@ -16,6 +16,7 @@
 
 #include <sel4/sel4.h>
 #include <utils/util.h>
+#include <vka/capops.h>
 
 #include "vmm/vmm.h"
 #include "vmm/debug.h"
@@ -252,18 +253,27 @@ static int vmm_map_guest_device_reservation(vmm_t *vmm, uintptr_t paddr, size_t 
             return error;
         }
         error = simple_get_frame_cap(&vmm->host_simple, (void*)current_paddr, page_size, &path);
+        uintptr_t cookie;
+        bool allocated = false;
         if (error) {
             /* attempt to allocate */
-            uintptr_t cookie;
+            allocated = true;
             error = vka_utspace_alloc_at(&vmm->vka, &path, kobject_get_type(KOBJECT_FRAME, page_size), page_size, current_paddr, &cookie);
         }
         if (error) {
             ZF_LOGE("Failed to find device frame 0x%x size 0x%x for region 0x%x 0x%x", (unsigned int)current_paddr, (unsigned int)BIT(page_size), (unsigned int)paddr, (unsigned int)bytes);
+            vka_cnode_delete(&path);
+            vka_cspace_free(&vmm->vka, path.capPtr);
             return error;
         }
         error = vspace_map_pages_at_vaddr(&guest_memory->vspace, &path.capPtr, NULL, (void*)current_map, 1, page_size, reservation);
         if (error) {
             ZF_LOGE("Failed to map device page 0x%x at 0x%x from region 0x%x 0x%x\n", (unsigned int)current_paddr, (unsigned int)current_map, (unsigned int)paddr, (unsigned int)bytes);
+            if (allocated) {
+                vka_utspace_free(&vmm->vka, kobject_get_type(KOBJECT_FRAME, page_size), page_size, cookie);
+            }
+            vka_cnode_delete(&path);
+            vka_cspace_free(&vmm->vka, path.capPtr);
             return error;
         }
     }
@@ -276,6 +286,10 @@ uintptr_t vmm_map_guest_device(vmm_t *vmm, uintptr_t paddr, size_t bytes, size_t
     guest_memory_t *guest_memory = &vmm->guest_mem;
     uintptr_t reservation_base;
     reservation_t reservation = vspace_reserve_range(&guest_memory->vspace, bytes + align, seL4_AllRights, 1, (void**)&reservation_base);
+    if (!reservation.res) {
+        ZF_LOGE("Failed to allocate reservation of size %zu when mapping memory from %p", bytes + align, (void*)paddr);
+        return 0;
+    }
     /* Round up reservation so it is aligned. Hopefully it also ends up page aligned with the
      * sun moon and stars and we can actually find a frame cap and map it */
     uintptr_t map_base = ROUND_UP(reservation_base, align);
@@ -292,6 +306,10 @@ int vmm_map_guest_device_at(vmm_t *vmm, uintptr_t vaddr, uintptr_t paddr, size_t
     /* Reserve a region that is guaranteed to have an aligned region in it */
     guest_memory_t *guest_memory = &vmm->guest_mem;
     reservation_t reservation = vspace_reserve_range_at(&guest_memory->vspace, (void*)vaddr, bytes, seL4_AllRights, 1);
+    if (!reservation.res) {
+        ZF_LOGE("Failed to allocate reservation of size %zu when mapping device from %p at", bytes, (void*)paddr, (void*)vaddr);
+        return -1;
+    }
     error = vmm_map_guest_device_reservation(vmm, paddr, bytes, reservation, vaddr);
     vspace_free_reservation(&guest_memory->vspace, reservation);
     return error;

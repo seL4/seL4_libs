@@ -38,7 +38,7 @@ char morecore_area[CONFIG_LIB_SEL4_MUSLC_SYS_MORECORE_BYTES];
 size_t morecore_size = CONFIG_LIB_SEL4_MUSLC_SYS_MORECORE_BYTES;
 /* Pointer to free space in the morecore area. */
 static uintptr_t morecore_base = (uintptr_t) &morecore_area;
-static uintptr_t morecore_top = (uintptr_t) &morecore_area[CONFIG_LIB_SEL4_MUSLC_SYS_MORECORE_BYTES];
+uintptr_t morecore_top = (uintptr_t) &morecore_area[CONFIG_LIB_SEL4_MUSLC_SYS_MORECORE_BYTES];
 
 /* Actual morecore implementation
    returns 0 if failure, returns newbrk if success.
@@ -109,7 +109,7 @@ void *muslc_brk_reservation_start = NULL;
 char *morecore_area = NULL;
 size_t morecore_size = 0;
 static uintptr_t morecore_base = 0;
-static uintptr_t morecore_top = 0;
+uintptr_t morecore_top = 0;
 
 static uintptr_t brk_start;
 

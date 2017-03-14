@@ -102,7 +102,7 @@ sel4utils_configure_thread_config(vka_t *vka, vspace_t *parent, vspace_t *alloc,
 #ifdef CONFIG_KERNEL_RT
         error = seL4_SchedControl_Configure(config.sched_params.sched_ctrl, res->sched_context.cptr,
                                             config.sched_params.budget, config.sched_params.period,
-                                            config.sched_params.extra_refills);
+                                            config.sched_params.extra_refills, config.sched_params.badge);
 #endif
         if (error != seL4_NoError) {
             ZF_LOGE("Failed to configure sched context");
@@ -115,6 +115,9 @@ sel4utils_configure_thread_config(vka_t *vka, vspace_t *parent, vspace_t *alloc,
     }
     seL4_CapData_t null_cap_data = {{0}};
     error = seL4_TCB_Configure(res->tcb.cptr, config.fault_endpoint,
+#ifdef CONFIG_KERNEL_RT
+                               seL4_CapNull,
+#endif
                                seL4_PrioProps_new(config.sched_params.mcp, config.sched_params.priority),
 #ifdef CONFIG_KERNEL_RT
                                res->sched_context.cptr,
@@ -244,6 +247,11 @@ sel4utils_print_fault_message(seL4_MessageInfo_t tag, const char *thread_name)
                 (void *) seL4_Fault_CapFault_get_Addr(fault),
                 COLOR_NORMAL);
         break;
+#ifdef CONFIG_KERNEL_RT
+    case seL4_Fault_Timeout:
+        printf("Timeout fault from %s\n", thread_name);
+        break;
+#endif
 
     default:
         /* What? Why are we here? What just happened? */

@@ -617,7 +617,7 @@ sel4utils_configure_process_custom(sel4utils_process_t *process, vka_t *vka,
      * the required virtual memory*/
     sel4utils_thread_config_t thread_config = {0};
     thread_config = thread_config_cspace(thread_config, process->cspace.cptr, cspace_root_data);
-    thread_config = thread_config_fault_endpoint(thread_config, SEL4UTILS_ENDPOINT_SLOT);
+    thread_config = thread_config_fault_endpoint(thread_config, process->fault_endpoint.cptr);
     thread_config.sched_params = config.sched_params;
     thread_config.create_reply = config.create_cspace;
     error = sel4utils_configure_thread_config(vka, spawner_vspace, &process->vspace, thread_config,

@@ -69,6 +69,8 @@ typedef struct sel4utils_checkpoint {
     sel4utils_thread_t *thread;
 } sel4utils_checkpoint_t;
 
+typedef void (*sel4utils_thread_entry_fn)(void *arg0, void *arg1, void *ipc_buf);
+
 /**
  * Configure a thread, allocating any resources required.
  *
@@ -139,7 +141,7 @@ int sel4utils_configure_thread_config(vka_t *vka, vspace_t *parent, vspace_t *al
  *
  * @return 0 on success, -1 on failure.
  */
-int sel4utils_start_thread(sel4utils_thread_t *thread, void *entry_point, void *arg0, void *arg1,
+int sel4utils_start_thread(sel4utils_thread_t *thread, sel4utils_thread_entry_fn entry_point, void *arg0, void *arg1,
                            int resume);
 
 /**

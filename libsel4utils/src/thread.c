@@ -116,7 +116,7 @@ sel4utils_configure_thread_config(vka_t *vka, vspace_t *parent, vspace_t *alloc,
 }
 
 int
-sel4utils_start_thread(sel4utils_thread_t *thread, void *entry_point, void *arg0, void *arg1,
+sel4utils_start_thread(sel4utils_thread_t *thread, sel4utils_thread_entry_fn entry_point, void *arg0, void *arg1,
                        int resume)
 {
     seL4_UserContext context = {0};
@@ -225,7 +225,7 @@ sel4utils_start_fault_handler(seL4_CPtr fault_endpoint, vka_t *vka, vspace_t *vs
         return -1;
     }
 
-    return sel4utils_start_thread(res, fault_handler, name,
+    return sel4utils_start_thread(res, (sel4utils_thread_entry_fn)fault_handler, name,
                                   (void *) fault_endpoint, 1);
 }
 

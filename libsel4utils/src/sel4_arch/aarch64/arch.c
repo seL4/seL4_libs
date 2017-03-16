@@ -14,6 +14,8 @@
 #include <sel4/types.h>
 #include <sel4utils/thread.h>
 #include <sel4utils/helpers.h>
+#include <utils/zf_log.h>
+#include <utils/stack.h>
 #include <stdbool.h>
 
 int
@@ -21,8 +23,8 @@ sel4utils_arch_init_context(void *entry_point, void *stack_top, seL4_UserContext
 {
     context->pc = (seL4_Word) entry_point;
     context->sp = (seL4_Word) stack_top;
-    if ((uintptr_t) stack_top % (sizeof(seL4_Word) * 2) != 0) {
-        ZF_LOGE("Stack %p not aligned on double word boundary", stack_top);
+    if (!IS_ALIGNED((uintptr_t)stack_top, STACK_CALL_ALIGNMENT_BITS)) {
+        ZF_LOGE("Initial stack pointer must be %d byte aligned", STACK_CALL_ALIGNMENT);
         return -1;
     }
     return 0;

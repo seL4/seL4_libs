@@ -11,6 +11,8 @@
 #include <sel4/types.h>
 #include <sel4utils/thread.h>
 #include <sel4utils/helpers.h>
+#include <utils/zf_log.h>
+#include <utils/stack.h>
 #include <stdbool.h>
 
 int
@@ -30,7 +32,17 @@ sel4utils_arch_init_context_with_args(sel4utils_thread_entry_fn entry_point,
                                       bool local_stack, void *stack_top, seL4_UserContext *context,
                                       vka_t *vka, vspace_t *local_vspace, vspace_t *remote_vspace)
 {
-    sel4utils_arch_init_context(entry_point, stack_top, context);
+
+    if (!IS_ALIGNED((uintptr_t)stack_top, STACK_CALL_ALIGNMENT_BITS)) {
+        ZF_LOGE("Initial stack pointer must be %d byte aligned", STACK_CALL_ALIGNMENT);
+        return -1;
+    }
+
+    /* align the stack pointer so that when we are in the function pointed to
+     * by entry_point, the stack pointer is aligned as if a return address had
+     * been pushed onto the stack, which is what the compiler assumes */
+    uintptr_t stack_top_after_call = (uintptr_t) stack_top - sizeof(uintptr_t);
+    sel4utils_arch_init_context(entry_point, (void*)stack_top_after_call, context);
     context->rdi = (seL4_Word) arg0;
     context->rsi = (seL4_Word) arg1;
     /* if we are setting args then we must not be spawning a process, therefore

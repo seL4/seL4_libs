@@ -26,6 +26,7 @@
 #include <sel4utils/util.h>
 #include <sel4utils/arch/util.h>
 #include <sel4utils/helpers.h>
+#include <utils/stack.h>
 
 static int
 write_ipc_buffer_user_data(vka_t *vka, vspace_t *vspace, seL4_CPtr ipc_buf, uintptr_t buf_loc)
@@ -122,9 +123,13 @@ sel4utils_start_thread(sel4utils_thread_t *thread, sel4utils_thread_entry_fn ent
     seL4_UserContext context = {0};
     size_t context_size = sizeof(seL4_UserContext) / sizeof(seL4_Word);
 
+    uintptr_t aligned_stack_pointer = ALIGN_DOWN((uintptr_t)thread->initial_stack_pointer,
+                                                 STACK_CALL_ALIGNMENT);
+
     int error = sel4utils_arch_init_local_context(entry_point, arg0, arg1,
                                               (void *) thread->ipc_buffer_addr,
-                                              thread->initial_stack_pointer, &context);
+                                              (void *) aligned_stack_pointer,
+                                              &context);
     if (error) {
         return error;
     }

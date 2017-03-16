@@ -141,8 +141,8 @@ int sel4utils_configure_thread_config(vka_t *vka, vspace_t *parent, vspace_t *al
  *
  * @return 0 on success, -1 on failure.
  */
-int sel4utils_start_thread(sel4utils_thread_t *thread, sel4utils_thread_entry_fn entry_point, void *arg0, void *arg1,
-                           int resume);
+int sel4utils_start_thread(sel4utils_thread_t *thread, sel4utils_thread_entry_fn entry_point,
+                           void *arg0, void *arg1, int resume);
 
 /**
  * Release any resources used by this thread. The thread data structure will not be usable

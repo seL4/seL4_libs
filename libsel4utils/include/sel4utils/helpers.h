@@ -46,14 +46,17 @@ int sel4utils_arch_init_context(void *entry_point, void *stack_top, seL4_UserCon
  *
  * @return 0 on success.
  */
-int sel4utils_arch_init_context_with_args(sel4utils_thread_entry_fn entry_point, void *arg0, void *arg1, void *arg2,
-                                bool local_stack, void *stack_top, seL4_UserContext *context,
-                                vka_t *vka, vspace_t *local_vspace, vspace_t *remote_vspace);
+int sel4utils_arch_init_context_with_args(sel4utils_thread_entry_fn entry_point,
+                                          void *arg0, void *arg1, void *arg2,
+                                          bool local_stack, void *stack_top, seL4_UserContext *context,
+                                          vka_t *vka, vspace_t *local_vspace, vspace_t *remote_vspace);
 
 /* convenient wrappers */
 static inline int
-sel4utils_arch_init_local_context(sel4utils_thread_entry_fn entry_point, void *arg0, void *arg1, void *arg2,
-                                 void *stack_top, seL4_UserContext *context) {
+sel4utils_arch_init_local_context(sel4utils_thread_entry_fn entry_point,
+                                  void *arg0, void *arg1, void *arg2,
+                                  void *stack_top, seL4_UserContext *context)
+{
     return sel4utils_arch_init_context_with_args(entry_point, arg0, arg1, arg2, true, stack_top, context, NULL, NULL, NULL);
 }
 

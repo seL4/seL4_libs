@@ -116,8 +116,8 @@ sel4utils_configure_thread_config(vka_t *vka, vspace_t *parent, vspace_t *alloc,
 }
 
 int
-sel4utils_start_thread(sel4utils_thread_t *thread, sel4utils_thread_entry_fn entry_point, void *arg0, void *arg1,
-                       int resume)
+sel4utils_start_thread(sel4utils_thread_t *thread, sel4utils_thread_entry_fn entry_point,
+                       void *arg0, void *arg1, int resume)
 {
     seL4_UserContext context = {0};
     size_t context_size = sizeof(seL4_UserContext) / sizeof(seL4_Word);

@@ -25,9 +25,10 @@ sel4utils_arch_init_context(void *entry_point, void *stack_top, seL4_UserContext
 }
 
 int
-sel4utils_arch_init_context_with_args(sel4utils_thread_entry_fn entry_point, void *arg0, void *arg1, void *arg2,
-                            bool local_stack, void *stack_top, seL4_UserContext *context,
-                            vka_t *vka, vspace_t *local_vspace, vspace_t *remote_vspace)
+sel4utils_arch_init_context_with_args(sel4utils_thread_entry_fn entry_point,
+                                      void *arg0, void *arg1, void *arg2,
+                                      bool local_stack, void *stack_top, seL4_UserContext *context,
+                                      vka_t *vka, vspace_t *local_vspace, vspace_t *remote_vspace)
 {
     sel4utils_arch_init_context(entry_point, stack_top, context);
     context->rdi = (seL4_Word) arg0;

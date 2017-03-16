@@ -121,7 +121,7 @@ serial_server_parent_spawn_thread(simple_t *parent_simple, vka_t *parent_vka,
     }
 
     error = sel4utils_start_thread(&get_serial_server()->server_thread,
-                                   &serial_server_main,
+                                   (sel4utils_thread_entry_fn)&serial_server_main,
                                    NULL, NULL, 1);
     if (error != 0) {
         ZF_LOGE(SERSERVP"spawn_thread: sel4utils_start_thread failed with "

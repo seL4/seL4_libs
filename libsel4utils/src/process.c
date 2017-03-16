@@ -242,7 +242,7 @@ sel4utils_spawn_process(sel4utils_process_t *process, vka_t *vka, vspace_t *vspa
     /* move the stack pointer down to a place we can write to.
      * to be compatible with as many architectures as possible
      * we need to ensure double word alignment */
-    initial_stack_pointer = ROUND_DOWN(initial_stack_pointer - sizeof(seL4_Word), sizeof(seL4_Word) * 2);
+    initial_stack_pointer = ALIGN_DOWN(initial_stack_pointer - sizeof(seL4_Word), STACK_CALL_ALIGNMENT);
 
     seL4_UserContext context = {0};
     size_t context_size = sizeof(seL4_UserContext) / sizeof(seL4_Word);

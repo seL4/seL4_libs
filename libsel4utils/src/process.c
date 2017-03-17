@@ -308,7 +308,7 @@ sel4utils_spawn_process_v(sel4utils_process_t *process, vka_t *vka, vspace_t *vs
                     sizeof(dest_argv) + /* args */
                     sizeof(dest_envp); /* env */
     uintptr_t hypothetical_stack_pointer = initial_stack_pointer - to_push;
-    uintptr_t rounded_stack_pointer = ROUND_DOWN(hypothetical_stack_pointer, sizeof(seL4_Word) * 2);
+    uintptr_t rounded_stack_pointer = ALIGN_DOWN(hypothetical_stack_pointer, STACK_CALL_ALIGNMENT);
     ptrdiff_t stack_rounding = hypothetical_stack_pointer - rounded_stack_pointer;
     initial_stack_pointer -= stack_rounding;
 

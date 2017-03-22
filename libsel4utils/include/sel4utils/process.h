@@ -80,8 +80,11 @@ enum sel4utils_cspace_layout {
     /* The slot for this processes reply object */
     SEL4UTILS_REPLY_SLOT = 6,
 
+    /* the slot for this processes sc */
+    SEL4UTILS_SCHED_CONTEXT_SLOT = 7,
+
     /* First free slot in the cspace configured by sel4utils */
-    SEL4UTILS_FIRST_FREE = 7
+    SEL4UTILS_FIRST_FREE = 8
 };
 
 typedef struct {

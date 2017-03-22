@@ -624,6 +624,10 @@ sel4utils_configure_process_custom(sel4utils_process_t *process, vka_t *vka,
         vka_cspace_make_path(vka, process->thread.reply.cptr, &src);
         slot = sel4utils_copy_cap_to_process(process, src);
         assert(slot == SEL4UTILS_REPLY_SLOT);
+
+        vka_cspace_make_path(vka, process->thread.sched_context.cptr, &src);
+        slot = sel4utils_copy_cap_to_process(process, src);
+        assert(slot == SEL4UTILS_SCHED_CONTEXT_SLOT);
     }
 
     if (error) {
@@ -711,6 +715,8 @@ sel4utils_process_init_cap(seL4_CPtr cap)
         return SEL4UTILS_PD_SLOT;
     case seL4_CapInitThreadASIDPool:
         return SEL4UTILS_ASID_POOL_SLOT;
+    case seL4_CapInitThreadSC:
+        return SEL4UTILS_SCHED_CONTEXT_SLOT;
     default:
         ZF_LOGE("sel4utils does not copy this cap (%zu) to new processes", cap);
         return seL4_CapNull;

@@ -42,17 +42,18 @@ sel4utils_arch_init_context_with_args(sel4utils_thread_entry_fn entry_point, voi
 
     /* arguments as they should appear on the stack */
     seL4_Word stack_args[] = {(seL4_Word) arg0, (seL4_Word) arg1, (seL4_Word) arg2};
+    if (stack_top) {
+        /* if we were to increase the stack pointer such that after the arguments are
+         * pushed, the stack pointer would be correctly aligned, we would add this
+         * value */
+        size_t up_padding = sizeof(stack_args) % STACK_CALL_ALIGNMENT;
 
-    /* if we were to increase the stack pointer such that after the arguments are
-     * pushed, the stack pointer would be correctly aligned, we would add this
-     * value */
-    size_t up_padding = sizeof(stack_args) % STACK_CALL_ALIGNMENT;
+        /* but we can't add to the stack pointer as we might run off the end of our stack,
+         * so we'll decrease it by this value */
+        size_t down_padding = (STACK_CALL_ALIGNMENT - up_padding) % STACK_CALL_ALIGNMENT;
 
-    /* but we can't add to the stack pointer as we might run off the end of our stack,
-     * so we'll decrease it by this value */
-    size_t down_padding = (STACK_CALL_ALIGNMENT - up_padding) % STACK_CALL_ALIGNMENT;
-
-    stack_top = (void *)((uintptr_t) stack_top - down_padding);
+        stack_top = (void *)((uintptr_t) stack_top - down_padding);
+    }
 
     if (local_stack && stack_top) {
         seL4_Word *stack_ptr = (seL4_Word *) stack_top;

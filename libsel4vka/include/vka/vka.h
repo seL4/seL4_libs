@@ -145,6 +145,11 @@ vka_cspace_alloc(vka_t *vka, seL4_CPtr *res)
         return -1;
     }
 
+    if (!vka->cspace_alloc) {
+        ZF_LOGE("Unimplemented");
+        return -1;
+    }
+
     return vka->cspace_alloc(vka->data, res);
 }
 
@@ -163,6 +168,11 @@ vka_cspace_make_path(vka_t *vka, seL4_CPtr slot, cspacepath_t *res)
         return;
     }
 
+    if (!vka->cspace_make_path) {
+        ZF_LOGE("Unimplmented");
+        return;
+    }
+
     vka->cspace_make_path(vka->data, slot, res);
 }
 
@@ -173,7 +183,7 @@ static inline int
 vka_cspace_alloc_path(vka_t *vka, cspacepath_t *res)
 {
     seL4_CPtr slot;
-    int error = vka->cspace_alloc(vka->data, &slot);
+    int error = vka_cspace_alloc(vka, &slot);
 
     if (error == seL4_NoError) {
         vka_cspace_make_path(vka, slot, res);
@@ -243,7 +253,7 @@ vka_utspace_alloc_maybe_device(vka_t *vka, const cspacepath_t *dest, seL4_Word t
         return -1;
     }
 
-    if (!vka->utspace_alloc) {
+    if (!vka->utspace_alloc_maybe_device) {
         ZF_LOGE("Not implemented");
         return -1;
     }

@@ -158,6 +158,9 @@ int allocman_add_simple_untypeds(allocman_t *alloc, simple_t *simple);
  */
 allocman_t *bootstrap_new_2level_simple(simple_t *simple, size_t l1size, size_t l2size, size_t pool_size, void *pool);
 
+/* As above, but 1 level */
+allocman_t *bootstrap_new_1level_simple(simple_t *simple, size_t l1size, size_t pool_size, void *pool);
+
 /**
  * Bootstraps into the current environment as defined by simple. This will continue
  * to use the cspace described by simple, as well as all the untypeds it knows about

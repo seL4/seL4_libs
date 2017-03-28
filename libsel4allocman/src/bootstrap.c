@@ -22,6 +22,7 @@
 #include <vka/capops.h>
 #include <vka/object.h>
 #include <sel4utils/mapping.h>
+#include <sel4utils/process.h>
 #include <simple/simple.h>
 #include <simple/simple_helpers.h>
 #include <utils/arith.h>
@@ -430,16 +431,18 @@ static int bootstrap_new_1level_cspace(bootstrap_info_t *bs, int size) {
         return error;
     }
     /* put a cap back to ourselves */
+    seL4_CPtr new_cnode = SEL4UTILS_CNODE_SLOT;
     error = seL4_CNode_Mint(
-        node.capPtr, 1, size,
+        node.capPtr, new_cnode, size,
         node.root, node.capPtr, node.capDepth,
         seL4_AllRights, seL4_CapData_Guard_new(0, seL4_WordBits - size));
     if (error != seL4_NoError) {
         return 1;
     }
     /* put our old cnode into a slot */
+    seL4_CPtr old_cnode_slot = BIT(size) - 1u;
     error = seL4_CNode_Copy(
-        node.capPtr, 2, size,
+        node.capPtr, old_cnode_slot, size,
         bs->boot_cnode.root, bs->boot_cnode.capPtr, bs->boot_cnode.capDepth,
         seL4_AllRights);
     if (error != seL4_NoError) {
@@ -458,11 +461,11 @@ static int bootstrap_new_1level_cspace(bootstrap_info_t *bs, int size) {
         return error;
     }
     error = cspace_single_level_create(bs->alloc, cspace, (struct cspace_single_level_config){
-        .cnode = 1,
+        .cnode = new_cnode,
         .cnode_size_bits = size,
         .cnode_guard_bits = seL4_WordBits - size,
-        .first_slot = 3,
-        .end_slot = BIT(size)});
+        .first_slot = new_cnode + 1u,
+        .end_slot = BIT(size) - 2u});
     if (error) {
         return error;
     }
@@ -471,21 +474,21 @@ static int bootstrap_new_1level_cspace(bootstrap_info_t *bs, int size) {
         return error;
     }
     /* construct path to our old cnode */
-    bs->old_cnode = allocman_cspace_make_path(bs->alloc, 2);
+    bs->old_cnode = allocman_cspace_make_path(bs->alloc, old_cnode_slot);
     /* update where our current booting cnode is */
-    bs->boot_cnode = allocman_cspace_make_path(bs->alloc, 1);
+    bs->boot_cnode = allocman_cspace_make_path(bs->alloc, new_cnode);
     /* any untypeds are no longer valid */
     bs->uts_in_current_cspace = 0;
     return 0;
 }
-int bootstrap_transfer_caps_simple(bootstrap_info_t *bs, simple_t *simple) {
+int bootstrap_transfer_caps_simple(bootstrap_info_t *bs, simple_t *simple, int levels) {
 
     int error;
     size_t i;
     size_t cap_count = simple_get_cap_count(simple);
     seL4_CPtr cnode = simple_get_cnode(simple);
 
-    for(i = 0; i < cap_count; i++) {
+    for(i = SEL4UTILS_CNODE_SLOT + 1u; i < cap_count; i++) {
         seL4_CPtr pos = simple_get_nth_cap(simple,i);
 
         /* Because we are going to switch root cnodes don't move the old cnode cap
@@ -493,9 +496,17 @@ int bootstrap_transfer_caps_simple(bootstrap_info_t *bs, simple_t *simple) {
          * Also don't move any untyped caps, the untyped allocator is looking
          * after those now.
          */
-        if(pos == cnode || simple_is_untyped_cap(simple, pos)) continue;
+        if (pos == cnode || simple_is_untyped_cap(simple, pos)) continue;
 
-        cspacepath_t slot = _cspace_two_level_make_path(bs->alloc->cspace.cspace, pos);
+        cspacepath_t slot;
+        if (levels == 1) {
+            slot = _cspace_single_level_make_path(bs->alloc->cspace.cspace, pos);
+        } else if (levels == 2) {
+            slot = _cspace_two_level_make_path(bs->alloc->cspace.cspace, pos);
+        } else {
+            ZF_LOGE("Too many cspace levels!\n");
+            return 1;
+        }
 
         if(pos == bs->tcb.capPtr || pos == bs->pd.capPtr) {
             error = seL4_CNode_Copy(slot.root, pos, slot.capDepth,
@@ -968,9 +979,13 @@ allocman_t *bootstrap_use_current_simple(simple_t *simple, size_t pool_size, voi
     return allocman;
 }
 
-allocman_t *bootstrap_new_2level_simple(simple_t *simple, size_t l1size, size_t l2size, size_t pool_size, void *pool) {
+static allocman_t *bootstrap_new_simple(simple_t *simple, int levels, size_t l1size, size_t l2size, size_t pool_size, void *pool) {
     allocman_t *alloc;
     int error;
+
+    assert(levels == 1 || levels == 2);
+    assert(l1size > 0);
+    assert(levels == 1 || l2size > 0);
 
     bootstrap_info_t *bootstrap = bootstrap_create_info(pool_size, pool);
     if (bootstrap == NULL) {
@@ -995,13 +1010,18 @@ allocman_t *bootstrap_new_2level_simple(simple_t *simple, size_t l1size, size_t 
     cspacepath_t tcb = _cspace_simple1level_make_path(&bootstrap->maybe_boot_cspace, simple_get_tcb(simple));
     cspacepath_t pd = _cspace_simple1level_make_path(&bootstrap->maybe_boot_cspace, simple_get_pd(simple));
 
-    alloc = _bootstrap_new_level2(bootstrap, l1size, l2size, tcb, pd, NULL);
+
+    if (levels == 1) {
+        alloc = _bootstrap_new_level1(bootstrap, l1size, tcb, pd, NULL);
+    } else {
+        alloc = _bootstrap_new_level2(bootstrap, l1size, l2size, tcb, pd, NULL);
+    }
     if (!alloc) {
         return NULL;
     }
 
     /* Take all the caps in the boot cnode and put in them in the same location in the new cspace */
-    error = bootstrap_transfer_caps_simple(bootstrap, simple);
+    error = bootstrap_transfer_caps_simple(bootstrap, simple, levels);
     if(error) {
         return NULL;
     }
@@ -1012,6 +1032,14 @@ allocman_t *bootstrap_new_2level_simple(simple_t *simple, size_t l1size, size_t 
     return alloc;
 }
 
+allocman_t *bootstrap_new_1level_simple(simple_t *simple, size_t l1size, size_t pool_size, void *pool) {
+    return bootstrap_new_simple(simple, 1, l1size, 0, pool_size, pool);
+}
+
+
+allocman_t *bootstrap_new_2level_simple(simple_t *simple, size_t l1size, size_t l2size, size_t pool_size, void *pool) {
+    return bootstrap_new_simple(simple, 2, l1size, l2size, pool_size, pool);
+}
 
 static int allocman_add_bootinfo_untypeds(allocman_t *alloc, seL4_BootInfo *bi) {
     seL4_CPtr i;

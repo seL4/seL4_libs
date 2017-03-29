@@ -13,6 +13,7 @@
 
 #include <stdint.h>
 #include <sel4bench/armv/events.h>
+#include <utils/util.h>
 
 typedef uint32_t sel4bench_counter_t;
 #define SEL4BENCH_COUNTER_FORMAT "u"
@@ -84,11 +85,11 @@ static inline void sel4bench_private_deinit(void* data) {
  *  bit  1 = write 1 to reset all counters to zero
  *  bit  0 = enable bit
  */
-#define SEL4BENCH_ARMV8A_PMCR_N(x)       (((x) & 0xFFFF) >> 11)
-#define SEL4BENCH_ARMV8A_PMCR_ENABLE     (1 << 0)
-#define SEL4BENCH_ARMV8A_PMCR_RESET_ALL  (1 << 1)
-#define SEL4BENCH_ARMV8A_PMCR_RESET_CCNT (1 << 2)
-#define SEL4BENCH_ARMV8A_PMCR_DIV64      (1 << 3) /* Should CCNT be divided by 64? */
+#define SEL4BENCH_ARMV8A_PMCR_N(x)       (((x) & 0xFFFF) >> 11u)
+#define SEL4BENCH_ARMV8A_PMCR_ENABLE     BIT(0)
+#define SEL4BENCH_ARMV8A_PMCR_RESET_ALL  BIT(1)
+#define SEL4BENCH_ARMV8A_PMCR_RESET_CCNT BIT(2)
+#define SEL4BENCH_ARMV8A_PMCR_DIV64      BIT(3) /* Should CCNT be divided by 64? */
 static FASTFN void sel4bench_private_write_pmcr(uint32_t val) {
 	asm volatile (
 		"mcr p15, 0, %0, c9, c12, 0\n"

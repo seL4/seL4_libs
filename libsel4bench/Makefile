@@ -14,9 +14,9 @@ TARGETS := libsel4bench.a
 # Source files required to build the target
 CFILES := \
 	$(patsubst $(SOURCE_DIR)/%,%,$(wildcard $(SOURCE_DIR)/src/*.c)) \
-	$(patsubst $(SOURCE_DIR)/%,%,$(wildcard $(SOURCE_DIR)/src/arch-$(ARCH)/*.c)) \
-	$(patsubst $(SOURCE_DIR)/%,%,$(wildcard $(SOURCE_DIR)/src/arch-$(ARCH)/armv/$(ARMV)/*.c)) \
-	$(patsubst $(SOURCE_DIR)/%,%,$(wildcard $(SOURCE_DIR)/src/arch-$(ARCH)/cpu/$(CPU)/*.c))
+	$(patsubst $(SOURCE_DIR)/%,%,$(wildcard $(SOURCE_DIR)/src/$(ARCH)/*.c)) \
+	$(patsubst $(SOURCE_DIR)/%,%,$(wildcard $(SOURCE_DIR)/src/$(ARCH)/armv/$(ARMV)/*.c)) \
+	$(patsubst $(SOURCE_DIR)/%,%,$(wildcard $(SOURCE_DIR)/src/$(ARCH)/cpu/$(CPU)/*.c))
 
 # Header files/directories this library provides
 # Note: sel4_client.h may not have been built at the time this is evaluated.

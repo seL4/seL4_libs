@@ -1,5 +1,5 @@
 /*
- *  Copyright 2016, Data61
+ *  Copyright 2017, Data61
  *  Commonwealth Scientific and Industrial Research Organisation (CSIRO)
  *  ABN 41 687 119 230.
  *
@@ -9,7 +9,6 @@
  *
  * @TAG(D61_BSD)
  */
-
 #include <autoconf.h>
 
 #define SEL4BENCH_ARMV8A_EVENT_SOFTWARE_INCREMENT          0x00
@@ -73,6 +72,4 @@
 #define SEL4BENCH_ARMV8A_EVENT_L2D_TLB                     0x2F
 #define SEL4BENCH_ARMV8A_EVENT_L2I_TLB                     0x30
 
-#ifdef CONFIG_ARM_CORTEX_A53
-#include "sel4bench_events_cortexa53.h"
-#endif /* CONFIG_ARM_CORTEX_A53 */
+#include <sel4bench/cpu/events.h>

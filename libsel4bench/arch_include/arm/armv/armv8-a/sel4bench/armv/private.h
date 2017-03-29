@@ -1,5 +1,5 @@
 /*
- *  Copyright 2016, Data61
+ *  Copyright 2017, Data61
  *  Commonwealth Scientific and Industrial Research Organisation (CSIRO)
  *  ABN 41 687 119 230.
  *
@@ -9,16 +9,14 @@
  *
  * @TAG(D61_BSD)
  */
-
 #ifndef __SEL4BENCH_PRIVATE_H__
 #define __SEL4BENCH_PRIVATE_H__
 
 #include <stdint.h>
+#include <sel4bench/armv/events.h>
 
 typedef uint32_t sel4bench_counter_t;
 #define SEL4BENCH_COUNTER_FORMAT "u"
-
-#include "sel4bench_events_armv8a.h"
 
 //function attributes
 //functions that need to be inlined for speed

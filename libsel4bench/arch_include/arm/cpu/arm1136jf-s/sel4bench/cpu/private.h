@@ -1,18 +1,19 @@
 /*
- * Copyright 2014, NICTA
+ *  Copyright 2017, Data61
+ *  Commonwealth Scientific and Industrial Research Organisation (CSIRO)
+ *  ABN 41 687 119 230.
  *
  * This software may be distributed and modified according to the terms of
  * the BSD 2-Clause license. Note that NO WARRANTY is provided.
  * See "LICENSE_BSD2.txt" for details.
  *
- * @TAG(NICTA_BSD)
+ * @TAG(D61_BSD)
  */
-
 #ifndef __SEL4BENCH_PRIVATE_H__
 #define __SEL4BENCH_PRIVATE_H__
 
 #include <stdint.h>
-#include "sel4bench_events_arm1136.h"
+#include <sel4bench/cpu/events.h>
 
 //function attributes
 //functions that need to be forced inline

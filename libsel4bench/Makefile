@@ -24,6 +24,7 @@ HDRFILES := \
 	$(wildcard $(SOURCE_DIR)/include/*) \
 	$(wildcard $(SOURCE_DIR)/arch_include/$(ARCH)/*) \
 	$(wildcard $(SOURCE_DIR)/arch_include/$(ARCH)/armv/$(ARMV)/*) \
+	$(wildcard $(SOURCE_DIR)/arch_include/$(ARCH)/cpu/$(CPU)/*) \
 
 # Extra include directory for magpie to find type.h and sel4arch.idl4
 INCLUDE_DIRS := include arch_include/$(ARCH)

@@ -1,5 +1,5 @@
 /*
- *  Copyright 2016, Data61
+ *  Copyright 2017, Data61
  *  Commonwealth Scientific and Industrial Research Organisation (CSIRO)
  *  ABN 41 687 119 230.
  *
@@ -9,7 +9,6 @@
  *
  * @TAG(D61_BSD)
  */
-
 #define SEL4BENCH_CORTEXA53_EVENT_BUS_ACCESS_LD         0x60
 #define SEL4BENCH_CORTEXA53_EVENT_BUS_ACCESS_ST         0x61
 #define SEL4BENCH_CORTEXA53_EVENT_BR_INDIRECT_SPEC      0x7A

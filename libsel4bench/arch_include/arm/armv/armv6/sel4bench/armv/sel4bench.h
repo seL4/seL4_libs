@@ -9,8 +9,7 @@
  *
  * @TAG(D61_BSD)
  */
-#ifndef __ARCH_ARMV_SEL4BENCH_H
-#define __ARCH_ARMV_SEL4BENCH_H
+#pragma once
 
 #include <sel4bench/cpu/sel4bench.h>
 
@@ -24,5 +23,3 @@
         : \
         : "r8", "lr"); \
 } while(0)
-
-#endif /* __ARCH_ARMV_SEL4BENCH_H */

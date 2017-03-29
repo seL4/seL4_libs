@@ -9,8 +9,7 @@
  *
  * @TAG(D61_BSD)
  */
-#ifndef __ARCH_ARMV7A_SEL4BENCH_H__
-#define __ARCH_ARMV7A_SEL4BENCH_H__
+#pragma once
 
 #include <sel4bench/armv/private.h>
 #include <sel4/sel4.h>
@@ -190,6 +189,3 @@ static FASTFN void sel4bench_reset_counters(seL4_Word counters) {
 		sel4bench_private_write_cntens(enable_word); //start the counters again
 	}
 }
-
-#endif /* __ARCH_ARMV7A_SEL4BENCH_H__ */
-

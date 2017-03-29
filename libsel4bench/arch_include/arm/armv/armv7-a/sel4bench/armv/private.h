@@ -9,8 +9,7 @@
  *
  * @TAG(D61_BSD)
  */
-#ifndef __SEL4BENCH_PRIVATE_H__
-#define __SEL4BENCH_PRIVATE_H__
+#pragma once
 
 #include <stdint.h>
 #include <sel4bench/armv/events.h>
@@ -195,5 +194,3 @@ static FASTFN void sel4bench_private_write_evtsel(uint32_t val) {
 		: "r"(val)
 	);
 }
-
-#endif /* __SEL4BENCH_PRIVATE_H__ */

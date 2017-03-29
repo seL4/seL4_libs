@@ -9,6 +9,8 @@
  *
  * @TAG(D61_BSD)
  */
+#pragma once
+
 #include <autoconf.h>
 
 #define SEL4BENCH_ARMV8A_EVENT_SOFTWARE_INCREMENT          0x00

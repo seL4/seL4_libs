@@ -9,13 +9,9 @@
  *
  * @TAG(D61_BSD)
  */
-#ifndef __ARCH_SEL4BENCH_H__
-#define __ARCH_SEL4BENCH_H__
+#pragma once
 
 #include <sel4bench/armv/sel4bench.h>
 
 typedef uint32_t ccnt_t;
 #define CCNT_FORMAT "%u"
-
-#endif /* __ARCH_SEL4BENCH_H__ */
-

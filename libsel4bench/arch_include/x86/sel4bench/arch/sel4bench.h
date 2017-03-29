@@ -7,9 +7,7 @@
  *
  * @TAG(NICTA_BSD)
  */
-
-#ifndef __ARCH_SEL4BENCH_H__
-#define __ARCH_SEL4BENCH_H__
+#pragma once
 
 #include <assert.h>
 #include <stdio.h>
@@ -336,5 +334,3 @@ static FASTFN void sel4bench_reset_counters(seL4_Word counters) {
 		if(counter & 1)
 			seL4_DebugRun(&sel4bench_private_wrmsr, msr_data);
 }
-
-#endif /* __ARCH_SEL4BENCH_H__ */

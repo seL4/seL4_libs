@@ -9,9 +9,7 @@
  *
  * @TAG(D61_BSD)
  */
-
-#ifndef __SEL4BENCH_H__
-#define __SEL4BENCH_H__
+#pragma once
 
 #include <stddef.h>
 #include <stdint.h>
@@ -158,10 +156,7 @@ SEL4BENCH_API void sel4bench_stop_counters(seL4_Word counters);
  * Reset a set of performance counters to zero. The argument is a
  * bitfield detailing that set. (Note that this means the library supports a
  * number of counters less than or equal to the machine word size in bits.)
- * 
+ *
  * @param counters A bitfield indicating which counter(s) to reset.
  */
 SEL4BENCH_API void sel4bench_reset_counters(seL4_Word counters);
-
-#endif /* __SEL4BENCH_H__ */
-

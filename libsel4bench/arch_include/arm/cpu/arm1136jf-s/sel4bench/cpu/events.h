@@ -9,6 +9,7 @@
  *
  * @TAG(D61_BSD)
  */
+#pragma once
 //event definitions
 #define SEL4BENCH_ARM1136_EVENT_CACHE_L1I_MISS          0x00
 #define SEL4BENCH_ARM1136_EVENT_STALL_INSTRUCTION       0x01

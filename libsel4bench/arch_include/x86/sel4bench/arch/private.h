@@ -7,9 +7,7 @@
  *
  * @TAG(NICTA_BSD)
  */
-
-#ifndef __SEL4BENCH_PRIVATE_H__
-#define __SEL4BENCH_PRIVATE_H__
+#pragma once
 
 #include <autoconf.h>
 #include <stdint.h>
@@ -383,5 +381,3 @@ static FASTFN seL4_Word sel4bench_private_lookup_event(seL4_Word event) {
 		return event;
 	}
 }
-
-#endif /* __SEL4BENCH_PRIVATE_H__ */

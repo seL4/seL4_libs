@@ -9,6 +9,7 @@
  *
  * @TAG(D61_BSD)
  */
+#pragma once
 /*
  * event definitions
  * events specific to the Cortex-A15

@@ -8,6 +8,7 @@
  * @TAG(NICTA_BSD)
  */
 
+#pragma once
 //PMC event definitions
 /* Note: there are lots of these. Only seemingly interesting ones -- that is,
  * either core sel4bench events, or ones closely related -- are included here.

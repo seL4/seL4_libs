@@ -12,7 +12,7 @@
 
 //event definitions
 //events common to all ARMV7A CPUs
-
+#pragma once
 #include <autoconf.h>
 
 #define SEL4BENCH_ARMV7A_EVENT_SOFTWARE_INCREMENT          0x00

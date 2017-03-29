@@ -9,6 +9,7 @@
  *
  * @TAG(D61_BSD)
  */
+#pragma once
 //event definitions
 //events specific to the Cortex-A8
 #define SEL4BENCH_CORTEXA8_EVENT_WRITE_BUFFER_DRAIN       0x40

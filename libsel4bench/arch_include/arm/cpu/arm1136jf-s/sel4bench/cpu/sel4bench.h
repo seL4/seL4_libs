@@ -9,8 +9,7 @@
  *
  * @TAG(D61_BSD)
  */
-#ifndef __ARCH_ARM1136_SEL4BENCH_H__
-#define __ARCH_ARM1136_SEL4BENCH_H__
+#pragma once
 
 #include <sel4bench/cpu/private.h>
 #include <assert.h>
@@ -259,6 +258,3 @@ static FASTFN void sel4bench_start_counters(seL4_Word counters) {
 	 */
 	sel4bench_reset_counters(counters);
 }
-
-#endif /* __ARCH_ARM1136_SEL4BENCH_H__ */
-

@@ -221,7 +221,7 @@ int
 sel4utils_spawn_process(sel4utils_process_t *process, vka_t *vka, vspace_t *vspace, int argc,
                         char *argv[], int resume)
 {
-    uintptr_t initial_stack_pointer = (uintptr_t)process->thread.initial_stack_pointer - 4;
+    uintptr_t initial_stack_pointer = (uintptr_t)process->thread.stack_top - sizeof(seL4_Word);
     uintptr_t new_process_argv = 0;
     int error;
     /* write all the strings into the stack */
@@ -284,7 +284,7 @@ sel4utils_spawn_process_v(sel4utils_process_t *process, vka_t *vka, vspace_t *vs
 
     seL4_UserContext context = {0};
 
-    uintptr_t initial_stack_pointer = (uintptr_t) process->thread.initial_stack_pointer - sizeof(seL4_Word);
+    uintptr_t initial_stack_pointer = (uintptr_t) process->thread.stack_top - sizeof(seL4_Word);
     uintptr_t dest_argv[argc];
     uintptr_t dest_envp[envc];
     

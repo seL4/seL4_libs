@@ -52,7 +52,7 @@
  */
 //#define SEL4BENCH_STRICT_PMC_SERIALIZATION
 
-#include "sel4bench_private.h"
+#include <sel4bench/arch/private.h>
 
 #define CCNT_FORMAT "%"PRIu64
 typedef uint64_t ccnt_t;

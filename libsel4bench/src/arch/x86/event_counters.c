@@ -11,7 +11,7 @@
 #include <sel4bench/sel4bench.h>
 #include <utils/util.h>
 
-#include "../event_counters.h"
+#include "../../event_counters.h"
 
 const char*
 sel4bench_arch_get_counter_description(seL4_Word counter)

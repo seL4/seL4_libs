@@ -159,7 +159,7 @@ static FASTFN uint64_t sel4bench_private_rdpmc(uint32_t counter) {
 #ifdef SEL4BENCH_STRICT_PMC_SERIALIZATION
 #define sel4bench_private_serialize_pmc sel4bench_private_cpuid_serial
 #else //SEL4BENCH_STRICT_PMC_SERIALIZATION
-#define sel4bench_private_serialize_pmc sel4bench_private_lfence 
+#define sel4bench_private_serialize_pmc sel4bench_private_lfence
 #endif //SEL4BENCH_STRICT_PMC_SERIALIZATION
 
 //enable user-level pmc access
@@ -300,7 +300,7 @@ static seL4_Word SEL4BENCH_IA32_SKYLAKE_EVENTS[5] = {
 };
 
 static FASTFN seL4_Word sel4bench_private_lookup_event(seL4_Word event) {
-	if((SEL4BENCH_IA32_EVENT_GENERIC_MASK & event) == SEL4BENCH_IA32_EVENT_GENERIC_MASK) {
+	if((SEL4BENCH_EVENT_GENERIC_MASK & event) == SEL4BENCH_EVENT_GENERIC_MASK) {
 		uint32_t dummy = 0;
 		ia32_cpuid_model_info_t model_info = { .raw = 0 };
 		sel4bench_private_cpuid(IA32_CPUID_LEAF_MODEL, 0, &model_info.raw, &dummy, &dummy, &dummy);
@@ -309,7 +309,7 @@ static FASTFN seL4_Word sel4bench_private_lookup_event(seL4_Word event) {
 		assert(FAMILY(model_info) == IA32_CPUID_FAMILY_P6);
 
 		uint8_t model = MODEL(model_info);
-		event = event & ~SEL4BENCH_IA32_EVENT_GENERIC_MASK;
+		event = event & ~SEL4BENCH_EVENT_GENERIC_MASK;
 
 		//Using the model summary on http://www.sandpile.org/x86/cpuid.htm#level_0000_0001h
 		//Let's hope it's accurate...

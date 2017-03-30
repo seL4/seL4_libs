@@ -36,14 +36,6 @@
     (var) = (((uint64_t)high) << 32ull) | ((uint64_t)low); \
 } while(0)
 
-//standard libsel4bench events
-#define SEL4BENCH_EVENT_CACHE_L1I_MISS    SEL4BENCH_IA32_EVENT_CACHE_L1I_MISS
-#define SEL4BENCH_EVENT_CACHE_L1D_MISS    SEL4BENCH_IA32_EVENT_CACHE_L1D_MISS
-#define SEL4BENCH_EVENT_TLB_L1I_MISS      SEL4BENCH_IA32_EVENT_TLB_L1I_MISS
-#define SEL4BENCH_EVENT_TLB_L1D_MISS      SEL4BENCH_IA32_EVENT_TLB_L1D_MISS
-#define SEL4BENCH_EVENT_MEMORY_ACCESS     SEL4BENCH_IA32_EVENT_MEMORY_ACCESS
-#define SEL4BENCH_EVENT_BRANCH_MISPREDICT SEL4BENCH_IA32_EVENT_BRANCH_MISPREDICT
-
 /* Intel docs are somewhat unclear as to exactly how to serialize PMCs.
  * Using LFENCE for the moment, because it's much faster. If event counts
  * turn out to be unreliable, switch to CPUID by uncommenting this line.

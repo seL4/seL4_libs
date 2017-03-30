@@ -21,16 +21,6 @@
     ); \
 } while(0)
 
-//expose common event definitions
-#define SEL4BENCH_EVENT_CACHE_L1I_MISS      SEL4BENCH_ARMV7A_EVENT_CACHE_L1I_MISS
-#define SEL4BENCH_EVENT_CACHE_L1D_MISS      SEL4BENCH_ARMV7A_EVENT_CACHE_L1D_MISS
-#define SEL4BENCH_EVENT_TLB_L1I_MISS        SEL4BENCH_ARMV7A_EVENT_TLB_L1I_MISS
-#define SEL4BENCH_EVENT_TLB_L1D_MISS        SEL4BENCH_ARMV7A_EVENT_TLB_L1D_MISS
-#define SEL4BENCH_EVENT_MEMORY_ACCESS       SEL4BENCH_ARMV7A_EVENT_MEMORY_ACCESS
-#define SEL4BENCH_EVENT_EXECUTE_INSTRUCTION SEL4BENCH_ARMV7A_EVENT_EXECUTE_INSTRUCTION
-#define SEL4BENCH_EVENT_BRANCH_MISPREDICT   SEL4BENCH_ARMV7A_EVENT_BRANCH_MISPREDICT
-
-
 //utility macros
 #define MODIFY_PMCR(op, val) sel4bench_private_write_pmcr(sel4bench_private_read_pmcr() op (val))
 
@@ -83,7 +73,7 @@ static FASTFN void sel4bench_destroy() {
 
 static FASTFN seL4_Word sel4bench_get_num_counters() {
 #ifdef CORTEX_A8
-	return 4;
+    return 4;
 #else //CORTEX_A8
 	return SEL4BENCH_ARMV7A_PMCR_N(sel4bench_private_read_pmcr());
 #endif //CORTEX_A8

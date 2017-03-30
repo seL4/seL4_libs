@@ -12,8 +12,6 @@
 
 #include "../../event_counters.h"
 
-#define NAME_EVENT(id, name) EVENT_COUNTER_FORMAT(SEL4BENCH_ARMV7A_EVENT_##id, name)
-
 const char* const sel4bench_arch_event_counter_data[] = {
     NAME_EVENT(SOFTWARE_INCREMENT        , "Instruction architecturally executed, condition code check pass, software increment"),
     NAME_EVENT(CACHE_L1I_MISS            , "Level 1 instruction cache refill"),

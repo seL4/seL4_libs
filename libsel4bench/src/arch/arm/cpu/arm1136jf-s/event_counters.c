@@ -12,8 +12,6 @@
 
 #include "../../event_counters.h"
 
-#define NAME_EVENT(id, name) EVENT_COUNTER_FORMAT(SEL4BENCH_ARM1136_EVENT_##id, name)
-
 const char* const sel4bench_arch_event_counter_data[] = {
     NAME_EVENT(CACHE_L1I_MISS        , "CACHE_L1I_MISS"),
     NAME_EVENT(STALL_INSTRUCTION     , "STALL_INSTRUCTION"),

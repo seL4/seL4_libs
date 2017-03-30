@@ -11,6 +11,7 @@
 
 #include <sel4/types.h>
 
-const char* sel4bench_arch_get_counter_description(seL4_Word counter);
+#define NAME_EVENT(id, name) EVENT_COUNTER_FORMAT(SEL4BENCH_EVENT_##id, name)
+
 const char* sel4bench_arch_get_counter_description(counter_t counter);
 

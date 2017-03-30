@@ -10,8 +10,6 @@
 
 #include "../../event_counters.h"
 
-#define NAME_EVENT(id, name) EVENT_COUNTER_FORMAT(SEL4BENCH_CORTEXA9_EVENT_##id, name)
-
 const char* const sel4bench_cpu_event_counter_data[] = {
     NAME_EVENT(JAVA_BYTECODE_EXECUTE   , "Java bytecode executed"),
     NAME_EVENT(SW_JAVA_BYTECODE_EXECUTE, "Software Java bytecode executed"),

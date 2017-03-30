@@ -10,8 +10,6 @@
 
 #include "../../event_counters.h"
 
-#define NAME_EVENT(id, name) EVENT_COUNTER_FORMAT(SEL4BENCH_CORTEXA53_EVENT_##id, name)
-
 const char* const sel4bench_cpu_event_counter_data[] = {
     NAME_EVENT(BUS_ACCESS_LD        , "Bus access, read"),
     NAME_EVENT(BUS_ACCESS_ST        , "Bus access, write"),

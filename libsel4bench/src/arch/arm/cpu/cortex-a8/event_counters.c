@@ -10,8 +10,6 @@
 
 #include "../../event_counters.h"
 
-#define NAME_EVENT(id, name) EVENT_COUNTER_FORMAT(SEL4BENCH_CORTEXA8_EVENT_##id, name)
-
 const char* const sel4bench_cpu_event_counter_data[] = {
     NAME_EVENT(WRITE_BUFFER_DRAIN      , "WRITE_BUFFER_DRAIN"),
     NAME_EVENT(CACHE_L2_WRITE          , "CACHE_L2_WRITE"),

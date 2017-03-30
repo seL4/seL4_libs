@@ -10,8 +10,6 @@
 
 #include "../../event_counters.h"
 
-#define NAME_EVENT(id, name) EVENT_COUNTER_FORMAT(SEL4BENCH_CORTEXA15_EVENT_##id, name)
-
 const char* const sel4bench_cpu_event_counter_data[] = {
     NAME_EVENT(L1D_CACHE_LD         , "Level 1 data cache access, read"),
     NAME_EVENT(L1D_CACHE_ST         , "Level 1 data cache access, write"),

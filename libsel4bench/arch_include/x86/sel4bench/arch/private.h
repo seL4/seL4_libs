@@ -13,9 +13,6 @@
 #include <stdint.h>
 #include <utils/util.h>
 
-typedef uint64_t sel4bench_counter_t;
-#define SEL4BENCH_COUNTER_FORMAT "llu"
-
 //function attributes
 //ultra-short, time-sensitive functions
 #define FASTFN inline __attribute__((always_inline))

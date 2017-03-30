@@ -15,9 +15,6 @@
 #include <sel4bench/armv/events.h>
 #include <utils/util.h>
 
-typedef uint32_t sel4bench_counter_t;
-#define SEL4BENCH_COUNTER_FORMAT "u"
-
 //function attributes
 //functions that need to be inlined for speed
 #define FASTFN inline __attribute__((always_inline))

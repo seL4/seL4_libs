@@ -76,7 +76,7 @@ static FASTFN seL4_Word sel4bench_get_num_counters() {
 	return SEL4BENCH_ARMV8A_PMCR_N(sel4bench_private_read_pmcr());
 }
 
-static FASTFN sel4bench_counter_t sel4bench_get_cycle_count() {
+static FASTFN ccnt_t sel4bench_get_cycle_count() {
     uint32_t val;
 	uint32_t enable_word = sel4bench_private_read_cntens(); //store running state
 
@@ -91,7 +91,7 @@ static FASTFN sel4bench_counter_t sel4bench_get_cycle_count() {
  * think it's worthwhile in the general case, for performance reasons.
  * moreover, it's small enough that it'll be suitably aligned most of the time
  */
-static FASTFN sel4bench_counter_t sel4bench_get_counter(counter_t counter) {
+static FASTFN ccnt_t sel4bench_get_counter(counter_t counter) {
 	sel4bench_private_write_pmnxsel(counter); //select the counter on the PMU
 
 	counter = BIT(counter); //from here on in, we operate on a bitfield
@@ -111,7 +111,7 @@ static FASTFN sel4bench_counter_t sel4bench_get_counter(counter_t counter) {
  * line in size) however, the pointer dereference is overwhelmingly likely to
  * produce a dcache miss, which will occur with the counters off
  */
-static CACHESENSFN sel4bench_counter_t sel4bench_get_counters(counter_bitfield_t counters, sel4bench_counter_t* values) {
+static CACHESENSFN ccnt_t sel4bench_get_counters(counter_bitfield_t counters, ccnt_t* values) {
 	//we don't really have time for a NULL or bounds check here
 
 	uint32_t enable_word = sel4bench_private_read_cntens(); //store current running state

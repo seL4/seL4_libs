@@ -11,7 +11,9 @@
  */
 #pragma once
 
-#include <sel4bench/armv/sel4bench.h>
+#include <stdint.h>
 
 typedef uint32_t ccnt_t;
 #define CCNT_FORMAT "%u"
+
+#include <sel4bench/armv/sel4bench.h>

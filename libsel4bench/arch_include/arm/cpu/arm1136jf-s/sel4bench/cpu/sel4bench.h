@@ -16,9 +16,6 @@
 #include <assert.h>
 #include <sel4/sel4.h>
 
-typedef uint32_t sel4bench_counter_t;
-#define SEL4BENCH_COUNTER_FORMAT "u"
-
 //begin system-mode stubs for sel4bench_* api functions
 static KERNELFN void sel4bench_private_init(void* data) {
 	sel4bench_arm1136_pmnc_t init_pmnc = {
@@ -127,7 +124,7 @@ static KERNELFN void sel4bench_private_get_counters(void* data) {
 
 	uint32_t* args = (uint32_t*)data;
 	uint32_t counters = args[0];
-	sel4bench_counter_t* values = (sel4bench_counter_t*)args[1];
+	ccnt_t* values = (ccnt_t*)args[1];
 
 
 	//read value of specified counters
@@ -198,13 +195,13 @@ static FASTFN seL4_Word sel4bench_get_num_counters() {
 	return SEL4BENCH_ARM1136_NUM_COUNTERS;
 }
 
-static FASTFN sel4bench_counter_t sel4bench_get_cycle_count() {
+static FASTFN ccnt_t sel4bench_get_cycle_count() {
 	uint32_t val = 0;
 	seL4_DebugRun(&sel4bench_private_get_cycle_count, &val);
 	return val;
 }
 
-static FASTFN sel4bench_counter_t sel4bench_get_counter(counter_t counter) {
+static FASTFN ccnt_t sel4bench_get_counter(counter_t counter) {
 	assert(counter < sel4bench_get_num_counters()); //range check
 
 	uint32_t val = counter;
@@ -212,7 +209,7 @@ static FASTFN sel4bench_counter_t sel4bench_get_counter(counter_t counter) {
 	return val;
 }
 
-static FASTFN sel4bench_counter_t sel4bench_get_counters(counter_bitfield_t counters, sel4bench_counter_t* values) {
+static FASTFN ccnt_t sel4bench_get_counters(counter_bitfield_t counters, ccnt_t* values) {
 	assert(counters & (sel4bench_get_num_counters() - 1)); //there are only two counters, so there should be no other 1 bits
 	assert(values);                                        //NULL guard -- because otherwise we'll get a kernel fault
 

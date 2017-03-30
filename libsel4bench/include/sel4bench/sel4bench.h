@@ -81,7 +81,7 @@ static UNUSED void sel4bench_destroy();
  * @return The current cycle count. This might be since _init(), if the cycle
  *         counter needs explicit starting, or since bootup, if it freewheels.
  */
-static UNUSED sel4bench_counter_t sel4bench_get_cycle_count();
+static UNUSED ccnt_t sel4bench_get_cycle_count();
 
 /**
  * Query how many performance counters are supported on this CPU, excluding the
@@ -101,24 +101,24 @@ const char* sel4bench_get_counter_description(counter_t counter);
 
 /**
  * Query the value of a counter.
- * 
+ *
  * @param counter The counter to query.
  * @return The value of the counter.
  */
-static UNUSED sel4bench_counter_t sel4bench_get_counter(counter_t counter);
+static UNUSED ccnt_t sel4bench_get_counter(counter_t counter);
 
 /**
  * Query the value of a set of counters.
- * 
+ *
  * @param counters A bitfield indicating which counter(s) to query.
- * @param values   An array of sel4bench_counter_t, of length equal to the
+ * @param values   An array of ccnt_t, of length equal to the
  *                 highest counter index to be read (to a maximum of
  *                 sel4bench_get_num_counters()). Each counter to be read
  *                 will be written to its corresponding index in this array.
  * @return The current cycle count, as sel4bench_get_cycle_count()
  */
-static UNUSED sel4bench_counter_t sel4bench_get_counters(counter_bitfield_t counters,
-                                                         sel4bench_counter_t* values);
+static UNUSED ccnt_t sel4bench_get_counters(counter_bitfield_t counters,
+                                                         ccnt_t* values);
 
 /**
  * Assign a counter to track a specific event. Events are processor-specific,

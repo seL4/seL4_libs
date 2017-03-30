@@ -88,7 +88,7 @@ static FASTFN void sel4bench_init() {
 	seL4_DebugRun(&sel4bench_private_enable_user_pmc, NULL);
 }
 
-static FASTFN sel4bench_counter_t sel4bench_get_cycle_count() {
+static FASTFN ccnt_t sel4bench_get_cycle_count() {
 	sel4bench_private_serialize_pmc(); /* Serialise all preceding instructions */
 	uint64_t time = sel4bench_private_rdtsc();
 	sel4bench_private_serialize_pmc(); /* Serialise all following instructions */
@@ -118,7 +118,7 @@ static FASTFN seL4_Word sel4bench_get_num_counters() {
 	}
 }
 
-static FASTFN sel4bench_counter_t sel4bench_get_counter(counter_t counter) {
+static FASTFN ccnt_t sel4bench_get_counter(counter_t counter) {
 	sel4bench_private_serialize_pmc();    /* Serialise all preceding instructions */
 	uint64_t counter_val = sel4bench_private_rdpmc(counter);
 	sel4bench_private_serialize_pmc();    /* Serialise all following instructions */
@@ -126,7 +126,7 @@ static FASTFN sel4bench_counter_t sel4bench_get_counter(counter_t counter) {
 	return counter_val;
 }
 
-static CACHESENSFN sel4bench_counter_t sel4bench_get_counters(counter_bitfield_t counters, sel4bench_counter_t* values) {
+static CACHESENSFN ccnt_t sel4bench_get_counters(counter_bitfield_t counters, ccnt_t* values) {
 	unsigned char counter = 0;
 
 	sel4bench_private_serialize_pmc();    /* Serialise all preceding instructions */

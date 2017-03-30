@@ -17,8 +17,7 @@
 #include <sel4/sel4.h>
 #include <sel4bench/types.h>
 #include <sel4bench/arch/sel4bench.h>
-
-#define SEL4BENCH_API static __attribute__((unused))
+#include <utils/attribute.h>
 
 /**
  * @file
@@ -67,13 +66,13 @@ static UNUSED event_id_t GENERIC_EVENTS[] = {
  * Starts the cycle counter, which is guaranteed to run until _destroy() is
  * called.
  */
-SEL4BENCH_API void sel4bench_init();
+static UNUSED void sel4bench_init();
 
 /**
  * Tear down the sel4bench library. Nothing else is guaranteed to work, and may
  * produce strange failures, after you do this.
  */
-SEL4BENCH_API void sel4bench_destroy();
+static UNUSED void sel4bench_destroy();
 
 /**
  * Query the cycle counter. If said counter needs starting, _init() will have
@@ -82,7 +81,7 @@ SEL4BENCH_API void sel4bench_destroy();
  * @return The current cycle count. This might be since _init(), if the cycle
  *         counter needs explicit starting, or since bootup, if it freewheels.
  */
-SEL4BENCH_API sel4bench_counter_t sel4bench_get_cycle_count();
+static UNUSED sel4bench_counter_t sel4bench_get_cycle_count();
 
 /**
  * Query how many performance counters are supported on this CPU, excluding the
@@ -90,7 +89,7 @@ SEL4BENCH_API sel4bench_counter_t sel4bench_get_cycle_count();
  * 
  * @return Processor's available counters.
  */
-SEL4BENCH_API seL4_Word sel4bench_get_num_counters();
+static UNUSED seL4_Word sel4bench_get_num_counters();
 
 /**
  * Query the description of a counter
@@ -106,7 +105,7 @@ const char* sel4bench_get_counter_description(counter_t counter);
  * @param counter The counter to query.
  * @return The value of the counter.
  */
-SEL4BENCH_API sel4bench_counter_t sel4bench_get_counter(counter_t counter);
+static UNUSED sel4bench_counter_t sel4bench_get_counter(counter_t counter);
 
 /**
  * Query the value of a set of counters.
@@ -118,7 +117,7 @@ SEL4BENCH_API sel4bench_counter_t sel4bench_get_counter(counter_t counter);
  *                 will be written to its corresponding index in this array.
  * @return The current cycle count, as sel4bench_get_cycle_count()
  */
-SEL4BENCH_API sel4bench_counter_t sel4bench_get_counters(counter_bitfield_t counters,
+static UNUSED sel4bench_counter_t sel4bench_get_counters(counter_bitfield_t counters,
                                                          sel4bench_counter_t* values);
 
 /**
@@ -128,7 +127,7 @@ SEL4BENCH_API sel4bench_counter_t sel4bench_get_counters(counter_bitfield_t coun
  * @param counter The counter to configure.
  * @param event The event to track.
  */
-SEL4BENCH_API void sel4bench_set_count_event(counter_t counter, event_id_t id);
+static UNUSED void sel4bench_set_count_event(counter_t counter, event_id_t id);
 
 /**
  * Start counting events on a set of performance counters. The argument is a
@@ -137,7 +136,7 @@ SEL4BENCH_API void sel4bench_set_count_event(counter_t counter, event_id_t id);
  *
  * @param counters A bitfield indicating which counter(s) to start.
  */
-SEL4BENCH_API void sel4bench_start_counters(counter_bitfield_t counters);
+static UNUSED void sel4bench_start_counters(counter_bitfield_t counters);
 
 /**
  * Stop counting events on a set of performance counters. The argument is a
@@ -148,7 +147,7 @@ SEL4BENCH_API void sel4bench_start_counters(counter_bitfield_t counters);
  *
  * @param counters A bitfield indicating which counter(s) to stop.
  */
-SEL4BENCH_API void sel4bench_stop_counters(counter_bitfield_t counters);
+static UNUSED void sel4bench_stop_counters(counter_bitfield_t counters);
 
 /**
  * Reset a set of performance counters to zero. The argument is a
@@ -157,4 +156,4 @@ SEL4BENCH_API void sel4bench_stop_counters(counter_bitfield_t counters);
  *
  * @param counters A bitfield indicating which counter(s) to reset.
  */
-SEL4BENCH_API void sel4bench_reset_counters(counter_bitfield_t counters);
+static UNUSED void sel4bench_reset_counters(counter_bitfield_t counters);

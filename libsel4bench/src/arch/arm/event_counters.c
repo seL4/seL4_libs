@@ -10,7 +10,7 @@
 #include "event_counters.h"
 
 const char*
-sel4bench_arch_get_counter_description(seL4_Word counter)
+sel4bench_arch_get_counter_description(counter_t counter)
 {
     if (counter < 0) {
         return NULL;

@@ -17,6 +17,7 @@
     ); \
 } while(0)
 
+#include <sel4bench/types.h>
 #include <sel4bench/armv/private.h>
 #include <sel4/sel4.h>
 #include <utils/util.h>
@@ -90,7 +91,7 @@ static FASTFN sel4bench_counter_t sel4bench_get_cycle_count() {
  * think it's worthwhile in the general case, for performance reasons.
  * moreover, it's small enough that it'll be suitably aligned most of the time
  */
-static FASTFN sel4bench_counter_t sel4bench_get_counter(seL4_Word counter) {
+static FASTFN sel4bench_counter_t sel4bench_get_counter(counter_t counter) {
 	sel4bench_private_write_pmnxsel(counter); //select the counter on the PMU
 
 	counter = BIT(counter); //from here on in, we operate on a bitfield
@@ -110,7 +111,7 @@ static FASTFN sel4bench_counter_t sel4bench_get_counter(seL4_Word counter) {
  * line in size) however, the pointer dereference is overwhelmingly likely to
  * produce a dcache miss, which will occur with the counters off
  */
-static CACHESENSFN sel4bench_counter_t sel4bench_get_counters(seL4_Word counters, sel4bench_counter_t* values) {
+static CACHESENSFN sel4bench_counter_t sel4bench_get_counters(counter_bitfield_t counters, sel4bench_counter_t* values) {
 	//we don't really have time for a NULL or bounds check here
 
 	uint32_t enable_word = sel4bench_private_read_cntens(); //store current running state
@@ -133,20 +134,20 @@ static CACHESENSFN sel4bench_counter_t sel4bench_get_counters(seL4_Word counters
 	return ccnt;
 }
 
-static FASTFN void sel4bench_set_count_event(seL4_Word counter, seL4_Word event) {
+static FASTFN void sel4bench_set_count_event(counter_t counter, event_id_t event) {
 	sel4bench_private_write_pmnxsel(counter); //select counter
 	sel4bench_private_write_pmcnt(0); //reset it
 	return sel4bench_private_write_evtsel(event); //change the event
 }
 
-static FASTFN void sel4bench_start_counters(seL4_Word counters) {
+static FASTFN void sel4bench_start_counters(counter_bitfield_t counters) {
 	/* conveniently, ARM performance counters work exactly like this,
 	 * so we just write the value directly to COUNTER_ENABLE_SET
 	 */
 	return sel4bench_private_write_cntens(counters);
 }
 
-static FASTFN void sel4bench_stop_counters(seL4_Word counters) {
+static FASTFN void sel4bench_stop_counters(counter_bitfield_t counters) {
 	/* conveniently, ARM performance counters work exactly like this,
 	 * so we just write the value directly to COUNTER_ENABLE_SET
 	 * (protecting the CCNT)
@@ -154,7 +155,7 @@ static FASTFN void sel4bench_stop_counters(seL4_Word counters) {
 	return sel4bench_private_write_cntenc(counters & ~BIT(SEL4BENCH_ARMV8A_COUNTER_CCNT));
 }
 
-static FASTFN void sel4bench_reset_counters(seL4_Word counters) {
+static FASTFN void sel4bench_reset_counters(counter_bitfield_t counters) {
     //Reset all counters except the CCNT
 	if(counters == (~0UL) || counters == (BIT(sel4bench_get_num_counters()) - 1)) {
 		MODIFY_PMCR(|, SEL4BENCH_ARMV8A_PMCR_RESET_ALL);

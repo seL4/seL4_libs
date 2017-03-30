@@ -14,6 +14,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <inttypes.h>
+#include <sel4bench/types.h>
 
 #define SEL4BENCH_READ_CCNT(var) do { \
     uint32_t low, high; \
@@ -117,7 +118,7 @@ static FASTFN seL4_Word sel4bench_get_num_counters() {
 	}
 }
 
-static FASTFN sel4bench_counter_t sel4bench_get_counter(seL4_Word counter) {
+static FASTFN sel4bench_counter_t sel4bench_get_counter(counter_t counter) {
 	sel4bench_private_serialize_pmc();    /* Serialise all preceding instructions */
 	uint64_t counter_val = sel4bench_private_rdpmc(counter);
 	sel4bench_private_serialize_pmc();    /* Serialise all following instructions */
@@ -125,7 +126,7 @@ static FASTFN sel4bench_counter_t sel4bench_get_counter(seL4_Word counter) {
 	return counter_val;
 }
 
-static CACHESENSFN sel4bench_counter_t sel4bench_get_counters(seL4_Word counters, sel4bench_counter_t* values) {
+static CACHESENSFN sel4bench_counter_t sel4bench_get_counters(counter_bitfield_t counters, sel4bench_counter_t* values) {
 	unsigned char counter = 0;
 
 	sel4bench_private_serialize_pmc();    /* Serialise all preceding instructions */
@@ -139,7 +140,7 @@ static CACHESENSFN sel4bench_counter_t sel4bench_get_counters(seL4_Word counters
 	return time;
 }
 
-static FASTFN void sel4bench_set_count_event(seL4_Word counter, seL4_Word event) {
+static FASTFN void sel4bench_set_count_event(counter_t counter, event_id_t event) {
 	//one implementation, because P6 and architectural PMCs work identically
 
 	assert(counter < sel4bench_get_num_counters());
@@ -170,7 +171,7 @@ static FASTFN void sel4bench_set_count_event(seL4_Word counter, seL4_Word event)
 	seL4_DebugRun(&sel4bench_private_wrmsr, msr_data);
 }
 
-static FASTFN void sel4bench_set_count_intx_bits(seL4_Word counter, bool in_tx, bool in_txcp) {
+static FASTFN void sel4bench_set_count_intx_bits(counter_t counter, bool in_tx, bool in_txcp) {
 	/* The Haswell uArch enhances perfevtsel_t with bit 32 to only count cycles in a RTM 
 	   transactional region and bit 33 to exclude cycles in a RTM transactional region 
 	   that abort in the cycle count. */
@@ -197,7 +198,7 @@ static FASTFN void sel4bench_set_count_intx_bits(seL4_Word counter, bool in_tx, 
 	seL4_DebugRun(&sel4bench_private_wrmsr, msr_data);
 }
 
-static FASTFN void sel4bench_start_counters(seL4_Word counters) {
+static FASTFN void sel4bench_start_counters(counter_bitfield_t counters) {
 	/* On P6, only the first counter has an enable flag, which controls both counters
 	 * simultaneously.
 	 * Arch PMCs are all done independently.
@@ -226,7 +227,7 @@ static FASTFN void sel4bench_start_counters(seL4_Word counters) {
 	//{RD,WR}MSR support data structure
 	uint32_t msr_data[3];
 
-	seL4_Word counter;
+	counter_t counter;
 	//NOT your average for loop!
 	for(counter = 0; counters; counter++) {
 		if(!(counters & (1 << counter)))
@@ -257,7 +258,7 @@ static FASTFN void sel4bench_start_counters(seL4_Word counters) {
 
 }
 
-static FASTFN void sel4bench_stop_counters(seL4_Word counters) {
+static FASTFN void sel4bench_stop_counters(counter_bitfield_t counters) {
 	/* On P6, only the first counter has an enable flag, which controls both counters
 	 * simultaneously.
 	 * Arch PMCs are all done independently.
@@ -283,7 +284,7 @@ static FASTFN void sel4bench_stop_counters(seL4_Word counters) {
 	//{RD,WR}MSR support data structure
 	uint32_t msr_data[3];
 
-	seL4_Word counter;
+	counter_t counter;
 	//NOT your average for loop!
 	for(counter = 0; counters; counter++) {
 		if(!(counters & (1 << counter)))
@@ -315,7 +316,7 @@ static FASTFN void sel4bench_destroy() {
 	seL4_DebugRun(&sel4bench_private_disable_user_pmc, NULL);
 }
 
-static FASTFN void sel4bench_reset_counters(seL4_Word counters) {
+static FASTFN void sel4bench_reset_counters(counter_bitfield_t counters) {
 	uint32_t msr_data[3];
 	msr_data[0] = IA32_MSR_PMC_PERFEVTCNT_BASE;
 	msr_data[1] = 0;

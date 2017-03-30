@@ -299,7 +299,7 @@ static seL4_Word SEL4BENCH_IA32_SKYLAKE_EVENTS[5] = {
 	0x412E  //LONGEST_LAT_CACHE.MISS
 };
 
-static FASTFN seL4_Word sel4bench_private_lookup_event(seL4_Word event) {
+static FASTFN seL4_Word sel4bench_private_lookup_event(event_id_t event) {
 	if((SEL4BENCH_EVENT_GENERIC_MASK & event) == SEL4BENCH_EVENT_GENERIC_MASK) {
 		uint32_t dummy = 0;
 		ia32_cpuid_model_info_t model_info = { .raw = 0 };

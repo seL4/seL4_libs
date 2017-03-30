@@ -15,6 +15,7 @@
 #include <stdint.h>
 
 #include <sel4/sel4.h>
+#include <sel4bench/types.h>
 #include <sel4bench/arch/sel4bench.h>
 
 #define SEL4BENCH_API static __attribute__((unused))
@@ -30,32 +31,12 @@
  * call could potentially result in a syscall. (This is of particular note on
  * the ARM1136, for which even reading the cycle counter must be done in kernel
  * mode.)
- * 
+ *
  * It also goes out of its way to ensure that there's always a cycle counter
  * available for use. _init() will start this running, and _destroy() will tear
  * it down, if necessary.
- * 
- * Finally, some CPP constants for events that are common to all architecture
- * variants are also exposed. These are:
- * <ul>
- *  <li> SEL4BENCH_EVENT_CACHE_L1I_MISS      </li>
- *  <li> SEL4BENCH_EVENT_CACHE_L1D_MISS      </li>
- *  <li> SEL4BENCH_EVENT_TLB_L1I_MISS        </li>
- *  <li> SEL4BENCH_EVENT_TLB_L1D_MISS        </li>
- *  <li> SEL4BENCH_EVENT_MEMORY_ACCESS       </li>
- *  <li> SEL4BENCH_EVENT_EXECUTE_INSTRUCTION </li>
- *  <li> SEL4BENCH_EVENT_BRANCH_MISPREDICT   </li>
- * </ul>
- * Additional events are architecture (and potentially processor) specific.
- * These may be defined in architecture or processor header files.
- * 
- * See the events.h for your architecture for specific events, caveats,
- * gotchas, and other trickery.
- * 
+ *
  * Notes:
- * - The MEMORY_ACCESS event refers to all memory loads/stores issued by the
- *   processor -- that is, all memory accesses *except* instruction fetch
- *   operations -- whether they are satisfied by a cache or from main memory.
  * - Overflow is completely ignored, even on processors that only support
  *   32-bit counters (and thus where there is space to overflow into). If you
  *   are doing something that might overflow a counter, it's up to you to deal
@@ -63,6 +44,22 @@
  * - Everything is zero-indexed.
  */
 
+/*
+ * CPP constants for events that are common to all architecture
+ * variants.
+ * Additional events are architecture (and potentially processor) specific.
+ * These may be defined in architecture or processor header files.
+ */
+static UNUSED event_id_t GENERIC_EVENTS[] = {
+  SEL4BENCH_EVENT_CACHE_L1I_MISS,
+  SEL4BENCH_EVENT_CACHE_L1D_MISS,
+  SEL4BENCH_EVENT_TLB_L1I_MISS,
+  SEL4BENCH_EVENT_TLB_L1D_MISS,
+  SEL4BENCH_EVENT_EXECUTE_INSTRUCTION,
+  SEL4BENCH_EVENT_BRANCH_MISPREDICT
+};
+/* Number of generic counters */
+#define SEL4BENCH_NUM_GENERIC_COUNTERS ARRAY_SIZE(GENERIC_EVENTS)
 
 /**
  * Initialise the sel4bench library. Nothing else is guaranteed to work, and
@@ -101,7 +98,7 @@ SEL4BENCH_API seL4_Word sel4bench_get_num_counters();
  * @return An ASCII string prepresentation of the counters description, or NULL
  *         if the counter does not exist.
  */
-const char* sel4bench_get_counter_description(seL4_Word counter);
+const char* sel4bench_get_counter_description(counter_t counter);
 
 /**
  * Query the value of a counter.
@@ -109,7 +106,7 @@ const char* sel4bench_get_counter_description(seL4_Word counter);
  * @param counter The counter to query.
  * @return The value of the counter.
  */
-SEL4BENCH_API sel4bench_counter_t sel4bench_get_counter(seL4_Word counter);
+SEL4BENCH_API sel4bench_counter_t sel4bench_get_counter(counter_t counter);
 
 /**
  * Query the value of a set of counters.
@@ -121,36 +118,37 @@ SEL4BENCH_API sel4bench_counter_t sel4bench_get_counter(seL4_Word counter);
  *                 will be written to its corresponding index in this array.
  * @return The current cycle count, as sel4bench_get_cycle_count()
  */
-SEL4BENCH_API sel4bench_counter_t sel4bench_get_counters(seL4_Word counters, sel4bench_counter_t* values);
+SEL4BENCH_API sel4bench_counter_t sel4bench_get_counters(counter_bitfield_t counters,
+                                                         sel4bench_counter_t* values);
 
 /**
  * Assign a counter to track a specific event. Events are processor-specific,
  * though some common ones might be exposed through preprocessor constants.
- * 
+ *
  * @param counter The counter to configure.
  * @param event The event to track.
  */
-SEL4BENCH_API void sel4bench_set_count_event(seL4_Word counter, seL4_Word event);
+SEL4BENCH_API void sel4bench_set_count_event(counter_t counter, event_id_t id);
 
 /**
  * Start counting events on a set of performance counters. The argument is a
  * bitfield detailing that set. (Note that this means the library supports a
  * number of counters less than or equal to the machine word size in bits.)
- * 
+ *
  * @param counters A bitfield indicating which counter(s) to start.
  */
-SEL4BENCH_API void sel4bench_start_counters(seL4_Word counters);
+SEL4BENCH_API void sel4bench_start_counters(counter_bitfield_t counters);
 
 /**
  * Stop counting events on a set of performance counters. The argument is a
  * bitfield detailing that set. (Note that this means the library supports a
  * number of counters less than or equal to the machine word size in bits.)
- * 
+ *
  * Some processors (notably, the ARM1136) may not support this operation.
- * 
+ *
  * @param counters A bitfield indicating which counter(s) to stop.
  */
-SEL4BENCH_API void sel4bench_stop_counters(seL4_Word counters);
+SEL4BENCH_API void sel4bench_stop_counters(counter_bitfield_t counters);
 
 /**
  * Reset a set of performance counters to zero. The argument is a
@@ -159,4 +157,4 @@ SEL4BENCH_API void sel4bench_stop_counters(seL4_Word counters);
  *
  * @param counters A bitfield indicating which counter(s) to reset.
  */
-SEL4BENCH_API void sel4bench_reset_counters(seL4_Word counters);
+SEL4BENCH_API void sel4bench_reset_counters(counter_bitfield_t counters);

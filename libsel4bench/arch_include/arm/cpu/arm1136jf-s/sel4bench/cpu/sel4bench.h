@@ -11,6 +11,7 @@
  */
 #pragma once
 
+#include <sel4bench/types.h>
 #include <sel4bench/cpu/private.h>
 #include <assert.h>
 #include <sel4/sel4.h>
@@ -203,7 +204,7 @@ static FASTFN sel4bench_counter_t sel4bench_get_cycle_count() {
 	return val;
 }
 
-static FASTFN sel4bench_counter_t sel4bench_get_counter(seL4_Word counter) {
+static FASTFN sel4bench_counter_t sel4bench_get_counter(counter_t counter) {
 	assert(counter < sel4bench_get_num_counters()); //range check
 
 	uint32_t val = counter;
@@ -211,7 +212,7 @@ static FASTFN sel4bench_counter_t sel4bench_get_counter(seL4_Word counter) {
 	return val;
 }
 
-static FASTFN sel4bench_counter_t sel4bench_get_counters(seL4_Word counters, sel4bench_counter_t* values) {
+static FASTFN sel4bench_counter_t sel4bench_get_counters(counter_bitfield_t counters, sel4bench_counter_t* values) {
 	assert(counters & (sel4bench_get_num_counters() - 1)); //there are only two counters, so there should be no other 1 bits
 	assert(values);                                        //NULL guard -- because otherwise we'll get a kernel fault
 
@@ -222,19 +223,19 @@ static FASTFN sel4bench_counter_t sel4bench_get_counters(seL4_Word counters, sel
 	return args[0];
 }
 
-static FASTFN void sel4bench_set_count_event(seL4_Word counter, seL4_Word event) {
+static FASTFN void sel4bench_set_count_event(counter_t counter, event_id_t event) {
 	assert(counter < sel4bench_get_num_counters()); //range check
 
 	seL4_DebugRun(&sel4bench_private_set_count_event, (void*)(event | ((counter & 1U) << 31)));
 }
 
-static FASTFN void sel4bench_stop_counters(seL4_Word counters) {
+static FASTFN void sel4bench_stop_counters(counter_bitfield_t counters) {
 	/* all three ARM1136 counters have to start at the same time...
 	 * so we just start them all at init time and make this a no-op
 	 */
 }
 
-static FASTFN void sel4bench_reset_counters(seL4_Word counters) {
+static FASTFN void sel4bench_reset_counters(counter_bitfield_t counters) {
 	if(counters == (~0UL) || counters == (1U << sel4bench_get_num_counters()) - 1) {
 		seL4_DebugRun(&sel4bench_private_reset_gp_counters, NULL);
 	} else {
@@ -242,7 +243,7 @@ static FASTFN void sel4bench_reset_counters(seL4_Word counters) {
 	}
 }
 
-static FASTFN void sel4bench_start_counters(seL4_Word counters) {
+static FASTFN void sel4bench_start_counters(counter_bitfield_t counters) {
 	/* all three ARM1136 counters have to start at the same time...
 	 * so we just start them all at init time and make this reset them
 	 */

@@ -12,4 +12,5 @@
 #include <sel4/types.h>
 
 const char* sel4bench_arch_get_counter_description(seL4_Word counter);
+const char* sel4bench_arch_get_counter_description(counter_t counter);
 

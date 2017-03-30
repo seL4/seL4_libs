@@ -9,7 +9,7 @@
  */
 
 #include <sel4bench/sel4bench.h>
-#include "../event_counters.h"
+#include "../../event_counters.h"
 
 #define EVENT_COUNTER_FORMAT(id, name) [id] = name
 

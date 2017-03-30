@@ -27,12 +27,13 @@
 #define SEL4BENCH_ARMV7A_COUNTER_CCNT 31
 
 // select whether user mode gets access to the PMCs
-static FASTFN void sel4bench_private_switch_user_pmc(unsigned long state) {
-	asm volatile (
-			"mcr p15, 0, %0, c9, c14, 0\n"
-			: /* no outputs */
-			: "r" (state) /* input on/off state */
-	);
+static FASTFN void sel4bench_private_switch_user_pmc(unsigned long state)
+{
+    asm volatile (
+        "mcr p15, 0, %0, c9, c14, 0\n"
+        : /* no outputs */
+        : "r" (state) /* input on/off state */
+    );
 }
 
 /*
@@ -40,31 +41,35 @@ static FASTFN void sel4bench_private_switch_user_pmc(unsigned long state) {
  *
  * determines if an interrupt is generated on overflow.
  */
-static FASTFN void sel4bench_private_write_intens(uint32_t mask) {
-	asm volatile (
-		"mcr p15, 0, %0, c9, c14, 1\n"
-		:
-		: "r"(mask)
-	);
+static FASTFN void sel4bench_private_write_intens(uint32_t mask)
+{
+    asm volatile (
+        "mcr p15, 0, %0, c9, c14, 1\n"
+        :
+        : "r"(mask)
+    );
 }
-static FASTFN void sel4bench_private_write_intenc(uint32_t mask) {
-	asm volatile (
-		"mcr p15, 0, %0, c9, c14, 2\n"
-		:
-		: "r"(mask)
-		);
+static FASTFN void sel4bench_private_write_intenc(uint32_t mask)
+{
+    asm volatile (
+        "mcr p15, 0, %0, c9, c14, 2\n"
+        :
+        : "r"(mask)
+    );
 }
 
-static inline void sel4bench_private_init(void* data) {
-	//enable user-mode performance-counter access
-	sel4bench_private_switch_user_pmc(1);
+static inline void sel4bench_private_init(void* data)
+{
+    //enable user-mode performance-counter access
+    sel4bench_private_switch_user_pmc(1);
 
-	//disable overflow interrupts on all counters
-	sel4bench_private_write_intenc(-1);
+    //disable overflow interrupts on all counters
+    sel4bench_private_write_intenc(-1);
 }
-static inline void sel4bench_private_deinit(void* data) {
-	//disable user-mode performance-counter access
-	sel4bench_private_switch_user_pmc(0);
+static inline void sel4bench_private_deinit(void* data)
+{
+    //disable user-mode performance-counter access
+    sel4bench_private_switch_user_pmc(0);
 }
 
 
@@ -87,21 +92,23 @@ static inline void sel4bench_private_deinit(void* data) {
 #define SEL4BENCH_ARMV7A_PMCR_RESET_ALL  (BIT(1))
 #define SEL4BENCH_ARMV7A_PMCR_RESET_CCNT (BIT(2))
 #define SEL4BENCH_ARMV7A_PMCR_DIV64      (BIT(3)) /* Should CCNT be divided by 64? */
-static FASTFN void sel4bench_private_write_pmcr(uint32_t val) {
-	asm volatile (
-		"mcr p15, 0, %0, c9, c12, 0\n"
-		:
-		: "r"(val)
-	);
+static FASTFN void sel4bench_private_write_pmcr(uint32_t val)
+{
+    asm volatile (
+        "mcr p15, 0, %0, c9, c12, 0\n"
+        :
+        : "r"(val)
+    );
 }
-static FASTFN uint32_t sel4bench_private_read_pmcr(void) {
-	uint32_t val;
-	asm volatile (
-		"mrc p15, 0, %0, c9, c12, 0\n"
-		: "=r"(val)
-		:
-	);
-	return val;
+static FASTFN uint32_t sel4bench_private_read_pmcr(void)
+{
+    uint32_t val;
+    asm volatile (
+        "mrc p15, 0, %0, c9, c12, 0\n"
+        : "=r"(val)
+        :
+    );
+    return val;
 }
 
 /*
@@ -109,28 +116,31 @@ static FASTFN uint32_t sel4bench_private_read_pmcr(void) {
  *
  * bit corresponds to which counter.
  */
-static FASTFN void sel4bench_private_write_cntens(uint32_t mask) {
-	asm volatile (
-		"mcr p15, 0, %0, c9, c12, 1\n"
-		:
-		: "r"(mask)
-	);
+static FASTFN void sel4bench_private_write_cntens(uint32_t mask)
+{
+    asm volatile (
+        "mcr p15, 0, %0, c9, c12, 1\n"
+        :
+        : "r"(mask)
+    );
 }
-static FASTFN uint32_t sel4bench_private_read_cntens() {
-	uint32_t mask;
-	asm volatile (
-		"mrc p15, 0, %0, c9, c12, 1\n"
-		: "=r"(mask)
-		:
-	);
-	return mask;
+static FASTFN uint32_t sel4bench_private_read_cntens()
+{
+    uint32_t mask;
+    asm volatile (
+        "mrc p15, 0, %0, c9, c12, 1\n"
+        : "=r"(mask)
+        :
+    );
+    return mask;
 }
-static FASTFN void sel4bench_private_write_cntenc(uint32_t mask) {
-	asm volatile (
-		"mcr p15, 0, %0, c9, c12, 2\n"
-		:
-		: "r"(mask)
-	);
+static FASTFN void sel4bench_private_write_cntenc(uint32_t mask)
+{
+    asm volatile (
+        "mcr p15, 0, %0, c9, c12, 2\n"
+        :
+        : "r"(mask)
+    );
 }
 
 /*
@@ -138,21 +148,23 @@ static FASTFN void sel4bench_private_write_cntenc(uint32_t mask) {
  *
  * counter is selected by PMNXSEL register.
  */
-static FASTFN uint32_t sel4bench_private_read_pmcnt(void) {
-	uint32_t val;
-	asm volatile (
-		"mrc p15, 0, %0, c9, c13, 2\n"
-		: "=r"(val)
-		:
-	);
-	return val;
+static FASTFN uint32_t sel4bench_private_read_pmcnt(void)
+{
+    uint32_t val;
+    asm volatile (
+        "mrc p15, 0, %0, c9, c13, 2\n"
+        : "=r"(val)
+        :
+    );
+    return val;
 }
-static FASTFN void sel4bench_private_write_pmcnt(uint32_t val) {
-	asm volatile (
-		"mcr p15, 0, %0, c9, c13, 2\n"
-		: "=r"(val)
-		:
-	);
+static FASTFN void sel4bench_private_write_pmcnt(uint32_t val)
+{
+    asm volatile (
+        "mcr p15, 0, %0, c9, c13, 2\n"
+        : "=r"(val)
+        :
+    );
 }
 
 
@@ -161,12 +173,13 @@ static FASTFN void sel4bench_private_write_pmcnt(uint32_t val) {
  *
  * selects which counter is used by get_pmnct.
  */
-static FASTFN void sel4bench_private_write_pmnxsel(uint32_t val) {
-	asm volatile (
-		"mcr p15, 0, %0, c9, c12, 5\n"
-		:
-		: "r"(val)
-	);
+static FASTFN void sel4bench_private_write_pmnxsel(uint32_t val)
+{
+    asm volatile (
+        "mcr p15, 0, %0, c9, c12, 5\n"
+        :
+        : "r"(val)
+    );
 }
 
 /*
@@ -175,20 +188,22 @@ static FASTFN void sel4bench_private_write_pmnxsel(uint32_t val) {
  * determines which events are counted by a performance counter.
  * counter is selected by PMNXSEL register.
  */
-static FASTFN uint32_t sel4bench_private_read_evtsel(void) {
-	uint32_t val;
-	asm volatile (
-		"mrc p15, 0, %0, c9, c13, 1\n"
-		: "=r"(val)
-		:
-	);
-	return val;
+static FASTFN uint32_t sel4bench_private_read_evtsel(void)
+{
+    uint32_t val;
+    asm volatile (
+        "mrc p15, 0, %0, c9, c13, 1\n"
+        : "=r"(val)
+        :
+    );
+    return val;
 }
 
-static FASTFN void sel4bench_private_write_evtsel(uint32_t val) {
-	asm volatile (
-		"mcr p15, 0, %0, c9, c13, 1\n"
-		:
-		: "r"(val)
-	);
+static FASTFN void sel4bench_private_write_evtsel(uint32_t val)
+{
+    asm volatile (
+        "mcr p15, 0, %0, c9, c13, 1\n"
+        :
+        : "r"(val)
+    );
 }

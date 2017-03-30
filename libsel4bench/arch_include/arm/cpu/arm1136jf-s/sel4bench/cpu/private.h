@@ -53,92 +53,99 @@
  *  bit      0 = E         = enable all three counters
  */
 typedef union {
-	struct {
-		uint32_t E         : 1;
-		uint32_t P         : 1;
-		uint32_t C         : 1;
-		uint32_t D         : 1;
-		uint32_t IntEn     : 3;
-		uint32_t SBZ1      : 1;
-		uint32_t Flag      : 3;
-		uint32_t X         : 1;
-		uint32_t EvtCount2 : 8;
-		uint32_t EvtCount1 : 8;
-		uint32_t SBZ2      : 4;
-	};
-	uint32_t raw;
+    struct {
+        uint32_t E         : 1;
+        uint32_t P         : 1;
+        uint32_t C         : 1;
+        uint32_t D         : 1;
+        uint32_t IntEn     : 3;
+        uint32_t SBZ1      : 1;
+        uint32_t Flag      : 3;
+        uint32_t X         : 1;
+        uint32_t EvtCount2 : 8;
+        uint32_t EvtCount1 : 8;
+        uint32_t SBZ2      : 4;
+    };
+    uint32_t raw;
 } sel4bench_arm1136_pmnc_t;
 
-static CACHESENSFN void sel4bench_private_set_pmnc(sel4bench_arm1136_pmnc_t val) {
-	/*
-	 * The ARM1136 has a 3-cycle delay between changing the PMNC and the
-	 * counters reacting. So we insert 3 nops to cover for that. Aligning on a
-	 * cache line boundary guarantees that the nops won't cause anything
-	 * interesting to happen.
-	 */
-	asm volatile (
-		"mcr p15, 0, %0, c15, c12, 0;"
-		"nop;"
-		"nop;"
-		"nop;"
-		:
-		: "r"(val.raw)
-	);
+static CACHESENSFN void sel4bench_private_set_pmnc(sel4bench_arm1136_pmnc_t val)
+{
+    /*
+     * The ARM1136 has a 3-cycle delay between changing the PMNC and the
+     * counters reacting. So we insert 3 nops to cover for that. Aligning on a
+     * cache line boundary guarantees that the nops won't cause anything
+     * interesting to happen.
+     */
+    asm volatile (
+        "mcr p15, 0, %0, c15, c12, 0;"
+        "nop;"
+        "nop;"
+        "nop;"
+        :
+        : "r"(val.raw)
+    );
 }
-static FASTFN sel4bench_arm1136_pmnc_t sel4bench_private_get_pmnc(void) {
-	sel4bench_arm1136_pmnc_t val;
-	asm volatile (
-		"mrc p15, 0, %0, c15, c12, 0"
-		: "=r"(val.raw)
-		:
-	);
-	return val;
+static FASTFN sel4bench_arm1136_pmnc_t sel4bench_private_get_pmnc(void)
+{
+    sel4bench_arm1136_pmnc_t val;
+    asm volatile (
+        "mrc p15, 0, %0, c15, c12, 0"
+        : "=r"(val.raw)
+        :
+    );
+    return val;
 }
 
 /*
  * CCNT: cycle counter
  */
-static FASTFN uint32_t sel4bench_private_get_ccnt() {
-	uint32_t val;
-	asm volatile (
-		"mrc p15, 0, %0, c15, c12," SEL4BENCH_ARM1136_COUNTER_CCNT
-		: "=r"(val)
-	);
-	return val;
+static FASTFN uint32_t sel4bench_private_get_ccnt()
+{
+    uint32_t val;
+    asm volatile (
+        "mrc p15, 0, %0, c15, c12," SEL4BENCH_ARM1136_COUNTER_CCNT
+        : "=r"(val)
+    );
+    return val;
 }
 
 /*
  * PMN0: event count 0
  */
-static FASTFN uint32_t sel4bench_private_get_pmn0() {
-	uint32_t val;
-	asm volatile (
-		"mrc p15, 0, %0, c15, c12,"SEL4BENCH_ARM1136_COUNTER_PMN0
-		: "=r"(val)
-	);
-	return val;
+static FASTFN uint32_t sel4bench_private_get_pmn0()
+{
+    uint32_t val;
+    asm volatile (
+        "mrc p15, 0, %0, c15, c12,"SEL4BENCH_ARM1136_COUNTER_PMN0
+        : "=r"(val)
+    );
+    return val;
 }
-static FASTFN void sel4bench_private_set_pmn0(uint32_t val) {
-	asm volatile (
-		"mcr p15, 0, %0, c15, c12,"SEL4BENCH_ARM1136_COUNTER_PMN0
-		: "=r"(val)
-	);
+static FASTFN void sel4bench_private_set_pmn0(uint32_t val)
+{
+    asm volatile (
+        "mcr p15, 0, %0, c15, c12,"SEL4BENCH_ARM1136_COUNTER_PMN0
+        : "=r"(val)
+    );
 }
 
 /*
  * PMN1: event count 1
  */
-static FASTFN uint32_t sel4bench_private_get_pmn1() {
-	uint32_t val;
-	asm volatile (
-		"mrc p15, 0, %0, c15, c12,"SEL4BENCH_ARM1136_COUNTER_PMN1
-		: "=r"(val)
-	);
-	return val;
+static FASTFN uint32_t sel4bench_private_get_pmn1()
+{
+    uint32_t val;
+    asm volatile (
+        "mrc p15, 0, %0, c15, c12,"SEL4BENCH_ARM1136_COUNTER_PMN1
+        : "=r"(val)
+    );
+    return val;
 }
-static FASTFN void sel4bench_private_set_pmn1(uint32_t val) {
-	asm volatile (
-		"mcr p15, 0, %0, c15, c12,"SEL4BENCH_ARM1136_COUNTER_PMN1
-		: "=r"(val)
-	);
+static FASTFN void sel4bench_private_set_pmn1(uint32_t val)
+{
+    asm volatile (
+        "mcr p15, 0, %0, c15, c12,"SEL4BENCH_ARM1136_COUNTER_PMN1
+        : "=r"(val)
+    );
 }

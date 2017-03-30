@@ -21,7 +21,7 @@
 
 /**
  * @file
- * 
+ *
  * libsel4bench is a library designed to abstract over the performance
  * monitoring counters (PMCs) in modern IA-32 and ARM processors, so that you
  * can measure the performance of your software.  It will also work out whether
@@ -50,12 +50,12 @@
  * These may be defined in architecture or processor header files.
  */
 static UNUSED event_id_t GENERIC_EVENTS[] = {
-  SEL4BENCH_EVENT_CACHE_L1I_MISS,
-  SEL4BENCH_EVENT_CACHE_L1D_MISS,
-  SEL4BENCH_EVENT_TLB_L1I_MISS,
-  SEL4BENCH_EVENT_TLB_L1D_MISS,
-  SEL4BENCH_EVENT_EXECUTE_INSTRUCTION,
-  SEL4BENCH_EVENT_BRANCH_MISPREDICT
+    SEL4BENCH_EVENT_CACHE_L1I_MISS,
+    SEL4BENCH_EVENT_CACHE_L1D_MISS,
+    SEL4BENCH_EVENT_TLB_L1I_MISS,
+    SEL4BENCH_EVENT_TLB_L1D_MISS,
+    SEL4BENCH_EVENT_EXECUTE_INSTRUCTION,
+    SEL4BENCH_EVENT_BRANCH_MISPREDICT
 };
 /* Number of generic counters */
 #define SEL4BENCH_NUM_GENERIC_COUNTERS ARRAY_SIZE(GENERIC_EVENTS)
@@ -77,7 +77,7 @@ static UNUSED void sel4bench_destroy();
 /**
  * Query the cycle counter. If said counter needs starting, _init() will have
  * taken care of it.
- * 
+ *
  * @return The current cycle count. This might be since _init(), if the cycle
  *         counter needs explicit starting, or since bootup, if it freewheels.
  */
@@ -86,7 +86,7 @@ static UNUSED ccnt_t sel4bench_get_cycle_count();
 /**
  * Query how many performance counters are supported on this CPU, excluding the
  * cycle counter.
- * 
+ *
  * @return Processor's available counters.
  */
 static UNUSED seL4_Word sel4bench_get_num_counters();
@@ -118,7 +118,7 @@ static UNUSED ccnt_t sel4bench_get_counter(counter_t counter);
  * @return The current cycle count, as sel4bench_get_cycle_count()
  */
 static UNUSED ccnt_t sel4bench_get_counters(counter_bitfield_t counters,
-                                                         ccnt_t* values);
+                                            ccnt_t* values);
 
 /**
  * Assign a counter to track a specific event. Events are processor-specific,

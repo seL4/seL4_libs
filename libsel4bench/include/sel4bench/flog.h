@@ -24,7 +24,7 @@ typedef struct {
 
 #ifdef CONFIG_FLOG
 static inline flog_t *
-flog_init(ccnt_t *results, int length) 
+flog_init(ccnt_t *results, int length)
 {
     flog_t *flog = calloc(1, sizeof(flog_t));
     if (unlikely(flog == NULL)) {
@@ -39,7 +39,8 @@ flog_init(ccnt_t *results, int length)
 }
 
 static inline void
-flog_end(flog_t *flog) {
+flog_end(flog_t *flog)
+{
     ccnt_t end;
     SEL4BENCH_READ_CCNT(end);
     if (likely(flog->start != 0 && flog->next < flog->length)) {
@@ -49,7 +50,8 @@ flog_end(flog_t *flog) {
 }
 
 static inline void
-flog_start(flog_t *flog) {
+flog_start(flog_t *flog)
+{
     SEL4BENCH_READ_CCNT(flog->start);
 }
 

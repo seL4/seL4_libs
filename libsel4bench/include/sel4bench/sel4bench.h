@@ -57,6 +57,15 @@ static UNUSED event_id_t GENERIC_EVENTS[] = {
     SEL4BENCH_EVENT_EXECUTE_INSTRUCTION,
     SEL4BENCH_EVENT_BRANCH_MISPREDICT
 };
+
+static UNUSED char * GENERIC_EVENT_NAMES[] = {
+    "L1 i-cache misses",
+    "L1 d-cache misses",
+    "L1 i-tlb misses",
+    "L1 d-tlb misses",
+    "Instructions",
+    "Branch mispredict"
+};
 /* Number of generic counters */
 #define SEL4BENCH_NUM_GENERIC_COUNTERS ARRAY_SIZE(GENERIC_EVENTS)
 

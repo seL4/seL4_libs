@@ -73,7 +73,7 @@ static_assert(ARRAY_SIZE(GENERIC_EVENTS) == ARRAY_SIZE(GENERIC_EVENT_NAMES),
               "event names same length as counters");
 
 /* Number of generic counters */
-#define SEL4BENCH_NUM_GENERIC_COUNTERS ARRAY_SIZE(GENERIC_EVENTS)
+#define SEL4BENCH_NUM_GENERIC_EVENTS ARRAY_SIZE(GENERIC_EVENTS)
 
 /**
  * Initialise the sel4bench library. Nothing else is guaranteed to work, and

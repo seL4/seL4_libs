@@ -210,6 +210,7 @@ sel4test_run_tests(const char *name, int (*run_test)(struct testcase *t)) {
 
      sel4test_start_suite(name);
      /* Run tests */
+     test_assert_fatal(num_tests > 0);
      for (int i = 0; i < num_tests; i++) {
          sel4test_start_test(tests[i]->name);
          int result = run_test(tests[i]);

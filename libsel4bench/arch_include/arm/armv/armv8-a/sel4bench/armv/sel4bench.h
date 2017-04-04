@@ -116,7 +116,7 @@ static FASTFN ccnt_t sel4bench_get_counter(counter_t counter)
  * line in size) however, the pointer dereference is overwhelmingly likely to
  * produce a dcache miss, which will occur with the counters off
  */
-static CACHESENSFN ccnt_t sel4bench_get_counters(counter_bitfield_t counters, ccnt_t* values)
+static CACHESENSFN ccnt_t sel4bench_get_counters(counter_bitfield_t mask, ccnt_t* values)
 {
     //we don't really have time for a NULL or bounds check here
 
@@ -125,8 +125,8 @@ static CACHESENSFN ccnt_t sel4bench_get_counters(counter_bitfield_t counters, cc
     sel4bench_private_write_cntenc(enable_word); //stop running counters (we do this instead of stopping the ones we're interested in because it saves an instruction)
 
     unsigned int counter = 0;
-    for (; counters != 0; counters >>= 1, counter++) { //for each counter...
-        if (counters & 1) { //... if we care about it...
+    for (; mask != 0; mask >>= 1, counter++) { //for each counter...
+        if (mask & 1) { //... if we care about it...
             sel4bench_private_write_pmnxsel(counter); //select it,
             values[counter] = sel4bench_private_read_pmcnt(); //and read its value
         }
@@ -147,37 +147,37 @@ static FASTFN void sel4bench_set_count_event(counter_t counter, event_id_t event
     return sel4bench_private_write_evtsel(event); //change the event
 }
 
-static FASTFN void sel4bench_start_counters(counter_bitfield_t counters)
+static FASTFN void sel4bench_start_counters(counter_bitfield_t mask)
 {
     /* conveniently, ARM performance counters work exactly like this,
      * so we just write the value directly to COUNTER_ENABLE_SET
      */
-    return sel4bench_private_write_cntens(counters);
+    return sel4bench_private_write_cntens(mask);
 }
 
-static FASTFN void sel4bench_stop_counters(counter_bitfield_t counters)
+static FASTFN void sel4bench_stop_counters(counter_bitfield_t mask)
 {
     /* conveniently, ARM performance counters work exactly like this,
      * so we just write the value directly to COUNTER_ENABLE_SET
      * (protecting the CCNT)
      */
-    return sel4bench_private_write_cntenc(counters & ~BIT(SEL4BENCH_ARMV8A_COUNTER_CCNT));
+    return sel4bench_private_write_cntenc(mask & ~BIT(SEL4BENCH_ARMV8A_COUNTER_CCNT));
 }
 
-static FASTFN void sel4bench_reset_counters(counter_bitfield_t counters)
+static FASTFN void sel4bench_reset_counters(counter_bitfield_t mask)
 {
     //Reset all counters except the CCNT
-    if (counters == (~0UL) || counters == (BIT(sel4bench_get_num_counters()) - 1)) {
+    if (mask == (~0UL) || mask == (BIT(sel4bench_get_num_counters()) - 1)) {
         MODIFY_PMCR( | , SEL4BENCH_ARMV8A_PMCR_RESET_ALL);
     } else {
-        counters = counters & ~BIT(SEL4BENCH_ARMV8A_COUNTER_CCNT);
+        mask = mask & ~BIT(SEL4BENCH_ARMV8A_COUNTER_CCNT);
         uint32_t enable_word = sel4bench_private_read_cntens(); //store current running state
 
         sel4bench_private_write_cntenc(enable_word); //stop running counters (we do this instead of stopping the ones we're interested in because it saves an instruction)
 
         unsigned int counter = 0;
-        for (; counters != 0; counters >>= 1, counter++) { //for each counter...
-            if (counters & 1) { //... if we care about it...
+        for (; mask != 0; mask >>= 1, counter++) { //for each counter...
+            if (mask & 1) { //... if we care about it...
                 sel4bench_private_write_pmnxsel(counter); //select it,
                 sel4bench_private_write_pmcnt(0);
             }

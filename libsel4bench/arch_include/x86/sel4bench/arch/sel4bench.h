@@ -131,13 +131,13 @@ static FASTFN ccnt_t sel4bench_get_counter(counter_t counter)
     return counter_val;
 }
 
-static CACHESENSFN ccnt_t sel4bench_get_counters(counter_bitfield_t counters, ccnt_t* values)
+static CACHESENSFN ccnt_t sel4bench_get_counters(counter_bitfield_t mask, ccnt_t* values)
 {
     unsigned char counter = 0;
 
     sel4bench_private_serialize_pmc();    /* Serialise all preceding instructions */
-    for (; counters != 0; counters >>= 1, counter++)
-        if (counters & 1) {
+    for (; mask != 0; mask >>= 1, counter++)
+        if (mask & 1) {
             values[counter] = sel4bench_private_rdpmc(counter);
         }
 
@@ -207,7 +207,7 @@ static FASTFN void sel4bench_set_count_intx_bits(counter_t counter, bool in_tx, 
     seL4_DebugRun(&sel4bench_private_wrmsr, msr_data);
 }
 
-static FASTFN void sel4bench_start_counters(counter_bitfield_t counters)
+static FASTFN void sel4bench_start_counters(counter_bitfield_t mask)
 {
     /* On P6, only the first counter has an enable flag, which controls both counters
      * simultaneously.
@@ -216,10 +216,10 @@ static FASTFN void sel4bench_start_counters(counter_bitfield_t counters)
     uint32_t dummy;
 
     seL4_Word num_counters = sel4bench_get_num_counters();
-    if (counters == ~(0UL)) {
-        counters = ((1 << num_counters) - 1);
+    if (mask == ~(0UL)) {
+        mask = ((1 << num_counters) - 1);
     } else {
-        assert((~((1 << num_counters) - 1) & counters) == 0);
+        assert((~((1 << num_counters) - 1) & mask) == 0);
     }
 
     uint32_t max_basic_leaf = 0;
@@ -227,9 +227,9 @@ static FASTFN void sel4bench_start_counters(counter_bitfield_t counters)
 
     if (!(max_basic_leaf >= IA32_CPUID_LEAF_PMC)) {
         //we're P6, because otherwise the init() assertion would have tripped
-        assert(counters == 0x3);
-        if (counters == 0x3) {
-            counters = 1;
+        assert(mask == 0x3);
+        if (mask == 0x3) {
+            mask = 1;
         } else {
             return;
         }
@@ -240,12 +240,12 @@ static FASTFN void sel4bench_start_counters(counter_bitfield_t counters)
 
     counter_t counter;
     //NOT your average for loop!
-    for (counter = 0; counters; counter++) {
-        if (!(counters & (1 << counter))) {
+    for (counter = 0; mask; counter++) {
+        if (!(mask & (1 << counter))) {
             continue;
         }
 
-        counters &= ~(1 << counter);
+        mask &= ~(1 << counter);
 
         //read appropriate MSR
         msr_data[0] = IA32_MSR_PMC_PERFEVTSEL_BASE + counter;
@@ -270,7 +270,7 @@ static FASTFN void sel4bench_start_counters(counter_bitfield_t counters)
 
 }
 
-static FASTFN void sel4bench_stop_counters(counter_bitfield_t counters)
+static FASTFN void sel4bench_stop_counters(counter_bitfield_t mask)
 {
     /* On P6, only the first counter has an enable flag, which controls both counters
      * simultaneously.
@@ -279,10 +279,10 @@ static FASTFN void sel4bench_stop_counters(counter_bitfield_t counters)
     uint32_t dummy;
 
     seL4_Word num_counters = sel4bench_get_num_counters();
-    if (counters == ~(0UL)) {
-        counters = ((1 << num_counters) - 1);
+    if (mask == ~(0UL)) {
+        mask = ((1 << num_counters) - 1);
     } else {
-        assert((~((1 << num_counters) - 1) & counters) == 0);
+        assert((~((1 << num_mask) - 1) & mask) == 0);
     }
 
     uint32_t max_basic_leaf = 0;
@@ -290,8 +290,8 @@ static FASTFN void sel4bench_stop_counters(counter_bitfield_t counters)
 
     if (!(max_basic_leaf >= IA32_CPUID_LEAF_PMC)) {
         //we're P6, because otherwise the init() assertion would have tripped
-        assert(counters == 0x3);
-        counters = 1;
+        assert(mask == 0x3);
+        mask = 1;
     }
 
     //{RD,WR}MSR support data structure
@@ -299,12 +299,12 @@ static FASTFN void sel4bench_stop_counters(counter_bitfield_t counters)
 
     counter_t counter;
     //NOT your average for loop!
-    for (counter = 0; counters; counter++) {
-        if (!(counters & (1 << counter))) {
+    for (counter = 0; mask; counter++) {
+        if (!(mask & (1 << counter))) {
             continue;
         }
 
-        counters &= ~(1 << counter);
+        mask &= ~(1 << counter);
 
         //read appropriate MSR
         msr_data[0] = IA32_MSR_PMC_PERFEVTSEL_BASE + counter;
@@ -331,7 +331,7 @@ static FASTFN void sel4bench_destroy()
     seL4_DebugRun(&sel4bench_private_disable_user_pmc, NULL);
 }
 
-static FASTFN void sel4bench_reset_counters(counter_bitfield_t counters)
+static FASTFN void sel4bench_reset_counters(counter_bitfield_t mask)
 {
     uint32_t msr_data[3];
     msr_data[0] = IA32_MSR_PMC_PERFEVTCNT_BASE;
@@ -339,7 +339,7 @@ static FASTFN void sel4bench_reset_counters(counter_bitfield_t counters)
     msr_data[2] = 0;
 
     unsigned char counter = 0;
-    for (; counters != 0; counters >>= 1, msr_data[0]++)
+    for (; mask != 0; mask >>= 1, msr_data[0]++)
         if (counter & 1) {
             seL4_DebugRun(&sel4bench_private_wrmsr, msr_data);
         }

@@ -129,15 +129,15 @@ static KERNELFN void sel4bench_private_get_counters(void* data)
     sel4bench_private_set_pmnc(pmnc_contents);
 
     uint32_t* args = (uint32_t*)data;
-    uint32_t counters = args[0];
+    uint32_t mask = args[0];
     ccnt_t* values = (ccnt_t*)args[1];
 
 
     //read value of specified counters
-    if (counters & 1) {
+    if (mask & 1) {
         values[0] = sel4bench_private_get_pmn0();
     }
-    if (counters & 2) {
+    if (mask & 2) {
         values[1] = sel4bench_private_get_pmn1();
     }
 
@@ -223,13 +223,13 @@ static FASTFN ccnt_t sel4bench_get_counter(counter_t counter)
     return val;
 }
 
-static FASTFN ccnt_t sel4bench_get_counters(counter_bitfield_t counters, ccnt_t* values)
+static FASTFN ccnt_t sel4bench_get_counters(counter_bitfield_t mask, ccnt_t* values)
 {
-    assert(counters & (sel4bench_get_num_counters() - 1)); //there are only two counters, so there should be no other 1 bits
+    assert(mask & (sel4bench_get_num_counters() - 1)); //there are only two counters, so there should be no other 1 bits
     assert(values);                                        //NULL guard -- because otherwise we'll get a kernel fault
 
-    uint32_t args[2] = {counters, (uint32_t)values};
-    //entry 0: in = counters, out = ccnt
+    uint32_t args[2] = {mask, (uint32_t)values};
+    //entry 0: in = mask, out = ccnt
     //entry 1: in = values
     seL4_DebugRun(&sel4bench_private_get_counters, args);
     return args[0];
@@ -242,26 +242,26 @@ static FASTFN void sel4bench_set_count_event(counter_t counter, event_id_t event
     seL4_DebugRun(&sel4bench_private_set_count_event, (void*)(event | ((counter & 1U) << 31)));
 }
 
-static FASTFN void sel4bench_stop_counters(counter_bitfield_t counters)
+static FASTFN void sel4bench_stop_counters(counter_bitfield_t mask)
 {
     /* all three ARM1136 counters have to start at the same time...
      * so we just start them all at init time and make this a no-op
      */
 }
 
-static FASTFN void sel4bench_reset_counters(counter_bitfield_t counters)
+static FASTFN void sel4bench_reset_counters(counter_bitfield_t mask)
 {
-    if (counters == (~0UL) || counters == (1U << sel4bench_get_num_counters()) - 1) {
+    if (mask == (~0UL) || mask == (1U << sel4bench_get_num_counters()) - 1) {
         seL4_DebugRun(&sel4bench_private_reset_gp_counters, NULL);
     } else {
-        seL4_DebugRun(&sel4bench_private_reset_gp_counters, (void*)counters);
+        seL4_DebugRun(&sel4bench_private_reset_gp_counters, (void*)mask);
     }
 }
 
-static FASTFN void sel4bench_start_counters(counter_bitfield_t counters)
+static FASTFN void sel4bench_start_counters(counter_bitfield_t mask)
 {
     /* all three ARM1136 counters have to start at the same time...
      * so we just start them all at init time and make this reset them
      */
-    sel4bench_reset_counters(counters);
+    sel4bench_reset_counters(mask);
 }

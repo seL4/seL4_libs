@@ -172,3 +172,77 @@ static UNUSED void sel4bench_stop_counters(counter_bitfield_t counters);
  * @param counters A bitfield indicating which counter(s) to reset.
  */
 static UNUSED void sel4bench_reset_counters(counter_bitfield_t counters);
+
+/*
+ * @return the number benchmark loops required to read a number of events
+ */
+static inline int
+sel4bench_get_num_counter_chunks(seL4_Word n_counters, seL4_Word n_events)
+{
+    return DIV_ROUND_UP(n_events, n_counters);
+}
+
+/*
+ * Enable a chunk of the event counters passed in.
+ *
+ * @param chunk      events is divided into sel4bench_get_num_counter_chunks, determined by
+ *                   ceiling(n_events / n_counters).
+ * @param n_counters value returned by sel4bench_get_num_counters(), passed in to avoid
+ *                         expensive operations multiple times.
+ * @return a mask    used to manipulate the counters enabled.
+ */
+static inline counter_bitfield_t
+sel4bench_enable_counters(seL4_Word n_events, event_id_t events[n_events], seL4_Word chunk,
+                          seL4_Word n_counters)
+{
+    assert(chunk < sel4bench_get_num_counter_chunks(n_counters, n_events));
+    /* This value is passed in as it can be expensive to call, but
+     * should not be different to the returned function result */
+    assert(n_counters == sel4bench_get_num_counters());
+    counter_bitfield_t mask = 0;
+
+    for (seL4_Word i = 0; i < n_counters; i++) {
+        seL4_Word counter = chunk * n_counters + i;
+        if (counter >= n_events) {
+            break;
+        }
+        sel4bench_set_count_event(i, events[counter]);
+        mask |= BIT(i);
+    }
+
+    sel4bench_reset_counters(mask);
+    sel4bench_start_counters(mask);
+    return mask;
+}
+
+/*
+ * Read and stop the counters set in mask.
+ *
+ * @param chunk      as passed to sel4bench_enable_counters.
+ * @param n_counters value returned by sel4bench_get_num_counters(), passed in to avoid
+ *                         expensive operations multiple times.
+ * @param mask       returned by sel4bench_enable_counters.
+ * @param results    array of counter results. Must match the size of n_events as passed to
+ *                   sel4bench_enable_counters.
+ */
+static inline void
+sel4bench_read_and_stop_counters(counter_bitfield_t mask, seL4_Word chunk, seL4_Word n_counters,
+                                 ccnt_t results[])
+{
+   sel4bench_get_counters(mask, &results[chunk * n_counters]);
+   sel4bench_stop_counters(mask);
+}
+
+/* shortcut for calling sel4bench_enable_counters on the GENERIC_EVENTS supplied by all platforms in
+ * libsel4bench */
+static inline counter_bitfield_t
+sel4bench_enable_generic_counters(seL4_Word chunk, seL4_Word n_counters) {
+    return sel4bench_enable_counters(SEL4BENCH_NUM_GENERIC_EVENTS, GENERIC_EVENTS, chunk, n_counters);
+}
+
+/* shortcut for calling sel4bench_enable_counters on the GENERIC_EVENTS supplied by all platforms in
+ * libsel4bench */
+static inline int
+sel4bench_get_num_generic_counter_chunks(seL4_Word n_counters) {
+    return sel4bench_get_num_counter_chunks(n_counters, SEL4BENCH_NUM_GENERIC_EVENTS);
+}

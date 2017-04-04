@@ -18,6 +18,7 @@
 #include <sel4bench/types.h>
 #include <sel4bench/arch/sel4bench.h>
 #include <utils/attribute.h>
+#include <utils/arith.h>
 
 /**
  * @file

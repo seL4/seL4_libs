@@ -34,7 +34,7 @@ const char* const sel4bench_arch_event_counter_data[] = {
     NAME_EVENT(BRANCH_MISPREDICT         , "Mispredicted or not predicted branch speculatively executed"),
     NAME_EVENT(CCNT                      , "Cycle"),
     NAME_EVENT(EXECUTE_BRANCH_PREDICTABLE, "Predictable branch speculatively executed"),
-    NAME_EVENT(MEM_ACCESS                , "Data memory access"),
+    NAME_EVENT(MEMORY_ACCESS                , "Data memory access"),
     NAME_EVENT(L1I_CACHE                 , "Level 1 instruction cache access"),
     NAME_EVENT(L1D_CACHE_WB              , "Level 1 data cache write-back"),
     NAME_EVENT(L2D_CACHE                 , "Level 2 data cache access"),

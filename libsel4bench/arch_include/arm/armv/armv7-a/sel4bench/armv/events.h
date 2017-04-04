@@ -47,7 +47,7 @@
 #define SEL4BENCH_EVENT_CCNT                        0x11
 #define SEL4BENCH_EVENT_EXECUTE_BRANCH_PREDICTABLE  0x12
 /* Data memory access */
-#define SEL4BENCH_EVENT_MEM_ACCESS                  0x13
+#define SEL4BENCH_EVENT_MEMORY_ACCESS                  0x13
 /* Level 1 instruction cache access */
 #define SEL4BENCH_EVENT_L1I_CACHE                   0x14
 /* Level 1 data cache write-back */

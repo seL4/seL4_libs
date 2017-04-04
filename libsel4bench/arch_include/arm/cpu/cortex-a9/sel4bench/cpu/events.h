@@ -123,6 +123,8 @@
  * instructions in the same cycle so the event is two bits long.
  */
 #define SEL4BENCH_EVENT_RENAME_INST              0x68
+/* The cortex-a9 manual states that this counter implements 0x8 */
+#define SEL4BENCH_EVENT_EXECUTE_INSTRUCTION SEL4BENCH_EVENT_RENAME_INST
 
 /**
  * Predictable function returns (Approximate)
@@ -139,7 +141,6 @@
  * pipeline. The counted instructions are still speculative.
  */
 #define SEL4BENCH_EVENT_MAIN_EXEC_INST           0x70
-#define SEL4BENCH_EVENT_EXECUTE_INSTRUCTION SEL4BENCH_EVENT_MAIN_EXEC_INST
 
 /**
  * Second execution unit instructions (Approximate)

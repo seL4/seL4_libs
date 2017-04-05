@@ -17,7 +17,7 @@ static ssize_t
 debug_write(ps_chardevice_t* device UNUSED, const void* vdata, size_t count,
             chardev_callback_t cb UNUSED, void* token UNUSED)
 {
-#ifdef SEL4_DEBUG_KERNEL
+#ifdef CONFIG_DEBUG_BUILD
     size_t sent = 0;
     const char* data = (const char*)vdata;
     for (sent = 0; sent < count; sent++) {

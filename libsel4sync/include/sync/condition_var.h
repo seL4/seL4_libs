@@ -12,6 +12,7 @@
 
 #pragma once
 
+#include <autoconf.h>
 #include <sel4/sel4.h>
 #include <vka/vka.h>
 #include <vka/object.h>
@@ -35,7 +36,7 @@ static inline int sync_cv_init(sync_cv_t *cv, seL4_CPtr notification)
         return -1;
     }
 
-#ifdef SEL4_DEBUG_KERNEL
+#ifdef CONFIG_DEBUG_BUILD
     /* Check the cap actually is a notification. */
     assert(seL4_DebugCapIdentify(notification) == 6);
 #endif

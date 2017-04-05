@@ -11,6 +11,7 @@
 #ifndef _SYNC_BIN_SEM_H_
 #define _SYNC_BIN_SEM_H_
 
+#include <autoconf.h>
 #include <assert.h>
 #include <sel4/sel4.h>
 #include <vka/vka.h>
@@ -39,7 +40,7 @@ static inline int sync_bin_sem_init(sync_bin_sem_t *sem, seL4_CPtr notification,
         return -1;
     }
 
-#ifdef SEL4_DEBUG_KERNEL
+#ifdef CONFIG_DEBUG_BUILD
     /* Check the cap actually is a notification. */
     assert(seL4_DebugCapIdentify(notification) == 6);
 #endif

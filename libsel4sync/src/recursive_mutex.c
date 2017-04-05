@@ -8,6 +8,7 @@
  * @TAG(NICTA_BSD)
  */
 
+#include <autoconf.h>
 #include <sync/recursive_mutex.h>
 #include <stddef.h>
 #include <assert.h>
@@ -24,7 +25,7 @@ int sync_recursive_mutex_init(sync_recursive_mutex_t *mutex, seL4_CPtr notificat
         ZF_LOGE("Mutex passed to sync_recursive_mutex_init is NULL");
         return -1;
     }
-#ifdef SEL4_DEBUG_KERNEL
+#ifdef CONFIG_DEBUG_BUILD
     /* Check the cap actually is a notification. */
     assert(seL4_DebugCapIdentify(notification) == 6);
 #endif

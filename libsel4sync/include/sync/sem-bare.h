@@ -17,6 +17,7 @@
  * semaphore.
  */
 
+#include <autoconf.h>
 #include <assert.h>
 #include <limits.h>
 #include <sel4/sel4.h>
@@ -24,7 +25,7 @@
 #include <sync/atomic.h>
 
 static inline int sync_sem_bare_wait(seL4_CPtr ep, volatile int *value) {
-#ifdef SEL4_DEBUG_KERNEL
+#ifdef CONFIG_DEBUG_BUILD
     /* Check the cap actually is an EP. */
     assert(seL4_DebugCapIdentify(ep) == 4);
 #endif
@@ -60,7 +61,7 @@ static inline int sync_sem_bare_trywait(seL4_CPtr ep, volatile int *value) {
 }
 
 static inline int sync_sem_bare_post(seL4_CPtr ep, volatile int *value) {
-#ifdef SEL4_DEBUG_KERNEL
+#ifdef CONFIG_DEBUG_BUILD
     /* Check the cap actually is an EP. */
     assert(seL4_DebugCapIdentify(ep) == 4);
 #endif

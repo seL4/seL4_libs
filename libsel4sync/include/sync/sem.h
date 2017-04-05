@@ -11,6 +11,7 @@
 #ifndef _SYNC_SEM_H_
 #define _SYNC_SEM_H_
 
+#include <autoconf.h>
 #include <assert.h>
 #include <sel4/sel4.h>
 #include <vka/vka.h>
@@ -33,7 +34,7 @@ static inline int sync_sem_init(sync_sem_t *sem, seL4_CPtr ep, int value) {
         ZF_LOGE("Semaphore passed to sync_sem_init was NULL");
         return -1;
     }
-#ifdef SEL4_DEBUG_KERNEL
+#ifdef CONFIG_DEBUG_BUILD
     /* Check the cap actually is an EP. */
     assert(seL4_DebugCapIdentify(ep) == 4);
 #endif

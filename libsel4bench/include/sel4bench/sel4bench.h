@@ -166,13 +166,10 @@ static UNUSED void sel4bench_start_counters(counter_bitfield_t counters);
 static UNUSED void sel4bench_stop_counters(counter_bitfield_t counters);
 
 /**
- * Reset a set of performance counters to zero. The argument is a
- * bitfield detailing that set. (Note that this means the library supports a
- * number of counters less than or equal to the machine word size in bits.)
+ * Reset all performance counters to zero.
  *
- * @param counters A bitfield indicating which counter(s) to reset.
  */
-static UNUSED void sel4bench_reset_counters(counter_bitfield_t counters);
+static UNUSED void sel4bench_reset_counters(void);
 
 /*
  * @return the number benchmark loops required to read a number of events
@@ -211,7 +208,7 @@ sel4bench_enable_counters(seL4_Word n_events, event_id_t events[n_events], seL4_
         mask |= BIT(i);
     }
 
-    sel4bench_reset_counters(mask);
+    sel4bench_reset_counters();
     sel4bench_start_counters(mask);
     return mask;
 }

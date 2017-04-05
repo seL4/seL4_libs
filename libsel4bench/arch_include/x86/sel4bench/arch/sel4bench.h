@@ -331,16 +331,15 @@ static FASTFN void sel4bench_destroy()
     seL4_DebugRun(&sel4bench_private_disable_user_pmc, NULL);
 }
 
-static FASTFN void sel4bench_reset_counters(counter_bitfield_t mask)
+static FASTFN void sel4bench_reset_counters(void)
 {
     uint32_t msr_data[3];
     msr_data[0] = IA32_MSR_PMC_PERFEVTCNT_BASE;
     msr_data[1] = 0;
     msr_data[2] = 0;
 
-    unsigned char counter = 0;
-    for (; mask != 0; mask >>= 1, msr_data[0]++)
-        if (counter & 1) {
-            seL4_DebugRun(&sel4bench_private_wrmsr, msr_data);
-        }
+    for (int i = 0; i < sel4bench_get_num_counters(); i++) {
+        msr_data[0]++;
+        seL4_DebugRun(&sel4bench_private_wrmsr, msr_data);
+    }
 }

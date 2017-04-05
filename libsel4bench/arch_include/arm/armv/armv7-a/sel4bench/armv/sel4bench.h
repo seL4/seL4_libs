@@ -168,25 +168,8 @@ static FASTFN void sel4bench_stop_counters(counter_bitfield_t mask)
     return sel4bench_private_write_cntenc(mask & ~BIT(SEL4BENCH_ARMV7A_COUNTER_CCNT));
 }
 
-static FASTFN void sel4bench_reset_counters(counter_bitfield_t mask)
+static FASTFN void sel4bench_reset_counters(void)
 {
     //Reset all counters except the CCNT
-    if (mask == (~0UL) || mask == (BIT(sel4bench_get_num_counters()) - 1)) {
-        MODIFY_PMCR( | , SEL4BENCH_ARMV7A_PMCR_RESET_ALL);
-    } else {
-        mask = mask & ~BIT(SEL4BENCH_ARMV7A_COUNTER_CCNT);
-        uint32_t enable_word = sel4bench_private_read_cntens(); //store current running state
-
-        sel4bench_private_write_cntenc(enable_word); //stop running counters (we do this instead of stopping the ones we're interested in because it saves an instruction)
-
-        unsigned int counter = 0;
-        for (; mask != 0; mask >>= 1, counter++) { //for each counter...
-            if (mask & 1) { //... if we care about it...
-                sel4bench_private_write_pmnxsel(counter); //select it,
-                sel4bench_private_write_pmcnt(0);
-            }
-        }
-
-        sel4bench_private_write_cntens(enable_word); //start the counters again
-    }
+    MODIFY_PMCR( | , SEL4BENCH_ARMV7A_PMCR_RESET_ALL);
 }

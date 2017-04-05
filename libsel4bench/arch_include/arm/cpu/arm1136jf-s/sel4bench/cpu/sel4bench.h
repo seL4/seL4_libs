@@ -49,24 +49,15 @@ static KERNELFN void sel4bench_private_destroy(void* data)
 
 static KERNELFN void sel4bench_private_reset_gp_counters(void* data)
 {
-    if (data == NULL) {
-        sel4bench_arm1136_pmnc_t reset_pmnc = sel4bench_private_get_pmnc();
-        reset_pmnc.P = 1; //reset performance counters
-        reset_pmnc.Flag = 0x3; //clear overflow flags on C0 and C1
-        reset_pmnc.C = 0; //don't touch CCNT
-        reset_pmnc.SBZ1 = 0; //per spec
-        reset_pmnc.SBZ2 = 0; //per spec
+    sel4bench_arm1136_pmnc_t reset_pmnc = sel4bench_private_get_pmnc();
+    reset_pmnc.P = 1; //reset performance counters
+    reset_pmnc.Flag = 0x3; //clear overflow flags on C0 and C1
+    reset_pmnc.C = 0; //don't touch CCNT
+    reset_pmnc.SBZ1 = 0; //per spec
+    reset_pmnc.SBZ2 = 0; //per spec
 
-        //reset and enable all counters
-        sel4bench_private_set_pmnc(reset_pmnc);
-    } else {
-        uint32_t counter = (uint32_t)data; //cheesy, I know
-        if (counter) {
-            sel4bench_private_set_pmn1(0);
-        } else {
-            sel4bench_private_set_pmn0(0);
-        }
-    }
+    //reset and enable all counters
+    sel4bench_private_set_pmnc(reset_pmnc);
 }
 
 static KERNELFN void sel4bench_private_get_cycle_count(void* data)
@@ -249,13 +240,9 @@ static FASTFN void sel4bench_stop_counters(counter_bitfield_t mask)
      */
 }
 
-static FASTFN void sel4bench_reset_counters(counter_bitfield_t mask)
+static FASTFN void sel4bench_reset_counters(void)
 {
-    if (mask == (~0UL) || mask == (1U << sel4bench_get_num_counters()) - 1) {
-        seL4_DebugRun(&sel4bench_private_reset_gp_counters, NULL);
-    } else {
-        seL4_DebugRun(&sel4bench_private_reset_gp_counters, (void*)mask);
-    }
+    seL4_DebugRun(&sel4bench_private_reset_gp_counters, NULL);
 }
 
 static FASTFN void sel4bench_start_counters(counter_bitfield_t mask)
@@ -263,5 +250,5 @@ static FASTFN void sel4bench_start_counters(counter_bitfield_t mask)
     /* all three ARM1136 counters have to start at the same time...
      * so we just start them all at init time and make this reset them
      */
-    sel4bench_reset_counters(mask);
+    sel4bench_reset_counters();
 }

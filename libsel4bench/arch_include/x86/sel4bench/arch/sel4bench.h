@@ -339,7 +339,7 @@ static FASTFN void sel4bench_reset_counters(void)
     msr_data[2] = 0;
 
     for (int i = 0; i < sel4bench_get_num_counters(); i++) {
-        msr_data[0]++;
         seL4_DebugRun(&sel4bench_private_wrmsr, msr_data);
+        msr_data[0]++;
     }
 }

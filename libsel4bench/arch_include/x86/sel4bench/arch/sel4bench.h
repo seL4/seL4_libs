@@ -282,7 +282,7 @@ static FASTFN void sel4bench_stop_counters(counter_bitfield_t mask)
     if (mask == ~(0UL)) {
         mask = ((1 << num_counters) - 1);
     } else {
-        assert((~((1 << num_mask) - 1) & mask) == 0);
+        assert((~((1 << num_counters) - 1) & mask) == 0);
     }
 
     uint32_t max_basic_leaf = 0;

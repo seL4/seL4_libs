@@ -42,7 +42,6 @@ static long boot_set_thread_area(va_list ap) {
 }
 
 bool muslcsys_get_boot_set_thread_area(void **arg) {
-    assert(arg);
     *arg = boot_set_thread_area_arg;
     return boot_set_thread_area_happened;
 }
@@ -60,7 +59,6 @@ static long boot_set_tid_address(va_list ap) {
 }
 
 bool muslcsys_get_boot_set_tid_address(int **arg) {
-    assert(arg);
     *arg = boot_set_tid_address_arg;
     return boot_set_tid_address_happened;
 }

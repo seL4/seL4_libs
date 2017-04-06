@@ -464,7 +464,7 @@ static int bootstrap_new_1level_cspace(bootstrap_info_t *bs, int size) {
         .cnode = new_cnode,
         .cnode_size_bits = size,
         .cnode_guard_bits = seL4_WordBits - size,
-        .first_slot = new_cnode + 1u,
+        .first_slot = simple_get_cap_count(bs->simple),
         .end_slot = BIT(size) - 2u}); // subtract 2 as the last slot is occupied
     if (error) {
         return error;

@@ -10,8 +10,6 @@
 
 #include <autoconf.h>
 
-#if defined CONFIG_LIB_SEL4_VSPACE && defined CONFIG_LIB_SEL4_VKA
-
 #include <stdlib.h>
 #include <string.h>
 #include <vka/vka.h>
@@ -445,5 +443,3 @@ sel4utils_bootstrap_clone_into_vspace(vspace_t *current, vspace_t *clone, reserv
     vka_cspace_free(get_alloc_data(current)->vka, slot);
     return 0;
 }
-
-#endif /* CONFIG_LIB_SEL4_VSPACE && CONFIG_LIB_SEL4_VKA */

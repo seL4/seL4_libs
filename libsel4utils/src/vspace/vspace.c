@@ -11,8 +11,6 @@
 /* see sel4utils/vspace.h for details */
 #include <autoconf.h>
 
-#if defined CONFIG_LIB_SEL4_VKA && defined CONFIG_LIB_SEL4_VSPACE
-
 #include <inttypes.h>
 #include <stdbool.h>
 #include <stdlib.h>
@@ -808,5 +806,3 @@ sel4utils_get_paddr(vspace_t *vspace, void *vaddr, seL4_Word type, seL4_Word siz
     return vka_utspace_paddr(vka, vspace_get_cookie(vspace, vaddr), type, size_bits);
 
 }
-
-#endif /* CONFIG_LIB_SEL4_VKA && CONFIG_LIB_SEL4_VSPACE */

@@ -31,8 +31,6 @@
 
 #include <autoconf.h>
 
-#if defined CONFIG_LIB_SEL4_VSPACE && defined CONFIG_LIB_SEL4_VKA
-
 #include <vspace/vspace.h>
 #include <vka/vka.h>
 #include <sel4utils/util.h>
@@ -310,5 +308,4 @@ void sel4utils_get_image_region(uintptr_t *va_start, uintptr_t *va_end);
  */
 uintptr_t sel4utils_get_paddr(vspace_t *vspace, void *vaddr, seL4_Word type, seL4_Word size_bits);
 
-#endif /* CONFIG_LIB_SEL4_VSPACE && CONFIG_LIB_SEL4_VKA */
 #endif /* _UTILS_VSPACE_H */

@@ -13,7 +13,7 @@
 
 #include <autoconf.h>
 
-#if defined(CONFIG_LIB_SEL4_VSPACE) && defined(CONFIG_LIB_SEL4_VKA) && defined(CONFIG_LIB_PLATSUPPORT) && defined(CONFIG_IOMMU)
+#if defined(CONFIG_IOMMU)
 
 #include <sel4/sel4.h>
 #include <vka/vka.h>
@@ -60,5 +60,5 @@ int sel4utils_make_iommu_dma_alloc(vka_t *vka, vspace_t *vspace, ps_dma_man_t *d
  * @return 0 on success
  */
 int sel4utils_iommu_dma_alloc_iospace(void *dma_cookie, void *vaddr, size_t size);
-#endif /* CONFIG_LIB_SEL4_VSPACE && CONFIG_LIB_SEL4_VKA && CONFIG_LIB_PLATSUPPORT && CONFIG_IOMMU */
+#endif /* CONFIG_IOMMU */
 #endif /* SEL4_UTILS_IOMMU_DMA_H */

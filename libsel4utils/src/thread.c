@@ -10,8 +10,6 @@
 
 #include <autoconf.h>
 
-#ifdef CONFIG_LIB_SEL4_VSPACE
-
 #include <inttypes.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -288,6 +286,3 @@ sel4utils_free_checkpoint(sel4utils_checkpoint_t *checkpoint)
 {
     free(checkpoint->stack);
 }
-
-
-#endif /* CONFIG_LIB_SEL4_VSPACE */

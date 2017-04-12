@@ -16,8 +16,6 @@
 #include <vka/capops.h>
 #include <sel4platsupport/device.h>
 
-#ifdef CONFIG_LIB_SEL4_VSPACE
-
 void
 timer_common_destroy_frame(seL4_timer_t *timer, vka_t *vka, vspace_t *vspace)
 {
@@ -131,5 +129,3 @@ timer_common_destroy(seL4_timer_t *timer, vka_t *vka, vspace_t *vspace)
     }
     timer_common_destroy_internal(timer, vka, vspace);
 }
-
-#endif /* CONFIG_LIB_SEL4_VSPACE */

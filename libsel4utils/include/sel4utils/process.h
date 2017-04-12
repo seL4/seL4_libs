@@ -12,8 +12,6 @@
 
 #include <autoconf.h>
 
-#if (defined CONFIG_LIB_SEL4_VSPACE && defined CONFIG_LIB_SEL4_VKA)
-
 #include <vka/vka.h>
 #include <vspace/vspace.h>
 
@@ -312,5 +310,4 @@ void sel4utils_create_word_args(char strings[][WORD_STRING_SIZE], char *argv[], 
  */
 seL4_CPtr sel4utils_process_init_cap(seL4_CPtr cap);
 
-#endif /* (defined CONFIG_LIB_SEL4_VSPACE && defined CONFIG_LIB_SEL4_VKA) */
 #endif /* SEL4UTILS_PROCESS_H */

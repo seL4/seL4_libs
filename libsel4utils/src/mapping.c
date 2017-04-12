@@ -10,8 +10,6 @@
 
 #include <autoconf.h>
 
-#ifdef CONFIG_LIB_SEL4_VKA
-
 #include <inttypes.h>
 #include <sel4/sel4.h>
 #include <vka/object.h>
@@ -223,8 +221,6 @@ sel4utils_map_ept_page(vka_t *vka, seL4_CPtr pd, seL4_CPtr frame, seL4_Word vadd
 
 #endif /* CONFIG_VTX */
 
-#ifdef CONFIG_LIB_SEL4_VSPACE
-
 /* Some more generic routines for helping with mapping */
 void *
 sel4utils_dup_and_map(vka_t *vka, vspace_t *vspace, seL4_CPtr page, size_t size_bits)
@@ -266,6 +262,3 @@ sel4utils_unmap_dup(vka_t *vka, vspace_t *vspace, void *mapping, size_t size_bit
     vka_cnode_delete(&copy_path);
     vka_cspace_free(vka, copy);
 }
-
-#endif /* CONFIG_LIB_SEL4_VSAPCE */
-#endif /* CONFIG_LIB_SEL4_VKA */

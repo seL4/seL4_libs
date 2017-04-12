@@ -22,8 +22,6 @@
 
 #include <autoconf.h>
 
-#if defined CONFIG_LIB_SEL4_VSPACE && defined CONFIG_LIB_SEL4_VKA
-
 #include <vspace/vspace.h>
 #include <vka/vka.h>
 
@@ -77,5 +75,4 @@ int sel4utils_cs_vspace_for_each(vspace_t *vspace, void *addr, uint32_t len,
  */
 int sel4utils_cs_vspace_set_root(vspace_t *vspace, seL4_CPtr page_directory);
 
-#endif /* CONFIG_LIB_SEL4_VSPACE && CONFIG_LIB_SEL4_VKA */
 #endif /* _UTILS_CLIENT_SERVER_VSPACE_H */

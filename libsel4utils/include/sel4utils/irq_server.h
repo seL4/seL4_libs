@@ -52,8 +52,6 @@
 
 #include <autoconf.h>
 
-#if (defined CONFIG_LIB_SEL4_VKA && defined CONFIG_LIB_SEL4_VSPACE && defined CONFIG_LIB_SEL4_SIMPLE)
-
 #include <sel4/sel4.h>
 #include <vspace/vspace.h>
 #include <vka/vka.h>
@@ -195,5 +193,4 @@ void irq_server_handle_irq_ipc(irq_server_t irq_server);
  */
 seL4_MessageInfo_t irq_server_wait_for_irq(irq_server_t irq_server, seL4_Word* badge_ret);
 
-#endif /* (defined CONFIG_LIB_SEL4_VKA && defined CONFIG_LIB_SEL4_VSPACE) */
 #endif /* SEL4UTILS_IRQ_SERVER_H */

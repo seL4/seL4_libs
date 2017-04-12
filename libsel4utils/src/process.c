@@ -9,8 +9,6 @@
  */
 #include <autoconf.h>
 
-#if (defined CONFIG_LIB_SEL4_VKA && defined CONFIG_LIB_SEL4_VSPACE)
-
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
@@ -697,5 +695,3 @@ sel4utils_process_init_cap(seL4_CPtr cap)
         return seL4_CapNull;
     }
 };
-
-#endif /*(defined CONFIG_LIB_SEL4_VKA && defined CONFIG_LIB_SEL4_VSPACE)*/

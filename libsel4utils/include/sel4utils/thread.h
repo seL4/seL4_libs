@@ -21,8 +21,6 @@
 
 #include <autoconf.h>
 
-#ifdef CONFIG_LIB_SEL4_VSPACE
-
 #include <sel4/sel4.h>
 #include <stdbool.h>
 #include <vka/vka.h>
@@ -230,5 +228,4 @@ sel4utils_suspend_thread(sel4utils_thread_t *thread)
     return seL4_TCB_Suspend(thread->tcb.cptr);
 }
 
-#endif /* CONFIG_LIB_SEL4_VSPACE */
 #endif /* _SEL4UTILS_THREAD_H */

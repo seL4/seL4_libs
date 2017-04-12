@@ -10,8 +10,6 @@
 
 #include <autoconf.h>
 
-#if defined CONFIG_LIB_SEL4_VKA && defined CONFIG_LIB_SEL4_VSPACE
-
 #include <sel4utils/client_server_vspace.h>
 #include <vka/capops.h>
 #include <sel4utils/mapping.h>
@@ -303,5 +301,3 @@ int sel4utils_cs_vspace_set_root(vspace_t *vspace, seL4_CPtr vspace_root)
 
     return 0;
 }
-
-#endif

@@ -10,8 +10,6 @@
 
 #include <sel4utils/irq_server.h>
 
-#if (defined CONFIG_LIB_SEL4_VKA && defined CONFIG_LIB_SEL4_VSPACE && defined CONFIG_LIB_SEL4_SIMPLE)
-
 #include <simple/simple.h>
 #include <sel4utils/thread.h>
 #include <vka/capops.h>
@@ -405,5 +403,3 @@ irq_server_wait_for_irq(irq_server_t irq_server, seL4_Word* badge_ret)
     }
     return msginfo;
 }
-
-#endif /* (defined CONFIG_LIB_SEL4_VKA && defined CONFIG_LIB_SEL4_VSPACE) */

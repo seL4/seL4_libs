@@ -9,8 +9,6 @@
  */
 #include <autoconf.h>
 
-#if (defined CONFIG_LIB_SEL4_VKA && defined CONFIG_LIB_SEL4_VSPACE)
-
 #include <string.h>
 #include <sel4/sel4.h>
 #include <elf/elf.h>
@@ -302,5 +300,3 @@ sel4utils_elf_load(vspace_t *loadee, vspace_t *loader, vka_t *loadee_vka, vka_t 
 {
     return sel4utils_elf_load_record_regions(loadee, loader, loadee_vka, loader_vka, image_name, NULL, 0);
 }
-
-#endif /* (defined CONFIG_LIB_SEL4_VKA && defined CONFIG_LIB_SEL4_VSPACE) */

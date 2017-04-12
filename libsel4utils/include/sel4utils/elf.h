@@ -12,8 +12,6 @@
 
 #include <autoconf.h>
 
-#if (defined CONFIG_LIB_SEL4_VKA && defined CONFIG_LIB_SEL4_VSPACE)
-
 #include <vka/vka.h>
 
 #include <vspace/vspace.h>
@@ -106,5 +104,4 @@ sel4utils_elf_num_regions(const char *image_name);
  */
 uintptr_t sel4utils_elf_get_vsyscall(const char *image_name);
 
-#endif /* (defined CONFIG_LIB_SEL4_VKA && defined CONFIG_LIB_SEL4_VSPACE) */
 #endif /* SEL4UTILS_ELF_H */

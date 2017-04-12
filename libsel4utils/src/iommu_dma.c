@@ -10,7 +10,7 @@
 
 #include <autoconf.h>
 
-#if defined(CONFIG_LIB_SEL4_VSPACE) && defined(CONFIG_LIB_SEL4_VKA) && defined(CONFIG_LIB_PLATSUPPORT) && defined(CONFIG_IOMMU)
+#if defined(CONFIG_IOMMU)
 
 #include <sel4utils/iommu_dma.h>
 #include <sel4utils/vspace.h>
@@ -236,4 +236,4 @@ error:
     return -1;
 }
 
-#endif /* CONFIG_LIB_SEL4_VSPACE && CONFIG_LIB_SEL4_VKA && CONFIG_LIB_PLATSUPPORT && CONFIG_IOMMU */
+#endif /* CONFIG_IOMMU */

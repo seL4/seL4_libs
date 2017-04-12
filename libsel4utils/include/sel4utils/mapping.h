@@ -17,8 +17,6 @@
 #include <sel4/sel4_arch/mapping.h>
 #include <sel4utils/arch/mapping.h>
 
-#ifdef CONFIG_LIB_SEL4_VKA
-
 #include <vka/vka.h>
 #include <vka/object.h>
 
@@ -71,8 +69,6 @@ static inline int sel4utils_map_page_leaky(vka_t *vka, seL4_CPtr pd, seL4_CPtr f
     return sel4utils_map_page(vka, pd, frame, vaddr, rights, cacheable, objects, &num);
 }
 
-#ifdef CONFIG_LIB_SEL4_VSPACE
-
 #include <vspace/vspace.h>
 
 /* Duplicate a page cap and map it into a vspace
@@ -97,9 +93,6 @@ void * sel4utils_dup_and_map(vka_t *vka, vspace_t *vspace, seL4_CPtr page, size_
  * @return none
  */
 void sel4utils_unmap_dup(vka_t *vka, vspace_t *vspace, void *mapping, size_t size_bits);
-
-#endif /* CONFIG_LIB_SEL4_VSPACE */
-#endif /* CONFIG_LIB_SEL4_VKA */
 
 #if defined(CONFIG_IOMMU) || defined(CONFIG_ARM_SMMU)
 int sel4utils_map_iospace_page(vka_t *vka, seL4_CPtr iospace, seL4_CPtr frame, seL4_Word vaddr,

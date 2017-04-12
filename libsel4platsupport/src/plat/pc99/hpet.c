@@ -22,8 +22,6 @@
 #include <vka/capops.h>
 #include "../../timer_common.h"
 
-#ifdef CONFIG_LIB_SEL4_VSPACE
-
 static void
 hpet_handle_irq(seL4_timer_t *timer, uint32_t irq)
 {
@@ -189,5 +187,3 @@ sel4platsupport_get_default_timer(vka_t *vka, vspace_t *vspace,
 
     return timer;
 }
-
-#endif /* CONFIG_LIB_SEL4_VSPACE */

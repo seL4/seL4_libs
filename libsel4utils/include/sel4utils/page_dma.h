@@ -13,8 +13,6 @@
 
 #include <autoconf.h>
 
-#if defined(CONFIG_LIB_SEL4_VSPACE) && defined(CONFIG_LIB_SEL4_VKA) && defined(CONFIG_LIB_PLATSUPPORT)
-
 #include <sel4/sel4.h>
 #include <vka/vka.h>
 #include <vspace/vspace.h>
@@ -32,5 +30,4 @@
  */
 int sel4utils_new_page_dma_alloc(vka_t *vka, vspace_t *vspace, ps_dma_man_t *dma_man);
 
-#endif /* CONFIG_LIB_SEL4_VSPACE && CONFIG_LIB_SEL4_VKA && CONFIG_LIB_PLATSUPPORT */
 #endif /* SEL4_UTILS_PAGE_DMA_H */

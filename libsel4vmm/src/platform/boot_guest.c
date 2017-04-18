@@ -178,12 +178,10 @@ int vmm_guest_load_boot_module(vmm_t *vmm, const char *name) {
     return 0;
 }
 
-#ifdef CONFIG_VMM_VESA_FRAMEBUFFER
 static inline uint32_t vmm_plat_vesa_fbuffer_size(seL4_VBEModeInfoBlock_t *block) {
     assert(block);
     return ALIGN_UP(block->bytesPerScanLine * block->yRes, 65536);
 }
-#endif
 
 static int make_guest_page_dir_continued(uintptr_t guest_phys, void *vaddr, size_t size, size_t offset, void *cookie) {
     assert(offset == 0);
@@ -386,7 +384,7 @@ static int make_guest_boot_info(vmm_t *vmm) {
 
 /* Init the guest page directory, cmd line args and boot info structures. */
 void vmm_plat_init_guest_boot_structure(vmm_t *vmm, const char *cmdline) {
-    int err;
+    int UNUSED err;
 
     err = make_guest_page_dir(vmm);
     assert(!err);

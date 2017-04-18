@@ -160,7 +160,7 @@ int vmm_io_port_add_handler(vmm_io_port_list_t *io_list, uint16_t start, uint16_
 
 /*configure io ports for a guest*/
 int vmm_io_port_init_guest(vmm_io_port_list_t *io_list, simple_t *simple, seL4_CPtr vcpu) {
-    int error;
+    int UNUSED error;
 
     for (int i = 0; i < io_list->num_ioports; i++) {
         ioport_range_t *port = &io_list->ioports[i];

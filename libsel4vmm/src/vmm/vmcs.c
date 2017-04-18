@@ -18,7 +18,7 @@
 
 int vmm_vmcs_read(seL4_CPtr vcpu, seL4_Word field) {
 
-    seL4_X86_VCPU_ReadVMCS_t result;
+    seL4_X86_VCPU_ReadVMCS_t UNUSED result;
 
     assert(vcpu);
 

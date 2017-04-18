@@ -62,7 +62,7 @@ int vmm_init_host(vmm_t *vmm) {
 }
 
 static int vmm_init_vcpu(vmm_t *vmm, unsigned int vcpu_num, int priority) {
-    int error;
+    int UNUSED error;
     assert(vcpu_num < vmm->num_vcpus);
     vmm_vcpu_t *vcpu = &vmm->vcpus[vcpu_num];
 

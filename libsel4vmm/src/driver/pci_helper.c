@@ -380,7 +380,7 @@ vmm_pci_entry_t vmm_pci_create_cap_emulation(vmm_pci_entry_t existing, int num_c
 
 vmm_pci_entry_t vmm_pci_no_msi_cap_emulation(vmm_pci_entry_t existing) {
     uint32_t value;
-    int error;
+    int UNUSED error;
     /* Ensure this is a type 0 device */
     value = 0;
     error = existing.ioread(existing.cookie, PCI_HEADER_TYPE, 1, &value);

@@ -139,7 +139,7 @@ static void vmm_update_guest_state_from_fault(vmm_vcpu_t *vcpu, seL4_Word *msg) 
 
 /* Entry point of of VMM main host module. */
 void vmm_run(vmm_t *vmm) {
-    int error;
+    int UNUSED error;
     DPRINTF(2, "VMM MAIN HOST MODULE STARTED\n");
 
     for (int i = 0; i < vmm->num_vcpus; i++) {

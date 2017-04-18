@@ -307,7 +307,7 @@ int vmm_map_guest_device_at(vmm_t *vmm, uintptr_t vaddr, uintptr_t paddr, size_t
     guest_memory_t *guest_memory = &vmm->guest_mem;
     reservation_t reservation = vspace_reserve_range_at(&guest_memory->vspace, (void*)vaddr, bytes, seL4_AllRights, 1);
     if (!reservation.res) {
-        ZF_LOGE("Failed to allocate reservation of size %zu when mapping device from %p at", bytes, (void*)paddr, (void*)vaddr);
+        ZF_LOGE("Failed to allocate reservation of size %zu when mapping device from %p at %p", bytes, (void*)paddr, (void*)vaddr);
         return -1;
     }
     error = vmm_map_guest_device_reservation(vmm, paddr, bytes, reservation, vaddr);

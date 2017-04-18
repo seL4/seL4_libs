@@ -158,19 +158,15 @@ vka_cspace_make_path(vka_t *vka, seL4_CPtr slot, cspacepath_t *res)
 {
 
     if (!res) {
-        ZF_LOGE("res is NULL");
-        return;
+        ZF_LOGF("res is NULL");
     }
 
     if (!vka) {
-        ZF_LOGE("vka is NULL");
-        res->capPtr = 0;
-        return;
+        ZF_LOGF("vka is NULL");
     }
 
     if (!vka->cspace_make_path) {
-        ZF_LOGE("Unimplmented");
-        return;
+        ZF_LOGF("Unimplmented");
     }
 
     vka->cspace_make_path(vka->data, slot, res);

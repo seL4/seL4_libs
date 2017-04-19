@@ -317,9 +317,15 @@ static int make_guest_e820_map(struct e820entry *e820, guest_memory_t *guest_mem
     return entry + 1;
 }
 
-static int make_guest_boot_info_continued(uintptr_t paddr, void *vaddr, size_t size, size_t offset, void *cookie) {
-    DPRINTF(2, "plat: init guest boot info\n");
-    vmm_t *vmm = (vmm_t*)cookie;
+static int make_guest_boot_info(vmm_t *vmm) {
+    /* TODO: Bootinfo struct needs to be allocated in location accessable by real mode? */
+    uintptr_t addr = guest_ram_allocate(&vmm->guest_mem, sizeof(struct boot_params));
+    if (addr == 0) {
+        ZF_LOGE("Failed to allocate %zu bytes for guest boot info struct", sizeof(struct boot_params));
+        return -1;
+    }
+    printf("Guest boot info allocated at %p. Populating...\n", (void*)addr);
+    vmm->guest_image.boot_info = addr;
 
     /* Map in BIOS boot info structure. */
     struct boot_params boot_info;
@@ -358,20 +364,7 @@ static int make_guest_boot_info_continued(uintptr_t paddr, void *vaddr, size_t s
     } else {
         boot_info.hdr.version = 0x0202;
     }
-    memcpy(vaddr, ((char*)(&boot_info)) + offset, size);
-    return 0;
-}
-
-static int make_guest_boot_info(vmm_t *vmm) {
-    /* TODO: Bootinfo struct needs to be allocated in location accessable by real mode? */
-    uintptr_t addr = guest_ram_allocate(&vmm->guest_mem, sizeof(struct boot_params));
-    if (addr == 0) {
-        ZF_LOGE("Failed to allocate %zu bytes for guest boot info struct", sizeof(struct boot_params));
-        return -1;
-    }
-    printf("Guest boot info allocated at %p. Populating...\n", (void*)addr);
-    vmm->guest_image.boot_info = addr;
-    return vmm_guest_vspace_touch(&vmm->guest_mem.vspace, addr, sizeof(struct boot_params), make_guest_boot_info_continued, vmm);
+    return vmm_guest_vspace_touch(&vmm->guest_mem.vspace, addr, sizeof(boot_info), guest_elf_write_address, &boot_info);
 }
 
 /* Init the guest page directory, cmd line args and boot info structures. */

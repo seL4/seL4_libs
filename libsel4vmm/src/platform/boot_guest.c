@@ -236,13 +236,21 @@ static void make_guest_screen_info(vmm_t *vmm, struct screen_info *info) {
     seL4_X86_BootInfo_VBE vbeinfo;
     ssize_t result;
     result = simple_get_extended_bootinfo(&vmm->host_simple, SEL4_BOOTINFO_HEADER_X86_VBE, &vbeinfo, sizeof(seL4_X86_BootInfo_VBE));
+    uintptr_t base = 0;
+    size_t fbuffer_size;
     if (config_set(CONFIG_VMM_VESA_FRAMEBUFFER) && result != -1) {
+        fbuffer_size = vmm_plat_vesa_fbuffer_size(&vbeinfo.vbeModeInfoBlock);
+        base = vmm_map_guest_device(vmm, vbeinfo.vbeModeInfoBlock.physBasePtr, fbuffer_size, PAGE_SIZE_4K);
+        if (!base) {
+            ZF_LOGE("Failed to map base pointer for VESA frame buffer. Disabling");
+        }
+    }
+    if (base) {
         info->orig_video_isVGA = 0x23; // Tell Linux it's a VESA mode
         info->lfb_width = vbeinfo.vbeModeInfoBlock.xRes;
         info->lfb_height = vbeinfo.vbeModeInfoBlock.yRes;
         info->lfb_depth = vbeinfo.vbeModeInfoBlock.bitsPerPixel;
-        size_t fbuffer_size = vmm_plat_vesa_fbuffer_size(&vbeinfo.vbeModeInfoBlock);
-        uintptr_t base = vmm_map_guest_device(vmm, vbeinfo.vbeModeInfoBlock.physBasePtr, fbuffer_size, PAGE_SIZE_4K);
+
         info->lfb_base = base;
         info->lfb_size = fbuffer_size >> 16;
         info->lfb_linelength = vbeinfo.vbeModeInfoBlock.bytesPerScanLine;

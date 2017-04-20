@@ -281,6 +281,7 @@ static void make_guest_screen_info(vmm_t *vmm, struct screen_info *info) {
         info->rsvd_pos = vbeinfo.vbeModeInfoBlock.rsvdOff;
         info->vesapm_seg = vbeinfo.vbeInterfaceSeg;
         info->vesapm_off = vbeinfo.vbeInterfaceOff;
+        info->pages = vbeinfo.vbeModeInfoBlock.planes;
     } else {
         memset(info, 0, sizeof(*info));
     }

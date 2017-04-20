@@ -235,14 +235,30 @@ static void make_guest_screen_info(vmm_t *vmm, struct screen_info *info) {
     /* VESA information */
     seL4_X86_BootInfo_VBE vbeinfo;
     ssize_t result;
+    int error;
     result = simple_get_extended_bootinfo(&vmm->host_simple, SEL4_BOOTINFO_HEADER_X86_VBE, &vbeinfo, sizeof(seL4_X86_BootInfo_VBE));
     uintptr_t base = 0;
     size_t fbuffer_size;
     if (config_set(CONFIG_VMM_VESA_FRAMEBUFFER) && result != -1) {
-        fbuffer_size = vmm_plat_vesa_fbuffer_size(&vbeinfo.vbeModeInfoBlock);
-        base = vmm_map_guest_device(vmm, vbeinfo.vbeModeInfoBlock.physBasePtr, fbuffer_size, PAGE_SIZE_4K);
-        if (!base) {
-            ZF_LOGE("Failed to map base pointer for VESA frame buffer. Disabling");
+        /* map the protected mode interface at the same location we are told about it at.
+         * this is just to guarantee that it ends up within the segment addressable range */
+        uintptr_t pm_base = (vbeinfo.vbeInterfaceSeg << 4) + vbeinfo.vbeInterfaceOff;
+        error = 0;
+        if (pm_base > 0xc000) {
+            /* construct a page size and aligned region to map */
+            uintptr_t aligned_pm = ROUND_DOWN(pm_base, PAGE_SIZE_4K);
+            int size = vbeinfo.vbeInterfaceLen + (pm_base - aligned_pm);
+            size = ROUND_UP(size, PAGE_SIZE_4K);
+            error = vmm_map_guest_device_at(vmm, aligned_pm, aligned_pm, size);
+        }
+        if (error) {
+            ZF_LOGE("Failed to map vbe protected mode interface for VESA frame buffer. Disabling");
+        } else {
+            fbuffer_size = vmm_plat_vesa_fbuffer_size(&vbeinfo.vbeModeInfoBlock);
+            base = vmm_map_guest_device(vmm, vbeinfo.vbeModeInfoBlock.physBasePtr, fbuffer_size, PAGE_SIZE_4K);
+            if (!base) {
+                ZF_LOGE("Failed to map base pointer for VESA frame buffer. Disabling");
+            }
         }
     }
     if (base) {

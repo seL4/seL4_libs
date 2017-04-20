@@ -140,6 +140,7 @@ static int vmm_cpuid_virt(unsigned int function, unsigned int index, struct cpui
         case 0x80000002: /* Get processor name string. */
         case 0x80000003:
         case 0x80000004:
+        case 0x80000005:
         case 0x80000006: /* Cache information. */
             /* Pass through brand name from native CPUID. */
             break;

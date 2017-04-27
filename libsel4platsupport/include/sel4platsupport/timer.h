@@ -11,39 +11,15 @@
 #ifndef _SEL4_PLATSUPPORT_TIMER_H
 #define _SEL4_PLATSUPPORT_TIMER_H
 
+#include <sel4platsupport/timer_types.h>
+#include <sel4platsupport/plat/timer.h>
+#include <sel4platsupport/arch/timer.h>
+
 #include <platsupport/timer.h>
-
 #include <simple/simple.h>
-
 #include <vka/vka.h>
 #include <vka/object.h>
 #include <vspace/vspace.h>
-
-typedef struct seL4_timer seL4_timer_t;
-
-typedef void (*handle_irq_fn_t)(seL4_timer_t *timer, uint32_t irq);
-typedef void (*destroy_fn_t)(seL4_timer_t *timer, vka_t *vka, vspace_t *vspace);
-
-struct seL4_timer {
-    /* os independant timer interface */
-    pstimer_t *timer;
-
-    /* frame object for timer frame */
-    vka_object_t frame;
-    /* irq cap */
-    seL4_CPtr irq;
-    /* vaddr that frame is mapped in at */
-    void *vaddr;
-
-    /* timer specific config data. View in platsupport/plat/<timer>.h */
-    void *data;
-
-    /* sel4 specific functions to call to deal with timer */
-    handle_irq_fn_t handle_irq;
-
-    /* destroy this timer, it will no longer be valid */
-    destroy_fn_t destroy;
-};
 
 static inline void
 sel4_timer_handle_irq(seL4_timer_t *timer, uint32_t irq)

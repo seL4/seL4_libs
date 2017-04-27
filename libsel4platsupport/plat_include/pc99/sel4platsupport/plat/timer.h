@@ -10,6 +10,8 @@
 #ifndef _SEL4PLATSUPPORT_PLAT_TIMER_H
 #define _SEL4PLATSUPPORT_PLAT_TIMER_H
 
+#include <sel4platsupport/timer_types.h>
+
 #include <platsupport/arch/tsc.h>
 #include <sel4platsupport/plat/hpet.h>
 
@@ -32,5 +34,7 @@ seL4_timer_t *sel4platsupport_get_tsc_timer_freq(uint64_t freq);
 
 seL4_timer_t *sel4platsupport_get_tsc_timer(seL4_timer_t *timeout_timer);
 
+#include <sel4platsupport/arch/timer.h>
+#include <sel4platsupport/timer.h>
 
 #endif /* _SEL4PLATSUPPORT_PLAT_TIMER_H */

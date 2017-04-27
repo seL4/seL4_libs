@@ -14,7 +14,6 @@
 #ifndef __SEL4_PLAT_SUPPORT_PWM_H
 #define __SEL4_PLAT_SUPPORT_PWM_H
 
-#include <sel4platsupport/timer.h>
 #include <platsupport/timer.h>
 #include <platsupport/plat/timer.h>
 

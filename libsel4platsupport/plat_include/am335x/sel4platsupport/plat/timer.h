@@ -10,7 +10,8 @@
 #ifndef _SEL4PLATSUPPORT_PLAT_TIMER_H
 #define _SEL4PLATSUPPORT_PLAT_TIMER_H
 
-#include <sel4platsupport/timer.h>
+#include <sel4platsupport/timer_types.h>
+
 #include <platsupport/plat/timer.h>
 
 #define DEFAULT_TIMER_PADDR DMTIMER2_PADDR
@@ -21,5 +22,8 @@ seL4_timer_t *sel4platsupport_get_timer(enum timer_id id,
                                         vspace_t *vspace,
                                         simple_t *simple,
                                         seL4_CPtr notification);
+
+#include <sel4platsupport/arch/timer.h>
+#include <sel4platsupport/timer.h>
 
 #endif /* _SEL4PLATSUPPORT_PLAT_TIMER_H */

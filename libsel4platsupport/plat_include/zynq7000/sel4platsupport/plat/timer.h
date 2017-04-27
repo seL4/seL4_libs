@@ -10,6 +10,8 @@
 #ifndef _SEL4PLATSUPPORT_PLAT_TIMER_H
 #define _SEL4PLATSUPPORT_PLAT_TIMER_H
 
+#include <sel4platsupport/timer_types.h>
+
 #define TRIPLE_TIMER0_PADDR     0xF8001000
 #define TRIPLE_TIMER0_IRQ0      42
 #define TRIPLE_TIMER0_IRQ1      43
@@ -23,5 +25,7 @@
 #define DEFAULT_TIMER_PADDR     TRIPLE_TIMER0_PADDR
 #define DEFAULT_TIMER_INTERRUPT TRIPLE_TIMER0_IRQ0
 
+#include <sel4platsupport/arch/timer.h>
+#include <sel4platsupport/timer.h>
 
 #endif /* _SEL4PLATSUPPORT_PLAT_TIMER_H */

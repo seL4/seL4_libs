@@ -18,7 +18,6 @@
 
 #include <stdint.h>
 
-#include <sel4platsupport/timer.h>
 #include <platsupport/timer.h>
 #include <platsupport/plat/timer.h>
 

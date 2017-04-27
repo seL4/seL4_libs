@@ -1,27 +1,18 @@
 /*
- * Copyright 2014, NICTA
+ * Copyright 2017, Data61
+ * Commonwealth Scientific and Industrial Research Organisation (CSIRO)
+ * ABN 41 687 119 230.
  *
  * This software may be distributed and modified according to the terms of
  * the BSD 2-Clause license. Note that NO WARRANTY is provided.
  * See "LICENSE_BSD2.txt" for details.
  *
- * @TAG(NICTA_BSD)
+ * @TAG(D61_BSD)
  */
+
 #pragma once
 
 #include <sel4platsupport/timer_types.h>
 #include <sel4platsupport/plat/timer.h>
 
-#include <autoconf.h>
-#include <platsupport/timer.h>
-#include <platsupport/plat/timer.h>
-
-#ifdef CONFIG_ARCH_ARM_V7A
-#ifdef CONFIG_ARM_CORTEX_A15
-
-seL4_timer_t *sel4platsupport_get_generic_timer(void);
-
 #include <sel4platsupport/timer.h>
-
-#endif /* CONFIG_ARM_CORTEX_A15 */
-#endif /* CONFIG_ARCH_ARM_V7A */

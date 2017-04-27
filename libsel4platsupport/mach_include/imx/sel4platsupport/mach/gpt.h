@@ -17,7 +17,6 @@
 #include <autoconf.h>
 
 #include <stdint.h>
-#include <sel4platsupport/timer.h>
 #include <platsupport/plat/gpt_constants.h>
 
 /**

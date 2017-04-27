@@ -9,8 +9,13 @@
  */
 #pragma once
 
+#include <sel4platsupport/timer_types.h>
+
 #include <platsupport/plat/timer.h>
 
 #define DEFAULT_TIMER_INTERRUPT SP804_TIMER_IRQ
 
 #define DEFAULT_TIMER_PADDR    SP804_TIMER_PADDR
+
+#include <sel4platsupport/arch/timer.h>
+#include <sel4platsupport/timer.h>

@@ -123,7 +123,7 @@ sel4utils_mint_cap_to_process(sel4utils_process_t *process, cspacepath_t src, se
 }
 
 seL4_CPtr
-sel4utils_copy_cap_to_process(sel4utils_process_t *process, cspacepath_t src)
+sel4utils_copy_path_to_process(sel4utils_process_t *process, cspacepath_t src)
 {
     cspacepath_t dest = { 0 };
     if (next_free_slot(process, &dest) == -1) {
@@ -139,6 +139,24 @@ sel4utils_copy_cap_to_process(sel4utils_process_t *process, cspacepath_t src)
     /* success */
     allocate_next_slot(process);
     return dest.capPtr;
+}
+
+
+/* copy a cap to a process, returning the cptr in the process' cspace */
+seL4_CPtr
+sel4utils_copy_cap_to_process(sel4utils_process_t *process, vka_t *vka, seL4_CPtr cap)
+{
+    seL4_CPtr copied_cap;
+    cspacepath_t path;
+
+    vka_cspace_make_path(vka, cap, &path);
+    copied_cap = sel4utils_copy_path_to_process(process, path);
+    if (copied_cap == 0) {
+        ZF_LOGF("Failed to copy cap to process");
+        return 0;
+    }
+
+    return copied_cap;
 }
 
 seL4_CPtr
@@ -453,7 +471,7 @@ create_cspace(vka_t *vka, int size_bits, sel4utils_process_t *process,
     /* copy fault endpoint cap into process cspace */
     if (process->fault_endpoint.cptr != 0) {
         vka_cspace_make_path(vka, process->fault_endpoint.cptr, &src);
-        slot = sel4utils_copy_cap_to_process(process, src);
+        slot = sel4utils_copy_path_to_process(process, src);
         assert(slot == SEL4UTILS_ENDPOINT_SLOT);
     } else {
         /* no fault endpoint, update slot so next will work */
@@ -462,12 +480,12 @@ create_cspace(vka_t *vka, int size_bits, sel4utils_process_t *process,
 
     /* copy page directory cap into process cspace */
     vka_cspace_make_path(vka, process->pd.cptr, &src);
-    slot = sel4utils_copy_cap_to_process(process, src);
+    slot = sel4utils_copy_path_to_process(process, src);
     assert(slot == SEL4UTILS_PD_SLOT);
 
     if (!config_set(CONFIG_X86_64)) {
         vka_cspace_make_path(vka, get_asid_pool(asid_pool), &src);
-        slot = sel4utils_copy_cap_to_process(process, src);
+        slot = sel4utils_copy_path_to_process(process, src);
         assert(slot == SEL4UTILS_ASID_POOL_SLOT);
     }
 
@@ -585,7 +603,7 @@ sel4utils_configure_process_custom(sel4utils_process_t *process, vka_t *vka,
     if (config.create_cspace) {
         cspacepath_t src;
         vka_cspace_make_path(vka, process->thread.tcb.cptr, &src);
-        UNUSED seL4_CPtr slot = sel4utils_copy_cap_to_process(process, src);
+        UNUSED seL4_CPtr slot = sel4utils_copy_path_to_process(process, src);
         assert(slot == SEL4UTILS_TCB_SLOT);
     }
 

@@ -15,6 +15,13 @@
 #include <autoconf.h>
 #include <platsupport/timer.h>
 #include <platsupport/plat/timer.h>
+#include <vspace/vspace.h>
+#include <simple/simple.h>
+#include <vka/vka.h>
+
+typedef struct arch_timer_objects {
+    plat_timer_objects_t plat_timer_objects;
+} arch_timer_objects_t;
 
 #ifdef CONFIG_ARCH_ARM_V7A
 #ifdef CONFIG_ARM_CORTEX_A15

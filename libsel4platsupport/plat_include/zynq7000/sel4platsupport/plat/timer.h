@@ -25,6 +25,9 @@
 #define DEFAULT_TIMER_PADDR     TRIPLE_TIMER0_PADDR
 #define DEFAULT_TIMER_INTERRUPT TRIPLE_TIMER0_IRQ0
 
+typedef struct plat_timer_objects {
+} plat_timer_objects_t;
+
 #include <sel4platsupport/arch/timer.h>
 #include <sel4platsupport/timer.h>
 

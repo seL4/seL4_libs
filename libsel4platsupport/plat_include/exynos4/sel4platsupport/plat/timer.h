@@ -14,6 +14,9 @@
 
 #include <sel4platsupport/mach/pwm.h>
 
+typedef struct plat_timer_objects {
+} plat_timer_objects_t;
+
 #include <sel4platsupport/arch/timer.h>
 #include <sel4platsupport/timer.h>
 

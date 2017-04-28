@@ -17,6 +17,10 @@
 #include <stdlib.h>
 #include "../../timer_common.h"
 
+int sel4platsupport_plat_init_default_timer_caps(UNUSED vka_t *vka, UNUSED vspace_t *vspace, UNUSED simple_t *simple, UNUSED timer_objects_t *timer_objects)
+{
+    return 0;
+}
 
 
 seL4_timer_t *

@@ -21,6 +21,35 @@
 #include <vka/object.h>
 #include <vspace/vspace.h>
 
+typedef struct timer_objects {
+    /* Path to platsupport default timer's IRQ cap. */
+    cspacepath_t timer_irq_path;
+    /* VKA object for platsupport default timer's device-untyped. */
+    vka_object_t timer_dev_ut_obj;
+    /* physical address of the timeout timer */
+    uintptr_t timer_paddr;
+    arch_timer_objects_t arch_timer_objects;
+} timer_objects_t;
+
+
+/**
+ * Creates caps required for calling sel4platsupport_get_default_timer and stores them
+ * in supplied timer_objects_t.
+ *
+ * Uses the provided vka, vspace and simple interfaces for creating the caps.
+ * (A vspace is required because on some platforms devices may need to be mapped in
+ *  order to query hardware features.)
+ *
+ * @param  vka           Allocator to allocate objects with
+ * @param  vspace        vspace for mapping device frames into memory if necessary.
+ * @param  simple        simple interface for access to init caps
+ * @param  timer_objects struct for returning cap meta data.
+ * @return               0 on success, otherwise failure.
+ */
+int sel4platsupport_init_default_timer_caps(vka_t *vka, vspace_t *vspace, simple_t *simple, timer_objects_t *timer_objects);
+int sel4platsupport_arch_init_default_timer_caps(vka_t *vka, vspace_t *vspace, simple_t *simple, timer_objects_t *timer_objects);
+int sel4platsupport_plat_init_default_timer_caps(vka_t *vka, vspace_t *vspace, simple_t *simple, timer_objects_t *timer_objects);
+
 static inline void
 sel4_timer_handle_irq(seL4_timer_t *timer, uint32_t irq)
 {

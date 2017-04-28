@@ -15,4 +15,11 @@
 #include <sel4platsupport/timer_types.h>
 #include <sel4platsupport/plat/timer.h>
 
+#include <vspace/vspace.h>
+#include <simple/simple.h>
+#include <vka/vka.h>
+
+typedef struct arch_timer_objects {
+} arch_timer_objects_t;
+
 #include <sel4platsupport/timer.h>

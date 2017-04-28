@@ -15,6 +15,9 @@
 #include <sel4platsupport/mach/epit.h>
 #include <sel4platsupport/mach/gpt.h>
 
+typedef struct plat_timer_objects {
+} plat_timer_objects_t;
+
 #include <sel4platsupport/arch/timer.h>
 #include <sel4platsupport/timer.h>
 

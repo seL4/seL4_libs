@@ -17,5 +17,8 @@
 
 #define DEFAULT_TIMER_PADDR    SP804_TIMER_PADDR
 
+typedef struct plat_timer_objects {
+} plat_timer_objects_t;
+
 #include <sel4platsupport/arch/timer.h>
 #include <sel4platsupport/timer.h>

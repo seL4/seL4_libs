@@ -16,5 +16,8 @@
 #define DEFAULT_TIMER_INTERRUPT INT_NV_TMR1
 #define DEFAULT_TIMER_PADDR    NV_TMR_PADDR
 
+typedef struct plat_timer_objects {
+} plat_timer_objects_t;
+
 #include <sel4platsupport/arch/timer.h>
 #include <sel4platsupport/timer.h>

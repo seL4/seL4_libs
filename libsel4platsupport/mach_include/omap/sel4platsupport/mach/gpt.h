@@ -25,6 +25,12 @@
 #include <vka/vka.h>
 #include <simple/simple.h>
 
+typedef struct plat_timer_objects {
+    /* clock timer */
+    cspacepath_t clock_irq_path;
+    vka_object_t clock_timer_dev_ut_obj;
+} plat_timer_objects_t;
+
 #define DEFAULT_TIMER_PADDR GPT1_DEVICE_PADDR
 #define DEFAULT_TIMER_INTERRUPT GPT1_INTERRUPT
 

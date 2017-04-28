@@ -16,6 +16,19 @@
 #define DEFAULT_TIMER_PADDR DMTIMER0_PADDR
 #define DEFAULT_TIMER_INTERRUPT DMTIMER0_INTERRUPT
 
+typedef struct plat_timer_objects {
+    /* clock timer */
+    cspacepath_t clock_irq_path;
+    vka_object_t clock_timer_dev_ut_obj;
+    uintptr_t clock_timer_paddr;
+
+    /* Extra timer */
+    cspacepath_t extra_timer_irq_path;
+    vka_object_t extra_timer_dev_ut_obj;
+    uintptr_t extra_timer_paddr;
+
+} plat_timer_objects_t;
+
 seL4_timer_t *sel4platsupport_get_timer(enum timer_id id,
                                         vka_t *vka,
                                         vspace_t *vspace,

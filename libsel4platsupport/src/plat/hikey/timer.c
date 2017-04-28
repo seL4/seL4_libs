@@ -13,6 +13,7 @@
 #include <vka/object.h>
 #include <simple/simple.h>
 #include <sel4platsupport/timer.h>
+#include <sel4platsupport/device.h>
 #include <sel4platsupport/plat/timer.h>
 #include <utils/util.h>
 #include "../../timer_common.h"
@@ -24,6 +25,63 @@ typedef struct sel4_hikey_vupcounter_privdata {
 } sel4_hikey_vupcounter_privdata_t;
 
 static seL4_timer_t *sel4_hikey_vupcounter;
+
+int sel4platsupport_plat_init_default_timer_caps(vka_t *vka, UNUSED vspace_t *vspace, simple_t *simple, timer_objects_t *timer_objects)
+{
+    int error;
+    plat_timer_objects_t *plat_timer_objects = &timer_objects->arch_timer_objects.plat_timer_objects;
+
+    /* Get the hikey RTC0 timestamp device's device-ut. We don't need an IRQ cap
+     * for it because we don't use the RTC's "alarm" IRQ feature.
+     */
+    plat_timer_objects->clock_timer_paddr = RTC0_PADDR;
+    error = vka_alloc_untyped_at(vka, seL4_PageBits, plat_timer_objects->clock_timer_paddr,
+                                 &plat_timer_objects->clock_timer_dev_ut_obj);
+    if (error) {
+        ZF_LOGF("Failed to obtain device-ut cap for RTC0 wall-clock "
+        "timer.");
+        return error;
+    }
+
+    /* Also get another of the dual timers to use as the accompanying
+     * downcounter for the virtual upcounter.
+     */
+    plat_timer_objects->extra_timer_paddr = DMTIMER2_PADDR;
+    error = vka_alloc_untyped_at(vka, seL4_PageBits, plat_timer_objects->extra_timer_paddr,
+                                 &plat_timer_objects->extra_timer_dev_ut_obj);
+    if (error) {
+        ZF_LOGF("Failed to obtain device-ut cap for DMTIMER2 downcounter "
+        "timer.");
+        return error;
+    }
+    /* Alloc space for the IRQ caps for the IRQs of both timers. */
+    error = vka_cspace_alloc_path(vka, &plat_timer_objects->clock_irq_path);
+    if (error) {
+        ZF_LOGF("Failed to allocate RTC0 timer IRQ.");
+        return error;
+    }
+    error = vka_cspace_alloc_path(vka, &plat_timer_objects->extra_timer_irq_path);
+    if (error) {
+        ZF_LOGF("Failed to allocate DMTIMER2 timer IRQ.");
+        return error;
+    }
+    /* Obtain caps to the IRQs. */
+    error = sel4platsupport_copy_irq_cap(vka, simple,
+                                         RTC0_INTERRUPT,
+                                         &plat_timer_objects->clock_irq_path);
+    if (error) {
+        ZF_LOGF("Failed to obtain RTC0 timer IRQ cap.");
+        return error;
+    }
+    error = sel4platsupport_copy_irq_cap(vka, simple,
+                                         DMTIMER2_INTERRUPT,
+                                         &plat_timer_objects->extra_timer_irq_path);
+    if (error) {
+        ZF_LOGF("Failed to obtain DMTIMER2 timer IRQ cap.");
+        return error;
+    }
+    return 0;
+}
 
 static void
 sel4platsupport_hikey_vupcounter_destroy(seL4_timer_t *timer,

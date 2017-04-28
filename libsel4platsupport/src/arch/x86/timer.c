@@ -18,7 +18,6 @@
 #include <sel4platsupport/device.h>
 #include <platsupport/plat/hpet.h>
 #include <vka/capops.h>
-#include <sel4platsupport/init.h>
 
 int
 sel4platsupport_arch_init_default_timer_caps(vka_t *vka, vspace_t *vspace, simple_t *simple, timer_objects_t *timer_objects)

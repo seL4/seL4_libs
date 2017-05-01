@@ -154,9 +154,11 @@ sel4utils_move_cap_to_process(sel4utils_process_t *process, cspacepath_t src, vk
         ZF_LOGE("Failed to move cap\n");
         return 0;
     }
-
-    /* free slot in previous vka */
-    vka_cspace_free(from_vka, src.capPtr);
+    /* If we have been passed a vka to free a cspace slot */
+    if (from_vka != NULL) {
+        /* free slot in previous vka */
+        vka_cspace_free(from_vka, src.capPtr);
+    }
 
     /* success */
     allocate_next_slot(process);

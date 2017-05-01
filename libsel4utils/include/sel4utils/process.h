@@ -235,11 +235,15 @@ seL4_CPtr sel4utils_copy_cap_to_process(sel4utils_process_t *process, cspacepath
  * Move a cap into a process' cspace.
  *
  * This will only work if you configured the process using one of the above functions, or
- * have mimicked their functionality.
+ * have mimicked their functionality.  Additionally the VKA that is passed in to have the
+ * slot freed can only do this if it is tracking that slot.  IE when moving one of the initial
+ * caps provided by bootinfo such as the IRQ Control Cap the VKA may not be able to free the slot.
+ * Passing in NULL for the VKA will result in no slot being freed.
  *
  * @param process process to move the cap to
  * @param src     path in the current cspace to move the cap from
  * @param vka     the allocator that owns the cslot the cap is currently in, so it may be freed after the move.
+ *                if NULL, then the original slot will not be freed.
  *
  * @return 0 on failure, otherwise the slot in the processes cspace.
  */

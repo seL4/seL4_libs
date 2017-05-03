@@ -404,6 +404,12 @@ simple_get_tcb(simple_t *simple)
 }
 
 static inline seL4_CPtr
+simple_get_sc(simple_t *simple)
+{
+    return simple_init_cap(simple, seL4_CapInitThreadSC);
+}
+
+static inline seL4_CPtr
 simple_get_pd(simple_t *simple)
 {
     return simple_init_cap(simple, seL4_CapInitThreadPD);

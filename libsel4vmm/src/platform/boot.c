@@ -35,6 +35,8 @@ int vmm_init(vmm_t *vmm, allocman_t *allocman, simple_t simple, vka_t vka, vspac
     vmm->host_vspace = vspace;
     vmm->plat_callbacks = callbacks;
     vmm->tcb = simple_get_tcb(&simple);
+    vmm->sc = simple_get_sc(&simple);
+    vmm->sched_ctrl = simple_get_sched_ctrl(&simple, 0);
     // Currently set this to 4k pages by default
     vmm->page_size = seL4_PageBits;
     err = vmm_pci_init(&vmm->pci);

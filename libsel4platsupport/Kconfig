@@ -19,7 +19,7 @@ menuconfig LIB_SEL4_PLAT_SUPPORT
 
 config LIB_SEL4_PLAT_SUPPORT_USE_SEL4_DEBUG_PUTCHAR
     bool "Redirect putchar() to seL4_DebugPutchar()"
-    depends on LIB_SEL4_PLAT_SUPPORT && DEBUG_BUILD
+    depends on LIB_SEL4_PLAT_SUPPORT && PRINTING
     default y
     help
         Direct putchar() to seL4_DebugPutchar() instead of writing directly to the COM port.

@@ -130,7 +130,7 @@ static void CONSTRUCTOR(CONSTRUCTOR_MIN_PRIORITY) init_syscall_table(void) {
 #endif
 }
 
-#ifdef CONFIG_DEBUG_BUILD
+#ifdef CONFIG_PRINTING
 static void debug_error(int sysnum) {
     char buf[100];
     int i;

@@ -59,6 +59,7 @@
 #include <allocman/utspace/twinkle.h>
 #include <vspace/vspace.h>
 #include <simple/simple.h>
+#include <sel4platsupport/pmem.h>
 /**
  * Internal data structure for storing bootstrapping information. If you need to break
  * open the boot strapping process, then you will be given a pointer to one of these
@@ -141,8 +142,23 @@ allocman_t *bootstrap_new_2level_bootinfo(seL4_BootInfo *bi, size_t l1size, size
  *
  * This assumes that all the untyped caps are currently as simple thinks they are.
  * If there have been any cspace reshuffles simple will not give allocman useable information
+ *
+ * Allocman will also try and use sel4platsupport_get_pmem_region_list to find PMEM_TYPE_RAM
+ * regions that are device untyped objects.
  */
 int allocman_add_simple_untypeds(allocman_t *alloc, simple_t *simple);
+
+/**
+ * Give an allocator all the untyped memory that simple knows about.
+ *
+ * This assumes that all the untyped caps are currently as simple thinks they are.
+ * If there have been any cspace reshuffles simple will not give allocman useable information
+ *
+ * If num_regions is set to 0 or region_list is NULL, Allocman will also try and use
+ * sel4platsupport_get_pmem_region_list to find PMEM_TYPE_RAM regions that are device untyped objects.
+ * Otherwise any device untyped objects that overlap with regions that are type PMEM_TYPE_RAM will be marked as ALLOCMAN_UT_DEV_MEM.
+ */
+int allocman_add_simple_untypeds_with_regions(allocman_t *alloc, simple_t *simple, int num_regions, pmem_region_t *region_list);
 
 /**
  * Bootstraps using all the information provided by simple, but switches to a new two

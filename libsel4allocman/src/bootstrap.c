@@ -26,6 +26,7 @@
 #include <simple/simple.h>
 #include <simple/simple_helpers.h>
 #include <utils/arith.h>
+#include <sel4platsupport/pmem.h>
 
 /* configure the choice of boot strapping allocators */
 #define UTMAN split
@@ -61,6 +62,14 @@ struct bootstrap_info {
     bool *ut_isDevice;
     simple_t *simple;
 };
+
+typedef struct add_untypeds_state {
+    int num_regions;
+    bool region_alloc;
+    pmem_region_t *regions;
+    utspace_split_t split_ut;
+    utspace_interface_t ut_interface;
+} add_untypeds_state_t;
 
 static void bootstrap_free_info(bootstrap_info_t *bs) {
     if (bs->uts) {
@@ -942,8 +951,165 @@ allocman_t *bootstrap_new_2level_bootinfo(seL4_BootInfo *bi, size_t l1size, size
     return _new_from_bootinfo_common(info, old_cspace);
 }
 
-int allocman_add_simple_untypeds(allocman_t *alloc, simple_t *simple) {
+static size_t get_next_alignment_bits(uintptr_t base, uintptr_t goal, size_t max_alignment) {
+    /* Calculate alignment of our base pointer */
+    uintptr_t alignment = (base == 0) ? max_alignment : MIN(CTZL((long)base), max_alignment);
+
+    /* Our biggest size is either the distance to our goal, or our largest size
+     * based on our current alignment. */
+    uintptr_t next_size = MIN(goal - base, BIT(alignment));
+    ZF_LOGF_IF(next_size == 0, "next_size should not be 0 here.");
+
+    /* The largest untyped we can make is the highest power of 2 component of next_size */
+    size_t next_size_bits = seL4_WordBits - 1 - CLZL((long)next_size);
+
+    ZF_LOGD("goal 0x%zx, base: 0x%zx, next_size: 0x%zx, 0x%zx, 0x%zx, 0x%zx", goal, base, (uintptr_t) BIT(next_size_bits), next_size, CLZL((long)next_size),alignment);
+    return next_size_bits;
+}
+
+/*
+    Helper function that takes a region of device untyped and extracts it
+    from one utspace manager and deposits into a different utspace manager with
+    `untyped_type` type.  It is used for splitting up device untyped caps into ALLOCMAN_UT_DEV_MEM
+    and ALLOCMAN_UT_DEV.
+ */
+static ssize_t perform_sub_allocation(uintptr_t base, uintptr_t goal, allocman_t *alloc,
+                        utspace_interface_t *ut_space, utspace_split_t *token, int untyped_type) {
+    size_t next_size_bits = get_next_alignment_bits(base, goal, seL4_MaxUntypedBits);
+    cspacepath_t path;
+    int error = allocman_cspace_alloc(alloc, &path);
+    ZF_LOGF_IF(error, "allocman_cspace_alloc failed");
+
+    ut_space->alloc(alloc, token, next_size_bits, seL4_UntypedObject, &path, base, true, &error);
+    ZF_LOGF_IF(error, "ut_space.alloc failed");
+
+    error = allocman_utspace_add_uts(alloc, 1, &path, &next_size_bits, &base, untyped_type);
+    ZF_LOGF_IF(error, "allocman_utspace_add_uts failed");
+
+    return BIT(next_size_bits);
+}
+
+/**
+ * Separates device ram memory into separate untyped caps from the cap provided.
+ * Arch specific implementation as on x86 we can use the grup multiboot headers to
+ * find the address layout.  On arm there is no current implementation, but eventually
+ * we should be able to take a device tree and extract memory layout from that.
+ *
+ * @param  state     handle to device specific state.
+ * @param  paddr     base paddr of the untyped cap being passed in.
+ * @param  size_bits size in bits of the untyped cap.
+ * @param  path      the untyped cap.
+ * @param  alloc     handle to an already initialised allocman.
+ * @return           0 for success, otherwise error.
+ */
+static int handle_device_untyped_cap(add_untypeds_state_t *state, uintptr_t paddr, size_t size_bits, cspacepath_t *path, allocman_t *alloc ) {
+    ZF_LOGF_IF(state == NULL, "state is NULL");
+    bool cap_tainted = false;
     int error;
+    uintptr_t ut_end = paddr + BIT(size_bits);
+    for (int i = 0; i < state->num_regions; i++) {
+        pmem_region_t *region = &state->regions[i];
+        uint64_t region_end = region->base_addr + region->length;
+
+        if (region->type == PMEM_TYPE_RAM && !(paddr >= region_end || ut_end <= region->base_addr)) {
+            if (!cap_tainted) {
+                cap_tainted = true;
+                state->ut_interface.add_uts(alloc, &state->split_ut, 1, path, &size_bits, &paddr, ALLOCMAN_UT_DEV);
+            }
+            // We have an untyped that is overlapping with some ram.  Lets break it up into sub parts
+            ZF_LOGD("basepaddr 0x%zx framesize: %zd", paddr, size_bits);
+            ZF_LOGD("\tPhysical Memory Region from %"PRIx64" size %"PRIx64" type %d", region->base_addr, region->length, region->type);
+
+            uintptr_t top = MIN(region_end, ut_end);
+            while (paddr < top) {
+                uintptr_t goal;
+                int untyped_type;
+                if (paddr >= region->base_addr) {
+                    goal = top;
+                    untyped_type = ALLOCMAN_UT_DEV_MEM;
+                } else {
+                    goal = region->base_addr;
+                    untyped_type = ALLOCMAN_UT_DEV;
+                }
+                ssize_t result = perform_sub_allocation(paddr, goal, alloc, &state->ut_interface, &state->split_ut, untyped_type);
+                ZF_LOGF_IF(result < 0, "perform_sub_allocation failed");
+                paddr += result;
+
+            }
+        }
+    }
+    if (!cap_tainted) {
+        error = allocman_utspace_add_uts(alloc, 1, path, &size_bits, &paddr, ALLOCMAN_UT_DEV);
+        ZF_LOGF_IF(error, "allocman_utspace_add_uts failed");
+    } else if (paddr != ut_end){
+        // Got to allocate the rest of our untyped as UT_DEV
+        while (paddr < ut_end) {
+            ssize_t result = perform_sub_allocation(paddr, ut_end, alloc, &state->ut_interface, &state->split_ut, ALLOCMAN_UT_DEV);
+            ZF_LOGF_IF(result < 0, "perform_sub_allocation failed");
+            paddr += result;
+        }
+    }
+    return 0;
+}
+
+static void free_device_untyped_cap_state(allocman_t *alloc, add_untypeds_state_t *state) {
+    if (state == NULL) {
+        ZF_LOGE("free_device_untyped_cap_state with NULL state");
+        return;
+    }
+    if (state->region_alloc) {
+        if (state->regions == NULL) {
+            ZF_LOGE("free_device_untyped_cap_state with NULL regions");
+            return;
+        }
+        allocman_mspace_free(alloc, state->regions, sizeof(pmem_region_t) * state->num_regions);
+    }
+    allocman_mspace_free(alloc, state, sizeof(add_untypeds_state_t));
+    return;
+}
+/**
+ * Initialise required state for future calls to bootstrap_arch_handle_device_untyped_cap
+ * @param  alloc           an allocman with a cspace, mspace and utspace inside it.
+ * @param  simple          a simple interface
+ * @param  token           For returning a handle to the initialsed state.
+ * @param  feature_enabled For returning whether bootstrap_arch_handle_device_untyped_cap can be called.
+ * @param  num_regions     number of regions in region array
+ * @param  region_list     an array of regions. If NULL this will call sel4platsupport_get_pmem_region_list.
+ * @return                 0 for success, otherwise error.
+ */
+static int prepare_handle_device_untyped_cap(allocman_t *alloc, simple_t *simple, add_untypeds_state_t **token, int num_regions, pmem_region_t *region_list) {
+    int error;
+    add_untypeds_state_t *state = allocman_mspace_alloc(alloc, sizeof(add_untypeds_state_t), &error);
+    ZF_LOGF_IF(error, "Failed to allocate add_untypeds_state_t");
+
+    if (num_regions > 0 && region_list != NULL) {
+        state->num_regions = num_regions;
+        state->regions = region_list;
+        state->region_alloc = false;
+    } else  {
+        num_regions = sel4platsupport_get_num_pmem_regions(simple);
+        if (num_regions == 0 || num_regions == -1) {
+            free_device_untyped_cap_state(alloc, state);
+            return 0;
+        }
+        state->regions = allocman_mspace_alloc(alloc, sizeof(pmem_region_t) * num_regions, &error);
+        state->region_alloc = true;
+        state->num_regions = sel4platsupport_get_pmem_region_list(simple, num_regions, state->regions);
+        ZF_LOGF_IF(state->num_regions != num_regions, "Couldn't extract region list from simple");
+    }
+    utspace_split_create(&state->split_ut);
+    state->ut_interface = utspace_split_make_interface(&state->split_ut);
+
+    *token = state;
+    return 0;
+}
+
+
+int allocman_add_simple_untypeds_with_regions(allocman_t *alloc, simple_t *simple, int num_regions, pmem_region_t *region_list) {
+    add_untypeds_state_t *state = NULL;
+    int error = prepare_handle_device_untyped_cap(alloc, simple, &state, num_regions, region_list);
+    ZF_LOGF_IF(error, "bootstrap_prepare_handle_device_untyped_cap Failed");
+
     size_t i;
     size_t total_untyped = simple_get_untyped_count(simple);
 
@@ -952,13 +1118,25 @@ int allocman_add_simple_untypeds(allocman_t *alloc, simple_t *simple) {
         uintptr_t paddr;
         bool device;
         cspacepath_t path = allocman_cspace_make_path(alloc, simple_get_nth_untyped(simple, i, &size_bits, &paddr, &device));
-        error = allocman_utspace_add_uts(alloc, 1, &path, &size_bits, &paddr, device ? ALLOCMAN_UT_DEV : ALLOCMAN_UT_KERNEL);
-
-        if(error) {
-            return error;
+        int dev_type = device ? ALLOCMAN_UT_DEV : ALLOCMAN_UT_KERNEL;
+        // If it is regular UT memory, then we add cap and move on.
+        if (dev_type == ALLOCMAN_UT_KERNEL) {
+            error = allocman_utspace_add_uts(alloc, 1, &path, &size_bits, &paddr, dev_type);
+            ZF_LOGF_IF(error, "Could not add kernel untyped.");
+        } else {
+            // Otherwise we are Device untyped.
+            error = handle_device_untyped_cap(state, paddr, size_bits, &path, alloc);
+            ZF_LOGF_IF(error, "bootstrap_arch_handle_device_untyped_cap failed.");
         }
     }
+    if (state) {
+        free_device_untyped_cap_state(alloc, state);
+    }
     return 0;
+}
+
+int allocman_add_simple_untypeds(allocman_t *alloc, simple_t *simple) {
+    return allocman_add_simple_untypeds_with_regions(alloc, simple, 0, NULL);
 }
 
 allocman_t *bootstrap_use_current_simple(simple_t *simple, size_t pool_size, void *pool) {

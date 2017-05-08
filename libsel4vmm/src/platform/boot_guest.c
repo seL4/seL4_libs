@@ -42,7 +42,7 @@
 
 typedef struct boot_guest_cookie {
     vmm_t *vmm;
-    int fd;
+    FILE *file;
 } boot_guest_cookie_t;
 
 static int guest_elf_write_address(uintptr_t paddr, void *vaddr, size_t size, size_t offset, void *cookie) {
@@ -71,15 +71,17 @@ void vmm_plat_guest_elf_relocate(vmm_t *vmm, const char *relocs_filename) {
     DPRINTF(2, "plat: opening relocs file %s\n", relocs_filename);
 
     size_t relocs_size = 0;
-    int fd = vmm->plat_callbacks.open(relocs_filename);
-    if(fd == -1) {
+    FILE *file = fopen(relocs_filename, "r");
+    if(!file) {
         printf(COLOUR_Y "ERROR: Guest OS kernel relocation is required, but corresponding"
           "%s was not found. This is most likely due to a Makefile"
           "error, or configuration error.\n", relocs_filename);
            panic("Relocation required but relocation data file not found.");
            return;
     }
-    relocs_size = vmm->plat_callbacks.filelength(fd);
+    fseek(file, 0, SEEK_END);
+    relocs_size = ftell(file);
+    fseek(file, 0, SEEK_SET);
 
     /* The relocs file is the same relocs file format used by the Linux kernel decompressor to
      * relocate the Linux kernel:
@@ -101,7 +103,9 @@ void vmm_plat_guest_elf_relocate(vmm_t *vmm, const char *relocs_filename) {
         uint32_t vaddr;
         /* Get the next relocation from the relocs file. */
         uint32_t offset = relocs_size - (sizeof(uint32_t) * (i+1));
-        vmm->plat_callbacks.read(&vaddr, fd, offset, sizeof(uint32_t));
+        fseek(file, offset, SEEK_SET);
+        size_t result = fread(&vaddr, sizeof(uint32_t), 1, file);
+        ZF_LOGF_IF(result != 1, "Read failed unexpectedly");
         if (!vaddr) {
             break;
         }
@@ -136,13 +140,15 @@ void vmm_plat_guest_elf_relocate(vmm_t *vmm, const char *relocs_filename) {
         panic("Relocation required, but Kernel has not been build with CONFIG_RELOCATABLE.");
     }
 
-    vmm->plat_callbacks.close(fd);
+    fclose(file);
 
 }
 
 static int vmm_guest_load_boot_module_continued(uintptr_t paddr, void *addr, size_t size, size_t offset, void *cookie) {
     boot_guest_cookie_t *pass = ( boot_guest_cookie_t *) cookie;
-    pass->vmm->plat_callbacks.read(addr, pass->fd, offset, size);
+    fseek(pass->file, offset, SEEK_SET);
+    size_t result = fread(addr, size, 1, pass->file);
+    ZF_LOGF_IF(result != 1, "Read failed unexpectedly");
 
     return 0;
 }
@@ -152,12 +158,14 @@ int vmm_guest_load_boot_module(vmm_t *vmm, const char *name) {
     printf("Loading boot module \"%s\" at 0x%x\n", name, (unsigned int)load_addr);
 
     size_t initrd_size = 0;
-    int fd = vmm->plat_callbacks.open(name);
-    if (fd == -1) {
+    FILE *file = fopen(name, "r");
+    if (!file) {
         ZF_LOGE("Boot module \"%s\" not found.", name);
         return -1;
     }
-    initrd_size = vmm->plat_callbacks.filelength(fd);
+    fseek(file, 0, SEEK_END);
+    initrd_size = ftell(file);
+    fseek(file, 0, SEEK_SET);
     if (!initrd_size) {
         ZF_LOGE("Boot module has zero size. This is probably not what you want.");
         return -1;
@@ -167,13 +175,13 @@ int vmm_guest_load_boot_module(vmm_t *vmm, const char *name) {
     vmm->guest_image.boot_module_size = initrd_size;
 
     guest_ram_mark_allocated(&vmm->guest_mem, load_addr, initrd_size);
-    boot_guest_cookie_t pass = { .vmm = vmm, .fd = fd };
+    boot_guest_cookie_t pass = { .vmm = vmm, .file = file};
     vmm_guest_vspace_touch(&vmm->guest_mem.vspace, load_addr, initrd_size, vmm_guest_load_boot_module_continued, &pass);
 
     printf("Guest memory after loading initrd:\n");
     print_guest_ram_regions(&vmm->guest_mem);
 
-    vmm->plat_callbacks.close(fd);
+    fclose(file);
 
     return 0;
 }
@@ -429,7 +437,7 @@ void vmm_init_guest_thread_state(vmm_vcpu_t *vcpu) {
 
 /* TODO: Refactor and stop rewriting fucking elf loading code */
 static int vmm_load_guest_segment(vmm_t *vmm, seL4_Word source_offset,
-        seL4_Word dest_addr, unsigned int segment_size, unsigned int file_size, int fd) {
+        seL4_Word dest_addr, unsigned int segment_size, unsigned int file_size, FILE *file) {
 
     int ret;
     unsigned int page_size = vmm->page_size;
@@ -479,7 +487,9 @@ static int vmm_load_guest_segment(vmm_t *vmm, seL4_Word source_offset,
             DPRINTF(5, "load page src %zu dest %p remain %zu offset %zu copy vaddr %p "
                     "copy len %zu\n", source_offset, (void*)dest_addr, remain, offset, copy_vaddr, copy_len);
 
-            vmm->plat_callbacks.read(copy_vaddr, fd, source_offset, copy_len);
+            fseek(file, source_offset, SEEK_SET);
+            size_t result = fread(copy_vaddr, copy_len, 1, file);
+            ZF_LOGF_IF(result != 1, "Read failed unexpectedly");
             source_offset += copy_len;
             remain -= copy_len;
         } else {
@@ -511,13 +521,13 @@ int vmm_load_guest_elf(vmm_t *vmm, const char *elfname, size_t alignment) {
     char elf_file[256];
 
     DPRINTF(4, "Loading guest elf %s\n", elfname);
-    int fd = vmm->plat_callbacks.open(elfname);
-    if (fd == -1) {
+    FILE *file = fopen(elfname, "r");
+    if (!file) {
         ZF_LOGE("Guest elf \"%s\" not found.", elfname);
         return -1;
     }
 
-    ret = vmm_read_elf_headers(elf_file, vmm, fd, sizeof(elf_file));
+    ret = vmm_read_elf_headers(elf_file, vmm, file, sizeof(elf_file));
     if(ret < 0) {
         ZF_LOGE("Guest elf \"%s\" invalid.", elfname);
         return -1;
@@ -579,7 +589,7 @@ int vmm_load_guest_elf(vmm_t *vmm, const char *elfname, size_t alignment) {
         }
 
         /* Load this ELf segment. */
-        ret = vmm_load_guest_segment(vmm, source_offset, dest_addr, segment_size, file_size, fd);
+        ret = vmm_load_guest_segment(vmm, source_offset, dest_addr, segment_size, file_size, file);
         if (ret) {
             return ret;
         }
@@ -602,7 +612,7 @@ int vmm_load_guest_elf(vmm_t *vmm, const char *elfname, size_t alignment) {
     printf("Guest memory layout after loading elf\n");
     print_guest_ram_regions(&vmm->guest_mem);
 
-    vmm->plat_callbacks.close(fd);
+    fclose(file);
 
     return 0;
 }

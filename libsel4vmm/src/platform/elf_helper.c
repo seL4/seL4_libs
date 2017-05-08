@@ -16,13 +16,14 @@
 	Reads the elf header and elf program headers from a file
 		when given a sufficiently large memory buffer
 */
-int vmm_read_elf_headers(void *buf, vmm_t *vmm, int fd, size_t buf_size) {
-	int res;
+int vmm_read_elf_headers(void *buf, vmm_t *vmm, FILE *file, size_t buf_size) {
+	size_t result;
 	if(buf_size < sizeof(struct Elf32_Header))
 		return -1;
 
-	res = vmm->plat_callbacks.read(buf, fd, 0, buf_size);
-	if(res < 0)
+    fseek(file, 0, SEEK_SET);
+    result = fread(buf, buf_size, 1, file);
+	if(result != 1)
 		return -1;
 	if(elf_checkFile(buf) < 0)
 		return -1;

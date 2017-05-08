@@ -21,6 +21,7 @@
 
 #define FIRST_USER_FD (STDERR_FILENO + 1)
 
+#define FILE_TYPE_FREE -1
 #define FILE_TYPE_CPIO 0
 
 typedef struct cpio_file_data {

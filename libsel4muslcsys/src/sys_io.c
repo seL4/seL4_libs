@@ -58,6 +58,7 @@ static int num_fds = 256;
 void
 add_free_fd(int fd)
 {
+    get_fd_struct(fd)->filetype = FILE_TYPE_FREE;
     free_fd_table_index++;
     assert(free_fd_table_index < num_fds);
     free_fd_table[free_fd_table_index] = fd;

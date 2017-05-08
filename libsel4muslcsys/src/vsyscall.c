@@ -17,6 +17,9 @@
 #include <bits/errno.h>
 #include <muslcsys/vsyscall.h>
 #include "syscalls.h"
+#ifdef CONFIG_LIB_SEL4_MUSLC_SYS_CPIO_FS
+#include <cpio/cpio.h>
+#endif
 
 #define MUSLC_NUM_SYSCALLS (MUSLC_HIGHEST_SYSCALL + 1)
 
@@ -129,6 +132,14 @@ static void CONSTRUCTOR(CONSTRUCTOR_MIN_PRIORITY) init_syscall_table(void) {
     assert(ret == boot_set_thread_area);
 #endif
 }
+
+/* If we have a default CPIO file interface defined in the config then install it here */
+#ifdef CONFIG_LIB_SEL4_MUSLC_SYS_CPIO_FS
+extern char _cpio_archive[];
+static void CONSTRUCTOR(CONSTRUCTOR_MIN_PRIORITY) install_default_cpio(void) {
+    muslcsys_install_cpio_interface(_cpio_archive, cpio_get_file);
+}
+#endif
 
 #ifdef CONFIG_PRINTING
 static void debug_error(int sysnum) {

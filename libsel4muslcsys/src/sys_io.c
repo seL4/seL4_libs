@@ -29,8 +29,6 @@
 #include <sys/socket.h>
 #include <bits/syscall.h>
 
-#include <cpio/cpio.h>
-
 #include <sel4utils/util.h>
 
 #include <muslcsys/io.h>
@@ -39,6 +37,9 @@
 #define FD_TABLE_SIZE(x) (sizeof(muslcsys_fd_t) * (x))
 /* this implementation does not allow users to close STDOUT or STDERR, so they can't be freed */
 #define FREE_FD_TABLE_SIZE(x) (sizeof(int) * ((x) - FIRST_USER_FD))
+
+static void *cpio_archive_symbol;
+static muslcsys_cpio_get_file_fn_t cpio_get_file_impl;
 
 /* We need to wrap this in the config to prevent linker errors */
 #ifdef CONFIG_LIB_SEL4_MUSLC_SYS_CPIO_FS
@@ -197,17 +198,13 @@ sys_open_impl(const char *pathname, int flags, mode_t mode)
     }
     /* as we do not support create, ignore the mode */
     long unsigned int size;
-    /* wrapped in a config because the _cpio_archive definition is wrapped in a config */
     char *file = NULL;
-#ifdef CONFIG_LIB_SEL4_MUSLC_SYS_CPIO_FS
-    file = cpio_get_file(_cpio_archive, pathname, &size);
-    if (!file && strncmp(pathname, "./", 2) == 0) {
-        file = cpio_get_file(_cpio_archive, pathname + 2, &size);
+    if (cpio_get_file_impl && cpio_archive_symbol) {
+        file = cpio_get_file_impl(cpio_archive_symbol, pathname, &size);
+        if (!file && strncmp(pathname, "./", 2) == 0) {
+            file = cpio_get_file_impl(cpio_archive_symbol, pathname + 2, &size);
+        }
     }
-#else
-    ZF_LOGE("Warning: attempted to use fopen with no file system (CONFIG_LIB_SEL4_MUSLC_SYS_CPIO_FS not set)\n");
-    return -ENOENT;
-#endif
     if (!file) {
         ZF_LOGE("Failed to open file %s\n", pathname);
         return -ENOENT;
@@ -528,4 +525,9 @@ long sys_access(va_list ap) {
     }
     ZF_LOGE("Must pass F_OK or R_OK to %s\n", __FUNCTION__);
     return -EACCES;
+}
+
+void muslcsys_install_cpio_interface(void *cpio_symbol, muslcsys_cpio_get_file_fn_t fn) {
+    cpio_archive_symbol = cpio_symbol;
+    cpio_get_file_impl = fn;
 }

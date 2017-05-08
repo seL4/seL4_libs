@@ -52,3 +52,7 @@ allocate_fd();
 
 muslcsys_fd_t *
 get_fd_struct(int fd);
+
+/* install a cpio interface to use with open */
+typedef void *(*muslcsys_cpio_get_file_fn_t)(void *cpio_symbol, const char *name, unsigned long *size);
+void muslcsys_install_cpio_interface(void *cpio_symbol, muslcsys_cpio_get_file_fn_t fn);

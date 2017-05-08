@@ -15,10 +15,11 @@
 #include <assert.h>
 #include <stdint.h>
 
+#include <utils/util.h>
+
 #include <vspace/page.h>
 #include <sel4utils/arch/util.h>
 #include <sel4utils/sel4_zf_logif.h>
 #include <sel4utils/strerror.h>
-#include <utils/util.h>
 
 #endif

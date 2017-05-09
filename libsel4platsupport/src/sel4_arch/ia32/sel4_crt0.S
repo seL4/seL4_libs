@@ -18,6 +18,7 @@
 
 #ifdef CONFIG_LIB_SEL4_PLAT_SUPPORT_SEL4_START
 
+#include <sel4/sel4_arch/constants.h>
 #include <sel4/arch/constants.h>
 
 

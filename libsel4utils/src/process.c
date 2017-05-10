@@ -621,12 +621,10 @@ sel4utils_configure_process_custom(sel4utils_process_t *process, vka_t *vka,
         UNUSED seL4_CPtr slot = sel4utils_copy_path_to_process(process, src);
         assert(slot == SEL4UTILS_TCB_SLOT);
 
-        vka_cspace_make_path(vka, process->thread.reply.cptr, &src);
-        slot = sel4utils_copy_cap_to_process(process, src);
+        slot = sel4utils_copy_cap_to_process(process, vka, process->thread.reply.cptr);
         assert(slot == SEL4UTILS_REPLY_SLOT);
 
-        vka_cspace_make_path(vka, process->thread.sched_context.cptr, &src);
-        slot = sel4utils_copy_cap_to_process(process, src);
+        slot = sel4utils_copy_cap_to_process(process, vka, process->thread.sched_context.cptr);
         assert(slot == SEL4UTILS_SCHED_CONTEXT_SLOT);
     }
 

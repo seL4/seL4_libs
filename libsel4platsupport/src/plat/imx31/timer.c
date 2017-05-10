@@ -15,7 +15,6 @@
 #include <sel4platsupport/io.h>
 #include <sel4platsupport/device.h>
 #include <sel4platsupport/timer.h>
-#include <sel4platsupport/init.h>
 
 int sel4platsupport_plat_init_default_timer_caps(UNUSED vka_t *vka, UNUSED vspace_t *vspace, UNUSED simple_t *simple, UNUSED timer_objects_t *timer_objects)
 {

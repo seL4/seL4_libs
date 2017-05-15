@@ -192,6 +192,18 @@ typedef seL4_Word (*simple_get_arch_info_fn)(void *data);
 
 /**
  *
+ * Retrieve the length of a particular kind of extended boot information. The information will always
+ * be prefixed with a seL4_BootInfoHeader, which is included in the length
+ *
+ * @param data cookie for the underlying implementation
+ * @param type Type corresponding to a valid 'id' in a seL4_BootInfoHeader
+ *
+ * @return Length of the header or -1 if the type could not be found
+ */
+typedef ssize_t (*simple_get_extended_bootinfo_len_fn)(void *data, seL4_Word type);
+
+/**
+ *
  * Retrieve a particular kind of extended boot information. The information will always
  * be prefixed with a seL4_BootInfoHeader, which is included in the length
  *
@@ -221,6 +233,7 @@ typedef struct simple_t {
     simple_get_core_count_fn core_count;
     simple_print_fn print;
     simple_get_arch_info_fn arch_info;
+    simple_get_extended_bootinfo_len_fn extended_bootinfo_len;
     simple_get_extended_bootinfo_fn extended_bootinfo;
     arch_simple_t arch_simple;
 } simple_t;
@@ -578,6 +591,20 @@ simple_get_arch_info(simple_t *simple)
     }
 
     return simple->arch_info(simple->data);
+}
+
+static inline ssize_t
+simple_get_extended_bootinfo_length(simple_t *simple, seL4_Word type)
+{
+    if (!simple) {
+        ZF_LOGE("Simple is NULL");
+        return -1;
+    }
+    if (!simple->extended_bootinfo_len) {
+        ZF_LOGE("%s not implemented", __FUNCTION__);
+        return -1;
+    }
+    return simple->extended_bootinfo_len(simple->data, type);
 }
 
 static inline ssize_t

@@ -17,6 +17,7 @@
     ); \
 } while(0)
 
+#include <autoconf.h>
 #include <sel4bench/types.h>
 #include <sel4bench/armv/private.h>
 #include <sel4/sel4.h>
@@ -51,7 +52,7 @@ static FASTFN void sel4bench_init()
     //Enable counters globally.
     MODIFY_PMCR( | , SEL4BENCH_ARMV8A_PMCR_ENABLE);
 
-#ifdef ARM_HYP
+#ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
     // Select instruction count incl. PL2 by default */
     sel4bench_private_write_pmnxsel(0x1f);
     sel4bench_private_write_evtsel(BIT(27));

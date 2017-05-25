@@ -11,7 +11,7 @@
 #include <autoconf.h>
 
 #include <sel4platsupport/io.h>
-#ifdef ARCH_ARM
+#ifdef CONFIG_ARCH_ARM
 #include <platsupport/clock.h>
 #include <platsupport/mux.h>
 #endif
@@ -274,7 +274,7 @@ sel4platsupport_new_io_ops(vspace_t vspace, vka_t vka, ps_io_ops_t *io_ops)
     if (err) {
         return err;
     }
-#ifdef ARCH_ARM
+#ifdef CONFIG_ARCH_ARM
     clock_sys_init(io_ops, &io_ops->clock_sys);
     mux_sys_init(io_ops, &io_ops->mux_sys);
 #endif

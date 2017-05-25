@@ -13,12 +13,13 @@
 #ifndef _VKA_SEL4_ARCH_OBJECT_H__
 #define _VKA_SEL4_ARCH_OBJECT_H__
 
+#include <autoconf.h>
 #include <vka/vka.h>
 #include <vka/kobject_t.h>
 #include <utils/util.h>
 
 /*resource allocation interfaces for virtual machine extensions on ARM */
-#ifdef ARM_HYP
+#ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
 static inline int vka_alloc_vcpu(vka_t *vka, vka_object_t *result)
 {
     return vka_alloc_object(vka, seL4_ARM_VCPUObject, seL4_ARM_VCPUBits, result);

@@ -13,6 +13,7 @@
 #ifndef _SEL4UTILS_SEL4_ARCH_UTIL_H
 #define _SEL4UTILS_SEL4_ARCH_UTIL_H
 
+#include <autoconf.h>
 #include <sel4/sel4.h>
 
 #define ARCH_SYSCALL_INSTRUCTION_SIZE 4
@@ -21,7 +22,7 @@ static inline int
 sel4utils_is_read_fault(void)
 {
     seL4_Word fsr = seL4_GetMR(seL4_VMFault_FSR);
-#if defined(ARM_HYP)
+#if defined(CONFIG_ARM_HYPERVISOR_SUPPORT)
     return (fsr & (1 << 6)) == 0;
 #else
     return (fsr & (1 << 11)) == 0;

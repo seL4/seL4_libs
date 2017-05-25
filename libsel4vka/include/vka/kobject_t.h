@@ -66,7 +66,7 @@ kobject_get_size(kobject_t type, seL4_Word objectSize)
     case KOBJECT_REPLY:
         return seL4_ReplyBits;
     case KOBJECT_SCHED_CONTEXT:
-        return seL4_SchedContextBits;
+        return objectSize > seL4_MinSchedContextBits ? objectSize : seL4_MinSchedContextBits;
 #ifdef CONFIG_CACHE_COLORING
     case KOBJECT_KERNEL_IMAGE:
         return seL4_KernelImageBits;

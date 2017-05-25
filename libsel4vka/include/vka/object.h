@@ -144,7 +144,16 @@ static inline int vka_alloc_tcb(vka_t *vka, vka_object_t *result)
 
 static inline int vka_alloc_sched_context(vka_t *vka, vka_object_t *result)
 {
-    return vka_alloc_object(vka, seL4_SchedContextObject, seL4_SchedContextBits, result);
+    return vka_alloc_object(vka, seL4_SchedContextObject, seL4_MinSchedContextBits, result);
+}
+
+static inline int vka_alloc_sched_context_size(vka_t *vka, vka_object_t *result, uint32_t size_bits)
+{
+    if (size_bits < seL4_MinSchedContextBits) {
+        ZF_LOGE("Invalid size bits for sc");
+        return -1;
+    }
+    return vka_alloc_object(vka, seL4_SchedContextObject, size_bits, result);
 }
 
 static inline int vka_alloc_endpoint(vka_t *vka, vka_object_t *result)
@@ -284,7 +293,7 @@ vka_get_object_size(seL4_Word objectType, seL4_Word objectSize)
     case seL4_TCBObject:
         return seL4_TCBBits;
     case seL4_SchedContextObject:
-        return seL4_SchedContextBits;
+        return objectSize > seL4_MinSchedContextBits ? objectSize : seL4_MinSchedContextBits;
     case seL4_EndpointObject:
         return seL4_EndpointBits;
     case seL4_NotificationObject:

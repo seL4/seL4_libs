@@ -40,7 +40,7 @@
 */
 
 
-#ifndef _BEALGEBONE_H_
+#ifndef _BEAGLEBONE_H_
 #define _BEAGLEBONE_H_
 
 #ifdef __cplusplus

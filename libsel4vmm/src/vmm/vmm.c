@@ -269,7 +269,7 @@ seL4_CPtr vmm_create_async_event_notification_cap(vmm_t *vmm, seL4_Word badge) {
     seL4_CPtr ntfn = vmm->plat_callbacks.get_async_event_notification();
 
     // path to notification cap slot
-    cspacepath_t ntfn_path = {};
+    cspacepath_t ntfn_path;
     vka_cspace_make_path(&vmm->vka, ntfn, &ntfn_path);
 
     // allocate slot to store copy

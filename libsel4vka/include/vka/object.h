@@ -106,9 +106,9 @@ vka_alloc_object_leaky(vka_t *vka, seL4_Word type, seL4_Word size_bits)
 static inline void
 vka_free_object(vka_t *vka, vka_object_t *object)
 {
-    cspacepath_t path = {0};
-
+    cspacepath_t path;
     vka_cspace_make_path(vka, object->cptr, &path);
+
     if (path.capPtr == 0) {
         ZF_LOGE("Failed to create cspace path to object");
         return;

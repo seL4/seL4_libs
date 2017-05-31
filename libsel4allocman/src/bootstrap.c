@@ -1003,11 +1003,14 @@ static ssize_t perform_sub_allocation(uintptr_t base, uintptr_t goal, allocman_t
  * @return           0 for success, otherwise error.
  */
 static int handle_device_untyped_cap(add_untypeds_state_t *state, uintptr_t paddr, size_t size_bits, cspacepath_t *path, allocman_t *alloc ) {
-    ZF_LOGF_IF(state == NULL, "state is NULL");
     bool cap_tainted = false;
     int error;
     uintptr_t ut_end = paddr + BIT(size_bits);
-    for (int i = 0; i < state->num_regions; i++) {
+    int num_regions = 0;
+    if (state != NULL) {
+        num_regions = state->num_regions;
+    }
+    for (int i = 0; i < num_regions; i++) {
         pmem_region_t *region = &state->regions[i];
         uint64_t region_end = region->base_addr + region->length;
 

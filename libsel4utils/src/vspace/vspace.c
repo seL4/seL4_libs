@@ -317,7 +317,7 @@ map_pages_at_vaddr(vspace_t *vspace, seL4_CPtr caps[], uintptr_t cookies[],
 
 static int
 new_pages_at_vaddr(vspace_t *vspace, void *vaddr, size_t num_pages, size_t size_bits,
-                   seL4_CapRights_t rights, int cacheable)
+                   seL4_CapRights_t rights, int cacheable, bool can_use_dev)
 {
     sel4utils_alloc_data_t *data = get_alloc_data(vspace);
     int i;
@@ -326,7 +326,7 @@ new_pages_at_vaddr(vspace_t *vspace, void *vaddr, size_t num_pages, size_t size_
 
     for (i = 0; i < num_pages; i++) {
         vka_object_t object;
-        if (vka_alloc_frame(data->vka, size_bits, &object) != 0) {
+        if (vka_alloc_frame_maybe_device(data->vka, size_bits, can_use_dev, &object) != 0) {
             /* abort! */
             ZF_LOGE("Failed to allocate page");
             error = seL4_NotEnoughMemory;
@@ -447,7 +447,7 @@ sel4utils_unmap_pages(vspace_t *vspace, void *vaddr, size_t num_pages, size_t si
 
 int
 sel4utils_new_pages_at_vaddr(vspace_t *vspace, void *vaddr, size_t num_pages,
-                             size_t size_bits, reservation_t reservation)
+                             size_t size_bits, reservation_t reservation, bool can_use_dev)
 {
     struct sel4utils_alloc_data *data = get_alloc_data(vspace);
     sel4utils_res_t *res = reservation_to_res(reservation);
@@ -457,7 +457,7 @@ sel4utils_new_pages_at_vaddr(vspace_t *vspace, void *vaddr, size_t num_pages,
         return -1;
     }
 
-    return new_pages_at_vaddr(vspace, vaddr, num_pages, size_bits, res->rights, res->cacheable);
+    return new_pages_at_vaddr(vspace, vaddr, num_pages, size_bits, res->rights, res->cacheable, can_use_dev);
 }
 
 int sel4utils_reserve_range_no_alloc_aligned(vspace_t *vspace, sel4utils_res_t *reservation,

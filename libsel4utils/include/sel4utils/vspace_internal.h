@@ -441,7 +441,7 @@ int sel4utils_map_pages_at_vaddr(vspace_t *vspace, seL4_CPtr caps[], uintptr_t c
 void sel4utils_unmap_pages(vspace_t *vspace, void *vaddr, size_t num_pages, size_t size_bits, vka_t *vka);
 
 int sel4utils_new_pages_at_vaddr(vspace_t *vspace, void *vaddr, size_t num_pages,
-                                 size_t size_bits, reservation_t reservation);
+                                 size_t size_bits, reservation_t reservation, bool can_use_dev);
 
 reservation_t sel4utils_reserve_range_aligned(vspace_t *vspace, size_t size, size_t size_bits, seL4_CapRights_t rights,
                                               int cacheable, void **vaddr);

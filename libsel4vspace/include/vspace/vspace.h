@@ -23,6 +23,67 @@ typedef struct reservation {
     void *res;
 } reservation_t;
 
+
+/**
+ * Configuration for vspace_new_pages functions
+ */
+typedef struct vspace_new_pages_config {
+    /* If `NULL` then the mapping will be created at any available virtual
+       address.  If vaddr is not `NULL` than the mapping will be at
+       that virtual address if successful. */
+    void *vaddr;
+    /* Number of pages to be created and mapped */
+    size_t num_pages;
+    /* Number of bits for each page */
+    size_t size_bits;
+    /* Whether frames used to create pages can be device untyped or regular untyped */
+    bool can_use_dev;
+} vspace_new_pages_config_t;
+
+
+/**
+ * Returns a default configuration based on supplied parameters that can be passed to vspace_new_pages_with_config
+ * or vspace_new_pages_at_vaddr_with_config.
+ * @param  num_pages   number of pages in reservation
+ * @param  size_bits   size bits of each page
+ * @param  config      config struct to save configuration into
+ * @return             0 on success.
+ */
+static inline int default_vspace_new_pages_config(size_t num_pages, size_t size_bits, vspace_new_pages_config_t *config) {
+    if (num_pages == 0) {
+        ZF_LOGW("attempt to create 0 pages");
+        return -1;
+    }
+
+    config->vaddr = NULL;
+    config->num_pages = num_pages;
+    config->size_bits = size_bits;
+    config->can_use_dev = false;
+    return 0;
+}
+
+/**
+ * Set vaddr of the config
+ * @param  vaddr  vaddr to set. See documentation on vspace_new_pages_config_t.
+ * @param  config config struct to save configuration into
+ * @return        0 on success.
+ */
+static inline int vspace_new_pages_config_set_vaddr(void *vaddr, vspace_new_pages_config_t *config) {
+    config->vaddr = vaddr;
+    return 0;
+}
+
+/**
+ * Set whether can use device untyped
+ * @param  can_use_dev  `true` if can use device untyped. See documentation on vspace_new_pages_config_t.
+ * @param  config config struct to save configuration into
+ * @return        0 on success.
+ */
+static inline int vspace_new_pages_config_use_device_ut(bool can_use_dev, vspace_new_pages_config_t *config) {
+    config->can_use_dev = can_use_dev;
+    return 0;
+}
+
 /* IMPLEMENTATION INDEPENDANT FUNCTIONS - implemented by calling the implementation specific
  * function pointers */
 
@@ -80,6 +141,20 @@ void *vspace_share_mem(vspace_t *from, vspace_t *to, void *start, int num_pages,
 void *vspace_map_pages(vspace_t *vspace, seL4_CPtr caps[], uintptr_t cookies[],
                        seL4_CapRights_t rights, size_t num_pages, size_t size_bits,
                        int cacheable);
+
+/**
+ * Create a virtually contiguous area of mapped pages.
+ * This could be for shared memory or just allocating some pages.
+ * Depending on the config passed in, this will create a reservation or
+ * use an existing reservation
+ * @param  vspace the virtual memory allocator used.
+ * @param  config configuration for this function. See vspace_new_pages_config_t.
+ * @param  rights the rights to map the pages in with
+ * @return        vaddr at the start of the contiguous region
+ *         NULL on failure.
+ */
+void * vspace_new_pages_with_config(vspace_t *vspace, vspace_new_pages_config_t *config, seL4_CapRights_t rights);
+
 /**
  * Create a virtually contiguous area of mapped pages.
  * This could be for shared memory or just allocating some pages.
@@ -167,11 +242,12 @@ void vspace_free_ipc_buffer(vspace_t *vspace, void *addr);
  * @param num_pages the number of pages to allocate and map.
  * @param size_bits size of the pages to allocate and map, in bits.
  * @param reservation reservation to the range the allocation will take place in.
- *
+ * @param can_use_dev whether the underlying allocator can allocate object from ram device_untyped
+ *                    (Setting this to true is normally safe unless when creating IPC buffers.)
  * @return seL4_NoError on success, -1 otherwise.
  */
 typedef int (*vspace_new_pages_at_vaddr_fn)(vspace_t *vspace, void *vaddr, size_t num_pages,
-                                            size_t size_bits, reservation_t reservation);
+                                            size_t size_bits, reservation_t reservation, bool can_use_dev);
 
 
 /**
@@ -377,6 +453,17 @@ struct vspace {
 };
 
 /* convenient wrappers */
+static inline int
+vspace_new_pages_at_vaddr_with_config(vspace_t *vspace, vspace_new_pages_config_t *config, reservation_t res) {
+    if (vspace == NULL) {
+        ZF_LOGE("vspace is NULL");
+        return -1;
+    }
+    if (res.res == NULL) {
+        ZF_LOGE("reservation is required");
+    }
+    return vspace->new_pages_at_vaddr(vspace, config->vaddr, config->num_pages, config->size_bits, res, config->can_use_dev);
+}
 
 static inline int
 vspace_new_pages_at_vaddr(vspace_t *vspace, void *vaddr, size_t num_pages, size_t size_bits,
@@ -387,17 +474,20 @@ vspace_new_pages_at_vaddr(vspace_t *vspace, void *vaddr, size_t num_pages, size_
         return -1;
     }
 
-    if (num_pages == 0) {
-        ZF_LOGW("attempt to create 0 pages");
-        return -1;
-    }
-
     if (vspace->new_pages_at_vaddr == NULL) {
         ZF_LOGE("Unimplemented");
         return -1;
     }
-
-    return vspace->new_pages_at_vaddr(vspace, vaddr, num_pages, size_bits, reservation);
+    vspace_new_pages_config_t config;
+    if (default_vspace_new_pages_config(num_pages, size_bits, &config)) {
+        ZF_LOGE("Failed to create config");
+        return -1;
+    }
+    if (vspace_new_pages_config_set_vaddr(vaddr, &config)) {
+        ZF_LOGE("Failed to set vaddr");
+        return -1;
+    }
+    return vspace_new_pages_at_vaddr_with_config(vspace, &config, reservation);
 }
 
 static inline int

@@ -44,7 +44,7 @@ void vmm_vmcs_write(seL4_CPtr vcpu, seL4_Word field, seL4_Word value) {
 /*init the vmcs structure for a guest os thread*/
 void vmm_vmcs_init_guest(vmm_vcpu_t *vcpu) {
     vmm_vmcs_write(vcpu->guest_vcpu, VMX_GUEST_ES_SELECTOR, 2 << 3);
-    vmm_vmcs_write(vcpu->guest_vcpu, VMX_GUEST_CS_SELECTOR, 1 << 3);
+    vmm_vmcs_write(vcpu->guest_vcpu, VMX_GUEST_CS_SELECTOR, BIT(3));
     vmm_vmcs_write(vcpu->guest_vcpu, VMX_GUEST_SS_SELECTOR, 2 << 3);
     vmm_vmcs_write(vcpu->guest_vcpu, VMX_GUEST_DS_SELECTOR, 2 << 3);
     vmm_vmcs_write(vcpu->guest_vcpu, VMX_GUEST_FS_SELECTOR, 0);

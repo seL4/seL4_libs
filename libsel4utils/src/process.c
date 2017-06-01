@@ -68,7 +68,7 @@ clear_objects(sel4utils_process_t *process, vka_t *vka)
 static int
 next_free_slot(sel4utils_process_t *process, cspacepath_t *dest)
 {
-    if (process->cspace_next_free >= (1 << process->cspace_size)) {
+    if (process->cspace_next_free >= (BIT(process->cspace_size))) {
         ZF_LOGE("Can't allocate slot, cspace is full.\n");
         return -1;
     }
@@ -83,7 +83,7 @@ next_free_slot(sel4utils_process_t *process, cspacepath_t *dest)
 static void
 allocate_next_slot(sel4utils_process_t *process)
 {
-    assert(process->cspace_next_free < (1 << process->cspace_size));
+    assert(process->cspace_next_free < (BIT(process->cspace_size)));
     process->cspace_next_free++;
 }
 

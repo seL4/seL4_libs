@@ -38,7 +38,7 @@
 
 #define APIC_LVR    0x30
 #define     APIC_LVR_MASK       0xFF00FF
-#define     APIC_LVR_DIRECTED_EOI   (1 << 24)
+#define     APIC_LVR_DIRECTED_EOI   (BIT(24))
 #define     GET_APIC_VERSION(x) ((x) & 0xFFu)
 #define     GET_APIC_MAXLVT(x)  (((x) >> 16) & 0xFFu)
 #ifdef CONFIG_X86_32
@@ -65,9 +65,9 @@
 #define     APIC_DFR_CLUSTER        0x0FFFFFFFul
 #define     APIC_DFR_FLAT           0xFFFFFFFFul
 #define APIC_SPIV   0xF0
-#define     APIC_SPIV_DIRECTED_EOI      (1 << 12)
-#define     APIC_SPIV_FOCUS_DISABLED    (1 << 9)
-#define     APIC_SPIV_APIC_ENABLED      (1 << 8)
+#define     APIC_SPIV_DIRECTED_EOI      (BIT(12))
+#define     APIC_SPIV_FOCUS_DISABLED    (BIT(9))
+#define     APIC_SPIV_APIC_ENABLED      (BIT(8))
 #define APIC_ISR    0x100
 #define APIC_ISR_NR     0x8     /* Number of 32 bit ISR registers. */
 #define APIC_TMR    0x180
@@ -118,13 +118,13 @@
 #define     APIC_TIMER_BASE_TMBASE      0x1
 #define     APIC_TIMER_BASE_DIV     0x2
 #define     APIC_LVT_TIMER_ONESHOT      (0 << 17)
-#define     APIC_LVT_TIMER_PERIODIC     (1 << 17)
+#define     APIC_LVT_TIMER_PERIODIC     (BIT(17))
 #define     APIC_LVT_TIMER_TSCDEADLINE  (2 << 17)
-#define     APIC_LVT_MASKED         (1 << 16)
-#define     APIC_LVT_LEVEL_TRIGGER      (1 << 15)
-#define     APIC_LVT_REMOTE_IRR     (1 << 14)
-#define     APIC_INPUT_POLARITY     (1 << 13)
-#define     APIC_SEND_PENDING       (1 << 12)
+#define     APIC_LVT_MASKED         (BIT(16))
+#define     APIC_LVT_LEVEL_TRIGGER      (BIT(15))
+#define     APIC_LVT_REMOTE_IRR     (BIT(14))
+#define     APIC_INPUT_POLARITY     (BIT(13))
+#define     APIC_SEND_PENDING       (BIT(12))
 #define     APIC_MODE_MASK          0x700
 #define     GET_APIC_DELIVERY_MODE(x)   (((x) >> 8) & 0x7)
 #define     SET_APIC_DELIVERY_MODE(x, y)    (((x) & ~0x700) | ((y) << 8))
@@ -137,7 +137,7 @@
 #define APIC_TMCCT  0x390
 #define APIC_TDCR   0x3E0
 #define APIC_SELF_IPI   0x3F0
-#define     APIC_TDR_DIV_TMBASE (1 << 2)
+#define     APIC_TDR_DIV_TMBASE (BIT(2))
 #define     APIC_TDR_DIV_1      0xB
 #define     APIC_TDR_DIV_2      0x0
 #define     APIC_TDR_DIV_4      0x1
@@ -157,7 +157,7 @@
 #define     APIC_EILVT_MSG_SMI  0x2
 #define     APIC_EILVT_MSG_NMI  0x4
 #define     APIC_EILVT_MSG_EXT  0x7
-#define     APIC_EILVT_MASKED   (1 << 16)
+#define     APIC_EILVT_MASKED   (BIT(16))
 
 #define APIC_BASE (fix_to_virt(FIX_APIC_BASE))
 #define APIC_BASE_MSR   0x800

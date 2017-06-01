@@ -23,9 +23,9 @@ sel4utils_is_read_fault(void)
 {
     seL4_Word fsr = seL4_GetMR(seL4_VMFault_FSR);
 #if defined(CONFIG_ARM_HYPERVISOR_SUPPORT)
-    return (fsr & (1 << 6)) == 0;
+    return (fsr & (BIT(6))) == 0;
 #else
-    return (fsr & (1 << 11)) == 0;
+    return (fsr & (BIT(11))) == 0;
 #endif
 }
 

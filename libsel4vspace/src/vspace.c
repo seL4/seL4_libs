@@ -83,7 +83,7 @@ vspace_share_mem(vspace_t *from, vspace_t *to, void *start, int num_pages, size_
     void *result;
 
     /* reserve a range to map the shared memory in to */
-    reservation_t res = vspace_reserve_range_aligned(to, num_pages * (1 << size_bits), size_bits,
+    reservation_t res = vspace_reserve_range_aligned(to, num_pages * (BIT(size_bits)), size_bits,
                                                      rights, cacheable, &result);
 
     if (res.res == NULL) {

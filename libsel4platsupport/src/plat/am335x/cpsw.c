@@ -300,7 +300,7 @@ void CPSWWrControlRegReset(unsigned int baseAddr)
 void CPSWWrCoreIntEnable(unsigned int baseAddr, unsigned int core,
                          unsigned int channel, unsigned int intFlag)
 {
-    HWREG(baseAddr + CPSW_WR_C_RX_THRESH_EN(core) + intFlag) |= (1 << channel);
+    HWREG(baseAddr + CPSW_WR_C_RX_THRESH_EN(core) + intFlag) |= (BIT(channel));
 }
 
 /**
@@ -322,7 +322,7 @@ void CPSWWrCoreIntDisable(unsigned int baseAddr, unsigned int core,
                           unsigned int channel, unsigned int intFlag)
 {
     HWREG(baseAddr + CPSW_WR_C_RX_THRESH_EN(core) + intFlag) &=
-        ~(1 << channel);
+        ~(BIT(channel));
 }
 
 /**
@@ -346,7 +346,7 @@ unsigned int CPSWWrCoreIntStatusGet(unsigned int baseAddr, unsigned int core,
                                     unsigned int channel, unsigned int intFlag)
 {
     return (HWREG(baseAddr + CPSW_WR_C_RX_THRESH_STAT(core) + intFlag)
-            &  (1 << channel));
+            &  (BIT(channel)));
 }
 
 /**
@@ -546,7 +546,7 @@ void CPSWALEBypassDisable(unsigned int baseAddr)
  **/
 void CPSWRxFlowControlEnable(unsigned int baseAddr, unsigned int portNum)
 {
-    HWREG(baseAddr + CPSW_SS_FLOW_CONTROL) |= (1 << portNum);
+    HWREG(baseAddr + CPSW_SS_FLOW_CONTROL) |= (BIT(portNum));
 }
 
 /**
@@ -560,7 +560,7 @@ void CPSWRxFlowControlEnable(unsigned int baseAddr, unsigned int portNum)
  **/
 void CPSWRxFlowControlDisable(unsigned int baseAddr, unsigned int portNum)
 {
-    HWREG(baseAddr + CPSW_SS_FLOW_CONTROL) &= ~(1 << portNum);
+    HWREG(baseAddr + CPSW_SS_FLOW_CONTROL) &= ~(BIT(portNum));
 }
 
 /**
@@ -733,7 +733,7 @@ void CPSWCPDMAReset(unsigned int baseAddr)
  **/
 void CPSWCPDMATxIntEnable(unsigned int baseAddr, unsigned int channel)
 {
-    HWREG(baseAddr + CPSW_CPDMA_TX_INTMASK_SET) |= (1 << channel);
+    HWREG(baseAddr + CPSW_CPDMA_TX_INTMASK_SET) |= (BIT(channel));
 }
 
 /**
@@ -747,7 +747,7 @@ void CPSWCPDMATxIntEnable(unsigned int baseAddr, unsigned int channel)
  **/
 void CPSWCPDMARxIntEnable(unsigned int baseAddr, unsigned int channel)
 {
-    HWREG(baseAddr + CPSW_CPDMA_RX_INTMASK_SET) |= (1 << channel);
+    HWREG(baseAddr + CPSW_CPDMA_RX_INTMASK_SET) |= (BIT(channel));
 }
 
 /**
@@ -761,7 +761,7 @@ void CPSWCPDMARxIntEnable(unsigned int baseAddr, unsigned int channel)
  **/
 void CPSWCPDMATxIntDisable(unsigned int baseAddr, unsigned int channel)
 {
-    HWREG(baseAddr + CPSW_CPDMA_TX_INTMASK_CLEAR) |= (1 << channel);
+    HWREG(baseAddr + CPSW_CPDMA_TX_INTMASK_CLEAR) |= (BIT(channel));
 
 }
 
@@ -776,7 +776,7 @@ void CPSWCPDMATxIntDisable(unsigned int baseAddr, unsigned int channel)
  **/
 void CPSWCPDMARxIntDisable(unsigned int baseAddr, unsigned int channel)
 {
-    HWREG(baseAddr + CPSW_CPDMA_RX_INTMASK_CLEAR) |= (1 << channel);
+    HWREG(baseAddr + CPSW_CPDMA_RX_INTMASK_CLEAR) |= (BIT(channel));
 
 }
 

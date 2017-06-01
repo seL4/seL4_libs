@@ -39,7 +39,7 @@
 #define APIC_LVT_NUM            6
 /* 14 is the version for Xeon and Pentium 8.4.8*/
 #define APIC_VERSION            (0x14UL | ((APIC_LVT_NUM - 1) << 16))
-#define LAPIC_MMIO_LENGTH       (1 << 12)
+#define LAPIC_MMIO_LENGTH       (BIT(12))
 /* followed define is not in apicdef.h */
 #define APIC_SHORT_MASK         0xc0000
 #define APIC_DEST_NOSHORT       0x0
@@ -748,7 +748,7 @@ static int apic_reg_write(vmm_vcpu_t *vcpu, uint32_t reg, uint32_t val)
     }
     case APIC_ICR:
         /* No delay here, so we always clear the pending bit */
-        apic_set_reg(apic, APIC_ICR, val & ~(1 << 12));
+        apic_set_reg(apic, APIC_ICR, val & ~(BIT(12)));
         apic_send_ipi(vcpu);
         break;
 

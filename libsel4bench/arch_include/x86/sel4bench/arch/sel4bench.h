@@ -219,9 +219,9 @@ static FASTFN void sel4bench_start_counters(counter_bitfield_t mask)
 
     seL4_Word num_counters = sel4bench_get_num_counters();
     if (mask == ~(0UL)) {
-        mask = ((1 << num_counters) - 1);
+        mask = ((BIT(num_counters)) - 1);
     } else {
-        assert((~((1 << num_counters) - 1) & mask) == 0);
+        assert((~((BIT(num_counters)) - 1) & mask) == 0);
     }
 
     uint32_t max_basic_leaf = 0;
@@ -243,11 +243,11 @@ static FASTFN void sel4bench_start_counters(counter_bitfield_t mask)
     counter_t counter;
     //NOT your average for loop!
     for (counter = 0; mask; counter++) {
-        if (!(mask & (1 << counter))) {
+        if (!(mask & (BIT(counter)))) {
             continue;
         }
 
-        mask &= ~(1 << counter);
+        mask &= ~(BIT(counter));
 
         //read appropriate MSR
         msr_data[0] = IA32_MSR_PMC_PERFEVTSEL_BASE + counter;
@@ -282,9 +282,9 @@ static FASTFN void sel4bench_stop_counters(counter_bitfield_t mask)
 
     seL4_Word num_counters = sel4bench_get_num_counters();
     if (mask == ~(0UL)) {
-        mask = ((1 << num_counters) - 1);
+        mask = ((BIT(num_counters)) - 1);
     } else {
-        assert((~((1 << num_counters) - 1) & mask) == 0);
+        assert((~((BIT(num_counters)) - 1) & mask) == 0);
     }
 
     uint32_t max_basic_leaf = 0;
@@ -302,11 +302,11 @@ static FASTFN void sel4bench_stop_counters(counter_bitfield_t mask)
     counter_t counter;
     //NOT your average for loop!
     for (counter = 0; mask; counter++) {
-        if (!(mask & (1 << counter))) {
+        if (!(mask & (BIT(counter)))) {
             continue;
         }
 
-        mask &= ~(1 << counter);
+        mask &= ~(BIT(counter));
 
         //read appropriate MSR
         msr_data[0] = IA32_MSR_PMC_PERFEVTSEL_BASE + counter;

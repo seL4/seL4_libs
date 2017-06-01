@@ -14,6 +14,7 @@
 #define _SEL4UTILS_SEL4_ARCH_UTIL_H
 
 #include <sel4/sel4.h>
+#include <utils/arith.h>
 
 #define ARCH_SYSCALL_INSTRUCTION_SIZE 4
 
@@ -21,7 +22,7 @@ static inline int
 sel4utils_is_read_fault(void)
 {
     seL4_Word fsr = seL4_GetMR(seL4_VMFault_FSR);
-    return (fsr & (1 << 6)) == 0;
+    return (fsr & (BIT(6))) == 0;
 }
 
 static inline void

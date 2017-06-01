@@ -82,10 +82,10 @@ platsupport_alloc_device_vaddr(seL4_Word bits)
 {
     seL4_Word va;
 
-    va = DITE_HEADER_START - (1 << bits);
+    va = DITE_HEADER_START - (BIT(bits));
 
     /* Ensure we are aligned to bits. If not, round down. */
-    va = va & ~((1 << bits) - 1);
+    va = va & ~((BIT(bits)) - 1);
 
     return va;
 }

@@ -475,10 +475,10 @@ static int vmm_load_guest_segment(vmm_t *vmm, seL4_Word source_offset,
         }
 
         /* Copy the contents of page from ELF into the mapped frame. */
-        size_t offset = dest_addr & ((1 << page_size) - 1);
+        size_t offset = dest_addr & ((BIT(page_size)) - 1);
 
         void *copy_vaddr = map_vaddr + offset;
-        size_t copy_len = (1 << page_size) - offset;
+        size_t copy_len = (BIT(page_size)) - offset;
 
         if (remain > 0) {
             if (copy_len > remain) {

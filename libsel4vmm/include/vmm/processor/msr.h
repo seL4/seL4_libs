@@ -216,14 +216,14 @@
 #define MSR_IA32_THERM_CONTROL      0x0000019a
 #define MSR_IA32_THERM_INTERRUPT    0x0000019b
 
-#define THERM_INT_HIGH_ENABLE       (1 << 0)
-#define THERM_INT_LOW_ENABLE        (1 << 1)
-#define THERM_INT_PLN_ENABLE        (1 << 24)
+#define THERM_INT_HIGH_ENABLE       (BIT(0))
+#define THERM_INT_LOW_ENABLE        (BIT(1))
+#define THERM_INT_PLN_ENABLE        (BIT(24))
 
 #define MSR_IA32_THERM_STATUS       0x0000019c
 
-#define THERM_STATUS_PROCHOT        (1 << 0)
-#define THERM_STATUS_POWER_LIMIT    (1 << 10)
+#define THERM_STATUS_PROCHOT        (BIT(0))
+#define THERM_STATUS_POWER_LIMIT    (BIT(10))
 
 #define MSR_THERM2_CTL          0x0000019d
 
@@ -240,26 +240,26 @@
 
 #define MSR_IA32_PACKAGE_THERM_STATUS       0x000001b1
 
-#define PACKAGE_THERM_STATUS_PROCHOT        (1 << 0)
-#define PACKAGE_THERM_STATUS_POWER_LIMIT    (1 << 10)
+#define PACKAGE_THERM_STATUS_PROCHOT        (BIT(0))
+#define PACKAGE_THERM_STATUS_POWER_LIMIT    (BIT(10))
 
 #define MSR_IA32_PACKAGE_THERM_INTERRUPT    0x000001b2
 
-#define PACKAGE_THERM_INT_HIGH_ENABLE       (1 << 0)
-#define PACKAGE_THERM_INT_LOW_ENABLE        (1 << 1)
-#define PACKAGE_THERM_INT_PLN_ENABLE        (1 << 24)
+#define PACKAGE_THERM_INT_HIGH_ENABLE       (BIT(0))
+#define PACKAGE_THERM_INT_LOW_ENABLE        (BIT(1))
+#define PACKAGE_THERM_INT_PLN_ENABLE        (BIT(24))
 
 /* Thermal Thresholds Support */
-#define THERM_INT_THRESHOLD0_ENABLE    (1 << 15)
+#define THERM_INT_THRESHOLD0_ENABLE    (BIT(15))
 #define THERM_SHIFT_THRESHOLD0        8
 #define THERM_MASK_THRESHOLD0          (0x7f << THERM_SHIFT_THRESHOLD0)
-#define THERM_INT_THRESHOLD1_ENABLE    (1 << 23)
+#define THERM_INT_THRESHOLD1_ENABLE    (BIT(23))
 #define THERM_SHIFT_THRESHOLD1        16
 #define THERM_MASK_THRESHOLD1          (0x7f << THERM_SHIFT_THRESHOLD1)
-#define THERM_STATUS_THRESHOLD0        (1 << 6)
-#define THERM_LOG_THRESHOLD0           (1 << 7)
-#define THERM_STATUS_THRESHOLD1        (1 << 8)
-#define THERM_LOG_THRESHOLD1           (1 << 9)
+#define THERM_STATUS_THRESHOLD0        (BIT(6))
+#define THERM_LOG_THRESHOLD0           (BIT(7))
+#define THERM_STATUS_THRESHOLD1        (BIT(8))
+#define THERM_LOG_THRESHOLD1           (BIT(9))
 
 /* MISC_ENABLE bits: architectural */
 #define MSR_IA32_MISC_ENABLE_FAST_STRING    (1ULL << 0)

@@ -313,15 +313,15 @@ static int vmm_cpuid_virt(unsigned int function, unsigned int index, struct cpui
                                       break;
                                   }
         case KVM_CPUID_FEATURES:
-                                  entry->eax = (1 << KVM_FEATURE_CLOCKSOURCE) |
-                                      (1 << KVM_FEATURE_NOP_IO_DELAY) |
-                                      (1 << KVM_FEATURE_CLOCKSOURCE2) |
-                                      (1 << KVM_FEATURE_ASYNC_PF) |
-                                      (1 << KVM_FEATURE_PV_EOI) |
-                                      (1 << KVM_FEATURE_CLOCKSOURCE_STABLE_BIT);
+                                  entry->eax = (BIT(KVM_FEATURE_CLOCKSOURCE)) |
+                                      (BIT(KVM_FEATURE_NOP_IO_DELAY)) |
+                                      (BIT(KVM_FEATURE_CLOCKSOURCE2)) |
+                                      (BIT(KVM_FEATURE_ASYNC_PF)) |
+                                      (BIT(KVM_FEATURE_PV_EOI)) |
+                                      (BIT(KVM_FEATURE_CLOCKSOURCE_STABLE_BIT));
 
                                   if (sched_info_on())
-                                      entry->eax |= (1 << KVM_FEATURE_STEAL_TIME);
+                                      entry->eax |= (BIT(KVM_FEATURE_STEAL_TIME));
 
                                   entry->ebx = 0;
                                   entry->ecx = 0;

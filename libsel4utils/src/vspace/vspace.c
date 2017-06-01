@@ -309,7 +309,7 @@ map_pages_at_vaddr(vspace_t *vspace, seL4_CPtr caps[], uintptr_t cookies[],
         if (error == seL4_NoError) {
             uintptr_t cookie = cookies == NULL ? 0 : cookies[i];
             error = update_entries(vspace, (uintptr_t) vaddr, caps[i], size_bits, cookie);
-            vaddr = (void *) ((uintptr_t) vaddr + (1 << size_bits));
+            vaddr = (void *) ((uintptr_t) vaddr + (BIT(size_bits)));
         }
     }
     return error;
@@ -337,7 +337,7 @@ new_pages_at_vaddr(vspace_t *vspace, void *vaddr, size_t num_pages, size_t size_
 
         if (error == seL4_NoError) {
             error = update_entries(vspace, (uintptr_t) vaddr, object.cptr, size_bits, object.ut);
-            vaddr = (void *) ((uintptr_t) vaddr + (1 << size_bits));
+            vaddr = (void *) ((uintptr_t) vaddr + (BIT(size_bits)));
         } else {
             vka_free_object(data->vka, &object);
             break;
@@ -440,7 +440,7 @@ sel4utils_unmap_pages(vspace_t *vspace, void *vaddr, size_t num_pages, size_t si
         assert(get_cap(data->top_level, v) != cap);
         assert(get_cookie(data->top_level, v) == 0);
 
-        v += (1 << size_bits);
+        v += (BIT(size_bits));
         vaddr = (void *) v;
     }
 }

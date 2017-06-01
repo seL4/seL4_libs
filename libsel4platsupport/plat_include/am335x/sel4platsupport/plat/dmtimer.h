@@ -60,7 +60,7 @@ extern "C" {
                                               DMTIMER_TCLR_PRE)
 
     /* Value used to divide timer clock by 4 */
-#define DMTIMER_PRESCALER_CLK_DIV_BY_4	    ((1 << DMTIMER_TCLR_PTV_SHIFT) | \
+#define DMTIMER_PRESCALER_CLK_DIV_BY_4	    ((BIT(DMTIMER_TCLR_PTV_SHIFT)) | \
                                               DMTIMER_TCLR_PRE)
 
     /* Value used to divide timer clock by 8 */

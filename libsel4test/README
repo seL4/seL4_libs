@@ -1,15 +1,17 @@
-(*
- * Copyright 2014, NICTA
- *
- * This software may be distributed and modified according to the terms of
- * the BSD 2-Clause license. Note that NO WARRANTY is provided.
- * See "LICENSE_BSD2.txt" for details.
- *
- * @TAG(NICTA_BSD)
- *)
+<!---
+  Copyright 2017, Data61
+  Commonwealth Scientific and Industrial Research Organisation (CSIRO)
+  ABN 41 687 119 230.
+
+  This software may be distributed and modified according to the terms of
+  the BSD 2-Clause license. Note that NO WARRANTY is provided.
+  See "LICENSE_BSD2.txt" for details.
+
+  @TAG(DATA61_BSD)
+-->
 
 This library is for running tests and generating test output in either
-human readable or xml format. 
+human readable or xml format.
 
 SETTING UP LIBSEL4TEST WITH YOUR PROJECT
 
@@ -19,7 +21,7 @@ testing as bamboo, you definitely want both turned on.
 
 CONFIG_PRINT_XML
 
-Bamboo requires XML. Humans can choose. 
+Bamboo requires XML. Humans can choose.
 
 CONFIG_BUFFER_OUTPUT
 
@@ -32,10 +34,10 @@ USING LIBSEL4TEST
 
 To use libsel4test:
 
-1. Provide a definition for struct env before including <sel4test/test.h>. 
+1. Provide a definition for struct env before including <sel4test/test.h>.
 2. Write tests with the prototype int (*test)(env_t env, void *args). Follow each test with the DEFINE_TEST macro.
 3. Provide a run_test function int (*run_test)(struct test_case *t) and call sel4test_run_tests.
-4. That's it. Each test will run in alphabetical order based on the test name. Tests will run forward and backward. 
+4. That's it. Each test will run in alphabetical order based on the test name. Tests will run forward and backward.
 
 Example code:
 
@@ -66,7 +68,7 @@ int main(void) {
     env->vka = init_allocator();
 
 
-    /* sel4test_basic_run_test just runs each test and passes in 
+    /* sel4test_basic_run_test just runs each test and passes in
        env returned by sel4test_get_env.
        You can define your own version of this if you need custom
        setup/teardown
@@ -78,7 +80,7 @@ int main(void) {
 
 CAVEATS
 
-There is a tool for sanitizing the xml in tools/extract_results.py. 
+There is a tool for sanitizing the xml in tools/extract_results.py.
 
 A NOTE ON ASSERT
 

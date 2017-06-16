@@ -15,6 +15,7 @@
 
 #include <autoconf.h>
 #include <sel4/sel4.h>
+#include <utils/arith.h>
 
 #define ARCH_SYSCALL_INSTRUCTION_SIZE 4
 

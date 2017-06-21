@@ -190,7 +190,7 @@ int vmm_guest_load_boot_module(vmm_t *vmm, const char *name) {
 
 static inline uint32_t vmm_plat_vesa_fbuffer_size(seL4_VBEModeInfoBlock_t *block) {
     assert(block);
-    return ALIGN_UP(block->bytesPerScanLine * block->yRes, 65536);
+    return ALIGN_UP(block->vbe_common.bytesPerScanLine * block->vbe12_part1.yRes, 65536);
 }
 
 static int make_guest_page_dir_continued(uintptr_t guest_phys, void *vaddr, size_t size, size_t offset, void *cookie) {
@@ -263,7 +263,7 @@ static void make_guest_screen_info(vmm_t *vmm, struct screen_info *info) {
             ZF_LOGE("Failed to map vbe protected mode interface for VESA frame buffer. Disabling");
         } else {
             fbuffer_size = vmm_plat_vesa_fbuffer_size(&vbeinfo.vbeModeInfoBlock);
-            base = vmm_map_guest_device(vmm, vbeinfo.vbeModeInfoBlock.physBasePtr, fbuffer_size, PAGE_SIZE_4K);
+            base = vmm_map_guest_device(vmm, vbeinfo.vbeModeInfoBlock.vbe20.physBasePtr, fbuffer_size, PAGE_SIZE_4K);
             if (!base) {
                 ZF_LOGE("Failed to map base pointer for VESA frame buffer. Disabling");
             }
@@ -271,25 +271,25 @@ static void make_guest_screen_info(vmm_t *vmm, struct screen_info *info) {
     }
     if (base) {
         info->orig_video_isVGA = 0x23; // Tell Linux it's a VESA mode
-        info->lfb_width = vbeinfo.vbeModeInfoBlock.xRes;
-        info->lfb_height = vbeinfo.vbeModeInfoBlock.yRes;
-        info->lfb_depth = vbeinfo.vbeModeInfoBlock.bitsPerPixel;
+        info->lfb_width = vbeinfo.vbeModeInfoBlock.vbe12_part1.xRes;
+        info->lfb_height = vbeinfo.vbeModeInfoBlock.vbe12_part1.yRes;
+        info->lfb_depth = vbeinfo.vbeModeInfoBlock.vbe12_part1.bitsPerPixel;
 
         info->lfb_base = base;
         info->lfb_size = fbuffer_size >> 16;
-        info->lfb_linelength = vbeinfo.vbeModeInfoBlock.bytesPerScanLine;
+        info->lfb_linelength = vbeinfo.vbeModeInfoBlock.vbe_common.bytesPerScanLine;
 
-        info->red_size = vbeinfo.vbeModeInfoBlock.redLen;
-        info->red_pos = vbeinfo.vbeModeInfoBlock.redOff;
-        info->green_size = vbeinfo.vbeModeInfoBlock.greenLen;
-        info->green_pos = vbeinfo.vbeModeInfoBlock.greenOff;
-        info->blue_size = vbeinfo.vbeModeInfoBlock.blueLen;
-        info->blue_pos = vbeinfo.vbeModeInfoBlock.blueOff;
-        info->rsvd_size = vbeinfo.vbeModeInfoBlock.rsvdLen;
-        info->rsvd_pos = vbeinfo.vbeModeInfoBlock.rsvdOff;
+        info->red_size = vbeinfo.vbeModeInfoBlock.vbe12_part2.redLen;
+        info->red_pos = vbeinfo.vbeModeInfoBlock.vbe12_part2.redOff;
+        info->green_size = vbeinfo.vbeModeInfoBlock.vbe12_part2.greenLen;
+        info->green_pos = vbeinfo.vbeModeInfoBlock.vbe12_part2.greenOff;
+        info->blue_size = vbeinfo.vbeModeInfoBlock.vbe12_part2.blueLen;
+        info->blue_pos = vbeinfo.vbeModeInfoBlock.vbe12_part2.blueOff;
+        info->rsvd_size = vbeinfo.vbeModeInfoBlock.vbe12_part2.rsvdLen;
+        info->rsvd_pos = vbeinfo.vbeModeInfoBlock.vbe12_part2.rsvdOff;
         info->vesapm_seg = vbeinfo.vbeInterfaceSeg;
         info->vesapm_off = vbeinfo.vbeInterfaceOff;
-        info->pages = vbeinfo.vbeModeInfoBlock.planes;
+        info->pages = vbeinfo.vbeModeInfoBlock.vbe12_part1.planes;
     } else {
         memset(info, 0, sizeof(*info));
     }

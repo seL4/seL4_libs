@@ -1087,7 +1087,7 @@ static int prepare_handle_device_untyped_cap(allocman_t *alloc, simple_t *simple
     add_untypeds_state_t *state = allocman_mspace_alloc(alloc, sizeof(add_untypeds_state_t), &error);
     ZF_LOGF_IF(error, "Failed to allocate add_untypeds_state_t");
 
-    if (num_regions > 0 && region_list != NULL) {
+    if (num_regions >= 0 && region_list != NULL) {
         state->num_regions = num_regions;
         state->regions = region_list;
         state->region_alloc = false;

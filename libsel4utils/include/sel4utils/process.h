@@ -310,6 +310,6 @@ void sel4utils_create_word_args(char strings[][WORD_STRING_SIZE], char *argv[], 
  * @param cap initial cap index from sel4/bootinfo_types.h
  * @return the corresponding cap in a sel4utils launched process.
  */
-seL4_CPtr sel4utils_process_init_cap(seL4_CPtr cap);
+seL4_CPtr sel4utils_process_init_cap(void *data, seL4_CPtr cap);
 
 #endif /* SEL4UTILS_PROCESS_H */

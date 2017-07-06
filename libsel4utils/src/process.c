@@ -681,7 +681,7 @@ sel4utils_destroy_process(sel4utils_process_t *process, vka_t *vka)
 }
 
 seL4_CPtr
-sel4utils_process_init_cap(seL4_CPtr cap)
+sel4utils_process_init_cap(void *data, seL4_CPtr cap)
 {
     switch (cap) {
     case seL4_CapInitThreadTCB:

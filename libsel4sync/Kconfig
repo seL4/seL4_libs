@@ -18,3 +18,6 @@ config LIB_SEL4_SYNC
     default y
     help
         Synchronisation library for seL4
+
+config HAVE_LIB_SEL4_SYNC
+    bool

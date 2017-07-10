@@ -18,6 +18,7 @@
 #include <vspace/vspace.h>
 
 #include <sel4utils/thread.h>
+#include <sel4utils/process_config.h>
 #include <sel4utils/vspace.h>
 #include <sel4utils/elf.h>
 
@@ -81,47 +82,6 @@ enum sel4utils_cspace_layout {
     SEL4UTILS_FIRST_FREE = 6
 };
 
-typedef struct {
-    /* should we handle elf logic at all? */
-    bool is_elf;
-    /* if so what is the image name? */
-    const char *image_name;
-    /* Do you want the elf image preloaded? */
-    bool do_elf_load;
-
-    /* otherwise what is the entry point and sysinfo? */
-    void *entry_point;
-    uintptr_t sysinfo;
-
-    /* should we create a default single level cspace? */
-    bool create_cspace;
-    /* if so how big ? */
-    int one_level_cspace_size_bits;
-
-    /* otherwise what is the root cnode ?*/
-    /* Note if you use a custom cspace then
-     * sel4utils_copy_cap_to_process etc will not work */
-    vka_object_t cnode;
-
-    /* do you want us to create a vspace for you? */
-    bool create_vspace;
-    /* if not what is the page dir, and what is the vspace */
-    vspace_t *vspace;
-    vka_object_t page_dir;
-
-    /* if so, is there a regions you want left clear?*/
-    sel4utils_elf_region_t *reservations;
-    int num_reservations;
-
-    /* do you want a fault endpoint created? */
-    bool create_fault_endpoint;
-    /* otherwise what is it */
-    vka_object_t fault_endpoint;
-
-    int priority;
-    seL4_CPtr asid_pool;
-} sel4utils_process_config_t;
-
 /**
  * Start a process, and copy arguments into the processes address space.
  *
@@ -178,7 +138,7 @@ int sel4utils_spawn_process_v(sel4utils_process_t *process, vka_t *vka, vspace_t
 /**
  * This is the function to use if you just want to set up a process as fast as possible.
  * It creates a simple cspace and vspace for you, allocates a fault endpoint and puts
- * it into the new cspace.
+ * it into the new cspace. The process will start at priority 0.
  *
  * It loads the elf file into the new vspace, parses the elf file and stores the entry point
  * into process->entry_point.
@@ -196,13 +156,12 @@ int sel4utils_spawn_process_v(sel4utils_process_t *process, vka_t *vka, vspace_t
  * @param process      uninitialised process struct.
  * @param vka          allocator to use to allocate objects.
  * @param vspace vspace allocator for the current vspace.
- * @param priority     priority to configure the process to run as.
  * @param image_name   name of the elf image to load from the cpio archive.
  *
  * @return 0 on success, -1 on error.
  */
 int sel4utils_configure_process(sel4utils_process_t *process, vka_t *vka, vspace_t *vspace,
-                                uint8_t priority, const char *image_name);
+                                const char *image_name);
 
 /**
  * Configure a process with more customisations (Create your own vspace, customise cspace size).

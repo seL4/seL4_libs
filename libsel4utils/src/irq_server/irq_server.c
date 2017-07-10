@@ -254,8 +254,9 @@ irq_server_thread_new(vspace_t* vspace, vka_t* vka, seL4_CPtr cspace, seL4_Word 
     }
     st->node->notification = st->notification.cptr;
     /* Create the IRQ thread */
-    err = sel4utils_configure_thread(vka, vspace, vspace, seL4_CapNull, priority,
-                                     cspace, seL4_NilData, &st->thread);
+    sel4utils_thread_config_t config = thread_config_default(simple, cspace, seL4_NilData, 0, priority);
+    err = sel4utils_configure_thread_config(vka, vspace, vspace, config, &st->thread);
+
     if (err) {
         ZF_LOGE("Failed to configure IRQ server thread\n");
         return NULL;

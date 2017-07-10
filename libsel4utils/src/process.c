@@ -383,26 +383,15 @@ sel4utils_spawn_process_v(sel4utils_process_t *process, vka_t *vka, vspace_t *vs
     process->thread.initial_stack_pointer = (void *) initial_stack_pointer;
 
     /* Write the registers */
-    return seL4_TCB_WriteRegisters(process->thread.tcb.cptr, resume, 0, sizeof(context) / sizeof(seL4_Word), 
+    return seL4_TCB_WriteRegisters(process->thread.tcb.cptr, resume, 0, sizeof(context) / sizeof(seL4_Word),
                                   &context);
 }
 
 int
 sel4utils_configure_process(sel4utils_process_t *process, vka_t *vka,
-                            vspace_t *vspace, uint8_t priority, const char *image_name)
+                            vspace_t *vspace, const char *image_name)
 {
-    sel4utils_process_config_t config = {
-        .is_elf = true,
-        .image_name = image_name,
-        .do_elf_load = true,
-        .create_cspace = true,
-        .one_level_cspace_size_bits = CONFIG_SEL4UTILS_CSPACE_SIZE_BITS,
-        .create_vspace = true,
-        .create_fault_endpoint = true,
-        .priority = priority,
-        .asid_pool = seL4_CapInitThreadASIDPool,
-    };
-
+    sel4utils_process_config_t config = process_config_default(image_name, seL4_CapInitThreadASIDPool);
     return sel4utils_configure_process_custom(process, vka, vspace, config);
 }
 
@@ -596,9 +585,14 @@ sel4utils_configure_process_custom(sel4utils_process_t *process, vka_t *vka,
 
     /* create the thread, do this *after* elf-loading so that we don't clobber
      * the required virtual memory*/
-    error = sel4utils_configure_thread(vka, spawner_vspace, &process->vspace, SEL4UTILS_ENDPOINT_SLOT,
-                                       config.priority, process->cspace.cptr, cspace_root_data, &process->thread);
-
+    sel4utils_thread_config_t thread_config = {0};
+    thread_config = thread_config_cspace(thread_config, process->cspace.cptr, cspace_root_data);
+    thread_config = thread_config_fault_endpoint(thread_config, SEL4UTILS_ENDPOINT_SLOT);
+    thread_config = thread_config_mcp(thread_config, config.mcp);
+    thread_config = thread_config_priority(thread_config, config.priority);
+    thread_config = thread_config_auth(thread_config, config.auth);
+    error = sel4utils_configure_thread_config(vka, spawner_vspace, &process->vspace, thread_config,
+                                              &process->thread);
     /* copy tcb cap to cspace */
     if (config.create_cspace) {
         cspacepath_t src;

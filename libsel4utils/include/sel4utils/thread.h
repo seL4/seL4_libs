@@ -28,6 +28,7 @@
 #include <vka/vka.h>
 
 #include <vspace/vspace.h>
+#include <sel4utils/thread_config.h>
 
 #ifdef CONFIG_DEBUG_BUILD
 #define NAME_THREAD(_tcbcap, _name)   seL4_DebugNameThread(_tcbcap, _name);
@@ -44,25 +45,6 @@ typedef struct sel4utils_thread {
     seL4_Word ipc_buffer_addr;
 } sel4utils_thread_t;
 
-typedef struct sel4utils_thread_config {
-    /* fault_endpoint endpoint to set as the threads fault endpoint. Can be seL4_CapNull. */
-    seL4_CPtr fault_endpoint;
-    /* seL4 priority for the thread to be scheduled with. */
-    uint8_t priority;
-    /* seL4 maximum controlled priority for the thread. */
-    uint8_t mcp;
-    /* root of the cspace to start the thread in */
-    seL4_CNode cspace;
-    /* data for cspace access */
-    seL4_CapData_t cspace_root_data;
-    /* use a custom stack size? */
-    bool custom_stack_size;
-    /* custom stack size in 4k pages for this thread */
-    seL4_Word stack_size;
-    /* true if this thread should have no ipc buffer */
-    bool no_ipc_buffer;
-} sel4utils_thread_config_t;
-
 typedef struct sel4utils_checkpoint {
     void *stack;
     seL4_UserContext regs;
@@ -72,13 +54,12 @@ typedef struct sel4utils_checkpoint {
 typedef void (*sel4utils_thread_entry_fn)(void *arg0, void *arg1, void *ipc_buf);
 
 /**
- * Configure a thread, allocating any resources required.
+ * Configure a thread, allocating any resources required. The thread will start at priority 0.
  *
  * @param vka initialised vka to allocate objects with
  * @param parent vspace structure of the thread calling this function, used for temporary mappings
  * @param alloc initialised vspace structure to allocate virtual memory with
  * @param fault_endpoint endpoint to set as the threads fault endpoint. Can be 0.
- * @param priority seL4 priority for the thread to be scheduled with.
  * @param cspace the root of the cspace to start the thread in
  * @param cspace_root_data data for cspace access
  * @param res an uninitialised sel4utils_thread_t data structure that will be initialised
@@ -87,7 +68,7 @@ typedef void (*sel4utils_thread_entry_fn)(void *arg0, void *arg1, void *ipc_buf)
  * @return 0 on success, -1 on failure. Use CONFIG_DEBUG to see error messages.
  */
 int sel4utils_configure_thread(vka_t *vka, vspace_t *parent, vspace_t *alloc, seL4_CPtr fault_endpoint,
-                               uint8_t priority, seL4_CNode cspace, seL4_CapData_t cspace_root_data,
+                               seL4_CNode cspace, seL4_CapData_t cspace_root_data,
                                sel4utils_thread_t *res);
 
 
@@ -193,12 +174,11 @@ void sel4utils_free_checkpoint(sel4utils_checkpoint_t *checkpoint);
 
 /**
  * Start a fault handling thread that will print the name of the thread that faulted
- * as well as debugging information.
+ * as well as debugging information. The thread will start at priority 0.
  *
  * @param fault_endpoint the fault_endpoint to wait on
  * @param vka allocator
  * @param vspace vspace (this library must be mapped into that vspace).
- * @param prio the priority to run the thread at (recommend highest possible)
  * @param cspace the cspace that the fault_endpoint is in
  * @param data the cspace_data for that cspace (with correct guard)
  * @param name the name of the thread to print if it faults
@@ -207,7 +187,7 @@ void sel4utils_free_checkpoint(sel4utils_checkpoint_t *checkpoint);
  * @return 0 on success.
  */
 int sel4utils_start_fault_handler(seL4_CPtr fault_endpoint, vka_t *vka, vspace_t *vspace,
-                                  uint8_t prio, seL4_CPtr cspace, seL4_CapData_t data, char *name, sel4utils_thread_t *res);
+                                  seL4_CPtr cspace, seL4_CapData_t data, char *name, sel4utils_thread_t *res);
 
 
 /**

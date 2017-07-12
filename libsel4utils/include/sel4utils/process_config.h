@@ -177,7 +177,7 @@ process_config_default(const char *image_name, seL4_CPtr asid_pool)
 }
 
 static inline sel4utils_process_config_t
-process_config_default_simple(simple_t *simple, char *image_name, uint8_t prio)
+process_config_default_simple(simple_t *simple, const char *image_name, uint8_t prio)
 {
     sel4utils_process_config_t config = process_config_new(simple);
     config = process_config_elf(config, image_name, true);

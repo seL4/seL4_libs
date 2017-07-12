@@ -307,7 +307,7 @@ sel4utils_spawn_process_v(sel4utils_process_t *process, vka_t *vka, vspace_t *vs
     uintptr_t initial_stack_pointer = (uintptr_t) process->thread.stack_top - sizeof(seL4_Word);
     uintptr_t dest_argv[argc];
     uintptr_t dest_envp[envc];
-    
+
     /* write all the strings into the stack */
     /* Copy over the user arguments */
     int error = sel4utils_stack_copy_args(vspace, &process->vspace, vka, argc, argv, dest_argv, &initial_stack_pointer);
@@ -321,7 +321,7 @@ sel4utils_spawn_process_v(sel4utils_process_t *process, vka_t *vka, vspace_t *vs
         return -1;
     }
 
-    /* we need to make sure the stack is aligned to a double word boundary after we push on everything else 
+    /* we need to make sure the stack is aligned to a double word boundary after we push on everything else
      * below this point. First, work out how much we are going to push */
     size_t to_push = 5 * sizeof(seL4_Word) + /* constants */
                     sizeof(auxv[0]) * auxc + /* aux */
@@ -414,8 +414,8 @@ create_reservations(vspace_t *vspace, int num, sel4utils_elf_region_t regions[])
     return 0;
 }
 
-static seL4_CPtr 
-get_asid_pool(seL4_CPtr asid_pool) 
+static seL4_CPtr
+get_asid_pool(seL4_CPtr asid_pool)
 {
     if (asid_pool == 0) {
         ZF_LOGW("This method will fail if run in a thread that is not in the root server cspace\n");
@@ -494,7 +494,7 @@ create_fault_endpoint(vka_t *vka, sel4utils_process_t *process)
     return 0;
 }
 
-int 
+int
 sel4utils_configure_process_custom(sel4utils_process_t *process, vka_t *vka,
                                    vspace_t *spawner_vspace, sel4utils_process_config_t config)
 {
@@ -532,7 +532,7 @@ sel4utils_configure_process_custom(sel4utils_process_t *process, vka_t *vka,
 
     process->own_cspace = config.create_cspace;
     if (config.create_cspace) {
-        if (create_cspace(vka, config.one_level_cspace_size_bits, process, cspace_root_data, 
+        if (create_cspace(vka, config.one_level_cspace_size_bits, process, cspace_root_data,
                           config.asid_pool) != 0) {
             goto error;
         }

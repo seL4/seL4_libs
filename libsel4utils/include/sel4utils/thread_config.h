@@ -21,16 +21,20 @@
 #include <sel4/types.h>
 #include <simple/simple.h>
 
-typedef struct sel4utils_thread_config {
-    /* fault_endpoint endpoint to set as the threads fault endpoint. Can be seL4_CapNull. */
-    seL4_CPtr fault_endpoint;
-    /* TCB to derive MCP from when setting priority/mcp */
-    seL4_CPtr auth;
-    /* seL4 priority for the thread to be scheduled with. */
+/* Threads and processes use this struct as both need scheduling config parameters */
+typedef struct sched_params {
+     /* seL4 priority for the thread to be scheduled with. */
     uint8_t priority;
     /* seL4 maximum controlled priority for the thread. */
     uint8_t mcp;
-    /* root of the cspace to start the thread in */
+    /* TCB to derive MCP from when setting priority/mcp (in future API) */
+    seL4_CPtr auth;
+} sched_params_t;
+
+typedef struct sel4utils_thread_config {
+    /* fault_endpoint endpoint to set as the threads fault endpoint. Can be seL4_CapNull. */
+    seL4_CPtr fault_endpoint;
+   /* root of the cspace to start the thread in */
     seL4_CNode cspace;
     /* data for cspace access */
     seL4_CapData_t cspace_root_data;
@@ -40,6 +44,8 @@ typedef struct sel4utils_thread_config {
     seL4_Word stack_size;
     /* true if this thread should have no ipc buffer */
     bool no_ipc_buffer;
+    /* scheduling parameters */
+    sched_params_t sched_params;
 } sel4utils_thread_config_t;
 
 static inline sel4utils_thread_config_t
@@ -53,7 +59,7 @@ thread_config_cspace(sel4utils_thread_config_t config, seL4_CPtr cspace_root, se
 static inline sel4utils_thread_config_t
 thread_config_auth(sel4utils_thread_config_t config, seL4_CPtr tcb)
 {
-    config.auth = tcb;
+    config.sched_params.auth = tcb;
     return config;
 }
 
@@ -69,14 +75,14 @@ thread_config_new(simple_t *simple)
 static inline sel4utils_thread_config_t
 thread_config_priority(sel4utils_thread_config_t config, uint8_t priority)
 {
-    config.priority = priority;
+    config.sched_params.priority = priority;
     return config;
 }
 
 static inline sel4utils_thread_config_t
 thread_config_mcp(sel4utils_thread_config_t config, uint8_t mcp)
 {
-    config.mcp = mcp;
+    config.sched_params.mcp = mcp;
     return config;
 }
 

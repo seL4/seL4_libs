@@ -588,9 +588,7 @@ sel4utils_configure_process_custom(sel4utils_process_t *process, vka_t *vka,
     sel4utils_thread_config_t thread_config = {0};
     thread_config = thread_config_cspace(thread_config, process->cspace.cptr, cspace_root_data);
     thread_config = thread_config_fault_endpoint(thread_config, SEL4UTILS_ENDPOINT_SLOT);
-    thread_config = thread_config_mcp(thread_config, config.mcp);
-    thread_config = thread_config_priority(thread_config, config.priority);
-    thread_config = thread_config_auth(thread_config, config.auth);
+    thread_config.sched_params = config.sched_params;
     error = sel4utils_configure_thread_config(vka, spawner_vspace, &process->vspace, thread_config,
                                               &process->thread);
     /* copy tcb cap to cspace */

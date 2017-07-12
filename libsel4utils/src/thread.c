@@ -81,7 +81,7 @@ sel4utils_configure_thread_config(vka_t *vka, vspace_t *parent, vspace_t *alloc,
 
     seL4_CapData_t null_cap_data = {{0}};
     error = seL4_TCB_Configure(res->tcb.cptr, config.fault_endpoint,
-                               seL4_PrioProps_new(config.mcp, config.priority), config.cspace,
+                               seL4_PrioProps_new(config.sched_params.mcp, config.sched_params.priority), config.cspace,
                                config.cspace_root_data, vspace_get_root(alloc), null_cap_data, res->ipc_buffer_addr, res->ipc_buffer);
 
     if (error != seL4_NoError) {
@@ -230,19 +230,19 @@ sel4utils_start_fault_handler(seL4_CPtr fault_endpoint, vka_t *vka, vspace_t *vs
 }
 
 int
-sel4utils_checkpoint_thread(sel4utils_thread_t *thread, sel4utils_checkpoint_t *checkpoint, bool suspend) 
+sel4utils_checkpoint_thread(sel4utils_thread_t *thread, sel4utils_checkpoint_t *checkpoint, bool suspend)
 {
     assert(checkpoint != NULL);
 
-    int error = seL4_TCB_ReadRegisters(thread->tcb.cptr, suspend, 0, sizeof(seL4_UserContext) / sizeof(seL4_Word), 
+    int error = seL4_TCB_ReadRegisters(thread->tcb.cptr, suspend, 0, sizeof(seL4_UserContext) / sizeof(seL4_Word),
             &checkpoint->regs);
     if (error) {
         ZF_LOGE("Failed to read registers of tcb while checkpointing\n");
         return error;
     }
-    
+
     size_t stack_size = (uintptr_t) thread->stack_top - (uintptr_t) sel4utils_get_sp(checkpoint->regs);
-    
+
     checkpoint->stack = malloc(stack_size);
     if (checkpoint->stack == NULL) {
         ZF_LOGE("Failed to malloc stack of size %zu\n", stack_size);
@@ -255,16 +255,16 @@ sel4utils_checkpoint_thread(sel4utils_thread_t *thread, sel4utils_checkpoint_t *
     return error;
 }
 
-int 
+int
 sel4utils_checkpoint_restore(sel4utils_checkpoint_t *checkpoint, bool free_memory, bool resume)
 {
     assert(checkpoint != NULL);
 
     size_t stack_size = (uintptr_t) checkpoint->thread->stack_top - (uintptr_t) sel4utils_get_sp(checkpoint->regs);
     memcpy((void *) sel4utils_get_sp(checkpoint->regs), checkpoint->stack, stack_size);
-    
+
     int error = seL4_TCB_WriteRegisters(checkpoint->thread->tcb.cptr, resume, 0,
-            sizeof(seL4_UserContext) / sizeof (seL4_Word), 
+            sizeof(seL4_UserContext) / sizeof (seL4_Word),
             &checkpoint->regs);
     if (error) {
         ZF_LOGE("Failed to restore registers of tcb while restoring checkpoint\n");

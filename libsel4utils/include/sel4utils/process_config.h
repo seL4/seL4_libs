@@ -54,11 +54,9 @@ typedef struct {
     /* otherwise what is it */
     vka_object_t fault_endpoint;
 
-    /* TCB to derive MCP from when setting priority/mcp */
-    seL4_CPtr auth;
-    int priority;
-    /* maximum control priority */
-    int mcp;
+    /* scheduling params */
+    sched_params_t sched_params;
+
     seL4_CPtr asid_pool;
 } sel4utils_process_config_t;
 
@@ -72,7 +70,7 @@ process_config_asid_pool(sel4utils_process_config_t config, seL4_CPtr asid_pool)
 static inline sel4utils_process_config_t
 process_config_auth(sel4utils_process_config_t config, seL4_CPtr auth)
 {
-    config.auth = auth;
+    config.sched_params.auth = auth;
     return config;
 }
 
@@ -140,14 +138,14 @@ process_config_create_vspace(sel4utils_process_config_t config, sel4utils_elf_re
 static inline sel4utils_process_config_t
 process_config_priority(sel4utils_process_config_t config, uint8_t priority)
 {
-    config.priority = priority;
+    config.sched_params.priority = priority;
     return config;
 }
 
 static inline sel4utils_process_config_t
 process_config_mcp(sel4utils_process_config_t config, uint8_t mcp)
 {
-    config.mcp = mcp;
+    config.sched_params.mcp = mcp;
     return config;
 }
 

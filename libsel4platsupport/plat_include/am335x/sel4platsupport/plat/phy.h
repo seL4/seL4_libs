@@ -38,7 +38,6 @@
 *
 */
 
-
 #ifndef _PHY_H_
 #define _PHY_H_
 
@@ -106,7 +105,6 @@ extern "C" {
 #define PHY_SPEED_10MBPS                  (0x0000u)
 #define PHY_SPEED_100MBPS                 (0x2000u)
 #define PHY_SPEED_1000MBPS                (0x0004u)
-
 
     /**************************************************************************
                             API function Prototypes

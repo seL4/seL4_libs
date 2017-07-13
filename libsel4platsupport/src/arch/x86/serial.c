@@ -12,7 +12,6 @@
 
 #include <sel4platsupport/serial.h>
 
-
 int
 sel4platsupport_arch_init_default_serial_caps(vka_t *vka, UNUSED vspace_t *vspace, simple_t *simple, serial_objects_t *serial_objects)
 {
@@ -52,7 +51,6 @@ sel4platsupport_arch_init_default_serial_caps(vka_t *vka, UNUSED vspace_t *vspac
         cspacepath_t tmp = { 0 };
         serial_objects->serial_irq_path = tmp;
     }
-
 
     serial_objects->arch_serial_objects.serial_io_port_cap = simple_get_IOPort_cap(simple,
                                                      SERIAL_CONSOLE_COM1_PORT,

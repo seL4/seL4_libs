@@ -12,7 +12,7 @@
 
 /* This file contains macros for CPUID emulation in x86.
  * Most of the code in this file is from arch/x86/kvm/cpuid.h Linux 3.8.8
- * This file should used only by cpuid.c 
+ * This file should used only by cpuid.c
  *
  *     Authors:
  *         Qian Ge
@@ -45,10 +45,10 @@
 
 /* CPUID instruction return value. */
 struct cpuid_val {
-    unsigned int eax; 
+    unsigned int eax;
     unsigned int ebx;
     unsigned int ecx;
     unsigned int edx;
-}; 
+};
 
 #endif /* _LIB_VMM_CPUID_H_ */

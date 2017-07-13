@@ -72,7 +72,6 @@ static inline void sel4bench_private_deinit(void* data)
     sel4bench_private_switch_user_pmc(0);
 }
 
-
 /*
  * PMCR:
  *
@@ -166,7 +165,6 @@ static FASTFN void sel4bench_private_write_pmcnt(uint32_t val)
         :
     );
 }
-
 
 /*
  * PMNXSEL

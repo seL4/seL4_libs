@@ -40,7 +40,6 @@
 *
 */
 
-
 #ifndef __EDMA_H__
 #define __EDMA_H__
 
@@ -130,7 +129,6 @@ extern "C" {
 #define EDMA3_CHANNEL_TYPE_DMA                (0u)
 #define EDMA3_CHANNEL_TYPE_QDMA               (1u)
 
-
 #define EDMA3_XFER_COMPLETE                   (0u)
 #define EDMA3_CC_DMA_EVT_MISS                 (1u)
 #define EDMA3_CC_QDMA_EVT_MISS                (2u)
@@ -141,7 +139,6 @@ extern "C" {
 #define EDMA3CC_CLR_TCCERR                     EDMA3CC_CCERRCLR_TCCERR
 #define EDMA3CC_CLR_QTHRQ0                     EDMA3CC_CCERRCLR_QTHRXCD0
 #define EDMA3CC_CLR_QTHRQ1                     EDMA3CC_CCERRCLR_QTHRXCD1
-
 
     /* paRAMEntry Fields*/
     /**
@@ -184,7 +181,6 @@ extern "C" {
      */
 #define    EDMA3CC_PARAM_ENTRY_CCNT           (0x7u)
 
-
     /** The offset for each PaRAM Entry field  */
 #define    EDMA3CC_PARAM_FIELD_OFFSET         (0x4u)
 
@@ -193,7 +189,6 @@ extern "C" {
       * and CCNT
       */
 #define    EDMA3CC_PARAM_ENTRY_FIELDS         (0x8u)
-
 
 #define    EDMA_REVID_AM335X                  (0x02u)
 
@@ -331,7 +326,6 @@ extern "C" {
     /****************************************************************************
     **                 API FUNCTION PROTOTYPES
     ****************************************************************************/
-
 
     void EDMA3Init(unsigned int baseAdd,
                    unsigned int queNum);

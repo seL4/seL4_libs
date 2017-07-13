@@ -223,7 +223,6 @@ static inline unsigned int vmm_guest_state_get_cs_selector(guest_state_t *gs, se
     return gs->machine.cs_selector;
 }
 
-
 /* set */
 static inline void vmm_set_user_context(guest_state_t *gs, int reg, uint32_t val) {
     MACHINE_STATE_DIRTY(gs->machine.context);
@@ -283,7 +282,6 @@ static inline void vmm_guest_state_set_cs_selector(guest_state_t *gs, unsigned i
     gs->machine.cs_selector = val;
 }
 
-
 /* sync */
 static inline void vmm_guest_state_sync_cr0(guest_state_t *gs, seL4_CPtr vcpu) {
     if(IS_MACHINE_STATE_MODIFIED(gs->machine.cr0)) {
@@ -340,7 +338,6 @@ static inline void vmm_guest_state_sync_cs_selector(guest_state_t *gs, seL4_CPtr
         MACHINE_STATE_SYNC(gs->machine.cs_selector);
     }
 }
-
 
 /* Exit */
 static inline unsigned int vmm_guest_exit_get_reason(guest_state_t *gs) {

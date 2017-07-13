@@ -17,7 +17,7 @@ menuconfig LIB_SEL4_UTILS
     select HAVE_LIB_SEL4_UTILS
     default y
     help
-        A library of utils for building an OS on seL4, including virtual memory, process and 
+        A library of utils for building an OS on seL4, including virtual memory, process and
         thread creation.
 
 if LIB_SEL4_UTILS

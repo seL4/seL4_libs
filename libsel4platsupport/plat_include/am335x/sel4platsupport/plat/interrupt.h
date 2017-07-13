@@ -41,7 +41,6 @@
 *
 */
 
-
 #ifndef INTERRUPT_H
 #define INTERRUPT_H
 
@@ -219,4 +218,3 @@ extern "C" {
 }
 #endif
 #endif
-

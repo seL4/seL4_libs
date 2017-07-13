@@ -23,6 +23,5 @@ typedef struct plat_timer_objects {
     vka_object_t clock_timer_dev_ut_obj;
 } plat_timer_objects_t;
 
-
 #include <sel4platsupport/arch/timer.h>
 #include <sel4platsupport/timer.h>

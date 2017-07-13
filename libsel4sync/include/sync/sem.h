@@ -57,7 +57,7 @@ static inline int sync_sem_wait(sync_sem_t *sem) {
     return sync_sem_bare_wait(sem->ep.cptr, &sem->value);
 }
 
-/* Try to wait on the semaphore without waiting on the endpoint 
+/* Try to wait on the semaphore without waiting on the endpoint
  * i.e. check the semaphore value in a loop
  * @param sem           An initialised semaphore to acquire.
  * @return              0 on success, an error code on failure. */
@@ -69,7 +69,7 @@ static inline int sync_sem_trywait(sync_sem_t *sem) {
     return sync_sem_bare_trywait(sem->ep.cptr, &sem->value);
 }
 
-/* Signal a binary semaphore 
+/* Signal a binary semaphore
  * @param sem           An initialised semaphore to release.
  * @return              0 on success, an error code on failure. */
 static inline int sync_sem_post(sync_sem_t *sem) {
@@ -91,7 +91,7 @@ static inline int sync_sem_new(vka_t *vka, sync_sem_t *sem, int value) {
         return -1;
     }
     int error = vka_alloc_endpoint(vka, &(sem->ep));
-    
+
     if (error != 0) {
         return error;
     } else {

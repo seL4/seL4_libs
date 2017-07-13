@@ -57,7 +57,6 @@ static int free_fd_table_index;
 /* total number of fds */
 static int num_fds = 256;
 
-
 void
 add_free_fd(int fd)
 {
@@ -83,7 +82,6 @@ valid_fd(int fd)
 {
     return fd < num_fds && fd >= FIRST_USER_FD;
 }
-
 
 static int
 allocate_file_table(void)
@@ -385,7 +383,6 @@ sys_ioctl(va_list ap)
     assert(!"not implemented");
     return 0;
 }
-
 
 long
 sys_prlimit64(va_list ap)

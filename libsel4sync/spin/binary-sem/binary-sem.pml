@@ -22,7 +22,7 @@ int sem_value = 1;
 
 inline bin_sem_wait() {
     int oldval;
-    
+
     /* Atomic decrement */
     atomic {
         oldval = sem_value;
@@ -48,7 +48,7 @@ inline bin_sem_signal()
 
     /* Conditional wake. */
     if
-    :: (new_val <= 0) -> 
+    :: (new_val <= 0) ->
         send: endpoint ! 1;
     :: (new_val > 0) ->
         skip;
@@ -63,7 +63,7 @@ active [4] proctype wait_thread() {
 
         /* critical section */
         crit:;
-        
+
         /* unlock */
         bin_sem_signal();
     od

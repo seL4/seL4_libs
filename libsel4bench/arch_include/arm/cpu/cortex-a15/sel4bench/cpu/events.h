@@ -58,4 +58,3 @@
 #define SEL4BENCH_EVENT_ISB_SPEC              0x7C /* Barrier speculatively executed, ISB */
 #define SEL4BENCH_EVENT_DSB_SPEC              0x7D /* Barrier speculatively executed, DSB */
 #define SEL4BENCH_EVENT_DMB_SPEC              0x7E /* Barrier speculatively executed, DMB */
-

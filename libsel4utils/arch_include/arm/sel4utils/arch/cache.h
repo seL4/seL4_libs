@@ -15,5 +15,3 @@
 #include <sel4utils/sel4_arch/cache.h>
 
 #endif /* SEL4UTILS_ARCH_CACHE_H */
-
-

@@ -38,27 +38,20 @@
 *
 */
 
-
-
 #ifndef _HW_CM_CEFUSE_H_
 #define _HW_CM_CEFUSE_H_
-
 
 /***********************************************************************\
  * Register arrays Definition
 \***********************************************************************/
 
-
 /***********************************************************************\
  * Bundle arrays Definition
 \***********************************************************************/
 
-
 /***********************************************************************\
  * Bundles Definition
 \***********************************************************************/
-
-
 
 /*************************************************************************\
  * Registers Definition
@@ -89,7 +82,6 @@
 #define CM_CEFUSE_CLKSTCTRL_CLKTRCTRL_SW_SLEEP   (0x1u)
 #define CM_CEFUSE_CLKSTCTRL_CLKTRCTRL_SW_WKUP   (0x2u)
 
-
 /* CEFUSE_CLKCTRL */
 #define CM_CEFUSE_CEFUSE_CLKCTRL_IDLEST   (0x00030000u)
 #define CM_CEFUSE_CEFUSE_CLKCTRL_IDLEST_SHIFT   (0x00000010u)
@@ -104,7 +96,5 @@
 #define CM_CEFUSE_CEFUSE_CLKCTRL_MODULEMODE_ENABLE   (0x2u)
 #define CM_CEFUSE_CEFUSE_CLKCTRL_MODULEMODE_RESERVED   (0x3u)
 #define CM_CEFUSE_CEFUSE_CLKCTRL_MODULEMODE_RESERVED_1   (0x1u)
-
-
 
 #endif

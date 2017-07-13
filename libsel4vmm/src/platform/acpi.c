@@ -26,7 +26,6 @@ Author: W.A. */
 
 #define APIC_FLAGS_ENABLED (1)
 
-
 uint8_t acpi_calc_checksum(const char* table, int length)
 {
     uint32_t sum = 0;
@@ -37,7 +36,6 @@ uint8_t acpi_calc_checksum(const char* table, int length)
 
     return 0x100 - (sum & 0xFF);
 }
-
 
 static void acpi_fill_table_head(acpi_header_t *head, const char *signature, uint8_t rev) {
     const char *oem = "NICTA ";
@@ -137,7 +135,7 @@ int make_guest_acpi_tables(vmm_t *vmm) {
 
     acpi_xsdt_t *xsdt = malloc(xsdt_size);
     acpi_fill_table_head(&xsdt->header, "XSDT", 1);
-    
+
     // Add previous tables to XSDT pointer list
     uintptr_t table_paddr = xsdt_addr + xsdt_size;
     uint64_t *entry = (uint64_t *)((char *)xsdt + sizeof(acpi_xsdt_t));
@@ -145,10 +143,10 @@ int make_guest_acpi_tables(vmm_t *vmm) {
         *entry++ = (uint64_t)table_paddr;
         table_paddr += table_sizes[i];
     }
-    
+
     xsdt->header.length = xsdt_size;
     xsdt->header.checksum = acpi_calc_checksum((char *)xsdt, xsdt_size);
-    
+
     tables[0] = xsdt;
     table_sizes[0] = xsdt_size;
 
@@ -171,7 +169,7 @@ int make_guest_acpi_tables(vmm_t *vmm) {
     if (err) {
         return err;
     }
-    
+
     acpi_rsdp_t rsdp = {
         .signature = "RSD PTR ",
         .oem_id = "NICTA ",
@@ -186,7 +184,7 @@ int make_guest_acpi_tables(vmm_t *vmm) {
         .reserved = {0}
     };
 
-    rsdp.checksum = acpi_calc_checksum((char *)&rsdp, 20);  
+    rsdp.checksum = acpi_calc_checksum((char *)&rsdp, 20);
     rsdp.extended_checksum = acpi_calc_checksum((char *)&rsdp, sizeof(rsdp));
 
     DPRINTF(2, "ACPI RSDP addr = %p\n", (void*)rsdp_addr);
@@ -194,4 +192,3 @@ int make_guest_acpi_tables(vmm_t *vmm) {
     return vmm_guest_vspace_touch(&vmm->guest_mem.vspace, rsdp_addr, sizeof(rsdp),
             make_guest_acpi_tables_continued, &rsdp);
 }
-

@@ -83,7 +83,7 @@ sys_mmap_impl(void *addr, size_t length, int prot, int flags, int fd, off_t offs
     return -ENOMEM;
 }
 
-long 
+long
 sys_mremap(va_list ap)
 {
     assert(!"not implemented");
@@ -194,7 +194,6 @@ sys_brk(va_list ap)
     }
 }
 
-
 /* Large mallocs will result in muslc calling mmap, so we do a minimal implementation
    here to support that. We make a bunch of assumptions in the process */
 static long
@@ -214,7 +213,6 @@ sys_mmap_impl_static(void *addr, size_t length, int prot, int flags, int fd, off
     assert(!"not implemented");
     return -ENOMEM;
 }
-
 
 static long
 sys_mmap_impl_dynamic(void *addr, size_t length, int prot, int flags, int fd, off_t offset)
@@ -251,7 +249,6 @@ sys_mmap_impl(void *addr, size_t length, int prot, int flags, int fd, off_t offs
 static long
 sys_mremap_dynamic(va_list ap)
 {
-
 
     void *old_address = va_arg(ap, void*);
     size_t old_size = va_arg(ap, size_t);
@@ -318,7 +315,6 @@ restore:
     assert(!error);
     return -ENOMEM;
 }
-
 
 static long
 sys_mremap_static(va_list ap)

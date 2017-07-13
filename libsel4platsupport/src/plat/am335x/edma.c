@@ -52,7 +52,6 @@
 *
 */
 
-
 /* Driver APIs */
 #include <sel4platsupport/plat/edma.h>
 
@@ -114,7 +113,6 @@ void EDMA3Init(unsigned int baseAdd,
 
     HWREG(baseAdd + EDMA3CC_DRAE(regionId)) = EDMA3_SET_ALL_BITS;
     HWREG(baseAdd + EDMA3CC_DRAEH(regionId)) = EDMA3_SET_ALL_BITS;
-
 
     if ((EDMA_REVID_AM335X == EDMAVersionGet())) {
         for (i = 0; i < 64; i++) {
@@ -777,7 +775,6 @@ void EDMA3ClrIntr(unsigned int baseAdd, unsigned int value)
     }
 }
 
-
 /**
  *  \brief   Retrieve existing PaRAM set associated with specified logical
  *           channel (DMA/Link).
@@ -1299,7 +1296,6 @@ unsigned int EDMA3DisableTransfer(unsigned int baseAdd,
     }
     return retVal;
 }
-
 
 /**
  *  \brief  Clears Event Register and Error Register for a specific

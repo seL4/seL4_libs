@@ -21,4 +21,3 @@ sel4bench_arch_get_counter_description(counter_t counter)
     ZF_LOGE("Not implemented");
     return NULL;
 }
-

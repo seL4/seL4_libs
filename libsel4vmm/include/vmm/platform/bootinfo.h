@@ -273,7 +273,6 @@ struct edd_info {
     struct edd_device_params params;
 } __attribute__ ((packed));
 
-
 struct boot_params {
     struct screen_info screen_info;         /* 0x000 */
     struct apm_bios_info apm_bios_info;     /* 0x040 */

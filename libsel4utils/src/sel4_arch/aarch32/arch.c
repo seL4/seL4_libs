@@ -43,5 +43,3 @@ sel4utils_arch_init_context_with_args(sel4utils_thread_entry_fn entry_point,
 
     return sel4utils_arch_init_context(entry_point, stack_top, context);
 }
-
-

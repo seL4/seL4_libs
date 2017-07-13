@@ -48,7 +48,7 @@
 
     #define DPRINTF(lvl, ...) do{ /* nothing */ }while(0)
     #define drun() do{ /* nothing */ }while(0)
-    
+
 #endif /* CONFIG_LIB_VMM_DEBUG */
 
 #ifndef panic
@@ -64,5 +64,3 @@
 void vmm_print_guest_context(int, vmm_vcpu_t*);
 
 #endif /* _LIB_VMM_DEBUG_H_ */
-
-

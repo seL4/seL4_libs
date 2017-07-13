@@ -38,27 +38,20 @@
 *
 */
 
-
-
 #ifndef _HW_CM_RTC_H_
 #define _HW_CM_RTC_H_
-
 
 /***********************************************************************\
  * Register arrays Definition
 \***********************************************************************/
 
-
 /***********************************************************************\
  * Bundle arrays Definition
 \***********************************************************************/
 
-
 /***********************************************************************\
  * Bundles Definition
 \***********************************************************************/
-
-
 
 /*************************************************************************\
  * Registers Definition
@@ -86,7 +79,6 @@
 #define CM_RTC_RTC_CLKCTRL_MODULEMODE_RESERVED   (0x3u)
 #define CM_RTC_RTC_CLKCTRL_MODULEMODE_RESERVED_1   (0x1u)
 
-
 /* CLKSTCTRL */
 #define CM_RTC_CLKSTCTRL_CLKACTIVITY_L4_RTC_GCLK   (0x00000100u)
 #define CM_RTC_CLKSTCTRL_CLKACTIVITY_L4_RTC_GCLK_SHIFT   (0x00000008u)
@@ -104,7 +96,5 @@
 #define CM_RTC_CLKSTCTRL_CLKTRCTRL_NO_SLEEP   (0x0u)
 #define CM_RTC_CLKSTCTRL_CLKTRCTRL_SW_SLEEP   (0x1u)
 #define CM_RTC_CLKSTCTRL_CLKTRCTRL_SW_WKUP   (0x2u)
-
-
 
 #endif

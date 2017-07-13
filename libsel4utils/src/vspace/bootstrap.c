@@ -414,7 +414,6 @@ sel4utils_bootstrap_clone_into_vspace(vspace_t *current, vspace_t *clone, reserv
         /* copy the cap */
         cspacepath_t src;
 
-
         vka_cspace_make_path(get_alloc_data(clone)->vka, cap, &src);
         error = vka_cnode_copy(&dest, &src, seL4_AllRights);
         assert(error == 0);

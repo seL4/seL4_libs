@@ -21,7 +21,6 @@
 #include "vmm/vmm.h"
 #include "vmm/processor/msr.h"
 
-
 int vmm_rdmsr_handler(vmm_vcpu_t *vcpu) {
 
     int ret = 0;
@@ -43,7 +42,7 @@ int vmm_rdmsr_handler(vmm_vcpu_t *vcpu) {
             data = 0;
             break;
 
-        case MSR_IA32_UCODE_REV: 
+        case MSR_IA32_UCODE_REV:
             data = 0x100000000ULL;
             break;
 
@@ -55,11 +54,11 @@ int vmm_rdmsr_handler(vmm_vcpu_t *vcpu) {
             /* performance counters not supported. */
             data = 0;
             break;
-            
+
         case 0xcd: /* fsb frequency */
             data = 3;
             break;
-        
+
         case MSR_EBC_FREQUENCY_ID:
             data = 1 << 24;
             break;
@@ -84,7 +83,6 @@ int vmm_rdmsr_handler(vmm_vcpu_t *vcpu) {
     return ret;
 }
 
-
 int vmm_wrmsr_handler(vmm_vcpu_t *vcpu) {
 
     int ret = 0;
@@ -92,7 +90,7 @@ int vmm_wrmsr_handler(vmm_vcpu_t *vcpu) {
     unsigned int msr_no = vmm_read_user_context(&vcpu->guest_state, USER_CONTEXT_ECX);
     unsigned int val_high = vmm_read_user_context(&vcpu->guest_state, USER_CONTEXT_EDX);
     unsigned int val_low = vmm_read_user_context(&vcpu->guest_state, USER_CONTEXT_EAX);
-    
+
     DPRINTF(4, "wrmsr ecx 0x%x   value: 0x%x  0x%x\n", msr_no, val_high, val_low);
 
     // src reference: Linux kernel 3.11 kvm arch/x86/kvm/x86.c
@@ -108,7 +106,7 @@ int vmm_wrmsr_handler(vmm_vcpu_t *vcpu) {
         case MSR_IA32_PERF_GLOBAL_STATUS_SET:
             /* performance counters not supported. */
             break;
-        
+
         case MSR_IA32_APICBASE:
             vmm_lapic_set_base_msr(vcpu, val_low);
             break;

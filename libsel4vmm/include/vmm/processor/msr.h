@@ -178,7 +178,6 @@
 #define VMX_BASIC_MEM_TYPE_WB   6LLU
 #define VMX_BASIC_INOUT     0x0040000000000000LLU
 
-
 /* Intel defined MSRs. */
 #define MSR_IA32_P5_MC_ADDR     0x00000000
 #define MSR_IA32_P5_MC_TYPE     0x00000001

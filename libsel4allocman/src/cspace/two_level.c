@@ -17,7 +17,6 @@
 #include <string.h>
 #include <utils/attribute.h>
 
-
 cspacepath_t _cspace_two_level_make_path(void *_cspace, seL4_CPtr slot)
 {
     cspacepath_t l1_path, l2_path;

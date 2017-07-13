@@ -28,4 +28,3 @@ HDRFILES := \
 	$(wildcard $(SOURCE_DIR)/arch_include/$(ARCH)/cpu/$(CPU)/*) \
 
 include $(SEL4_COMMON)/common.mk
-

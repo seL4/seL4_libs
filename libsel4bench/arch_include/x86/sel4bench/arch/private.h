@@ -72,10 +72,8 @@ typedef union {
     uint32_t  raw;
 } ia32_cpuid_leaf_pmc_eax_t;
 
-
 //Control-register constants
 #define IA32_CR4_PCE               8
-
 
 //PMC MSRs
 #define IA32_MSR_PMC_PERFEVTSEL_BASE 0x186
@@ -100,7 +98,6 @@ typedef union {
     };
     uint32_t raw;
 } ia32_pmc_perfevtsel_t;
-
 
 //Convenient execution of CPUID instruction. The first version isn't volatile, so is for querying the processor; the second version just serialises.
 //This looks slow, but gcc inlining is smart enough to optimise away all the memory references, and takes unused information into account.
@@ -135,7 +132,6 @@ static FASTFN void sel4bench_private_lfence()
 {
     asm volatile("lfence");
 }
-
 
 static FASTFN uint64_t sel4bench_private_rdtsc()
 {

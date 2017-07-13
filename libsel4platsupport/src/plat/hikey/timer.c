@@ -244,4 +244,3 @@ sel4platsupport_get_default_timer(vka_t *vka, vspace_t *vspace, simple_t *simple
 {
     return sel4platsupport_get_timer(TMR_DEFAULT, vka, vspace, simple, notification);
 }
-

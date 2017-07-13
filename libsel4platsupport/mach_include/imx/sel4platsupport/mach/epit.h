@@ -28,12 +28,10 @@
 #define DEFAULT_TIMER_PADDR EPIT2_DEVICE_PADDR
 #define DEFAULT_TIMER_INTERRUPT EPIT2_INTERRUPT
 
-
 typedef enum {
     EPIT1,
     EPIT2
 } epit_id_t;
-
 
 /**
  * Get an interface for an initialised epit timer.

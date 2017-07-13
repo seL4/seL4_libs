@@ -10,7 +10,6 @@
  * @TAG(DATA61_BSD)
  */
 
-
 #define MAX_SEM_VAL 1
 
 /* Semaphore value. */
@@ -141,4 +140,3 @@ init {
         run wait_cpu(4);
     }
 }
-

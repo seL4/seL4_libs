@@ -38,7 +38,6 @@ typedef struct camkes_vchan_con {
     int (*reg_callback)(callback_func_t, void *);
 } camkes_vchan_con_t;
 
-
 struct libvchan {
     int is_server;
     int server_persists;

@@ -38,8 +38,6 @@
 *
 */
 
-
-
 #ifndef _HW_DMTIMER_H_
 #define _HW_DMTIMER_H_
 
@@ -47,22 +45,17 @@
 extern "C" {
 #endif
 
-
     /***********************************************************************\
      * Register arrays Definition
     \***********************************************************************/
-
 
     /***********************************************************************\
      * Bundle arrays Definition
     \***********************************************************************/
 
-
     /***********************************************************************\
      * Bundles Definition
     \***********************************************************************/
-
-
 
     /*************************************************************************\
      * Registers Definition
@@ -110,7 +103,6 @@ extern "C" {
 #define DMTIMER_TIDR_Y_MINOR   (0x0000003Fu)
 #define DMTIMER_TIDR_Y_MINOR_SHIFT   (0x00000000u)
 
-
     /* TIOCP_CFG */
 #define DMTIMER_TIOCP_CFG_EMUFREE   (0x00000002u)
 #define DMTIMER_TIOCP_CFG_EMUFREE_SHIFT   (0x00000001u)
@@ -130,11 +122,9 @@ extern "C" {
 #define DMTIMER_TIOCP_CFG_SOFTRESET_INITIATE   (0x1u)
 #define DMTIMER_TIOCP_CFG_SOFTRESET_ONGOING   (0x1u)
 
-
     /* IRQ_EOI */
 #define DMTIMER_IRQ_EOI_LINE_NUMBER   (0x00000001u)
 #define DMTIMER_IRQ_EOI_LINE_NUMBER_SHIFT   (0x00000000u)
-
 
     /* IRQSTATUS_RAW */
 #define DMTIMER_IRQSTATUS_RAW_MAT_IT_FLAG   (0x00000001u)
@@ -155,7 +145,6 @@ extern "C" {
 #define DMTIMER_IRQSTATUS_RAW_TCAR_IT_FLAG_PENDING   (0x1u)
 #define DMTIMER_IRQSTATUS_RAW_TCAR_IT_FLAG_SET   (0x1u)
 
-
     /* IRQSTATUS */
 #define DMTIMER_IRQSTATUS_MAT_IT_FLAG   (0x00000001u)
 #define DMTIMER_IRQSTATUS_MAT_IT_FLAG_SHIFT   (0x00000000u)
@@ -174,7 +163,6 @@ extern "C" {
 #define DMTIMER_IRQSTATUS_TCAR_IT_FLAG_CLEAR   (0x1u)
 #define DMTIMER_IRQSTATUS_TCAR_IT_FLAG_NONE   (0x0u)
 #define DMTIMER_IRQSTATUS_TCAR_IT_FLAG_PENDING   (0x1u)
-
 
     /* IRQENABLE_SET */
 #define DMTIMER_IRQENABLE_SET_MAT_EN_FLAG   (0x00000001u)
@@ -195,7 +183,6 @@ extern "C" {
 #define DMTIMER_IRQENABLE_SET_TCAR_EN_FLAG_ENABLE   (0x1u)
 #define DMTIMER_IRQENABLE_SET_TCAR_EN_FLAG_ENABLED   (0x1u)
 
-
     /* IRQENABLE_CLR */
 #define DMTIMER_IRQENABLE_CLR_MAT_EN_FLAG   (0x00000001u)
 #define DMTIMER_IRQENABLE_CLR_MAT_EN_FLAG_SHIFT   (0x00000000u)
@@ -215,7 +202,6 @@ extern "C" {
 #define DMTIMER_IRQENABLE_CLR_TCAR_EN_FLAG_DISABLED   (0x0u)
 #define DMTIMER_IRQENABLE_CLR_TCAR_EN_FLAG_ENABLED   (0x1u)
 
-
     /* IRQWAKEEN */
 #define DMTIMER_IRQWAKEEN_MAT_WUP_ENA   (0x00000001u)
 #define DMTIMER_IRQWAKEEN_MAT_WUP_ENA_SHIFT   (0x00000000u)
@@ -231,7 +217,6 @@ extern "C" {
 #define DMTIMER_IRQWAKEEN_TCAR_WUP_ENA_SHIFT   (0x00000002u)
 #define DMTIMER_IRQWAKEEN_TCAR_WUP_ENA_DISABLE   (0x0u)
 #define DMTIMER_IRQWAKEEN_TCAR_WUP_ENA_ENABLE   (0x1u)
-
 
     /* TCLR */
 #define DMTIMER_TCLR_AR   (0x00000002u)
@@ -290,21 +275,17 @@ extern "C" {
 #define DMTIMER_TCLR_TRG_OVERFLOW   (0x1u)
 #define DMTIMER_TCLR_TRG_OVERFLOWANDMATCH   (0x2u)
 
-
     /* TCRR */
 #define DMTIMER_TCRR_TIMER_COUNTER   (0xFFFFFFFFu)
 #define DMTIMER_TCRR_TIMER_COUNTER_SHIFT   (0x00000000u)
-
 
     /* TLDR */
 #define DMTIMER_TLDR_LOAD_VALUE   (0xFFFFFFFFu)
 #define DMTIMER_TLDR_LOAD_VALUE_SHIFT   (0x00000000u)
 
-
     /* TTGR */
 #define DMTIMER_TTGR_TTGR_VALUE   (0xFFFFFFFFu)
 #define DMTIMER_TTGR_TTGR_VALUE_SHIFT   (0x00000000u)
-
 
     /* TWPS */
 #define DMTIMER_TWPS_W_PEND_TCLR   (0x00000001u)
@@ -332,16 +313,13 @@ extern "C" {
 #define DMTIMER_TWPS_W_PEND_TTGR_NONE   (0x0u)
 #define DMTIMER_TWPS_W_PEND_TTGR_PENDING   (0x1u)
 
-
     /* TMAR */
 #define DMTIMER_TMAR_COMPARE_VALUE   (0xFFFFFFFFu)
 #define DMTIMER_TMAR_COMPARE_VALUE_SHIFT   (0x00000000u)
 
-
     /* TCAR1 */
 #define DMTIMER_TCAR1_CAPTURED_VALUE   (0xFFFFFFFFu)
 #define DMTIMER_TCAR1_CAPTURED_VALUE_SHIFT   (0x00000000u)
-
 
     /* TSICR */
 #define DMTIMER_TSICR_POSTED   (0x00000004u)
@@ -354,16 +332,12 @@ extern "C" {
 #define DMTIMER_TSICR_SFT_RESETDISABLE   (0x1u)
 #define DMTIMER_TSICR_SFT_RESETENABLE   (0x0u)
 
-
     /* TCAR2 */
 #define DMTIMER_TCAR2_CAPTURED_VALUE   (0xFFFFFFFFu)
 #define DMTIMER_TCAR2_CAPTURED_VALUE_SHIFT   (0x00000000u)
-
-
 
 #ifdef __cplusplus
 }
 #endif
 
 #endif
-

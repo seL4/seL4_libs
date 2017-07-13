@@ -36,7 +36,6 @@
 #define MF_VECTOR 16
 #define MC_VECTOR 18
 
-
 /* Processor flags. */
 
 /*
@@ -129,8 +128,6 @@
 
 #define CR8_RESERVED_BITS (~(unsigned long)X86_CR8_TPR)
 
-
-
 /*
  * Definitions of Primary Processor-Based VM-Execution Controls.
  */
@@ -165,7 +162,6 @@
 #define SECONDARY_EXEC_UNRESTRICTED_GUEST   0x00000080
 #define SECONDARY_EXEC_PAUSE_LOOP_EXITING   0x00000400
 #define SECONDARY_EXEC_ENABLE_INVPCID       0x00001000
-
 
 #define PIN_BASED_EXT_INTR_MASK                 0x00000001
 #define PIN_BASED_NMI_EXITING                   0x00000008
@@ -272,6 +268,5 @@ enum vm_instruction_error_number {
     VMXERR_ENTRY_EVENTS_BLOCKED_BY_MOV_SS = 26,
     VMXERR_INVALID_OPERAND_TO_INVEPT_INVVPID = 28,
 };
-
 
 #endif /* _LIB_VMM_PLATFEATURE_H_ */

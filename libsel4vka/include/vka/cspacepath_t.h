@@ -82,7 +82,6 @@
  *
  */
 
-
 typedef struct _cspacepath_t {
     seL4_CPtr   capPtr;
     seL4_Word   capDepth;
@@ -92,7 +91,6 @@ typedef struct _cspacepath_t {
     seL4_Word   offset;
     seL4_Word   window;
 } cspacepath_t;
-
 
 static inline void
 cspacepath_swap(cspacepath_t *a, cspacepath_t *b)

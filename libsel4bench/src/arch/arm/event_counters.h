@@ -20,4 +20,3 @@ extern const char* const sel4bench_cpu_event_counter_data[];
 
 extern int sel4bench_arch_get_num_counters(void);
 extern int sel4bench_cpu_get_num_counters(void);
-

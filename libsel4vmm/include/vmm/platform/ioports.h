@@ -63,7 +63,6 @@
 #define X86_IO_ELCR_START      0x4d0
 #define X86_IO_ELCR_END        0x4d1
 
-
 /*pci configuration space*/
 #define X86_IO_PCI_CONFIG_START 0xcf8
 #define X86_IO_PCI_CONFIG_END   0xcff

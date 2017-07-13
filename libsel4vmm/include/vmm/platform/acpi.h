@@ -14,4 +14,3 @@
 #define MAX_ACPI_TABLES (2)
 
 int make_guest_acpi_tables(vmm_t *vmm);
-

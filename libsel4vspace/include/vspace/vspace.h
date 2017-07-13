@@ -23,7 +23,6 @@ typedef struct reservation {
     void *res;
 } reservation_t;
 
-
 /**
  * Configuration for vspace_new_pages functions
  */
@@ -39,7 +38,6 @@ typedef struct vspace_new_pages_config {
     /* Whether frames used to create pages can be device untyped or regular untyped */
     bool can_use_dev;
 } vspace_new_pages_config_t;
-
 
 /**
  * Returns a default configuration based on supplied parameters that can be passed to vspace_new_pages_with_config
@@ -101,7 +99,6 @@ static inline int vspace_new_pages_config_use_device_ut(bool can_use_dev, vspace
  */
 reservation_t vspace_reserve_range(vspace_t *vspace, size_t bytes,
                                    seL4_CapRights_t rights, int cacheable, void **vaddr);
-
 
 /**
  * Share memory from one vspace to another.
@@ -168,7 +165,6 @@ void * vspace_new_pages_with_config(vspace_t *vspace, vspace_new_pages_config_t 
  *         NULL on failure.
  */
 void *vspace_new_pages(vspace_t *vspace, seL4_CapRights_t rights, size_t num_pages, size_t size_bits);
-
 
 /**
  * Create a stack. The determines stack size.
@@ -249,7 +245,6 @@ void vspace_free_ipc_buffer(vspace_t *vspace, void *addr);
 typedef int (*vspace_new_pages_at_vaddr_fn)(vspace_t *vspace, void *vaddr, size_t num_pages,
                                             size_t size_bits, reservation_t reservation, bool can_use_dev);
 
-
 /**
  * Map in existing page capabilities, using contiguos virtual memory at the specified virtual address.
  *
@@ -268,7 +263,6 @@ typedef int (*vspace_new_pages_at_vaddr_fn)(vspace_t *vspace, void *vaddr, size_
 typedef int (*vspace_map_pages_at_vaddr_fn)(vspace_t *vspace, seL4_CPtr caps[], uintptr_t cookies[],
                                             void *vaddr, size_t num_pages,
                                             size_t size_bits, reservation_t reservation);
-
 
 /* potential values for vspace_unmap_pages */
 #define VSPACE_FREE ((vka_t *) 0xffffffff)
@@ -295,7 +289,6 @@ typedef int (*vspace_map_pages_at_vaddr_fn)(vspace_t *vspace, seL4_CPtr caps[], 
  */
 typedef void (*vspace_unmap_pages_fn)(vspace_t *vspace, void *vaddr, size_t num_pages,
                                       size_t size_bits, vka_t *free);
-
 
 /**
  * Tear down a vspace, freeing any memory allocated by the vspace itself.
@@ -558,7 +551,6 @@ vspace_tear_down(vspace_t *vspace, vka_t *vka)
     vspace->tear_down(vspace, vka);
 }
 
-
 static inline reservation_t
 vspace_reserve_range_aligned(vspace_t *vspace, size_t bytes, size_t size_bits,
                              seL4_CapRights_t rights, int cacheable, void **vaddr)
@@ -686,7 +678,6 @@ vspace_get_cookie(vspace_t *vspace, void *vaddr)
     return vspace->get_cookie(vspace, vaddr);
 }
 
-
 /* Helper functions */
 
 static inline void
@@ -752,4 +743,3 @@ vspace_share_mem_at_vaddr(vspace_t *from, vspace_t *to, void *start, int num_pag
 }
 
 #endif /* _INTERFACE_VSPACE_H_ */
-

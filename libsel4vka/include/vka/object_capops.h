@@ -38,7 +38,6 @@ vka_mint_object_inter_cspace(vka_t *src_vka, vka_object_t *object, vka_t *dest_v
     return vka_cnode_mint(result, &src, rights, badge);
 }
 
-
 /*
  * Mint an object cap into a new cslot in the same cspace.
  *

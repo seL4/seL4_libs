@@ -22,7 +22,6 @@
 
 #include <sel4/arch/constants.h>
 
-
     .global _sel4_start
     .extern sel4_vsyscall
 

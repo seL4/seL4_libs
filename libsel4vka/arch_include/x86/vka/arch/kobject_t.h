@@ -49,7 +49,6 @@ arch_kobject_get_size(kobject_t type, seL4_Word objectSize)
     }
 }
 
-
 static inline seL4_Word
 arch_kobject_get_type(int type, seL4_Word objectSize)
 {
@@ -73,6 +72,5 @@ arch_kobject_get_type(int type, seL4_Word objectSize)
         return x86_mode_kobject_get_type(type, objectSize);
     }
 }
-
 
 #endif /* _ARCH_KOBJECT_T_H_ */

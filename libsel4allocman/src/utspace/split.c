@@ -325,4 +325,3 @@ uintptr_t _utspace_split_paddr(void *_split, seL4_Word cookie, size_t size_bits)
     struct utspace_split_node *node = (struct utspace_split_node*)cookie;
     return node->paddr;
 }
-

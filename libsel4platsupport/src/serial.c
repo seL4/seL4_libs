@@ -39,7 +39,6 @@ static struct ps_chardevice console_device = {
 };
 static struct ps_chardevice* console = &console_device;
 
-
 void
 register_console(struct ps_chardevice* user_console)
 {
@@ -92,7 +91,6 @@ sel4platsupport_init_default_serial_caps(vka_t *vka, vspace_t *vspace, simple_t 
         ZF_LOGF("Failed to allocate serial IRQ slot.");
         return error;
     }
-
 
     /* Call into the arch-specific code for the next step.
      * x86 needs an I/O cap because the serial is accessed through port-I/O,

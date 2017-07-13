@@ -12,4 +12,3 @@
 #pragma once
 
 #include <sel4utils/strerror.h>
-

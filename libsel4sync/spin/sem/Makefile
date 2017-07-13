@@ -36,4 +36,3 @@ clean:
 	rm -f liveness
 	rm -f *.trail
 	rm -f pan.*
-

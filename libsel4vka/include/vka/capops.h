@@ -132,7 +132,6 @@ vka_cnode_rotate(const cspacepath_t *dest, seL4_CapData_t dest_badge, const cspa
 
 //TODO: implement rotate
 
-
 /**
  * Retype num_objects objects from untyped into type starting from destination slot dest.
  *

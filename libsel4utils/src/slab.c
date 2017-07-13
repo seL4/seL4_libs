@@ -105,7 +105,6 @@ static int delegate_utspace_alloc_at(void *data, const cspacepath_t *dest, seL4_
     return vka_utspace_alloc_at(sdata->delegate, dest, type, size_bits, paddr, res);
 }
 
-
 static void
 slab_utspace_free(void *data, seL4_Word type, seL4_Word size_bits, seL4_Word target)
 {

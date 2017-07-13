@@ -19,10 +19,8 @@
 #define DEFAULT_TIMER_PADDR DMTIMER2_PADDR
 #define DEFAULT_TIMER_INTERRUPT DMTIMER2_INTERRUPT
 
-
 typedef struct plat_timer_objects {
 } plat_timer_objects_t;
-
 
 seL4_timer_t *sel4platsupport_get_timer(enum timer_id id,
                                         vka_t *vka,

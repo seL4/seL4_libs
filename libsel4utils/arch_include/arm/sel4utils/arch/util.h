@@ -15,5 +15,3 @@
 #include <sel4utils/sel4_arch/util.h>
 
 #endif /* _SEL4UTILS_ARCH_UTIL_H */
-
-

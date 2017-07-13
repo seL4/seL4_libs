@@ -26,4 +26,3 @@ int
 __plat_getchar(void);
 
 #endif /* __PLAT_INTERNAL_H__ */
-

@@ -30,5 +30,3 @@ static inline int seL4_ARCH_PageDirectory_CleanInvalidate_Data(seL4_CPtr root, s
 }
 
 #endif /* SEL4UTILS_ARCH_CACHE_H */
-
-

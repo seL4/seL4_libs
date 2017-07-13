@@ -22,7 +22,6 @@
 typedef struct plat_timer_objects {
 } plat_timer_objects_t;
 
-
 seL4_timer_t *sel4platsupport_get_timer(enum timer_id id,
                                         vka_t *vka,
                                         vspace_t *vspace,

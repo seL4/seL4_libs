@@ -22,11 +22,10 @@ void sel4test_printf(const char *out);
 
 /**
  * Start a test suite
- * 
+ *
  * @name name of test suite
  */
 void sel4test_start_suite(const char *name);
-
 
 /**
  * End test suite
@@ -40,7 +39,6 @@ void sel4test_end_suite(void);
  */
 void sel4test_start_test(const char *name);
 
-
 /**
  * Report an error in a test case.
  * Can report multiple errors.
@@ -48,10 +46,9 @@ void sel4test_start_test(const char *name);
  */
 void _sel4test_report_error(const char *error, const char *file, int line);
 
-
 /*
  * Mark the current test as failed. Should
- * only be called once per test case 
+ * only be called once per test case
  */
 void _sel4test_failure(const char *failure, const char *file, int line);
 
@@ -61,7 +58,7 @@ void _sel4test_failure(const char *failure, const char *file, int line);
 void sel4test_end_test(void);
 
 /**
- * Gets the results of current suite. Results of current 
+ * Gets the results of current suite. Results of current
  * suite is valid until next sel4test_start_suite call.
  *
  * @param out_num_tests number of tests (may be NULL)

@@ -220,7 +220,6 @@ sel4utils_map_ept_page(vka_t *vka, seL4_CPtr pd, seL4_CPtr frame, seL4_Word vadd
     return seL4_X86_Page_MapEPT(frame, pd, vaddr, rights, attr);
 }
 
-
 #endif /* CONFIG_VTX */
 
 /* Some more generic routines for helping with mapping */

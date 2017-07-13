@@ -154,7 +154,7 @@ static inline int vka_alloc_notification(vka_t *vka, vka_object_t *result)
 }
 
 /* @deprecated use vka_alloc_notification */
-static inline int DEPRECATED("Use vka_alloc_notification") 
+static inline int DEPRECATED("Use vka_alloc_notification")
 vka_alloc_async_endpoint(vka_t *vka, vka_object_t *result)
 {
     return vka_alloc_notification(vka, result);
@@ -177,14 +177,12 @@ static inline int vka_alloc_frame_maybe_device(vka_t *vka, uint32_t size_bits, b
                                          size_bits, VKA_NO_PADDR, can_use_dev, result);
 }
 
-
 static inline int vka_alloc_frame_at(vka_t *vka, uint32_t size_bits, uintptr_t paddr,
                                      vka_object_t *result)
 {
     return vka_alloc_object_at(vka, kobject_get_type(KOBJECT_FRAME, size_bits), size_bits,
                                paddr, result);
 }
-
 
 static inline int vka_alloc_page_directory(vka_t *vka, vka_object_t *result)
 {
@@ -203,9 +201,7 @@ static inline int vka_alloc_kernel_image(vka_t *vka, vka_object_t *result)
     return vka_alloc_object(vka, kobject_get_type(KOBJECT_KERNEL_IMAGE, 0), seL4_KernelImageBits, result);
 }
 
-
 #endif
-
 
 /* Implement a kobject interface */
 static inline int vka_alloc_kobject(vka_t *vka, kobject_t type, seL4_Word size_bits,
@@ -213,7 +209,6 @@ static inline int vka_alloc_kobject(vka_t *vka, kobject_t type, seL4_Word size_b
 {
     return vka_alloc_object(vka, kobject_get_type(type, size_bits), size_bits, result);
 }
-
 
 /* leaky versions of the object allocation functions - throws away the kobject_t */
 
@@ -239,7 +234,6 @@ vka_alloc_async_endpoint_leaky(vka_t *vka)
 {
     return vka_alloc_notification_leaky(vka);
 }
-
 
 #define LEAKY_SIZE_BITS(name) \
     static inline seL4_CPtr vka_alloc_##name##_leaky(vka_t *vka, uint32_t size_bits) WARN_UNUSED_RESULT; \

@@ -10,7 +10,6 @@
 # @TAG(DATA61_BSD)
 #
 
-
 libs-$(CONFIG_LIB_SEL4_ALLOCMAN) += libsel4allocman
 
 libsel4allocman: libsel4 $(libc) libsel4vka libsel4utils \

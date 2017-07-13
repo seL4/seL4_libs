@@ -283,5 +283,3 @@ sel4platsupport_new_io_ops(vspace_t vspace, vka_t vka, ps_io_ops_t *io_ops)
 
     return err;
 }
-
-

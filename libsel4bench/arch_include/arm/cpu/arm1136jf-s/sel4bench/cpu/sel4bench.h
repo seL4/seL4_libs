@@ -123,7 +123,6 @@ static KERNELFN void sel4bench_private_get_counters(void* data)
     uint32_t mask = args[0];
     ccnt_t* values = (ccnt_t*)args[1];
 
-
     //read value of specified counters
     if (mask & 1) {
         values[0] = sel4bench_private_get_pmn0();

@@ -117,7 +117,6 @@ void CPSWSlControlExtEnable(unsigned int baseAddr)
     HWREG(baseAddr + CPSW_SL_MACCONTROL) |= CPSW_SL_MACCONTROL_EXT_EN;
 }
 
-
 /**
  * \brief   Disables the CPGMAC_SL gigabit mode if the input GMII_MTCLK has
  *          been stopped by the PHY
@@ -208,7 +207,6 @@ void CPSWSlReset(unsigned int baseAddr)
             ((HWREG(baseAddr + CPSW_SL_SOFT_RESET))
              & CPSW_SL_SOFT_RESET_SOFT_RESET));
 }
-
 
 /**
  * \brief   Sets the maximum length for received frame.

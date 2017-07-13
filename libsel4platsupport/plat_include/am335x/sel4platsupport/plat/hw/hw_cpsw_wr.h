@@ -38,8 +38,6 @@
 *
 */
 
-
-
 #ifndef _HW_CPSW_WR_H_
 #define _HW_CPSW_WR_H_
 
@@ -47,22 +45,17 @@
 extern "C" {
 #endif
 
-
     /***********************************************************************\
      * Register arrays Definition
     \***********************************************************************/
-
 
     /***********************************************************************\
      * Bundle arrays Definition
     \***********************************************************************/
 
-
     /***********************************************************************\
      * Bundles Definition
     \***********************************************************************/
-
-
 
     /*************************************************************************\
      * Registers Definition
@@ -107,11 +100,9 @@ extern "C" {
 #define CPSW_WR_IDVER_SCHEME   (0xFFF00000u)
 #define CPSW_WR_IDVER_SCHEME_SHIFT   (0x00000014u)
 
-
     /* SOFT_RESET */
 #define CPSW_WR_SOFT_RESET_SOFT_RESET   (0x00000001u)
 #define CPSW_WR_SOFT_RESET_SOFT_RESET_SHIFT   (0x00000000u)
-
 
     /* CONTROL */
 #define CPSW_WR_CONTROL_MMR_RESET      (0x0000000Au)
@@ -120,7 +111,6 @@ extern "C" {
 
 #define CPSW_WR_CONTROL_MMR_STDBYMODE   (0x0000000Cu)
 #define CPSW_WR_CONTROL_MMR_STDBYMODE_SHIFT   (0x00000002u)
-
 
     /* INT_CONTROL */
 #define CPSW_WR_INT_CONTROL_INT_PACE_EN   (0x003F0000u)
@@ -132,156 +122,125 @@ extern "C" {
 #define CPSW_WR_INT_CONTROL_INT_TEST   (0x80000000u)
 #define CPSW_WR_INT_CONTROL_INT_TEST_SHIFT   (0x0000001Fu)
 
-
     /* C0_RX_THRESH_EN */
 #define CPSW_WR_C0_RX_THRESH_EN_C0_RX_THRESH_EN   (0x000000FFu)
 #define CPSW_WR_C0_RX_THRESH_EN_C0_RX_THRESH_EN_SHIFT   (0x00000000u)
-
 
     /* C0_RX_EN */
 #define CPSW_WR_C0_RX_EN_C0_RX_EN   (0x000000FFu)
 #define CPSW_WR_C0_RX_EN_C0_RX_EN_SHIFT   (0x00000000u)
 
-
     /* C0_TX_EN */
 #define CPSW_WR_C0_TX_EN_C0_TX_EN   (0x000000FFu)
 #define CPSW_WR_C0_TX_EN_C0_TX_EN_SHIFT   (0x00000000u)
-
 
     /* C0_MISC_EN */
 #define CPSW_WR_C0_MISC_EN_C0_MISC_EN   (0x0000001Fu)
 #define CPSW_WR_C0_MISC_EN_C0_MISC_EN_SHIFT   (0x00000000u)
 
-
     /* C1_RX_THRESH_EN */
 #define CPSW_WR_C1_RX_THRESH_EN_C1_RX_THRESH_EN   (0x000000FFu)
 #define CPSW_WR_C1_RX_THRESH_EN_C1_RX_THRESH_EN_SHIFT   (0x00000000u)
-
 
     /* C1_RX_EN */
 #define CPSW_WR_C1_RX_EN_C1_RX_EN   (0x000000FFu)
 #define CPSW_WR_C1_RX_EN_C1_RX_EN_SHIFT   (0x00000000u)
 
-
     /* C1_TX_EN */
 #define CPSW_WR_C1_TX_EN_C1_TX_EN   (0x000000FFu)
 #define CPSW_WR_C1_TX_EN_C1_TX_EN_SHIFT   (0x00000000u)
-
 
     /* C1_MISC_EN */
 #define CPSW_WR_C1_MISC_EN_C1_MISC_EN   (0x0000001Fu)
 #define CPSW_WR_C1_MISC_EN_C1_MISC_EN_SHIFT   (0x00000000u)
 
-
     /* C2_RX_THRESH_EN */
 #define CPSW_WR_C2_RX_THRESH_EN_C2_RX_THRESH_EN   (0x000000FFu)
 #define CPSW_WR_C2_RX_THRESH_EN_C2_RX_THRESH_EN_SHIFT   (0x00000000u)
-
 
     /* C2_RX_EN */
 #define CPSW_WR_C2_RX_EN_C2_RX_EN   (0x000000FFu)
 #define CPSW_WR_C2_RX_EN_C2_RX_EN_SHIFT   (0x00000000u)
 
-
     /* C2_TX_EN */
 #define CPSW_WR_C2_TX_EN_C2_TX_EN   (0x000000FFu)
 #define CPSW_WR_C2_TX_EN_C2_TX_EN_SHIFT   (0x00000000u)
-
 
     /* C2_MISC_EN */
 #define CPSW_WR_C2_MISC_EN_C2_MISC_EN   (0x0000001Fu)
 #define CPSW_WR_C2_MISC_EN_C2_MISC_EN_SHIFT   (0x00000000u)
 
-
     /* C0_RX_THRESH_STAT */
 #define CPSW_WR_C0_RX_THRESH_STAT_C0_RX_THRESH_STAT   (0x000000FFu)
 #define CPSW_WR_C0_RX_THRESH_STAT_C0_RX_THRESH_STAT_SHIFT   (0x00000000u)
-
 
     /* C0_RX_STAT */
 #define CPSW_WR_C0_RX_STAT_C0_RX_STAT   (0x000000FFu)
 #define CPSW_WR_C0_RX_STAT_C0_RX_STAT_SHIFT   (0x00000000u)
 
-
     /* C0_TX_STAT */
 #define CPSW_WR_C0_TX_STAT_C0_TX_STAT   (0x000000FFu)
 #define CPSW_WR_C0_TX_STAT_C0_TX_STAT_SHIFT   (0x00000000u)
-
 
     /* C0_MISC_STAT */
 #define CPSW_WR_C0_MISC_STAT_C0_MISC_STAT   (0x0000001Fu)
 #define CPSW_WR_C0_MISC_STAT_C0_MISC_STAT_SHIFT   (0x00000000u)
 
-
     /* C1_RX_THRESH_STAT */
 #define CPSW_WR_C1_RX_THRESH_STAT_C1_RX_THRESH_STAT   (0x000000FFu)
 #define CPSW_WR_C1_RX_THRESH_STAT_C1_RX_THRESH_STAT_SHIFT   (0x00000000u)
-
 
     /* C1_RX_STAT */
 #define CPSW_WR_C1_RX_STAT_C1_RX_STAT   (0x000000FFu)
 #define CPSW_WR_C1_RX_STAT_C1_RX_STAT_SHIFT   (0x00000000u)
 
-
     /* C1_TX_STAT */
 #define CPSW_WR_C1_TX_STAT_C1_TX_STAT   (0x000000FFu)
 #define CPSW_WR_C1_TX_STAT_C1_TX_STAT_SHIFT   (0x00000000u)
-
 
     /* C1_MISC_STAT */
 #define CPSW_WR_C1_MISC_STAT_C1_MISC_STAT   (0x0000001Fu)
 #define CPSW_WR_C1_MISC_STAT_C1_MISC_STAT_SHIFT   (0x00000000u)
 
-
     /* C2_RX_THRESH_STAT */
 #define CPSW_WR_C2_RX_THRESH_STAT_C2_RX_THRESH_STAT   (0x000000FFu)
 #define CPSW_WR_C2_RX_THRESH_STAT_C2_RX_THRESH_STAT_SHIFT   (0x00000000u)
-
 
     /* C2_RX_STAT */
 #define CPSW_WR_C2_RX_STAT_C2_RX_STAT   (0x000000FFu)
 #define CPSW_WR_C2_RX_STAT_C2_RX_STAT_SHIFT   (0x00000000u)
 
-
     /* C2_TX_STAT */
 #define CPSW_WR_C2_TX_STAT_C2_TX_STAT   (0x000000FFu)
 #define CPSW_WR_C2_TX_STAT_C2_TX_STAT_SHIFT   (0x00000000u)
-
 
     /* C2_MISC_STAT */
 #define CPSW_WR_C2_MISC_STAT_C2_MISC_STAT   (0x0000001Fu)
 #define CPSW_WR_C2_MISC_STAT_C2_MISC_STAT_SHIFT   (0x00000000u)
 
-
     /* C0_RX_IMAX */
 #define CPSW_WR_C0_RX_IMAX_C0_RX_IMAX   (0x0000003Fu)
 #define CPSW_WR_C0_RX_IMAX_C0_RX_IMAX_SHIFT   (0x00000000u)
-
 
     /* C0_TX_IMAX */
 #define CPSW_WR_C0_TX_IMAX_C0_TX_IMAX   (0x0000003Fu)
 #define CPSW_WR_C0_TX_IMAX_C0_TX_IMAX_SHIFT   (0x00000000u)
 
-
     /* C1_RX_IMAX */
 #define CPSW_WR_C1_RX_IMAX_C1_RX_IMAX   (0x0000003Fu)
 #define CPSW_WR_C1_RX_IMAX_C1_RX_IMAX_SHIFT   (0x00000000u)
-
 
     /* C1_TX_IMAX */
 #define CPSW_WR_C1_TX_IMAX_C1_TX_IMAX   (0x0000003Fu)
 #define CPSW_WR_C1_TX_IMAX_C1_TX_IMAX_SHIFT   (0x00000000u)
 
-
     /* C2_RX_IMAX */
 #define CPSW_WR_C2_RX_IMAX_C2_RX_IMAX   (0x0000003Fu)
 #define CPSW_WR_C2_RX_IMAX_C2_RX_IMAX_SHIFT   (0x00000000u)
 
-
     /* C2_TX_IMAX */
 #define CPSW_WR_C2_TX_IMAX_C2_TX_IMAX   (0x0000003Fu)
 #define CPSW_WR_C2_TX_IMAX_C2_TX_IMAX_SHIFT   (0x00000000u)
-
 
     /* RGMII_CTL */
 #define CPSW_WR_RGMII_CTL_RGMII1_FULLDUPLEX   (0x00000008u)
@@ -301,8 +260,6 @@ extern "C" {
 
 #define CPSW_WR_RGMII_CTL_RGMII2_SPEED   (0x00000060u)
 #define CPSW_WR_RGMII_CTL_RGMII2_SPEED_SHIFT   (0x00000005u)
-
-
 
 #ifdef __cplusplus
 }

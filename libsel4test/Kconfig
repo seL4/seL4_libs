@@ -25,7 +25,6 @@ config TESTPRINTER_REGEX
     help
         A POSIX regex pattern that is used to filter the tests to run
 
-
 config TESTPRINTER_HALT_ON_TEST_FAILURE
     bool "Halt on the first test failure"
     default n
@@ -47,8 +46,8 @@ config BUFFER_OUTPUT
     default n
     depends on LIB_SEL4_TEST
     help
-        Buffer the output and print in <stdout> blocks so that bamboo 
+        Buffer the output and print in <stdout> blocks so that bamboo
         can parse the test logs properly. Turn this off for debugging your test suite
 
 config HAVE_LIB_SEL4_TEST
-    bool 
+    bool

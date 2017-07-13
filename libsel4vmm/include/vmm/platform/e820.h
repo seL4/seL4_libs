@@ -23,4 +23,3 @@
 #define E820_MAX_REGIONS 128 /* E820 supports up to 128. */
 
 #endif /* __LIB_VMM_E820_H_ */
-

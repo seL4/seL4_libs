@@ -22,7 +22,6 @@
 #include <utils/util.h>
 #include <vka/cspacepath_t.h>
 
-
 /**
  * Allocate a slot in a cspace.
  *
@@ -190,7 +189,6 @@ vka_cspace_alloc_path(vka_t *vka, cspacepath_t *res)
     return error;
 }
 
-
 static inline void
 vka_cspace_free(vka_t *vka, seL4_CPtr slot)
 {
@@ -205,7 +203,6 @@ vka_cspace_free(vka_t *vka, seL4_CPtr slot)
         ZF_LOGE("Not implemented");
         return;
     }
-
 
     vka->cspace_free(vka->data, slot);
 }

@@ -407,7 +407,6 @@
 #define SEL4BENCH_IA32_CORE_EVENT_BRANCH_MISPREDICT_TRUE_R 0x00C5
 #define SEL4BENCH_IA32_CORE_EVENT_BTB_MISS             0x00E2
 
-
 //P6 family (PM, P3)
 //new (or modified) in PM -- note, branch prediction events include speculative execution
 #define SEL4BENCH_IA32_P6_EVENT_EXECUTE_BRANCH         0x0088
@@ -437,4 +436,3 @@
 #define SEL4BENCH_EVENT_MEMORY_ACCESS           (4u | SEL4BENCH_EVENT_GENERIC_MASK)
 #define SEL4BENCH_EVENT_BRANCH_MISPREDICT       0x00C5
 #define SEL4BENCH_EVENT_EXECUTE_INSTRUCTION     0x00C0
-

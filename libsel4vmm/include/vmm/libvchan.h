@@ -42,7 +42,6 @@ libvchan_t *libvchan_server_init(int domain, int port, size_t read_min, size_t w
 */
 libvchan_t *libvchan_client_init(int domain, int port);
 
-
 /**
 * Waits for reads or writes to unblock, or for a close
 */
@@ -63,7 +62,6 @@ int libvchan_buffer_space(libvchan_t *ctrl);
 */
 int libvchan_recv(libvchan_t *ctrl, void *data, size_t size);
 
-
 /**
 * Packet-based send: send entire buffer if possible
 * @param ctrl The vchan control structure
@@ -82,7 +80,6 @@ int libvchan_send(libvchan_t *ctrl, const void *data, size_t size);
 * the vchan is nonblocking)
 */
 int libvchan_read(libvchan_t *ctrl, void *data, size_t size);
-
 
 /**
 * Stream-based send: send as much data as possible.

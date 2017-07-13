@@ -23,7 +23,7 @@
 _start:
     /* Setup a stack for ourselves. */
     ldr     x19, =_stack_top
-    mov     sp, x10 
+    mov     sp, x10
 
     /* Setup bootinfo. The pointer to the bootinfo struct starts in 'r0'. */
     bl      seL4_InitBootInfo

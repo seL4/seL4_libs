@@ -25,5 +25,3 @@ void debug_user_exception_message(int (*printfn)(const char *format, ...),
             (void*)mrs[0], (void*)mrs[1], (void*)mrs[2], (void*)mrs[3],
             (void*)mrs[4]);
 }
-
-

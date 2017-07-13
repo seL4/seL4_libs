@@ -141,7 +141,6 @@ sel4utils_copy_path_to_process(sel4utils_process_t *process, cspacepath_t src)
     return dest.capPtr;
 }
 
-
 /* copy a cap to a process, returning the cptr in the process' cspace */
 seL4_CPtr
 sel4utils_copy_cap_to_process(sel4utils_process_t *process, vka_t *vka, seL4_CPtr cap)

@@ -20,14 +20,14 @@
 
 /*
  * Allocate a cslot for an msi irq and get the cap for an irq.
- 
+
  * @param vka to allocate slot with
  * @param simple to get the cap from
  * @param irq_number to get the cap to
- * @param[out] dest empty path struct to return path to irq in 
+ * @param[out] dest empty path struct to return path to irq in
  * @return 0 on success
  */
-seL4_Error sel4platsupport_copy_msi_cap(vka_t *vka, simple_t *simple, seL4_Word irq_number, 
+seL4_Error sel4platsupport_copy_msi_cap(vka_t *vka, simple_t *simple, seL4_Word irq_number,
                                         cspacepath_t *dest);
 
 /*

@@ -50,12 +50,10 @@
 *
 */
 
-
 #include <sel4platsupport/plat/hw/hw_control_AM335x.h>
 #include <sel4platsupport/plat/hw/soc_AM335x.h>
 #include <sel4platsupport/plat/hw/hw_cm_per.h>
 #include <sel4platsupport/plat/hw/hw_types.h>
-
 
 /**
  *  \brief    This function maps the crossbar events.
@@ -115,7 +113,6 @@ unsigned int EDMA3CrossBarChannelMap(unsigned int baseAdd, unsigned int crossBar
 
     return 0;
 }
-
 
 /**
 * \brief  This API returns a unique number which identifies itself
@@ -323,4 +320,3 @@ void EDMAModuleClkConfig(void)
             (HWREG(SOC_CM_PER_REGS + CM_PER_TPTC2_CLKCTRL) &
              CM_PER_TPTC2_CLKCTRL_STBYST));
 }
-

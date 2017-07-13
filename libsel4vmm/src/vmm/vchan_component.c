@@ -242,7 +242,6 @@ int libvchan_readwrite_action(libvchan_t *ctrl, void *data, size_t size, int str
     return (size + remain);
 }
 
-
 /*
     Wait for data to arrive to a component from a given vchan
 */
@@ -259,7 +258,6 @@ int libvchan_wait(libvchan_t *ctrl) {
 
     return 0;
 }
-
 
 void libvchan_close(libvchan_t *ctrl) {
     /* Perform vchan component initialisation */

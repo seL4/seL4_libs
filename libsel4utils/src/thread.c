@@ -51,7 +51,6 @@ int sel4utils_configure_thread(vka_t *vka, vspace_t *parent, vspace_t *alloc, se
     return sel4utils_configure_thread_config(vka, parent, alloc, config, res);
 }
 
-
 int
 sel4utils_configure_thread_config(vka_t *vka, vspace_t *parent, vspace_t *alloc,
                                   sel4utils_thread_config_t config, sel4utils_thread_t *res)
@@ -194,7 +193,6 @@ sel4utils_print_fault_message(seL4_MessageInfo_t tag, const char *thread_name)
         break;
     }
 }
-
 
 static int
 fault_handler(char *name, seL4_CPtr endpoint)

@@ -32,7 +32,6 @@
 } while(0)
 #endif /* CONFIG_BUFFER_OUTPUT */
 
-
 #define sel4test_case_with_message(condition, message) do {\
     if(!(condition)) {\
         sel4test_report_error(message);\
@@ -47,12 +46,10 @@
     }\
 } while(0)
 
-
 /**
  * Report an error in the test
  */
 #define sel4test_report_error(x) _sel4test_report_error(x, __FILE__, __LINE__)
-
 
 /**
  * Report a failure in the test

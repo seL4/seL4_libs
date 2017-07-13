@@ -51,4 +51,3 @@ int vmm_mmio_add_handler(vmm_mmio_list_t *list, uintptr_t start, uintptr_t end,
         vmm_mmio_read_fn read_handler, vmm_mmio_write_fn write_handler);
 
 #endif
-

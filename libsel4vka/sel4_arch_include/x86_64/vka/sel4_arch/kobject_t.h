@@ -50,7 +50,6 @@ x86_mode_kobject_get_size(kobject_t type, seL4_Word objectSize)
     }
 }
 
-
 static inline seL4_Word
 x86_mode_kobject_get_type(kobject_t type, seL4_Word objectSize)
 {
@@ -72,6 +71,5 @@ x86_mode_kobject_get_type(kobject_t type, seL4_Word objectSize)
         return -1;
     }
 }
-
 
 #endif /* _SEL4_ARCH_KOBJECT_T_H_ */

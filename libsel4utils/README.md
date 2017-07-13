@@ -31,7 +31,7 @@ Utilities provided by this library:
   * debugging tools
 
 No allocator is provided, although any allocator that implements the seL4 vka interface can be used
-(we recommend libsel4allocman). 
+(we recommend libsel4allocman).
 
 Dependencies
 ------------------
@@ -40,17 +40,17 @@ libsel4utils depends on libsel4vka, libsel4vspace, libutils, libelf, libcpio, li
 
 Repository overview
 -------------------
-   
+
 *include/sel4utils*:
 
-  * client_server_vspace.h -- a virtual address space that proxies calls between two different 
+  * client_server_vspace.h -- a virtual address space that proxies calls between two different
                               vspaces
   * elf.h -- elf loading.
   * mapping.h -- page mapping.
   * process.h -- process creation, deletion.
   * profile.h -- profiling.
   * strerror.h -- for printing seL4 error codes.
-  * stack.h -- switch to a newly allocated stack. 
+  * stack.h -- switch to a newly allocated stack.
   * thread.h -- threads (kernel threads) creation, deletion.
   * util.h -- includes utilities from libutils.
   * vspace.h -- virtual memory management (implements vspace interface)

@@ -43,11 +43,8 @@
 *
 */
 
-
-
 #ifndef _HW_INTC_H_
 #define _HW_INTC_H_
-
 
 /*************************************************************************\
  * Registers Definition
@@ -280,6 +277,5 @@
 
 #define INTC_ILR_FIQNIRQ    (0x00000001u)
 #define INTC_ILR_FIQNIRQ_SHIFT  (0x00000000u)
-
 
 #endif

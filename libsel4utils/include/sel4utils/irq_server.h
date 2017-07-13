@@ -10,7 +10,6 @@
  * @TAG(DATA61_BSD)
  */
 
-
 /**
  * The IRQ server helps to manage the IRQs in a system. There are 3 API levels
  * in the design
@@ -59,7 +58,6 @@
 #include <vka/vka.h>
 #include <simple/simple.h>
 
-
 typedef int irq_t;
 
 struct irq_data;
@@ -85,7 +83,6 @@ struct irq_data {
  * @param[in] irq  The IRQ to acknowledge
  */
 void irq_data_ack_irq(struct irq_data* irq);
-
 
 /*********************************
  *** IRQ server node functions ***

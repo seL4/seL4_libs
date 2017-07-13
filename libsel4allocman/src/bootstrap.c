@@ -1109,7 +1109,6 @@ static int prepare_handle_device_untyped_cap(allocman_t *alloc, simple_t *simple
     return 0;
 }
 
-
 int allocman_add_simple_untypeds_with_regions(allocman_t *alloc, simple_t *simple, int num_regions, pmem_region_t *region_list) {
     add_untypeds_state_t *state = NULL;
     int error = prepare_handle_device_untyped_cap(alloc, simple, &state, num_regions, region_list);
@@ -1193,7 +1192,6 @@ static allocman_t *bootstrap_new_simple(simple_t *simple, int levels, size_t l1s
     cspacepath_t tcb = _cspace_simple1level_make_path(&bootstrap->maybe_boot_cspace, simple_get_tcb(simple));
     cspacepath_t pd = _cspace_simple1level_make_path(&bootstrap->maybe_boot_cspace, simple_get_pd(simple));
 
-
     if (levels == 1) {
         alloc = _bootstrap_new_level1(bootstrap, l1size, tcb, pd, NULL);
     } else {
@@ -1218,7 +1216,6 @@ static allocman_t *bootstrap_new_simple(simple_t *simple, int levels, size_t l1s
 allocman_t *bootstrap_new_1level_simple(simple_t *simple, size_t l1size, size_t pool_size, void *pool) {
     return bootstrap_new_simple(simple, 1, l1size, 0, pool_size, pool);
 }
-
 
 allocman_t *bootstrap_new_2level_simple(simple_t *simple, size_t l1size, size_t l2size, size_t pool_size, void *pool) {
     return bootstrap_new_simple(simple, 2, l1size, l2size, pool_size, pool);

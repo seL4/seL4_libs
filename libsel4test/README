@@ -61,12 +61,10 @@ a_test(env_t env, void *args)
 }
 DEFINE_TEST(TEST000, "An example test", a_test)
 
-
 int main(void) {
 
     /* allocator set up */
     env->vka = init_allocator();
-
 
     /* sel4test_basic_run_test just runs each test and passes in
        env returned by sel4test_get_env.
@@ -76,7 +74,6 @@ int main(void) {
     sel4test_run_tests("my test name", sel4test_basic_run_test);
 
 }
-
 
 CAVEATS
 

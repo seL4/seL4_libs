@@ -171,7 +171,6 @@
 #define X86_FEATURE_TOPOEXT (6*32+22) /* topology extensions CPUID leafs */
 #define X86_FEATURE_PERFCTR_CORE (6*32+23) /* core performance counter extensions */
 
-
 /*
  * Auxiliary flags: Linux defined - For features scattered in various
  * CPUID levels like 0x6, 0xA etc, word 7
@@ -203,7 +202,6 @@
 #define X86_FEATURE_PAUSEFILTER (8*32+13) /* AMD filtered pause intercept */
 #define X86_FEATURE_PFTHRESHOLD (8*32+14) /* AMD pause filter threshold */
 
-
 /* Intel-defined CPU features, CPUID level 0x00000007:0 (ebx), word 9 */
 #define X86_FEATURE_FSGSBASE    (9*32+ 0) /* {RD/WR}{FS/GS}BASE instructions*/
 #define X86_FEATURE_TSC_ADJUST  (9*32+ 1) /* TSC adjustment MSR 0x3b */
@@ -218,6 +216,5 @@
 #define X86_FEATURE_RDSEED  (9*32+18) /* The RDSEED instruction */
 #define X86_FEATURE_ADX     (9*32+19) /* The ADCX and ADOX instructions */
 #define X86_FEATURE_SMAP    (9*32+20) /* Supervisor Mode Access Prevention */
-
 
 #endif /* _LIB_VMM_CPUFEATURE_H_ */

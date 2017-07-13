@@ -33,7 +33,6 @@ typedef struct timer_objects {
     arch_timer_objects_t arch_timer_objects;
 } timer_objects_t;
 
-
 /**
  * Creates caps required for calling sel4platsupport_get_default_timer and stores them
  * in supplied timer_objects_t.

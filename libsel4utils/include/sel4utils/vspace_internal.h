@@ -381,7 +381,6 @@ is_reserved(vspace_mid_level_t *top_level, uintptr_t vaddr, size_t size_bits)
     return is_reserved_or_empty(top_level, vaddr, size_bits, RESERVED, EMPTY);
 }
 
-
 static inline seL4_CPtr
 get_cap(vspace_mid_level_t *top, uintptr_t vaddr)
 {

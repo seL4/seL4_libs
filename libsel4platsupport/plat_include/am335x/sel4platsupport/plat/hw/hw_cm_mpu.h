@@ -39,26 +39,20 @@
 *
 */
 
-
 #ifndef _HW_CM_MPU_H_
 #define _HW_CM_MPU_H_
-
 
 /***********************************************************************\
  * Register arrays Definition
 \***********************************************************************/
 
-
 /***********************************************************************\
  * Bundle arrays Definition
 \***********************************************************************/
 
-
 /***********************************************************************\
  * Bundles Definition
 \***********************************************************************/
-
-
 
 /*************************************************************************\
  * Registers Definition
@@ -84,7 +78,6 @@
 #define CM_MPU_CLKSTCTRL_CLKTRCTRL_SW_SLEEP   (0x1u)
 #define CM_MPU_CLKSTCTRL_CLKTRCTRL_SW_WKUP   (0x2u)
 
-
 /* MPU_CLKCTRL */
 #define CM_MPU_MPU_CLKCTRL_IDLEST   (0x00030000u)
 #define CM_MPU_MPU_CLKCTRL_IDLEST_SHIFT   (0x00000010u)
@@ -104,7 +97,5 @@
 #define CM_MPU_MPU_CLKCTRL_STBYST_SHIFT   (0x00000012u)
 #define CM_MPU_MPU_CLKCTRL_STBYST_FUNC   (0x0u)
 #define CM_MPU_MPU_CLKCTRL_STBYST_STANDBY   (0x1u)
-
-
 
 #endif

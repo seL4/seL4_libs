@@ -18,7 +18,6 @@
 #include <vka/object.h>
 #include <string.h>
 
-
 static inline size_t _round_up(size_t v, size_t bits)
 {
     size_t mask = MASK(bits);
@@ -114,4 +113,3 @@ void _utspace_twinkle_free(allocman_t *alloc, void *_twinkle, seL4_Word cookie, 
 {
     /* Do nothing */
 }
-

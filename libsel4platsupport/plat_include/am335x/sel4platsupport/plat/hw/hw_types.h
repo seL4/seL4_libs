@@ -38,7 +38,6 @@
 *
 */
 
-
 #ifndef _HW_TYPES_H_
 #define _HW_TYPES_H_
 

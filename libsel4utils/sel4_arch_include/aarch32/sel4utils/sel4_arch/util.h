@@ -30,7 +30,6 @@ sel4utils_is_read_fault(void)
 #endif
 }
 
-
 static inline void
 sel4utils_set_instruction_pointer(seL4_UserContext *regs, seL4_Word value)
 {

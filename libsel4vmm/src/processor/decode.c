@@ -15,7 +15,6 @@
 Author: W.A.
 */
 
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -30,7 +29,6 @@ Author: W.A.
 #define IA32_PDE_PRESENT(pde) (pde & BIT(0))
 #define IA32_PTE_ADDR(pte) (pte & 0xFFFFF000)
 #define IA32_PSE_ADDR(pde) (pde & 0xFFC00000)
-
 
 #define IA32_OPCODE_S(op) (op & BIT(0))
 #define IA32_OPCODE_D(op) (op & BIT(1))
@@ -110,7 +108,6 @@ static void debug_print_instruction(uint8_t *instr, int instr_len) {
     printf("\n");
 }
 
-
 /* Partial support to decode an instruction for a memory access
    This is very crude. It can break in many ways. */
 int vmm_decode_instruction(uint8_t *instr, int instr_len, int *reg, uint32_t *imm, int *op_len) {
@@ -140,7 +137,7 @@ int vmm_decode_instruction(uint8_t *instr, int instr_len, int *reg, uint32_t *im
     if (oplen != 2 && IA32_OPCODE_S(opcode)) {
         oplen = 4;
     }
-    
+
     uint8_t modrm = instr[++i];
     switch (opcode) {
         case 0x88:
@@ -176,7 +173,7 @@ int vmm_decode_instruction(uint8_t *instr, int instr_len, int *reg, uint32_t *im
 /*
    Useful information: The GDT loaded by the Linux SMP trampoline looks like:
 0x00: 00 00 00 00 00 00 00 00
-0x08: 00 00 00 00 00 00 00 00 
+0x08: 00 00 00 00 00 00 00 00
 0x10: ff ff 00 00 00 9b cf 00 <- Executable 0x00000000-0xffffffff
 0x18: ff ff 00 00 00 93 cf 00 <- RW data    0x00000000-0xffffffff
 */
@@ -203,7 +200,7 @@ uintptr_t vmm_emulate_realmode(guest_memory_t *gm, uint8_t *instr_buf,
             m66 = 1;
             instr++;
         }
-        
+
         if (*instr == 0x0f) {
             instr++;
             if (*instr == 0x01) {
@@ -336,4 +333,3 @@ uintptr_t vmm_emulate_realmode(guest_memory_t *gm, uint8_t *instr_buf,
 
     return 0;
 }
-

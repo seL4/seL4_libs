@@ -30,18 +30,18 @@ are loosely described as
     book kept in memory
   * memory: Requires frame object
 
-Note that these dependencies and complications only exist if you want to be able to track, book keep, free and reuse 
-all allocations. If you want a simpler 'allocate only' system, that does not require book keeping to support free, 
+Note that these dependencies and complications only exist if you want to be able to track, book keep, free and reuse
+all allocations. If you want a simpler 'allocate only' system, that does not require book keeping to support free,
 then these problems don't exist.
 
-Initially, because of these circular dependencies, nothing can be allocated. The static pool provides a way to inject 
+Initially, because of these circular dependencies, nothing can be allocated. The static pool provides a way to inject
 one of the dependencies and try and start the cycle.
 
-The static and virtual pools can be thought of as just being another heap. Allocman uses these to allocate book 
-keeping data in preference to the regular C heap due to usage in environments where the C heap is either not 
+The static and virtual pools can be thought of as just being another heap. Allocman uses these to allocate book
+keeping data in preference to the regular C heap due to usage in environments where the C heap is either not
 implemented or is implemented using allocman.
 
-Two pools are needed, one static and one virtual, because the virtual pool (along with the rest of allocman) require 
-memory in order to bootstrap. Once bootstrapping is done then provided the system does not run out of memory enough 
-space in the virtual pool will also be reserved to ensure that if the virtual pool needs to grow, there is enough 
+Two pools are needed, one static and one virtual, because the virtual pool (along with the rest of allocman) require
+memory in order to bootstrap. Once bootstrapping is done then provided the system does not run out of memory enough
+space in the virtual pool will also be reserved to ensure that if the virtual pool needs to grow, there is enough
 memory for any book keeping required.

@@ -120,7 +120,6 @@ static int am_vka_utspace_alloc (void *data, const cspacepath_t *dest, seL4_Word
     return am_vka_utspace_alloc_maybe_device(data, dest, type, size_bits, false, res);
 }
 
-
 /**
  * Allocate a portion of an untyped into an object
  *

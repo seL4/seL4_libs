@@ -27,11 +27,9 @@
 #define SEL4BENCH_EVENT_EXECUTE_INSTRUCTION         0x08
 #endif /* CONFIG_ARM_CORTEX_A9 */
 
-
 #define SEL4BENCH_EVENT_BRANCH_MISPREDICT           0x10
 
 #define SEL4BENCH_EVENT_CACHE_L1D_HIT               0x04
-
 
 #define SEL4BENCH_EVENT_MEMORY_READ                 0x06
 #define SEL4BENCH_EVENT_MEMORY_WRITE                0x07

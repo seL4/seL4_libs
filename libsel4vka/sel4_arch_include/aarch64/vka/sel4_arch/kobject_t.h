@@ -52,7 +52,6 @@ arm_mode_kobject_get_size(kobject_t type, seL4_Word objectSize)
     }
 }
 
-
 static inline seL4_Word
 arm_mode_kobject_get_type(kobject_t type, seL4_Word objectSize)
 {

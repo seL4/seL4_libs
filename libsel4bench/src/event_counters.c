@@ -18,5 +18,3 @@ sel4bench_get_counter_description(counter_t counter)
 {
     return sel4bench_arch_get_counter_description(counter);
 }
-
-

@@ -89,7 +89,7 @@ static inline int sync_bin_sem_new(vka_t *vka, sync_bin_sem_t *sem, int value) {
         return -1;
     }
     int error = vka_alloc_notification(vka, &(sem->notification));
-    
+
     if (error != 0) {
         return error;
     } else {

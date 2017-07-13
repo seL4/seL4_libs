@@ -270,7 +270,6 @@ irq_server_thread_new(vspace_t* vspace, vka_t* vka, seL4_CPtr cspace, seL4_Word 
     return st;
 }
 
-
 /******************
  *** IRQ server ***
  ******************/
@@ -386,7 +385,6 @@ irq_server_new(vspace_t* vspace, vka_t* vka, seL4_CPtr cspace, seL4_Word priorit
     *ret_irq_server = irq_server;
     return 0;
 }
-
 
 seL4_MessageInfo_t
 irq_server_wait_for_irq(irq_server_t irq_server, seL4_Word* badge_ret)

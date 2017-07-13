@@ -14,7 +14,7 @@
 #define MAX_RES_VAL 2
 #define MAX_PROC 2
 
-/* A notification in seL4 is a single data word. 
+/* A notification in seL4 is a single data word.
  * Here we simplify things to a single bit */
 typedef notification_t {
     bit data = 0;
@@ -36,7 +36,7 @@ byte users = 0;
 
 semaphore_t sem;
 
-/* seL4_Wait blocks on the notification. 
+/* seL4_Wait blocks on the notification.
  * When the data word is 1 it resets to 0 and returns. */
 inline seL4_Wait(notif)
 {

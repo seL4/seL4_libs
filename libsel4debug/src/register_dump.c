@@ -18,7 +18,7 @@
 #include <utils/zf_log.h>
 
 void
-sel4debug_dump_registers(seL4_CPtr tcb) 
+sel4debug_dump_registers(seL4_CPtr tcb)
 {
     seL4_UserContext context;
     int error;
@@ -35,4 +35,3 @@ sel4debug_dump_registers(seL4_CPtr tcb)
         printf("%s\t:0x%lx\n", register_names[i], (long) ((seL4_Word * )&context)[i]);
     }
 }
-

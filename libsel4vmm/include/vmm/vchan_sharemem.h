@@ -20,7 +20,6 @@
 #include <sel4utils/util.h>
 #include <simple/simple.h>
 
-
 #define VCHAN_BUF_SIZE PAGE_SIZE_4K
 #define NUM_BUFFERS 2
 

@@ -21,7 +21,6 @@
 #include <utils/util.h>
 #include "../../timer_common.h"
 
-
 seL4_timer_t *
 sel4platsupport_get_epit(vspace_t *vspace, simple_t *simple, vka_t *vka, seL4_CPtr notification,
                          uint32_t prescaler, epit_id_t epit_id)
@@ -65,4 +64,3 @@ sel4platsupport_get_epit(vspace_t *vspace, simple_t *simple, vka_t *vka, seL4_CP
     /* success */
     return timer;
 }
-

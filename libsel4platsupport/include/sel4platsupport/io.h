@@ -46,4 +46,3 @@ int sel4platsupport_new_io_mapper(vspace_t vspace, vka_t vka, ps_io_mapper_t *io
 int sel4platsupport_new_io_ops(vspace_t vspace, vka_t vka, ps_io_ops_t *io_ops);
 
 #endif /* _SEL4_PLATSUPPORT_IO_H */
-

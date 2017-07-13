@@ -29,17 +29,15 @@ int vmm_vmcs_read(seL4_CPtr vcpu, seL4_Word field) {
     return result.value;
 }
 
-
 /*write a field and its value into the VMCS*/
 void vmm_vmcs_write(seL4_CPtr vcpu, seL4_Word field, seL4_Word value) {
-    
+
     seL4_X86_VCPU_WriteVMCS_t result;
     assert(vcpu);
 
     result = seL4_X86_VCPU_WriteVMCS(vcpu, field, value);
     assert(result.error == seL4_NoError);
 }
-
 
 /*init the vmcs structure for a guest os thread*/
 void vmm_vmcs_init_guest(vmm_vcpu_t *vcpu) {
@@ -98,5 +96,3 @@ void vmm_vmcs_init_guest(vmm_vcpu_t *vcpu) {
     vmm_vmcs_write(vcpu->guest_vcpu, VMX_GUEST_VMX_PREEMPTION_TIMER_VALUE, CONFIG_LIB_VMM_VMX_TIMER_TIMEOUT);
 #endif
 }
-
-

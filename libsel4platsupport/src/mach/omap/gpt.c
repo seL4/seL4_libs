@@ -22,7 +22,6 @@
 #include <utils/util.h>
 #include "../../timer_common.h"
 
-
 static seL4_timer_t *
 sel4platsupport_get_gpt_impl(vspace_t *vspace, simple_t *simple, vka_t *vka, seL4_CPtr notification,
                         gpt_id_t gpt_id, uint32_t prescaler, bool relative)
@@ -69,7 +68,7 @@ DEPRECATED("use sel4platsupport_get_rel_gpt") seL4_timer_t *
 sel4platsupport_get_gpt(vspace_t *vspace, simple_t *simple, vka_t *vka, seL4_CPtr notification,
                         gpt_id_t gpt_id, uint32_t prescaler)
 {
-    return sel4platsupport_get_rel_gpt(vspace, simple, vka, notification, gpt_id, 
+    return sel4platsupport_get_rel_gpt(vspace, simple, vka, notification, gpt_id,
                                        prescaler);
 }
 
@@ -77,7 +76,7 @@ seL4_timer_t *
 sel4platsupport_get_rel_gpt(vspace_t *vspace, simple_t *simple, vka_t *vka, seL4_CPtr notification,
                         gpt_id_t gpt_id, uint32_t prescaler)
 {
-    return sel4platsupport_get_gpt_impl(vspace, simple, vka, notification, gpt_id, 
+    return sel4platsupport_get_gpt_impl(vspace, simple, vka, notification, gpt_id,
                                        prescaler, true);
 }
 
@@ -85,6 +84,6 @@ seL4_timer_t *
 sel4platsupport_get_abs_gpt(vspace_t *vspace, simple_t *simple, vka_t *vka, seL4_CPtr notification,
                         gpt_id_t gpt_id, uint32_t prescaler)
 {
-    return sel4platsupport_get_gpt_impl(vspace, simple, vka, notification, gpt_id, 
+    return sel4platsupport_get_gpt_impl(vspace, simple, vka, notification, gpt_id,
                                        prescaler, false);
 }

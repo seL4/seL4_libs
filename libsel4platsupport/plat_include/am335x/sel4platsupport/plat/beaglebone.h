@@ -39,7 +39,6 @@
 *
 */
 
-
 #ifndef _BEAGLEBONE_H_
 #define _BEAGLEBONE_H_
 

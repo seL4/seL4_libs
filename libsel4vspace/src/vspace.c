@@ -173,5 +173,3 @@ vspace_reserve_range(vspace_t *vspace, size_t bytes,
 {
     return vspace_reserve_range_aligned(vspace, bytes, seL4_PageBits, rights, cacheable, vaddr);
 }
-
-

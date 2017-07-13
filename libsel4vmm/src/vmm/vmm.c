@@ -71,7 +71,6 @@ void vmm_sync_guest_state(vmm_vcpu_t *vcpu) {
     vmm_guest_state_sync_cs_selector(&vcpu->guest_state, vcpu->guest_vcpu);
 }
 
-
 /* Handle VM exit in VMM module. */
 static void vmm_handle_vm_exit(vmm_vcpu_t *vcpu) {
     int reason = vmm_guest_exit_get_reason(&vcpu->guest_state);

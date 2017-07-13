@@ -60,7 +60,6 @@ static vka_t _vka_mem;
 static seL4_CPtr device_cap = 0;
 extern char __executable_start[];
 
-
 #if !(defined(CONFIG_LIB_SEL4_PLAT_SUPPORT_USE_SEL4_DEBUG_PUTCHAR) && defined(CONFIG_DEBUG_BUILD))
 static void* __map_device_page(void* cookie, uintptr_t paddr, size_t size,
                                int cached, ps_mem_flags_t flags);
@@ -73,7 +72,6 @@ static ps_io_ops_t io_ops = {
 };
 
 #endif
-
 
 /* completely hacky way of getting a virtual address. This is used a last ditch attempt to
  * get serial device going so we can print out an error */
@@ -119,7 +117,7 @@ __map_device_page_failsafe(void* cookie UNUSED, uintptr_t paddr, size_t size,
             seL4_AllRights,
             0
         );
-    
+
 error:
     if (error)
         for (;;);

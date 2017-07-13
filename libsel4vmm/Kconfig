@@ -39,10 +39,10 @@ config LIB_VMM_DEBUG_LEVEL
     help
         Debug verbosity level.
         5 levels for debug messages:
-           0: Always printout 
+           0: Always printout
            1: Main entry point in a module
            2: 2nd level entry point in a module
-           3: Main entry point of a function 
+           3: Main entry point of a function
            4: Details inside a function
 
 config LIB_VMM_VMX_TIMER_DEBUG

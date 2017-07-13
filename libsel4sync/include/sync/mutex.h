@@ -41,7 +41,7 @@ static inline int sync_mutex_unlock(sync_mutex_t *mutex) {
     return sync_bin_sem_post(mutex);
 }
 
-/* Allocate and initialise a managed mutex 
+/* Allocate and initialise a managed mutex
  * @param vka           A VKA instance used to allocate a notification object.
  * @param mutex         A mutex object to initialise.
  * @return              0 on success, an error code on failure. */

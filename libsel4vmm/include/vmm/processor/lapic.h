@@ -48,7 +48,7 @@ typedef struct vmm_lapic {
     void *regs;
     unsigned int sipi_vector;
 
-    enum vmm_lapic_state state; 
+    enum vmm_lapic_state state;
     int arb_prio;
 } vmm_lapic_t;
 

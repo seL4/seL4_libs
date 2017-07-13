@@ -291,6 +291,3 @@
  * PLE request programmed. (Precise)
  */
 #define SEL4BENCH_EVENT_PLE_REQUESTS             0xA5
-
-
-

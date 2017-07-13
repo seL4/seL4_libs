@@ -24,7 +24,6 @@ int sel4platsupport_plat_init_default_timer_caps(UNUSED vka_t *vka, UNUSED vspac
     return 0;
 }
 
-
 seL4_timer_t *
 sel4platsupport_get_timer(enum timer_id id, vka_t *vka, vspace_t *vspace,
                           simple_t *simple, seL4_CPtr notification)

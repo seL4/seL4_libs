@@ -47,8 +47,8 @@ static inline int sync_cv_init(sync_cv_t *cv, seL4_CPtr notification)
     return 0;
 }
 
-/* Wait on a condition variable. 
- * This assumes that you already hold the lock and will block until notified 
+/* Wait on a condition variable.
+ * This assumes that you already hold the lock and will block until notified
  * by sync_cv_signal or sync_cv_broadcast. It returns once you hold the lock
  * again. Note that a spurious wake up is possible and the condition should
  * always be checked again after sync_cv_wait returns.
@@ -97,7 +97,7 @@ static inline int sync_cv_wait(sync_bin_sem_t *lock, sync_cv_t *cv)
 }
 
 /* Signal a condition variable.
- * This assumes that you hold the lock and notifies one waiter 
+ * This assumes that you hold the lock and notifies one waiter
  * @param cv            The condition variable to signal.
  * @return              0 on success, an error code on failure. */
 static inline int sync_cv_signal(sync_cv_t *cv)
@@ -173,7 +173,7 @@ static inline int sync_cv_new(vka_t *vka, sync_cv_t *cv)
     }
 
     int error = vka_alloc_notification(vka, &(cv->notification));
-    
+
     if (error != 0) {
         return error;
     } else {
@@ -182,8 +182,8 @@ static inline int sync_cv_new(vka_t *vka, sync_cv_t *cv)
 }
 
 /* Destroy a managed condition variable.
- * Uses the passed vka instance to deallocate the notification object. 
- * This function is not to be used on unmanaged condition variables. 
+ * Uses the passed vka instance to deallocate the notification object.
+ * This function is not to be used on unmanaged condition variables.
  * @param vka           A VKA instance used to deallocate the notification object.
  * @param cv            A condition variable object initialised by sync_cv_new.
  * @return              0 on success, an error code on failure. */

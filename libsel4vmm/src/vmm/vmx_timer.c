@@ -31,4 +31,3 @@ int vmm_vmx_timer_handler(vmm_vcpu_t *vcpu) {
     return -1;
 #endif
 }
-

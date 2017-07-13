@@ -52,4 +52,3 @@ int vmm_alloc_guest_ram_at(struct vmm *vmm, uintptr_t start, size_t bytes);
 int vmm_alloc_guest_ram(struct vmm *vmm, size_t bytes, int onetoone);
 
 #endif /* __LIB_VMM_GUEST_MEMORY_H_ */
-

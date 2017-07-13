@@ -67,10 +67,10 @@ enum sel4utils_cspace_layout {
      * sel4utils_configure_process is used.
      */
     SEL4UTILS_ENDPOINT_SLOT = 2,
-    
+
     /* The page directory slot */
     SEL4UTILS_PD_SLOT = 3,
- 
+
     /* the slot for the asid pool that this thread is in and can create threads
      * in. 0 if this kernel does not support asid pools */
     SEL4UTILS_ASID_POOL_SLOT = 4,
@@ -240,7 +240,6 @@ seL4_CPtr sel4utils_mint_cap_to_process(sel4utils_process_t *process, cspacepath
  * @param vka allocator used to allocate objects for this process
  */
 void sel4utils_destroy_process(sel4utils_process_t *process, vka_t *vka);
-
 
 /*
  * sel4utils default allocated object function for vspaces.

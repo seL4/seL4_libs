@@ -53,6 +53,3 @@ debug_print_bootinfo(seL4_BootInfo *info)
 }
 
 #endif  /* CONFIG_USER_DEBUG_BUILD */
-
-
-

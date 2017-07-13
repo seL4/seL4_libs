@@ -12,7 +12,7 @@
 
 /* This file contains macros for CPUID emulation in x86.
  * Most of the code in this file is from arch/x86/kvm/cpuid.h Linux 3.8.8
- 
+
  *     Authors:
  *         Qian Ge
  */
@@ -40,7 +40,6 @@ static inline void native_cpuid(unsigned int *eax, unsigned int *ebx,
         : "0" (*eax), "2" (*ecx)
         : "memory");
 }
-
 
 static int vmm_cpuid_virt(unsigned int function, unsigned int index, struct cpuid_val *val, vmm_vcpu_t *vcpu) {
     unsigned int eax, ebx, ecx, edx;

@@ -37,7 +37,7 @@ static int vmm_cr_set_cr0(vmm_vcpu_t *vcpu, unsigned int value) {
     /*set the cr0 value with the shadow value*/
     value |= (vcpu->guest_state.virt.cr.cr0_mask & vcpu->guest_state.virt.cr.cr0_shadow);
 
-    if (value == set) 
+    if (value == set)
         return 0;
 
     vmm_guest_state_set_cr0(&vcpu->guest_state, value);
@@ -55,7 +55,6 @@ static int vmm_cr_get_cr3(vmm_vcpu_t *vcpu, unsigned int *value) {
     return 0;
 
 }
-
 
 static int vmm_cr_set_cr4(vmm_vcpu_t *vcpu, unsigned int value) {
 
@@ -76,7 +75,6 @@ static int vmm_cr_set_cr4(vmm_vcpu_t *vcpu, unsigned int value) {
 
     return 0;
 }
-
 
 static int vmm_cr_clts(vmm_vcpu_t *vcpu) {
     ZF_LOGI("Ignoring call of clts");
@@ -129,7 +127,7 @@ int vmm_cr_access_handler(vmm_vcpu_t *vcpu) {
                 case 4:
                     ret = vmm_cr_set_cr4(vcpu, val);
                     break;
-                case 8: 
+                case 8:
 
 #if 0
 
@@ -145,7 +143,7 @@ int vmm_cr_access_handler(vmm_vcpu_t *vcpu) {
                     return 0;
 #endif
 
-                default: 
+                default:
                     DPRINTF(4, "unhandled control register: op %d cr %d\n",
                             (int)(exit_qualification >> 4) & 3, cr);
                     break;
@@ -185,7 +183,7 @@ int vmm_cr_access_handler(vmm_vcpu_t *vcpu) {
             val = (exit_qualification >> LMSW_SOURCE_DATA_SHIFT) & 0x0f;
             ret = vmm_cr_lmsw(vcpu, val);
             break;
-        
+
         default:
             DPRINTF(4, "unhandled control register: op %d cr %d\n",
                     (int)(exit_qualification >> 4) & 3, cr);

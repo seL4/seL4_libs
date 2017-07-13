@@ -200,7 +200,6 @@ int vmm_guest_vspace_add_iospace(vspace_t *loader, vspace_t *vspace, seL4_CPtr i
     guest_vspace->iospaces = realloc(guest_vspace->iospaces, sizeof(guest_iospace_t) * (guest_vspace->num_iospaces + 1));
     assert(guest_vspace->iospaces);
 
-
     guest_iospace_t *guest_iospace = &guest_vspace->iospaces[guest_vspace->num_iospaces];
     guest_iospace->iospace = iospace;
     int error = sel4utils_get_vspace(loader, &guest_iospace->iospace_vspace, &guest_iospace->iospace_vspace_data,

@@ -22,7 +22,7 @@
 #include <vka/cspacepath_t.h>
 
 /* Request a cap to a specific IRQ number on the system
- * 
+ *
  * @param irq the irq number to get the cap for
  * @param data cookie for the underlying implementation
  * @param the CNode in which to put this cap
@@ -43,8 +43,8 @@ typedef struct arch_simple {
     void *data;
 } arch_simple_t;
 
-static inline seL4_CPtr 
-arch_simple_get_IOPort_cap(UNUSED arch_simple_t *simple, UNUSED uint16_t start_port, 
+static inline seL4_CPtr
+arch_simple_get_IOPort_cap(UNUSED arch_simple_t *simple, UNUSED uint16_t start_port,
                            UNUSED uint16_t end_port) {
     ZF_LOGF("Calling get_IOPort_cap on arm!");
     return -1;

@@ -35,5 +35,3 @@ static inline int seL4_ARCH_PageDirectory_Unify_Instruction(seL4_CPtr root, seL4
 }
 
 #endif /* SEL4UTILS_SEL4_ARCH_CACHE_H */
-
-

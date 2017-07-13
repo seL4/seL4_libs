@@ -140,7 +140,6 @@ perform_reservation(vspace_t *vspace, sel4utils_res_t *reservation, uintptr_t va
     reservation->rights = rights;
     reservation->cacheable = cacheable;
 
-
     error = reserve_entries_range(vspace, reservation->start, reservation->end, true);
 
     /* only support to reserve things that we've checked that we can */

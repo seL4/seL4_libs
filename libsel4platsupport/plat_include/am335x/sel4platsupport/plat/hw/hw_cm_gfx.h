@@ -39,26 +39,20 @@
 *
 */
 
-
 #ifndef _HW_CM_GFX_H_
 #define _HW_CM_GFX_H_
-
 
 /***********************************************************************\
  * Register arrays Definition
 \***********************************************************************/
 
-
 /***********************************************************************\
  * Bundle arrays Definition
 \***********************************************************************/
 
-
 /***********************************************************************\
  * Bundles Definition
 \***********************************************************************/
-
-
 
 /*************************************************************************\
  * Registers Definition
@@ -91,7 +85,6 @@
 #define CM_GFX_L3_CLKSTCTRL_CLKTRCTRL_SW_SLEEP   (0x1u)
 #define CM_GFX_L3_CLKSTCTRL_CLKTRCTRL_SW_WKUP   (0x2u)
 
-
 /* GFX_CLKCTRL */
 #define CM_GFX_GFX_CLKCTRL_IDLEST   (0x00030000u)
 #define CM_GFX_GFX_CLKCTRL_IDLEST_SHIFT   (0x00000010u)
@@ -111,7 +104,6 @@
 #define CM_GFX_GFX_CLKCTRL_STBYST_SHIFT   (0x00000012u)
 #define CM_GFX_GFX_CLKCTRL_STBYST_FUNC   (0x0u)
 #define CM_GFX_GFX_CLKCTRL_STBYST_STANDBY   (0x1u)
-
 
 /* BITBLT_CLKCTRL */
 #define CM_GFX_BITBLT_CLKCTRL_IDLEST   (0x00030000u)
@@ -133,7 +125,6 @@
 #define CM_GFX_BITBLT_CLKCTRL_STBYST_FUNC   (0x0u)
 #define CM_GFX_BITBLT_CLKCTRL_STBYST_STANDBY   (0x1u)
 
-
 /* L4LS_GFX_CLKSTCTRL */
 #define CM_GFX_L4LS_GFX_CLKSTCTRL_CLKACTIVITY_L4LS_GFX_GCLK   (0x00000100u)
 #define CM_GFX_L4LS_GFX_CLKSTCTRL_CLKACTIVITY_L4LS_GFX_GCLK_SHIFT   (0x00000008u)
@@ -146,6 +137,5 @@
 #define CM_GFX_L4LS_GFX_CLKSTCTRL_CLKTRCTRL_NO_SLEEP   (0x0u)
 #define CM_GFX_L4LS_GFX_CLKSTCTRL_CLKTRCTRL_SW_SLEEP   (0x1u)
 #define CM_GFX_L4LS_GFX_CLKSTCTRL_CLKTRCTRL_SW_WKUP   (0x2u)
-
 
 #endif

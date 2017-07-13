@@ -119,7 +119,7 @@ void vmm_start_ap_vcpu(vmm_vcpu_t *vcpu, unsigned int sipi_vector)
     uint8_t instr[TRAMPOLINE_LENGTH];
     vmm_fetch_instruction(vcpu, eip, vmm_guest_state_get_cr3(gs, vcpu->guest_vcpu),
             TRAMPOLINE_LENGTH, instr);
-    
+
     eip = vmm_emulate_realmode(&vcpu->vmm->guest_mem, instr, &segment, eip,
             TRAMPOLINE_LENGTH, gs);
 
@@ -143,7 +143,7 @@ void vmm_check_external_interrupt(vmm_t *vmm)
             if (vmm_apic_accept_pic_intr(vcpu)) {
                 vmm_vcpu_accept_interrupt(vcpu);
                 break; /* Only one VCPU can take a PIC interrupt */
-            } 
+            }
         }
     }
 }
@@ -157,4 +157,3 @@ void vmm_vcpu_accept_interrupt(vmm_vcpu_t *vcpu)
     /* in an exit, can call the regular injection method */
     vmm_have_pending_interrupt(vcpu);
 }
-

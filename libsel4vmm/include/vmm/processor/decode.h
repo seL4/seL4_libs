@@ -48,4 +48,3 @@ const static int vmm_decoder_reg_mapb[] = {
 };
 
 #endif
-

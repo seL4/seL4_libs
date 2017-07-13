@@ -38,8 +38,6 @@
 *
 */
 
-
-
 #ifndef _HW_CPSW_ALE_H_
 #define _HW_CPSW_ALE_H_
 
@@ -47,22 +45,17 @@
 extern "C" {
 #endif
 
-
     /***********************************************************************\
      * Register arrays Definition
     \***********************************************************************/
-
 
     /***********************************************************************\
      * Bundle arrays Definition
     \***********************************************************************/
 
-
     /***********************************************************************\
      * Bundles Definition
     \***********************************************************************/
-
-
 
     /*************************************************************************\
      * Registers Definition
@@ -89,7 +82,6 @@ extern "C" {
 
 #define CPSW_ALE_IDVER_ALE_MINOR_VER   (0x000000FFu)
 #define CPSW_ALE_IDVER_ALE_MINOR_VER_SHIFT   (0x00000000u)
-
 
     /* ALE_CONTROL */
 #define CPSW_ALE_CONTROL_AGE_OUT_NOW   (0x20000000u)
@@ -128,11 +120,9 @@ extern "C" {
 #define CPSW_ALE_CONTROL_RATE_LIMIT_TX   (0x00000008u)
 #define CPSW_ALE_CONTROL_RATE_LIMIT_TX_SHIFT   (0x00000003u)
 
-
     /* ALE_PRESCALE */
 #define CPSW_ALE_PRESCALE_ALE_PRESCALE   (0x000FFFFFu)
 #define CPSW_ALE_PRESCALE_ALE_PRESCALE_SHIFT   (0x00000000u)
-
 
     /* ALE_UNKNOWN_VLAN */
 #define CPSW_ALE_UNKNOWN_VLAN_UNKNOWN_FORCE_UNTA   (0x3F000000u)
@@ -147,14 +137,12 @@ extern "C" {
 #define CPSW_ALE_UNKNOWN_VLAN_UNKNOWN_VLAN_MEM   (0x0000003Fu)
 #define CPSW_ALE_UNKNOWN_VLAN_UNKNOWN_VLAN_MEM_SHIFT   (0x00000000u)
 
-
     /* ALE_TBLCTL */
 #define CPSW_ALE_TBLCTL_ENTRY_POINTER   (0x000003FFu)
 #define CPSW_ALE_TBLCTL_ENTRY_POINTER_SHIFT   (0x00000000u)
 
 #define CPSW_ALE_TBLCTL_WRITE_RDZ   (0x80000000u)
 #define CPSW_ALE_TBLCTL_WRITE_RDZ_SHIFT   (0x0000001Fu)
-
 
     /* ALE_PORTCTL0 */
 #define CPSW_ALE_PORTCTL0_BCAST_LIMIT   (0xFF000000u)
@@ -178,7 +166,6 @@ extern "C" {
 #define CPSW_ALE_PORTCTL0_VID_INGRESS_CHECK   (0x00000008u)
 #define CPSW_ALE_PORTCTL0_VID_INGRESS_CHECK_SHIFT   (0x00000003u)
 
-
     /* ALE_PORTCTL1 */
 #define CPSW_ALE_PORTCTL1_BCAST_LIMIT   (0xFF000000u)
 #define CPSW_ALE_PORTCTL1_BCAST_LIMIT_SHIFT   (0x00000018u)
@@ -200,7 +187,6 @@ extern "C" {
 
 #define CPSW_ALE_PORTCTL1_VID_INGRESS_CHECK   (0x00000008u)
 #define CPSW_ALE_PORTCTL1_VID_INGRESS_CHECK_SHIFT   (0x00000003u)
-
 
     /* ALE_PORTCTL2 */
 #define CPSW_ALE_PORTCTL2_BCAST_LIMIT   (0xFF000000u)
@@ -224,7 +210,6 @@ extern "C" {
 #define CPSW_ALE_PORTCTL2_VID_INGRESS_CHECK   (0x00000008u)
 #define CPSW_ALE_PORTCTL2_VID_INGRESS_CHECK_SHIFT   (0x00000003u)
 
-
     /* ALE_PORTCTL3 */
 #define CPSW_ALE_PORTCTL3_BCAST_LIMIT   (0xFF000000u)
 #define CPSW_ALE_PORTCTL3_BCAST_LIMIT_SHIFT   (0x00000018u)
@@ -246,7 +231,6 @@ extern "C" {
 
 #define CPSW_ALE_PORTCTL3_VID_INGRESS_CHECK   (0x00000008u)
 #define CPSW_ALE_PORTCTL3_VID_INGRESS_CHECK_SHIFT   (0x00000003u)
-
 
     /* ALE_PORTCTL4 */
 #define CPSW_ALE_PORTCTL4_BCAST_LIMIT   (0xFF000000u)
@@ -270,7 +254,6 @@ extern "C" {
 #define CPSW_ALE_PORTCTL4_VID_INGRESS_CHECK   (0x00000008u)
 #define CPSW_ALE_PORTCTL4_VID_INGRESS_CHECK_SHIFT   (0x00000003u)
 
-
     /* ALE_PORTCTL5 */
 #define CPSW_ALE_PORTCTL5_BCAST_LIMIT   (0xFF000000u)
 #define CPSW_ALE_PORTCTL5_BCAST_LIMIT_SHIFT   (0x00000018u)
@@ -292,8 +275,6 @@ extern "C" {
 
 #define CPSW_ALE_PORTCTL5_VID_INGRESS_CHECK   (0x00000008u)
 #define CPSW_ALE_PORTCTL5_VID_INGRESS_CHECK_SHIFT   (0x00000003u)
-
-
 
 #ifdef __cplusplus
 }

@@ -13,9 +13,6 @@
 #include <autoconf.h>
 #include <sel4platsupport/timer.h>
 
-
-
-
 int sel4platsupport_init_default_timer_caps(vka_t *vka, vspace_t *vspace, simple_t *simple, timer_objects_t *timer_objects)
 {
     int error;

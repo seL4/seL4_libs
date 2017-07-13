@@ -23,7 +23,7 @@
 #include <vspace/page.h>
 
 seL4_Error
-simple_default_get_ioapic(void *data, seL4_CNode root, seL4_Word index, uint8_t depth, 
+simple_default_get_ioapic(void *data, seL4_CNode root, seL4_Word index, uint8_t depth,
                           seL4_Word ioapic, seL4_Word pin, seL4_Word level, seL4_Word polarity,
                           seL4_Word vector)
 {
@@ -31,7 +31,7 @@ simple_default_get_ioapic(void *data, seL4_CNode root, seL4_Word index, uint8_t 
                                      polarity, vector);
 }
 
-seL4_Error 
+seL4_Error
 simple_default_get_irq(void *data, int irq, seL4_CNode root, seL4_Word index, uint8_t depth) {
 
     if (config_set(CONFIG_IRQ_IOAPIC)) {
@@ -64,21 +64,21 @@ simple_default_get_irq(void *data, int irq, seL4_CNode root, seL4_Word index, ui
 }
 
 seL4_Error
-simple_default_get_msi(void *data, seL4_CNode root, seL4_Word index, uint8_t depth, 
+simple_default_get_msi(void *data, seL4_CNode root, seL4_Word index, uint8_t depth,
                        seL4_Word pci_bus, seL4_Word pci_dev, seL4_Word pci_func, seL4_Word handle,
-                       seL4_Word vector) 
+                       seL4_Word vector)
 {
     return seL4_IRQControl_GetMSI(seL4_CapIRQControl, root, index, depth, pci_bus, pci_dev,
                                   pci_func, handle, vector);
 }
 
-seL4_CPtr 
+seL4_CPtr
 simple_default_get_IOPort_cap(void *data, uint16_t start_port, uint16_t end_port) {
     return seL4_CapIOPort;
 }
 
 void
-simple_default_init_arch_simple(arch_simple_t *simple, void *data) 
+simple_default_init_arch_simple(arch_simple_t *simple, void *data)
 {
     simple->data = data;
     simple->msi = simple_default_get_msi;
@@ -86,4 +86,3 @@ simple_default_init_arch_simple(arch_simple_t *simple, void *data)
     simple->ioapic = simple_default_get_ioapic;
     simple->IOPort_cap = simple_default_get_IOPort_cap;
 }
-

@@ -24,4 +24,3 @@ sel4bench_arch_get_counter_description(counter_t counter)
         return NULL;
     }
 }
-

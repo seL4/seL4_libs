@@ -39,7 +39,6 @@
 *
 */
 
-
 #ifndef _HW_CPSW_SL_H_
 #define _HW_CPSW_SL_H_
 
@@ -47,22 +46,17 @@
 extern "C" {
 #endif
 
-
     /***********************************************************************\
      * Register arrays Definition
     \***********************************************************************/
-
 
     /***********************************************************************\
      * Bundle arrays Definition
     \***********************************************************************/
 
-
     /***********************************************************************\
      * Bundles Definition
     \***********************************************************************/
-
-
 
     /*************************************************************************\
      * Registers Definition
@@ -96,7 +90,6 @@ extern "C" {
 
 #define CPSW_SL_IDVER_Z   (0x0000F800u)
 #define CPSW_SL_IDVER_Z_SHIFT   (0x0000000Bu)
-
 
     /* SL1_MACCONTROL */
 #define CPSW_SL_MACCONTROL_CMD_IDLE   (0x00000800u)
@@ -153,7 +146,6 @@ extern "C" {
 #define CPSW_SL_MACCONTROL_TX_SHORT_GAP_LIM_EN   (0x00200000u)
 #define CPSW_SL_MACCONTROL_TX_SHORT_GAP_LIM_EN_SHIFT   (0x00000015u)
 
-
     /* SL1_MACSTATUS */
 #define CPSW_SL_MACSTATUS_EXT_FULLDUPLEX   (0x00000008u)
 #define CPSW_SL_MACSTATUS_EXT_FULLDUPLEX_SHIFT   (0x00000003u)
@@ -170,16 +162,13 @@ extern "C" {
 #define CPSW_SL_MACSTATUS_TX_FLOW_ACT   (0x00000001u)
 #define CPSW_SL_MACSTATUS_TX_FLOW_ACT_SHIFT   (0x00000000u)
 
-
     /* SL1_SOFT_RESET */
 #define CPSW_SL_SOFT_RESET_SOFT_RESET   (0x00000001u)
 #define CPSW_SL_SOFT_RESET_SOFT_RESET_SHIFT   (0x00000000u)
 
-
     /* SL1_RX_MAXLEN */
 #define CPSW_SL_RX_MAXLEN_RX_MAXLEN   (0x00003FFFu)
 #define CPSW_SL_RX_MAXLEN_RX_MAXLEN_SHIFT   (0x00000000u)
-
 
     /* SL1_BOFFTEST */
 #define CPSW_SL_BOFFTEST_COLL_COUNT   (0x0000F000u)
@@ -194,14 +183,12 @@ extern "C" {
 #define CPSW_SL_BOFFTEST_TX_BACKOFF   (0x000003FFu)
 #define CPSW_SL_BOFFTEST_TX_BACKOFF_SHIFT   (0x00000000u)
 
-
     /* SL1_EMCONTROL */
 #define CPSW_SL_EMCONTROL_FREE   (0x00000001u)
 #define CPSW_SL_EMCONTROL_FREE_SHIFT   (0x00000000u)
 
 #define CPSW_SL_EMCONTROL_SOFT   (0x00000002u)
 #define CPSW_SL_EMCONTROL_SOFT_SHIFT   (0x00000001u)
-
 
     /* SL1_RX_PRI_MAP */
 #define CPSW_SL_RX_PRI_MAP_PRI0   (0x00000007u)
@@ -227,9 +214,6 @@ extern "C" {
 
 #define CPSW_SL_RX_PRI_MAP_PRI7   (0x70000000u)
 #define CPSW_SL_RX_PRI_MAP_PRI7_SHIFT   (0x0000001Cu)
-
-
-
 
 #ifdef __cplusplus
 }

@@ -45,12 +45,12 @@ void *sel4platsupport_map_frame_at(vka_t *vka, vspace_t *vspace, uintptr_t paddr
 
 /*
  * Allocate a cslot for an irq and get the cap for an irq.
- 
+
  * @param vka to allocate slot with
  * @param simple to get the cap from
  * @param irq_number to get the cap to
- * @param[out] dest empty path struct to return path to irq in 
+ * @param[out] dest empty path struct to return path to irq in
  * @return 0 on success
  */
-seL4_Error sel4platsupport_copy_irq_cap(vka_t *vka, simple_t *simple, seL4_Word irq, 
+seL4_Error sel4platsupport_copy_irq_cap(vka_t *vka, simple_t *simple, seL4_Word irq,
                                        cspacepath_t *dest);

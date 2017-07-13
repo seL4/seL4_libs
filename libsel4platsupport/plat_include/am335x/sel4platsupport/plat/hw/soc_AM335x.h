@@ -40,7 +40,6 @@
 *
 */
 
-
 #ifndef _SOC_AM33XX_H_
 #define _SOC_AM33XX_H_
 
@@ -152,7 +151,6 @@ extern "C" {
     /** @brief Base address of control module memory mapped registers             */
 #define SOC_CONTROL_REGS                     (0x44E10000)
 
-
     /** @brief Base address of Channel controller  memory mapped registers        */
 #define SOC_EDMA30CC_0_REGS                  (0x49000000)
 
@@ -165,7 +163,6 @@ extern "C" {
     *  parameters for the given SOC
     \******************************************************************************/
 #define TPCC_MUX(n)                         0xF90 + ((n) * 4)
-
 
 #define SOC_LCDC_0_REGS                     0x4830E000
 
@@ -192,7 +189,6 @@ extern "C" {
 #define SOC_EPWM_0_REGS                     (SOC_PWMSS0_REGS + SOC_EPWM_REGS)
 #define SOC_EPWM_1_REGS                     (SOC_PWMSS1_REGS + SOC_EPWM_REGS)
 #define SOC_EPWM_2_REGS                     (SOC_PWMSS2_REGS + SOC_EPWM_REGS)
-
 
 #define SOC_EPWM_MODULE_FREQ                 100
 

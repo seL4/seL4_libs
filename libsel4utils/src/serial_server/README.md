@@ -91,7 +91,6 @@ When you have all of those, go ahead and spawn the Server thread like this:
     }
     ZF_LOGF("Serial server spawned.");
 
-
 > #### Behaviour / Side effects
 >
 > * The server works with the assumption that it will be spawned in the Parent's

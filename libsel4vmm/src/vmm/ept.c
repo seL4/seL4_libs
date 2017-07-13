@@ -27,7 +27,7 @@ int vmm_ept_violation_handler(vmm_vcpu_t *vcpu) {
 
     uintptr_t guest_phys = vmm_guest_exit_get_physical(&vcpu->guest_state);
     unsigned int qualification = vmm_guest_exit_get_qualification(&vcpu->guest_state);
-    
+
     int e = vmm_mmio_exit_handler(vcpu, guest_phys, qualification);
 
     if (e == 0) {

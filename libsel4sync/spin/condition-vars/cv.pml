@@ -14,7 +14,7 @@
 #define NUM_THREADS 4
 #define WAIT_BOUND 2
 
-/* A notification in seL4 is a single data word. 
+/* A notification in seL4 is a single data word.
  * Here we simplify things to a single bit */
 typedef notification_t {
     bit data = 1;
@@ -34,7 +34,7 @@ typedef monitor_t {
     condition_var_t producer_cv;
 };
 
-/* The shared resource. 
+/* The shared resource.
  * Producer increments when resource < MAX_RES_VAL
  * Consumer decrements when resource > 0.
  */
@@ -57,7 +57,7 @@ byte thread_state[4];
    This is necessary to avoid infinite loops for which we can prove nothing */
 byte thread_waits[4];
 
-/* seL4_Wait blocks on the notification. 
+/* seL4_Wait blocks on the notification.
  * When the data word is 1 it resets to 0 and returns. */
 inline seL4_Wait(notif)
 {
@@ -72,7 +72,6 @@ inline seL4_Signal(notif)
 {
     notif.data = 1;
 }
-
 
 /* Wait on a condition variable. The calling thread must own the monitor lock */
 inline cv_wait(monitor, cv, cv_id, procnum)
@@ -99,12 +98,12 @@ inline cv_wait(monitor, cv, cv_id, procnum)
     int oldval;
     atomic {
         oldval = cv.waiters;
-        cv.waiters--; 
+        cv.waiters--;
     }
 
     /* Signal other waiting threads if we're broadcasting */
     if
-    :: (oldval > 1 && cv.broadcasting == 1) -> seL4_Signal(cv.wait_nb); 
+    :: (oldval > 1 && cv.broadcasting == 1) -> seL4_Signal(cv.wait_nb);
     :: (oldval <= 1 && cv.broadcasting == 1) -> cv.broadcasting = 0;
     :: else -> skip;
     fi
@@ -124,8 +123,8 @@ inline cv_signal(monitor, cv, procnum)
 {
     /* Decrement the waiters count */
     printf("%d signals cv\n", procnum);
-    if 
-    :: (cv.waiters > 0) -> 
+    if
+    :: (cv.waiters > 0) ->
         /* Wake up a thread */
         printf("Signal wait_nb\n");
         seL4_Signal(cv.wait_nb);
@@ -137,8 +136,8 @@ inline cv_signal(monitor, cv, procnum)
 inline cv_broadcast(monitor, cv, cv_id, procnum)
 {
     printf("%d broadcasts cv\n", procnum);
-    if 
-    :: (cv.waiters > 0) -> 
+    if
+    :: (cv.waiters > 0) ->
         if
         :: (thread_state[0] == cv_id && thread_waits[0] != WAIT_BOUND) -> thread_state[0] = 4;
         :: skip;
@@ -190,7 +189,7 @@ progress_prod:;
 
         /* Producer waits for resource != MAX_RES_VAL */
         do
-        :: (resource == MAX_RES_VAL) -> 
+        :: (resource == MAX_RES_VAL) ->
             cv_wait(the_monitor, the_monitor.producer_cv, 3, procnum);
             thread_waits[procnum-1]++;
             if
@@ -215,16 +214,16 @@ progress_prod:;
         printf("producer signals cv\n"); */
 
         if
-        :: (resource == MAX_RES_VAL) -> 
+        :: (resource == MAX_RES_VAL) ->
             printf("producer broadcasts\n");
             cv_broadcast(the_monitor, the_monitor.consumer_cv, 2, procnum);
-        :: else -> 
+        :: else ->
             skip;
             /* printf("consumer signals\n");
             cv_signal(the_monitor, the_monitor.consumer_cv, procnum); */
         fi
 
-        atomic { 
+        atomic {
             monitor_release(the_monitor);
             thread_state[procnum-1] = 0;
         }
@@ -248,7 +247,7 @@ progress_cons:;
 
         /* Consumer waits for resource != 0 */
         do
-        :: (resource == 0) -> 
+        :: (resource == 0) ->
             cv_wait(the_monitor, the_monitor.consumer_cv, 2, procnum);
             thread_waits[procnum-1]++;
             if
@@ -269,11 +268,11 @@ progress_cons:;
         printf("resource = %d\n", resource);
 
         if
-        :: (resource == 0) -> 
+        :: (resource == 0) ->
             printf("consumer broadcasts\n");
             printf("the_monitor.lock.data = %d\n", the_monitor.lock.data);
             cv_broadcast(the_monitor, the_monitor.producer_cv, 3, procnum);
-        :: else -> 
+        :: else ->
             skip;
             /* printf("consumer signals\n");
             cv_signal(the_monitor, the_monitor.consumer_cv, procnum); */

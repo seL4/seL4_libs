@@ -32,7 +32,6 @@
 #define SUCCESS true
 #define FAILURE false
 
-
 /* Contains information about the test environment.
  * Define struct env in your application. */
 struct env;
@@ -85,7 +84,7 @@ static inline int _test_fail(const char *condition, const char *file, int line)
     printf("Halting on first test failure...\n");
     sel4test_end_test();
     sel4test_end_suite();
-#ifdef CONFIG_DEBUG_BUILD    
+#ifdef CONFIG_DEBUG_BUILD
     seL4_DebugHalt();
 #endif /* CONFIG_DEBUG_BUILD */
     while(1);
@@ -102,12 +101,12 @@ static inline void _test_error(const char *condition, const char *file, int line
     printf("Halting on first test failure...\n");
     sel4test_end_test();
     sel4test_end_suite();
-#ifdef CONFIG_DEBUG_BUILD    
+#ifdef CONFIG_DEBUG_BUILD
     seL4_DebugHalt();
 #endif /* CONFIG_DEBUG_BUILD */
     while(1);
 #endif /* CONFIG_TESTPRINTER_HALT_ON_TEST_FAILURE */
- 
+
 }
 
 /* Fails a test case, stop everything. */
@@ -196,7 +195,7 @@ static inline void _test_abort(const char *condition, const char *file, int line
           }\
     } while (0)
 
-/* Pretty printed test_check wrapper macros for basic comparisons on c strings, 
+/* Pretty printed test_check wrapper macros for basic comparisons on c strings,
  * which output the values and variable names to aid debugging */
 #define test_streq(a, b)  test_strop(a, b, ==)
 #define test_strneq(a, b) test_strop(a, b, !=)
@@ -205,37 +204,35 @@ static inline void _test_abort(const char *condition, const char *file, int line
 #define test_strle(a, b)  test_strop(a, b, <)
 #define test_strleq(a, b) test_strop(a, b, <=)
 
-
 env_t sel4test_get_env(void);
 
 /*
  * Example basic run test
  */
 static inline int
-sel4test_basic_run_test(struct testcase *t) 
+sel4test_basic_run_test(struct testcase *t)
 {
     return t->function(sel4test_get_env());
 }
 
-/* 
+/*
  * Run every test defined with the DEFINE_TEST macro.
  *
  * Use CONFIG_TESTPRINTER_REGEX to filter tests.
  *
  * @param name the name of the test suite
- * @param run_test function that runs the tests. 
+ * @param run_test function that runs the tests.
  *
  */
 void sel4test_run_tests(const char *name, int (*run_test)(struct testcase *t));
 
-/* 
+/*
  * Get a testcase.
  *
  * @param name the name of the test to retrieve.
  * @return the test corresponding to name, NULL if test not found.
  */
 testcase_t* sel4test_get_test(const char *name);
-
 
 bool sel4test_get_result(void);
 #endif /* SEL4_TEST_H */

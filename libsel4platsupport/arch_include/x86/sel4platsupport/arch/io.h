@@ -27,6 +27,4 @@
  */
 int sel4platsupport_get_io_port_ops(ps_io_port_ops_t *ops, simple_t *simple);
 
-
 #endif /* _IA32_PLATSUPPORT_IO_H */
-

@@ -10,7 +10,6 @@
  * @TAG(DATA61_GPL)
  */
 
-
 #include "vmm/vmm.h"
 #include "vmm/debug.h"
 #include "vmm/vmcall.h"
@@ -46,7 +45,6 @@ int reg_new_handler(vmm_t *vmm, vmcall_handler func, int token) {
     DPRINTF(4, "Reg. handler %u for vmm, total = %u\n", *hnum - 1, *hnum);
     return 0;
 }
-
 
 int vmm_vmcall_handler(vmm_vcpu_t *vcpu) {
     int res;

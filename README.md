@@ -26,7 +26,7 @@ A collection of libraries for working on seL4.
 * libsel4sync: a synchronisation library that uses notifications to construct basic locks.
 * libsel4test: a very basic test infrastructure library.
 * libsel4utils: a library OS - Commonly used stuff, actively maintained: implements threads, processes, elf loading, virtual memory management etc.
-* libsel4vka: an allocation interface for seL4. 
+* libsel4vka: an allocation interface for seL4.
 * libsel4vspace: a virtual memory management interface for seL4.
 
 License

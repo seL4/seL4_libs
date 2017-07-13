@@ -229,7 +229,7 @@ static void UNUSED dump_vector(const char *name, void *bitmap)
 {
     int vec;
     uint32_t *reg = bitmap;
-    
+
     printf("%s = 0x", name);
 
     for (vec = MAX_APIC_VECTOR - APIC_VECTORS_PER_REG;
@@ -239,7 +239,6 @@ static void UNUSED dump_vector(const char *name, void *bitmap)
 
     printf("\n");
 }
-
 
 static int find_highest_vector(void *bitmap)
 {
@@ -299,7 +298,7 @@ static inline void apic_set_irr(int vec, vmm_lapic_t *apic)
 static inline void apic_clear_irr(int vec, vmm_lapic_t *apic)
 {
     apic_clear_vector(vec, apic->regs + APIC_IRR);
-    
+
     vec = apic_search_irr(apic);
     apic->irr_pending = (vec != -1);
 }
@@ -352,7 +351,7 @@ static inline void apic_clear_isr(int vec, vmm_lapic_t *apic)
 int vmm_lapic_find_highest_irr(vmm_vcpu_t *vcpu)
 {
     int highest_irr;
-    
+
     highest_irr = apic_find_highest_irr(vcpu->lapic);
 
     return highest_irr;
@@ -491,20 +490,20 @@ int vmm_irq_delivery_to_apic(vmm_vcpu_t *src_vcpu, struct vmm_lapic_irq *irq, un
     int i, r = -1;
     vmm_lapic_t *src = src_vcpu->lapic;
     vmm_t *vmm = src_vcpu->vmm;
-    
+
     vmm_vcpu_t *lowest = NULL;
 
     if (irq->shorthand == APIC_DEST_SELF) {
         return vmm_apic_set_irq(src_vcpu, irq, dest_map);
     }
-    
+
     for (i = 0; i < vmm->num_vcpus; i++) {
         vmm_vcpu_t *dest_vcpu = &vmm->vcpus[i];
 
         if (!vmm_apic_hw_enabled(dest_vcpu->lapic)) {
             continue;
         }
-    
+
         if (!vmm_apic_match_dest(dest_vcpu, src, irq->shorthand,
                         irq->dest_id, irq->dest_mode)) {
             continue;
@@ -525,7 +524,7 @@ int vmm_irq_delivery_to_apic(vmm_vcpu_t *src_vcpu, struct vmm_lapic_irq *irq, un
             }
         }
     }
-    
+
     if (lowest) {
         r = vmm_apic_set_irq(lowest, irq, dest_map);
     }
@@ -600,13 +599,13 @@ static int __apic_accept_irq(vmm_vcpu_t *vcpu, int delivery_mode,
             vmm_start_ap_vcpu(vcpu, vector);
         }
         break;
-    
+
     case APIC_DM_EXTINT:
         /* extints are handled by vmm_apic_consume_extints */
         printf("extint should not come to this function. vcpu %d\n", vcpu->vcpu_id);
         assert(0);
         break;
-    
+
     default:
         printf("TODO: unsupported lapic ipi delivery mode %x", delivery_mode);
         assert(0);
@@ -783,7 +782,7 @@ static int apic_reg_write(vmm_vcpu_t *vcpu, uint32_t reg, uint32_t val)
     case APIC_TDCR:
         apic_set_reg(apic, APIC_TDCR, val);
         break;
-    
+
     default:
         ret = 1;
         break;
@@ -903,7 +902,7 @@ uint32_t vmm_lapic_get_base_msr(vmm_vcpu_t *vcpu)
 
     apic_debug(2, "Read from IA32_APIC_BASE MSR returns %08x on vcpu %d\n", value, vcpu->vcpu_id);
 
-    return value;   
+    return value;
 }
 
 void vmm_lapic_reset(vmm_vcpu_t *vcpu)
@@ -1015,7 +1014,7 @@ int vmm_apic_get_interrupt(vmm_vcpu_t *vcpu)
 {
     vmm_lapic_t *apic = vcpu->lapic;
     int vector = vmm_apic_has_interrupt(vcpu);
-    
+
     if (vector == 1) {
         return pic_get_interrupt(vcpu->vmm);
     } else if (vector == -1) {
@@ -1063,4 +1062,3 @@ int vmm_apic_local_deliver(vmm_vcpu_t *vcpu, int lvt_type)
     return 0;
 }
 #endif
-

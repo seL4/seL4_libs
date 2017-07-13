@@ -42,7 +42,6 @@
 seL4_timer_t *sel4platsupport_get_hpet(vspace_t *vspace, simple_t *simple, acpi_t *acpi,
                                        vka_t *vka, seL4_CPtr notification, int irq_number, int vector);
 
-
 /**
  * Initialise the hpet timer with provided frame and do all seL4 specific set up.
  *

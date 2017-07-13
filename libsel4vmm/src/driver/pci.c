@@ -155,4 +155,3 @@ int vmm_pci_io_port_out(void *cookie, unsigned int port_no, unsigned int size, u
     }
     return dev->iowrite(dev->cookie, reg + offset, size, value);
 }
-

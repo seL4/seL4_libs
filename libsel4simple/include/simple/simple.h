@@ -24,7 +24,6 @@
 #include <stdbool.h>
 #include <vka/cspacepath_t.h>
 
-
 /**
  * Get the cap to the physical frame of memory and put it at specified location
  *
@@ -96,7 +95,6 @@ typedef int (*simple_get_cap_count_fn)(void *data);
  * @param the nth starting at 0
 */
 typedef seL4_CPtr (*simple_get_nth_cap_fn)(void *data, int n);
-
 
 /**
  * Get the cap to init caps with numbering based on bootinfo.h
@@ -240,7 +238,6 @@ typedef struct simple_t {
     arch_simple_t arch_simple;
 } simple_t;
 
-
 static inline void *
 simple_get_frame_info(simple_t *simple, void *paddr, int size_bits, seL4_CPtr *frame_cap, seL4_Word *ut_offset)
 {
@@ -256,7 +253,7 @@ simple_get_frame_info(simple_t *simple, void *paddr, int size_bits, seL4_CPtr *f
     return simple->frame_info(simple->data, paddr, size_bits, frame_cap, ut_offset);
 }
 
-static inline seL4_Error 
+static inline seL4_Error
 simple_get_frame_cap(simple_t *simple, void *paddr, int size_bits, cspacepath_t *path)
 {
     if (!simple) {
@@ -313,7 +310,7 @@ simple_get_IRQ_handler(simple_t *simple, int irq, cspacepath_t path)
     return simple->arch_simple.irq(simple->data, irq, path.root, path.capPtr, path.capDepth);
 }
 
-static inline seL4_Error 
+static inline seL4_Error
 simple_ASIDPool_assign(simple_t *simple, seL4_CPtr vspace)
 {
     if (!simple) {
@@ -328,8 +325,7 @@ simple_ASIDPool_assign(simple_t *simple, seL4_CPtr vspace)
     return simple->ASID_assign(simple->data, vspace);
 }
 
-
-static inline 
+static inline
 seL4_CPtr simple_get_IOPort_cap(simple_t *simple, uint16_t start_port, uint16_t end_port)
 {
     if (!simple) {
@@ -340,7 +336,7 @@ seL4_CPtr simple_get_IOPort_cap(simple_t *simple, uint16_t start_port, uint16_t 
     return arch_simple_get_IOPort_cap(&simple->arch_simple, start_port, end_port);
 }
 
-static inline int 
+static inline int
 simple_get_cap_count(simple_t *simple)
 {
     if (!simple) {
@@ -353,7 +349,7 @@ simple_get_cap_count(simple_t *simple)
     return simple->cap_count(simple->data);
 }
 
-static inline seL4_CPtr 
+static inline seL4_CPtr
 simple_get_nth_cap(simple_t *simple, int n)
 {
     if (!simple) {
@@ -406,7 +402,7 @@ simple_get_cnode(simple_t *simple)
     return simple_init_cap(simple, seL4_CapInitThreadCNode);
 }
 
-static inline seL4_CPtr 
+static inline seL4_CPtr
 simple_get_tcb(simple_t *simple)
 {
     return simple_init_cap(simple, seL4_CapInitThreadTCB);
@@ -418,19 +414,19 @@ simple_get_pd(simple_t *simple)
     return simple_init_cap(simple, seL4_CapInitThreadPD);
 }
 
-static inline seL4_CPtr 
+static inline seL4_CPtr
 simple_get_irq_ctrl(simple_t *simple)
 {
     return simple_init_cap(simple, seL4_CapIRQControl);
 }
 
-static inline seL4_CPtr 
+static inline seL4_CPtr
 simple_get_init_cap(simple_t *simple, seL4_CPtr cap)
 {
     return simple_init_cap(simple, cap);
 }
 
-static inline int 
+static inline int
 simple_get_untyped_count(simple_t *simple)
 {
     if (!simple) {
@@ -460,7 +456,7 @@ simple_get_nth_untyped(simple_t *simple, int n, size_t *size_bits, uintptr_t *pa
     return simple->nth_untyped(simple->data, n, size_bits, paddr, device);
 }
 
-static inline int 
+static inline int
 simple_get_userimage_count(simple_t *simple)
 {
     if (!simple) {
@@ -489,7 +485,7 @@ simple_get_nth_userimage(simple_t *simple, int n)
     return simple->nth_userimage(simple->data, n);
 }
 
-static inline int 
+static inline int
 simple_get_core_count(simple_t *simple)
 {
     if (!simple) {
@@ -505,7 +501,7 @@ simple_get_core_count(simple_t *simple)
 }
 
 #ifdef CONFIG_IOMMU
-static inline seL4_CPtr 
+static inline seL4_CPtr
 simple_get_iospace(simple_t *simple, uint16_t domainID, uint16_t deviceID, cspacepath_t *path)
 {
     if (!simple) {
@@ -565,7 +561,7 @@ simple_get_nth_iospace_cap(simple_t *simple, int n)
 }
 #endif
 
-static inline void 
+static inline void
 simple_print(simple_t *simple)
 {
     if (!simple) {

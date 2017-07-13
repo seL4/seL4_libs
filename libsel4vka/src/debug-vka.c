@@ -239,7 +239,6 @@ static int utspace_alloc_maybe_device(void *data, const cspacepath_t *dest, seL4
     return result;
 }
 
-
 static int utspace_alloc_at(void *data, const cspacepath_t *dest, seL4_Word type,
                             seL4_Word size_bits, uintptr_t paddr, seL4_Word *cookie)
 {

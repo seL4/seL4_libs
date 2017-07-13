@@ -72,7 +72,6 @@ kobject_get_size(kobject_t type, seL4_Word objectSize)
     }
 }
 
-
 static inline seL4_Word
 kobject_get_type(kobject_t type, seL4_Word objectSize)
 {
@@ -98,6 +97,5 @@ kobject_get_type(kobject_t type, seL4_Word objectSize)
         return arch_kobject_get_type(type, objectSize);
     }
 }
-
 
 #endif /* _KOBJECT_T_H_ */

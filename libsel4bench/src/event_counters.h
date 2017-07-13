@@ -10,10 +10,8 @@
  * @TAG(DATA61_BSD)
  */
 
-
 #include <sel4/types.h>
 
 #define NAME_EVENT(id, name) EVENT_COUNTER_FORMAT(SEL4BENCH_EVENT_##id, name)
 
 const char* sel4bench_arch_get_counter_description(counter_t counter);
-

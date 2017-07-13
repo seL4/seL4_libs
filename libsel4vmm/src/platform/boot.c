@@ -139,4 +139,3 @@ int vmm_init_guest_multi(vmm_t *vmm, int priority, int num_vcpus) {
     vmm->done_guest_init = 1;
     return 0;
 }
-

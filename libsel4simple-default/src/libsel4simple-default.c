@@ -256,4 +256,3 @@ void simple_default_init_bootinfo(simple_t *simple, seL4_BootInfo *bi) {
     simple->extended_bootinfo = &simple_default_get_extended_bootinfo;
     simple_default_init_arch_simple(&simple->arch_simple, NULL);
 }
-

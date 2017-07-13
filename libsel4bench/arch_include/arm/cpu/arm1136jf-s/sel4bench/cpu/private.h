@@ -24,14 +24,12 @@
 //functions that will be called through pointers, but need to be fast
 #define KERNELFN __attribute__((noinline, flatten))
 
-
 //counters and related constants
 #define SEL4BENCH_ARM1136_NUM_COUNTERS 2
 
 #define SEL4BENCH_ARM1136_COUNTER_CCNT "1"
 #define SEL4BENCH_ARM1136_COUNTER_PMN0 "2"
 #define SEL4BENCH_ARM1136_COUNTER_PMN1 "3"
-
 
 /*
  * PMNC: ARM1136 Performance Monitor Control Register

@@ -26,4 +26,3 @@ HDRFILES += $(wildcard $(SOURCE_DIR)/arch_include/$(ARCH)/*)
 HDRFILES += $(wildcard $(SOURCE_DIR)/sel4_arch_include/$(SEL4_ARCH)/*)
 
 include $(SEL4_COMMON)/common.mk
-

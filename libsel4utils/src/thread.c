@@ -81,7 +81,7 @@ sel4utils_configure_thread_config(vka_t *vka, vspace_t *parent, vspace_t *alloc,
 
     seL4_CapData_t null_cap_data = {{0}};
     error = seL4_TCB_Configure(res->tcb.cptr, config.fault_endpoint,
-                               seL4_PrioProps_new(config.priority, config.mcp), config.cspace,
+                               seL4_PrioProps_new(config.mcp, config.priority), config.cspace,
                                config.cspace_root_data, vspace_get_root(alloc), null_cap_data, res->ipc_buffer_addr, res->ipc_buffer);
 
     if (error != seL4_NoError) {

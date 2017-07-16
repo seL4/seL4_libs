@@ -10,8 +10,7 @@
  * @TAG(DATA61_BSD)
  */
 
-#ifndef _SEL4_PLATSUPPORT_IO_H
-#define _SEL4_PLATSUPPORT_IO_H
+#pragma once
 
 #include <vka/vka.h>
 #include <vspace/vspace.h>
@@ -52,5 +51,3 @@ int sel4platsupport_new_malloc_ops(ps_malloc_ops_t *ops)
  * @return returns 0 on success
  */
 int sel4platsupport_new_io_ops(vspace_t vspace, vka_t vka, ps_io_ops_t *io_ops);
-
-#endif /* _SEL4_PLATSUPPORT_IO_H */

@@ -14,18 +14,7 @@
 
 #include <stdint.h>
 #include <simple/simple.h>
-
-typedef enum pmem_type {
-    PMEM_TYPE_RAM,
-    PMEM_TYPE_UNKNOWN,
-    PMEM_NUM_REGION_TYPES,
-} pmem_type_t;
-
-typedef struct pmem_region {
-    pmem_type_t type;
-    uint64_t base_addr;
-    uint64_t length;
-} pmem_region_t;
+#include <platsupport/pmem.h>
 
 /**
  * Returns number of physical memory regions.  Each platform has a specific implementation

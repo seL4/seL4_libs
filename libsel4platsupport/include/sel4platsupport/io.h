@@ -38,7 +38,7 @@ int sel4platsupport_new_io_mapper(vspace_t vspace, vka_t vka, ps_io_mapper_t *io
  * @param ops Interface to fill in
  * @return    returns 0 on success
  */
-int sel4platsupport_new_malloc_ops(ps_malloc_ops_t *ops)
+int sel4platsupport_new_malloc_ops(ps_malloc_ops_t *ops);
 
 /**
  * Creates a new implementation of the platsupport io_ops interface using a

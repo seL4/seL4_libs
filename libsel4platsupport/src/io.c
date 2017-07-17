@@ -270,41 +270,42 @@ sel4platsupport_new_io_mapper(vspace_t vspace, vka_t vka, ps_io_mapper_t *io_map
 }
 
 static int
-sel4platsupport_malloc(void *cookie, size_t size, void *ptr)
+sel4platsupport_malloc(UNUSED void *cookie, size_t size, void **ptr)
 {
     assert(ptr != NULL);
     *ptr = malloc(size);
-    if (ptr == NULL) {
+    if (*ptr == NULL) {
         return ENOMEM;
     }
     return 0;
 }
 
 static int
-sel4platuspport_calloc(void *cookie, size_t nmemb, size_t size, void *ptr)
+sel4platsupport_calloc(UNUSED void *cookie, size_t nmemb, size_t size, void **ptr)
 {
     assert(ptr != NULL);
     *ptr = calloc(nmemb, size);
-    if (ptr == NULL) {
+    if (*ptr == NULL) {
         return ENOMEM;
     }
     return 0;
 }
 
 static int
-sel4platsupport_free(void *cookie, size_t size, void *ptr)
+sel4platsupport_free(UNUSED void *cookie, UNUSED size_t size, void *ptr)
 {
     free(ptr);
     return 0;
 }
 
-void
+int
 sel4platsupport_new_malloc_ops(ps_malloc_ops_t *ops)
 {
     ops->malloc = sel4platsupport_malloc;
-    ops->calloc = sel4platuspport_calloc;
+    ops->calloc = sel4platsupport_calloc;
     ops->free = sel4platsupport_free;
     ops->cookie = NULL;
+    return 0;
 }
 
 int
@@ -319,6 +320,6 @@ sel4platsupport_new_io_ops(vspace_t vspace, vka_t vka, ps_io_ops_t *io_ops)
     mux_sys_init(io_ops, &io_ops->mux_sys);
 #endif
 
-    sel4platsupport_new_malloc_ops(&op_ops->malloc_ops);
+    sel4platsupport_new_malloc_ops(&io_ops->malloc_ops);
     return err;
 }

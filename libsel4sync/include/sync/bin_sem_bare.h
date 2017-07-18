@@ -22,7 +22,7 @@
 #include <assert.h>
 #include <sel4/sel4.h>
 #include <stddef.h>
-#include <sync/atomic.h>
+#include <platsupport/sync/atomic.h>
 
 static inline int sync_bin_sem_bare_wait(seL4_CPtr notification, volatile int *value) {
     int oldval;

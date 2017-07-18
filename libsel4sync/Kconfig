@@ -12,7 +12,7 @@
 
 config LIB_SEL4_SYNC
     bool "libsel4sync"
-    depends on HAVE_LIB_SEL4 && HAVE_LIBC && HAVE_LIB_SEL4_VKA && HAVE_LIB_UTILS
+    depends on HAVE_LIB_SEL4 && HAVE_LIBC && HAVE_LIB_SEL4_VKA && HAVE_LIB_UTILS && HAVE_LIB_PLATSUPPORT
     select HAVE_SEL4_LIBS
     select HAVE_LIB_SEL4_SYNC
     default y

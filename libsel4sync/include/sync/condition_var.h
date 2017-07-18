@@ -16,7 +16,7 @@
 #include <sel4/sel4.h>
 #include <vka/vka.h>
 #include <vka/object.h>
-#include <sync/atomic.h>
+#include <platsupport/sync/atomic.h>
 #include <stdbool.h>
 
 typedef struct {

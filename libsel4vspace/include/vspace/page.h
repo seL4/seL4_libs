@@ -37,4 +37,17 @@ sel4_valid_size_bits(size_t size_bits)
     return false;
 }
 
+static inline int
+sel4_page_size_bits_for_memory_region(size_t size_bytes) {
+    int frame_size_index = 0;
+    /* find the largest reasonable frame size */
+    while (frame_size_index + 1 < SEL4_NUM_PAGE_SIZES) {
+        if (size_bytes >> sel4_page_sizes[frame_size_index + 1] == 0) {
+            break;
+        }
+        frame_size_index++;
+    }
+    return sel4_page_sizes[frame_size_index];
+}
+
 #endif /* _VSPACE_PAGE_H_ */

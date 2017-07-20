@@ -12,54 +12,21 @@
 #include <autoconf.h>
 #include <sel4platsupport/device.h>
 #include <sel4platsupport/platsupport.h>
-#include <vka/capops.h>
 #include <utils/util.h>
+#include <platsupport/irq.h>
 
-seL4_Error
-sel4platsupport_copy_msi_cap(vka_t *vka, simple_t *simple, seL4_Word irq_number, cspacepath_t *dest)
+int sel4platsupport_arch_copy_irq_cap(arch_simple_t *arch_simple, ps_irq_t *irq, cspacepath_t *dest)
 {
-    seL4_CPtr irq;
-
-    /* allocate a cslot for the irq cap */
-    int error = vka_cspace_alloc(vka, &irq);
-    if (error != 0) {
-        ZF_LOGE("Failed to allocate cslot for msi\n");
-        return error;
+    switch (irq->type) {
+        case PS_MSI:
+            return arch_simple_get_msi(arch_simple, *dest, irq->msi.pci_bus, irq->msi.pci_dev,
+                                       irq->msi.pci_func, irq->msi.handle, irq->msi.vector);
+        case PS_IOAPIC:
+            return arch_simple_get_ioapic(arch_simple, *dest, irq->ioapic.ioapic, irq->ioapic.pin,
+                                          irq->ioapic.level, irq->ioapic.polarity,
+                                          irq->ioapic.vector);
+        default:
+            ZF_LOGE("unknown irq type");
+            return -1;
     }
-
-    vka_cspace_make_path(vka, irq, dest);
-
-    error = arch_simple_get_msi(&simple->arch_simple, *dest, 0, 0, 0, 0, irq_number);
-    if  (error != seL4_NoError) {
-        ZF_LOGE("Failed to get cap to msi irq_number %zu\n", irq_number);
-        vka_cspace_free(vka, irq);
-        return error;
-    }
-
-    return seL4_NoError;
-}
-
-seL4_Error
-sel4platsupport_copy_ioapic_cap(vka_t *vka, simple_t *simple, seL4_Word ioapic, seL4_Word pin, seL4_Word level,
-                                seL4_Word polarity, seL4_Word vector, cspacepath_t *dest)
-{
-    seL4_CPtr irq;
-
-    /* allocate a cslot for the irq cap */
-    int error = vka_cspace_alloc(vka, &irq);
-    if (error != 0) {
-        ZF_LOGE("Failed to allocate cslot for msi");
-        return error;
-    }
-
-    vka_cspace_make_path(vka, irq, dest);
-
-    error = arch_simple_get_ioapic(&simple->arch_simple, *dest, ioapic, pin, level, polarity, vector);
-    if  (error != seL4_NoError) {
-        ZF_LOGE("Failed to get requested irq cap");
-        vka_cspace_free(vka, irq);
-        return error;
-    }
-
-    return seL4_NoError;
 }

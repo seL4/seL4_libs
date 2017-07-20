@@ -13,8 +13,9 @@
 #pragma once
 
 #include <sel4/sel4.h>
-#include <sel4platsupport/arch/device.h>
 #include <simple/simple.h>
+#include <simple/arch/simple.h>
+#include <sel4platsupport/irq.h>
 #include <vka/vka.h>
 #include <vka/object.h>
 #include <vspace/vspace.h>
@@ -48,9 +49,19 @@ void *sel4platsupport_map_frame_at(vka_t *vka, vspace_t *vspace, uintptr_t paddr
 
  * @param vka to allocate slot with
  * @param simple to get the cap from
- * @param irq_number to get the cap to
+ * @param irq    details of the irq
  * @param[out] dest empty path struct to return path to irq in
  * @return 0 on success
  */
-seL4_Error sel4platsupport_copy_irq_cap(vka_t *vka, simple_t *simple, seL4_Word irq,
+seL4_Error sel4platsupport_copy_irq_cap(vka_t *vka, simple_t *simple, ps_irq_t *irq,
                                        cspacepath_t *dest);
+
+/*
+ * Copy an irq cap specific to this architecture into dest.
+ *
+ * @param arch_simple to use to get the cap
+ * @param irq         msi or ioapic irq description
+ * @param dest        destination slot (already allocated)
+ * @return            0 on sucess.
+ */
+int sel4platsupport_arch_copy_irq_cap(arch_simple_t *arch_simple, ps_irq_t *irq, cspacepath_t *dest);

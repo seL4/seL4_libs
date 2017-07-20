@@ -10,7 +10,12 @@
  * @TAG(DATA61_BSD)
  */
 
-#ifndef __SEL4PLATSUPPORT_ARCH_DEVICE_H__
-#define __SEL4PLATSUPPORT_ARCH_DEVICE_H__
+#include <sel4platsupport/device.h>
+#include <utils/util.h>
 
-#endif /* __SEL4PLATSUPPORT_ARCH_DEVICE_H__ */
+int sel4platsupport_arch_copy_irq_cap(UNUSED arch_simple_t *arch_simple, UNUSED ps_irq_t *irq,
+        UNUSED cspacepath_t *dest)
+{
+    ZF_LOGE("unknown irq type");
+    return -1;
+}

@@ -11,33 +11,37 @@
  */
 #include <autoconf.h>
 #include <sel4platsupport/device.h>
+#include <sel4platsupport/irq.h>
 #include <sel4platsupport/platsupport.h>
 #include <stddef.h>
 #include <vka/capops.h>
 #include <utils/util.h>
 
 seL4_Error
-sel4platsupport_copy_irq_cap(vka_t *vka, simple_t *simple, seL4_Word irq_number, cspacepath_t *dest)
+sel4platsupport_copy_irq_cap(vka_t *vka, simple_t *simple, ps_irq_t *irq, cspacepath_t *dest)
 {
-    seL4_CPtr irq;
+    seL4_CPtr cap;
 
     /* allocate a cslot for the irq cap */
-    int error = vka_cspace_alloc(vka, &irq);
+    int error = vka_cspace_alloc(vka, &cap);
     if (error != 0) {
         ZF_LOGE("Failed to allocate cslot for irq");
         return error;
     }
 
-    vka_cspace_make_path(vka, irq, dest);
-
-    error = simple_get_IRQ_handler(simple, irq_number, *dest);
-    if  (error != seL4_NoError) {
-        ZF_LOGE("Failed to get cap to irq_number %zu", irq_number);
-        vka_cspace_free(vka, irq);
-        return error;
+    vka_cspace_make_path(vka, cap, dest);
+    assert(irq->type != PS_NONE);
+    if (irq->type == PS_INTERRUPT) {
+        error = simple_get_IRQ_handler(simple, irq->irq.number, *dest);
+    } else {
+        error = sel4platsupport_arch_copy_irq_cap(&simple->arch_simple, irq, dest);
     }
 
-    return seL4_NoError;
+    if  (error != seL4_NoError) {
+        ZF_LOGE("Failed to get cap for irq");
+        vka_cspace_free(vka, cap);
+    }
+    return error;
 }
 
 seL4_Error

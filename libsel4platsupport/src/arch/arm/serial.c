@@ -9,7 +9,7 @@
  *
  * @TAG(DATA61_BSD)
  */
-
+#include <platsupport/irq.h>
 #include <sel4platsupport/serial.h>
 #include <sel4platsupport/device.h>
 
@@ -18,8 +18,13 @@ sel4platsupport_arch_init_default_serial_caps(vka_t *vka, UNUSED vspace_t *vspac
 {
     int error;
 
+    ps_irq_t irq = {
+        .type = PS_INTERRUPT,
+        .irq.number = DEFAULT_SERIAL_INTERRUPT
+    };
+
     /* Obtain IRQ cap for PS default serial. */
-    error = sel4platsupport_copy_irq_cap(vka, simple, DEFAULT_SERIAL_INTERRUPT,
+    error = sel4platsupport_copy_irq_cap(vka, simple, &irq,
                                            &serial_objects->serial_irq_path);
     if (error) {
         ZF_LOGF("Failed to obtain PS default serial IRQ cap.");

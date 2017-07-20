@@ -15,6 +15,12 @@
 #include <stdint.h>
 #include <simple/simple.h>
 #include <platsupport/pmem.h>
+#include <vka/object.h>
+
+typedef struct {
+    pmem_region_t region;
+    vka_object_t obj;
+} sel4ps_pmem_t;
 
 /**
  * Returns number of physical memory regions.  Each platform has a specific implementation

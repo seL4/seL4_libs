@@ -10,28 +10,47 @@
  * @TAG(DATA61_BSD)
  */
 
-#ifndef _SEL4_PLATSUPPORT_TIMER_H
-#define _SEL4_PLATSUPPORT_TIMER_H
+#pragma once
 
-#include <sel4platsupport/timer_types.h>
-#include <sel4platsupport/plat/timer.h>
-#include <sel4platsupport/arch/timer.h>
-
+#include <sel4platsupport/pmem.h>
 #include <platsupport/timer.h>
+#include <platsupport/ltimer.h>
+#include <sel4platsupport/irq.h>
 #include <simple/simple.h>
 #include <vka/vka.h>
 #include <vka/object.h>
 #include <vspace/vspace.h>
 
+#define MAX_IRQS 4
+#define MAX_OBJS 4
+
+typedef struct seL4_timer seL4_timer_t;
+
+typedef void (*handle_irq_fn_t)(seL4_timer_t *timer, uint32_t irq);
+typedef void (*destroy_fn_t)(seL4_timer_t *timer, vka_t *vka, vspace_t *vspace);
+
 typedef struct timer_objects {
-    /* Path to platsupport default timer's IRQ cap. */
-    cspacepath_t timer_irq_path;
-    /* VKA object for platsupport default timer's device-untyped. */
-    vka_object_t timer_dev_ut_obj;
-    /* physical address of the timeout timer */
-    uintptr_t timer_paddr;
-    arch_timer_objects_t arch_timer_objects;
+    /* this struct is copied using c's struct deep copy semantics.
+     * avoid adding pointers to it */
+    size_t nirqs;
+    sel4ps_irq_t irqs[MAX_IRQS];
+    size_t nobjs;
+    sel4ps_pmem_t objs[MAX_OBJS];
 } timer_objects_t;
+
+struct seL4_timer {
+    /* os independent timer interface */
+    ltimer_t ltimer;
+
+    /* objects allocated for this timer */
+    timer_objects_t to;
+
+    /* sel4 specific functions to call to deal with timer */
+    handle_irq_fn_t handle_irq;
+
+    /* destroy this timer, it will no longer be valid */
+    destroy_fn_t destroy;
+};
 
 /**
  * Creates caps required for calling sel4platsupport_get_default_timer and stores them
@@ -48,50 +67,57 @@ typedef struct timer_objects {
  * @return               0 on success, otherwise failure.
  */
 int sel4platsupport_init_default_timer_caps(vka_t *vka, vspace_t *vspace, simple_t *simple, timer_objects_t *timer_objects);
-int sel4platsupport_arch_init_default_timer_caps(vka_t *vka, vspace_t *vspace, simple_t *simple, timer_objects_t *timer_objects);
-int sel4platsupport_plat_init_default_timer_caps(vka_t *vka, vspace_t *vspace, simple_t *simple, timer_objects_t *timer_objects);
-
-static inline void
-sel4_timer_handle_irq(seL4_timer_t *timer, uint32_t irq)
-{
-    timer->handle_irq(timer, irq);
-}
-
-static inline void
-sel4_timer_destroy(seL4_timer_t *timer, vka_t *vka, vspace_t *vspace)
-{
-    if (timer->destroy == NULL) {
-        ZF_LOGF("This timer doesn't support destroy!");
-    }
-
-    timer->destroy(timer, vka, vspace);
-}
-
-/* This is a helper function that assumes a timer has a single IRQ
- * finds it and handles it */
-static inline void
-sel4_timer_handle_single_irq(seL4_timer_t *timer)
-{
-    assert(timer != NULL);
-    assert(timer->timer->properties.irqs == 1);
-    sel4_timer_handle_irq(timer, timer_get_nth_irq(timer->timer, 0));
-}
 
 /*
- * Get the default timer for this platform.
+ * Initialise the default timer for this platform and do all of the seL4 related work.
  *
- * The default timer, at minimum, supports setting periodic timeouts for small intervals.
+ * After this operation is complete, the irqs from the ltimer will be delivered to the
+ * provided notification object with badges of BIT(seL4_BadgeBits - 1) - n where n is the index
+ * of the irq in the default ltimer.
  *
- * @param vka an initialised vka implementation that can allocate the physical
- *        address returned by sel4platsupport_get_default_timer_paddr.
- * @param notification endpoint capability for irqs to be delivered to.
- * @return initialised timer.
+ * @param vka          an initialised vka implementation that can allocate the physical
+ *                     addresses (if any) required by the ltimer.
+ * @param vspace       an initialised vspace for manging virtual memory.
+ * @param simple       for getting irq capabilities for the ltimer irqs.
+ * @param ntfn         notification object capability for irqs to be delivered to.
+ * @param timer        a timer structure to initialise.
+ * @return             0 on success.
+ * C
  */
-seL4_timer_t * sel4platsupport_get_default_timer(vka_t *vka, vspace_t *vspace, simple_t *simple,
-                                                 seL4_CPtr notification);
+int sel4platsupport_init_default_timer(vka_t *vka, vspace_t *vspace, simple_t *simple,
+                                seL4_CPtr notification, seL4_timer_t *timer);
+/*
+ * Initialise an seL4_timer with irqs from provided timer objects. As per sel4platsupport_init_timer,
+ * timer_objects are provided and the user is expected to initialise the ltimer after calling this function
+ * (to avoid unacked irqs due to irq caps not being set up).
+ *
+ * This function just does the seL4 parts of the timer init.
+ *
+ *
+ * @param vka          an initialised vka implementation that can allocate the physical
+ *                     address returned by sel4platsupport_get_default_timer_paddr.
+ * @param simple       for getting irq capabilities for the ltimer irqs.
+ * @param ntfn         notification object capability for irqs to be delivered to.
+ * @param timer        a timer structure to populate.
+ * @param objects      the timer objects that this timer needs to initialise.
+ * @return             0 on success.
+ */
+int sel4platsupport_init_timer_irqs(vka_t *vka, simple_t *simple, seL4_CPtr ntfn,
+        seL4_timer_t *timer, timer_objects_t *objects);
 
 /*
- * @return the physical address for the default timer.
+ * Handle a timer irq for this timer.
+ *
+ * @param timer       initialised timer.
+ * @param badge       badge recieved on the notification object this timer was initialised with.
  */
-uintptr_t sel4platsupport_get_default_timer_paddr(vka_t *vka, vspace_t *vspace);
-#endif /* _SEL4_PLATSUPPORT_TIMER_H */
+void sel4platsupport_handle_timer_irq(seL4_timer_t *timer, seL4_Word badge);
+
+/*
+ * Destroy the timer, freeing any resources allocated during initialisation.
+ *
+ * @param timer       initialised timer.
+ * @param vka         vka used to initialise the timer.
+ *
+ */
+void sel4platsupport_destroy_timer(seL4_timer_t *timer, vka_t *vka);

@@ -159,6 +159,12 @@ int sel4platsupport_init_default_timer(vka_t *vka, vspace_t *vspace, simple_t *s
 
     if (!error) {
         size_t nirqs = get_nirqs(&timer->ltimer);
+        for (size_t i = 0; i < nirqs; i++) {
+            error = ltimer_get_nth_irq(&timer->ltimer, i, &timer->to.irqs[i].irq);
+            if (error) {
+                return error;
+            }
+        }
         error = init_timer_internal(vka, simple, ntfn, timer, nirqs);
     }
 

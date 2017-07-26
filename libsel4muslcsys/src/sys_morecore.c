@@ -225,7 +225,7 @@ sys_mmap_impl_dynamic(void *addr, size_t length, int prot, int flags, int fd, of
     if (flags & MAP_ANONYMOUS) {
         /* determine how many pages we need */
         void *placement_vaddr;
-        uint32_t pages = ROUND_UP(length, PAGE_SIZE_4K) / PAGE_SIZE_4K;
+        uint32_t pages = BYTES_TO_PAGES(length);
 
         if (addr != NULL) {
             placement_vaddr = addr;

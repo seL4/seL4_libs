@@ -217,9 +217,9 @@ sys_mmap_impl_static(void *addr, size_t length, int prot, int flags, int fd, off
 static long
 sys_mmap_impl_dynamic(void *addr, size_t length, int prot, int flags, int fd, off_t offset)
 {
-    if (!muslc_this_vspace || !muslc_brk_reservation.res || !muslc_brk_reservation_start) {
-        ZF_LOGE("Need to assign vspace for sys_brk to work!\n");
-        assert(muslc_this_vspace && muslc_brk_reservation.res && muslc_brk_reservation_start);
+    if (!muslc_this_vspace) {
+        ZF_LOGE("Need to assign vspace for mmap to work!\n");
+        assert(muslc_this_vspace);
         return 0;
     }
     if (flags & MAP_ANONYMOUS) {

@@ -224,28 +224,9 @@ sys_mmap_impl_dynamic(void *addr, size_t length, int prot, int flags, int fd, of
     }
     if (flags & MAP_ANONYMOUS) {
         /* determine how many pages we need */
-        void *placement_vaddr;
         uint32_t pages = BYTES_TO_PAGES(length);
-
-        if (addr != NULL) {
-            placement_vaddr = addr;
-        } else {
-            if (brk_start == 0) {
-                brk_start = (uintptr_t)muslc_brk_reservation_start;
-            }
-            placement_vaddr = brk_start;
-        }
-
-        int error = vspace_new_pages_at_vaddr(muslc_this_vspace,
-                                              placement_vaddr,
-                                              pages, seL4_PageBits,
-                                              muslc_brk_reservation);
-        if (error != 0) {
-            return (long)NULL;
-        }
-
-        brk_start += pages * PAGE_SIZE_4K;
-        return vaddr;
+        void *ret = vspace_new_pages(muslc_this_vspace, seL4_AllRights, pages, seL4_PageBits);
+        return (long)ret;
     }
     assert(!"not implemented");
     return -ENOMEM;

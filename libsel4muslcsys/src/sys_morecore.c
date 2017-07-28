@@ -224,7 +224,7 @@ sys_mmap_impl_dynamic(void *addr, size_t length, int prot, int flags, int fd, of
     }
     if (flags & MAP_ANONYMOUS) {
         /* determine how many pages we need */
-        uint32_t pages = BYTES_TO_PAGES(length);
+        uint32_t pages = BYTES_TO_4K_PAGES(length);
         void *ret = vspace_new_pages(muslc_this_vspace, seL4_AllRights, pages, seL4_PageBits);
         return (long)ret;
     }

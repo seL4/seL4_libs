@@ -631,3 +631,19 @@ int allocman_configure_mspace_reserve(allocman_t *alloc, struct allocman_mspace_
     _end_operation(alloc, root);
     return 0;
 }
+
+
+int allocman_add_untypeds_from_timer_objects(allocman_t *alloc, timer_objects_t *to) {
+    int error = 0;
+    for (size_t i = 0; i < to->nobjs; i++) {
+        cspacepath_t path = allocman_cspace_make_path(alloc, to->objs[i].obj.cptr);
+        int error = allocman_utspace_add_uts(alloc, 1, &path, &to->objs[i].obj.size_bits,
+                                        (uintptr_t *) &to->objs[i].region.base_addr,
+                                        ALLOCMAN_UT_DEV);
+        if (error) {
+            ZF_LOGE(error, "Failed to add ut to allocman");
+            return error;
+        }
+    }
+    return 0;
+}

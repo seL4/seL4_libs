@@ -243,3 +243,32 @@ int sel4platsupport_init_default_timer_caps(vka_t *vka, vspace_t *vspace, simple
 
     return error;
 }
+
+seL4_CPtr sel4platsupport_timer_objs_get_irq_cap(timer_objects_t *to, int id, irq_type_t type) {
+    for (size_t i = 0; i < to->nirqs; i++) {
+        if (to->irqs[i].irq.type == type) {
+            switch (type) {
+            case PS_MSI:
+                if (to->irqs[i].irq.msi.vector == id) {
+                    return to->irqs[i].handler_path.capPtr;
+                }
+                break;
+            case PS_IOAPIC:
+                if (to->irqs[i].irq.ioapic.vector == id) {
+                    return to->irqs[i].handler_path.capPtr;
+                }
+                break;
+            case PS_INTERRUPT:
+                if (to->irqs[i].irq.irq.number == id) {
+                    return to->irqs[i].handler_path.capPtr;
+                }
+                break;
+            case PS_NONE:
+                ZF_LOGE("Invalid irq type");
+            }
+        }
+    }
+
+    ZF_LOGE("Could not find irq");
+    return seL4_CapNull;
+}

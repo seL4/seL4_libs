@@ -688,3 +688,27 @@ sel4utils_process_init_cap(void *data, seL4_CPtr cap)
         return seL4_CapNull;
     }
 };
+
+int
+sel4utils_copy_timer_caps_to_process(timer_objects_t *to, timer_objects_t *from, vka_t *vka, sel4utils_process_t *process)
+{
+    if (to == NULL || from == NULL || vka == NULL || process == NULL) {
+        ZF_LOGE("Invalid argument (is null): to: %p, from: %p, vka: %p, process: %p", to, from, vka, process);
+        return EINVAL;
+    }
+    /* struct deep copy */
+     *to = *from;
+
+    /* copy irq caps */
+    for (size_t i = 0; i < to->nirqs; i++) {
+        to->irqs[i].handler_path.capPtr = sel4utils_copy_cap_to_process(process,
+                vka, from->irqs[i].handler_path.capPtr);
+    }
+
+    /* copy pmem ut frame caps */
+    for (size_t i = 0; i < to->nobjs; i++) {
+        to->objs[i].obj.cptr = sel4utils_copy_cap_to_process(process,
+                vka, from->objs[i].obj.cptr);
+    }
+    return 0;
+}

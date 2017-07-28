@@ -121,3 +121,15 @@ void sel4platsupport_handle_timer_irq(seL4_timer_t *timer, seL4_Word badge);
  *
  */
 void sel4platsupport_destroy_timer(seL4_timer_t *timer, vka_t *vka);
+
+/*
+ * Helper function for getting the nth irq cap out of the timer_objects struct if its type is
+ * known.  This is often used for initialising an arch_simple interface.
+ *
+ * @param to       timer_objects struct containing irq caps.
+ * @param id       index of irq in the struct.
+ * @param type     Interrupt type
+ *
+ * @return         IRQ cap on success, otherwise seL4_CapNull on failure.
+ */
+seL4_CPtr sel4platsupport_timer_objs_get_irq_cap(timer_objects_t *to, int id, irq_type_t type);

@@ -21,6 +21,7 @@
 #include <sel4utils/process_config.h>
 #include <sel4utils/vspace.h>
 #include <sel4utils/elf.h>
+#include <sel4platsupport/timer.h>
 
 #define WORD_STRING_SIZE ((CONFIG_WORD_SIZE / 3) + 1)
 
@@ -270,4 +271,15 @@ void sel4utils_create_word_args(char strings[][WORD_STRING_SIZE], char *argv[], 
  */
 seL4_CPtr sel4utils_process_init_cap(void *data, seL4_CPtr cap);
 
+/*
+ * Helper function for copying timer IRQs and Device untyped caps into another process.
+ *
+ * @param to        struct to store new cap info
+ * @param from      struct containing current cap info
+ * @param vka       vka to create cnodes
+ * @param process   target process to copy caps too
+ *
+ * @return 0 on success.
+ */
+int sel4utils_copy_timer_caps_to_process(timer_objects_t *to, timer_objects_t *from, vka_t *vka, sel4utils_process_t *process);
 #endif /* SEL4UTILS_PROCESS_H */

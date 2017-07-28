@@ -14,7 +14,7 @@ menuconfig LIB_SEL4_ALLOCMAN
     bool "libsel4allocman"
     default y
     depends on HAVE_LIB_SEL4 && HAVE_LIBC && HAVE_LIB_SEL4_VKA && HAVE_LIB_SEL4_UTILS && \
-               HAVE_LIB_SEL4_VSPACE && HAVE_LIB_SEL4_SIMPLE && HAVE_LIB_UTILS
+               HAVE_LIB_SEL4_VSPACE && HAVE_LIB_SEL4_SIMPLE && HAVE_LIB_UTILS && HAVE_LIB_SEL4_PLAT_SUPPORT
     select HAVE_LIB_SEL4_ALLOCMAN
     help
         Allocation manager library for seL4

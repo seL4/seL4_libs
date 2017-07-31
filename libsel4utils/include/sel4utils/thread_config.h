@@ -90,7 +90,7 @@ static inline sel4utils_thread_config_t
 thread_config_stack_size(sel4utils_thread_config_t config, seL4_Word size)
 {
     config.stack_size = size;
-    config.custom_stack_size = false;
+    config.custom_stack_size = true;
     return config;
 }
 

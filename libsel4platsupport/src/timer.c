@@ -254,7 +254,7 @@ seL4_CPtr sel4platsupport_timer_objs_get_irq_cap(timer_objects_t *to, int id, ir
                 }
                 break;
             case PS_IOAPIC:
-                if (to->irqs[i].irq.ioapic.vector == id) {
+                if (to->irqs[i].irq.ioapic.pin == id) {
                     return to->irqs[i].handler_path.capPtr;
                 }
                 break;

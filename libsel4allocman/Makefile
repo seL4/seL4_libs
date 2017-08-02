@@ -14,14 +14,14 @@
 TARGETS := libsel4allocman.a
 
 # Source files required to build the target
-CFILES := $(patsubst $(SOURCE_DIR)/%,%,$(wildcard $(SOURCE_DIR)/src/*.c))
-CFILES += $(patsubst $(SOURCE_DIR)/%,%,$(wildcard $(SOURCE_DIR)/src/cspace/*.c))
-CFILES += $(patsubst $(SOURCE_DIR)/%,%,$(wildcard $(SOURCE_DIR)/src/utspace/*.c))
-CFILES += $(patsubst $(SOURCE_DIR)/%,%,$(wildcard $(SOURCE_DIR)/src/mspace/*.c))
+CFILES := $(sort $(patsubst $(SOURCE_DIR)/%,%,$(wildcard $(SOURCE_DIR)/src/*.c)))
+CFILES += $(sort $(patsubst $(SOURCE_DIR)/%,%,$(wildcard $(SOURCE_DIR)/src/cspace/*.c)))
+CFILES += $(sort $(patsubst $(SOURCE_DIR)/%,%,$(wildcard $(SOURCE_DIR)/src/utspace/*.c)))
+CFILES += $(sort $(patsubst $(SOURCE_DIR)/%,%,$(wildcard $(SOURCE_DIR)/src/mspace/*.c)))
 
 # Header files/directories this library provides
-HDRFILES := $(wildcard $(SOURCE_DIR)/include/*) \
-    $(wildcard ${SOURCE_DIR}/sel4_arch/${SEL4_ARCH}/*)
+HDRFILES := $(sort $(wildcard $(SOURCE_DIR)/include/*)) \
+    $(sort $(wildcard ${SOURCE_DIR}/sel4_arch/${SEL4_ARCH}/*))
 
 CFLAGS += -std=gnu99
 

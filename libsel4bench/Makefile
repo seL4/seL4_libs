@@ -15,16 +15,16 @@ TARGETS := libsel4bench.a
 
 # Source files required to build the target
 CFILES := \
-	$(patsubst $(SOURCE_DIR)/%,%,$(wildcard $(SOURCE_DIR)/src/*.c)) \
-	$(patsubst $(SOURCE_DIR)/%,%,$(wildcard $(SOURCE_DIR)/src/arch/$(ARCH)/*.c)) \
-	$(patsubst $(SOURCE_DIR)/%,%,$(wildcard $(SOURCE_DIR)/src/arch/$(ARCH)/armv/$(ARMV)/*.c)) \
-	$(patsubst $(SOURCE_DIR)/%,%,$(wildcard $(SOURCE_DIR)/src/arch/$(ARCH)/cpu/$(CPU)/*.c))
+	$(sort $(patsubst $(SOURCE_DIR)/%,%,$(wildcard $(SOURCE_DIR)/src/*.c))) \
+	$(sort $(patsubst $(SOURCE_DIR)/%,%,$(wildcard $(SOURCE_DIR)/src/arch/$(ARCH)/*.c))) \
+	$(sort $(patsubst $(SOURCE_DIR)/%,%,$(wildcard $(SOURCE_DIR)/src/arch/$(ARCH)/armv/$(ARMV)/*.c))) \
+	$(sort $(patsubst $(SOURCE_DIR)/%,%,$(wildcard $(SOURCE_DIR)/src/arch/$(ARCH)/cpu/$(CPU)/*.c)))
 
 # Header files/directories this library provides
 HDRFILES := \
-	$(wildcard $(SOURCE_DIR)/include/*) \
-	$(wildcard $(SOURCE_DIR)/arch_include/$(ARCH)/*) \
-	$(wildcard $(SOURCE_DIR)/arch_include/$(ARCH)/armv/$(ARMV)/*) \
-	$(wildcard $(SOURCE_DIR)/arch_include/$(ARCH)/cpu/$(CPU)/*) \
+	$(sort $(wildcard $(SOURCE_DIR)/include/*)) \
+	$(sort $(wildcard $(SOURCE_DIR)/arch_include/$(ARCH)/*)) \
+	$(sort $(wildcard $(SOURCE_DIR)/arch_include/$(ARCH)/armv/$(ARMV)/*)) \
+	$(sort $(wildcard $(SOURCE_DIR)/arch_include/$(ARCH)/cpu/$(CPU)/*)) 
 
 include $(SEL4_COMMON)/common.mk

@@ -14,9 +14,9 @@
 TARGETS := libsel4vspace.a
 
 # Source files required to build the target
-CFILES := $(patsubst $(SOURCE_DIR)/%,%,$(wildcard $(SOURCE_DIR)/src/*.c))
+CFILES := $(sort $(patsubst $(SOURCE_DIR)/%,%,$(wildcard $(SOURCE_DIR)/src/*.c)))
 
 # Header files/directories this library provides
-HDRFILES := $(wildcard $(SOURCE_DIR)/include/*) \
-    $(wildcard ${SOURCE_DIR}/arch_include/${ARCH}/*)
+HDRFILES := $(sort $(wildcard $(SOURCE_DIR)/include/*)) \
+    $(sort $(wildcard ${SOURCE_DIR}/arch_include/${ARCH}/*))
 include $(SEL4_COMMON)/common.mk

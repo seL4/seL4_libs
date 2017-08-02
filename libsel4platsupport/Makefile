@@ -14,21 +14,21 @@
 TARGETS := libsel4platsupport.a
 
 # Source files required to build the target
-CFILES := $(patsubst $(SOURCE_DIR)/%,%,$(wildcard ${SOURCE_DIR}/src/*.c))
-CFILES += $(patsubst $(SOURCE_DIR)/%,%,$(wildcard ${SOURCE_DIR}/src/arch/$(ARCH)/*.c))
-CFILES += $(patsubst $(SOURCE_DIR)/%,%,$(wildcard ${SOURCE_DIR}/src/plat/$(PLAT)/*.c))
-CFILES += $(patsubst $(SOURCE_DIR)/%,%,$(wildcard ${SOURCE_DIR}/src/mach/$(MACH)/*.c))
+CFILES := $(sort $(patsubst $(SOURCE_DIR)/%,%,$(wildcard ${SOURCE_DIR}/src/*.c)))
+CFILES += $(sort $(patsubst $(SOURCE_DIR)/%,%,$(wildcard ${SOURCE_DIR}/src/arch/$(ARCH)/*.c)))
+CFILES += $(sort $(patsubst $(SOURCE_DIR)/%,%,$(wildcard ${SOURCE_DIR}/src/plat/$(PLAT)/*.c)))
+CFILES += $(sort $(patsubst $(SOURCE_DIR)/%,%,$(wildcard ${SOURCE_DIR}/src/mach/$(MACH)/*.c)))
 
-ASMFILES += $(patsubst $(SOURCE_DIR)/%,%,$(wildcard ${SOURCE_DIR}/src/sel4_arch/$(SEL4_ARCH)/*.S))
+ASMFILES += $(sort $(patsubst $(SOURCE_DIR)/%,%,$(wildcard ${SOURCE_DIR}/src/sel4_arch/$(SEL4_ARCH)/*.S)))
 
 # Header files/directories this library provides
 HDRFILES := \
-    $(wildcard ${SOURCE_DIR}/include/*) \
-    $(wildcard ${SOURCE_DIR}/plat_include/$(PLAT)/*) \
-    $(wildcard ${SOURCE_DIR}/arch_include/${ARCH}/*)
+    $(sort $(wildcard ${SOURCE_DIR}/include/*)) \
+    $(sort $(wildcard ${SOURCE_DIR}/plat_include/$(PLAT)/*)) \
+    $(sort $(wildcard ${SOURCE_DIR}/arch_include/${ARCH}/*))
 
 ifneq ($(MACH),)
-HDRFILES += $(wildcard ${SOURCE_DIR}/mach_include/$(MACH)/*)
+HDRFILES += $(sort $(wildcard ${SOURCE_DIR}/mach_include/$(MACH)/*))
 endif
 
 CFLAGS += -W -Wall

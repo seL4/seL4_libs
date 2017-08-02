@@ -14,14 +14,14 @@
 TARGETS := libsel4vmm.a
 
 # Source files required to build the target
-CFILES := $(patsubst $(SOURCE_DIR)/%,%,$(wildcard $(SOURCE_DIR)/src/vmm/*.c))
-CFILES += $(patsubst $(SOURCE_DIR)/%,%,$(wildcard $(SOURCE_DIR)/src/platform/*.c))
-CFILES += $(patsubst $(SOURCE_DIR)/%,%,$(wildcard $(SOURCE_DIR)/src/driver/*.c))
-CFILES += $(patsubst $(SOURCE_DIR)/%,%,$(wildcard $(SOURCE_DIR)/src/manager/*.c))
-CFILES += $(patsubst $(SOURCE_DIR)/%,%,$(wildcard $(SOURCE_DIR)/src/processor/*.c))
+CFILES := $(sort $(patsubst $(SOURCE_DIR)/%,%,$(wildcard $(SOURCE_DIR)/src/vmm/*.c)))
+CFILES += $(sort $(patsubst $(SOURCE_DIR)/%,%,$(wildcard $(SOURCE_DIR)/src/platform/*.c)))
+CFILES += $(sort $(patsubst $(SOURCE_DIR)/%,%,$(wildcard $(SOURCE_DIR)/src/driver/*.c)))
+CFILES += $(sort $(patsubst $(SOURCE_DIR)/%,%,$(wildcard $(SOURCE_DIR)/src/manager/*.c)))
+CFILES += $(sort $(patsubst $(SOURCE_DIR)/%,%,$(wildcard $(SOURCE_DIR)/src/processor/*.c)))
 
 # Header files/directories this library provides
-HDRFILES := $(wildcard $(SOURCE_DIR)/include/*)
+HDRFILES := $(sort $(wildcard $(SOURCE_DIR)/include/*))
 
 CFLAGS += -std=gnu99 # -Wall -Werror
 

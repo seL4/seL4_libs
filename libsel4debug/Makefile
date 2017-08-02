@@ -14,16 +14,16 @@
 TARGETS := $(notdir ${SOURCE_DIR}).a
 
 # Source files required to build the target
-CFILES := $(patsubst $(SOURCE_DIR)/%,%,$(wildcard ${SOURCE_DIR}/src/*.c))
-CFILES += $(patsubst $(SOURCE_DIR)/%,%,$(wildcard ${SOURCE_DIR}/src/sel4_arch/$(SEL4_ARCH)/*.c))
-CFILES += $(patsubst $(SOURCE_DIR)/%,%,$(wildcard ${SOURCE_DIR}/src/plat/$(PLAT)/*.c))
+CFILES := $(sort $(patsubst $(SOURCE_DIR)/%,%,$(wildcard ${SOURCE_DIR}/src/*.c)))
+CFILES += $(sort $(patsubst $(SOURCE_DIR)/%,%,$(wildcard ${SOURCE_DIR}/src/sel4_arch/$(SEL4_ARCH)/*.c)))
+CFILES += $(sort $(patsubst $(SOURCE_DIR)/%,%,$(wildcard ${SOURCE_DIR}/src/plat/$(PLAT)/*.c)))
 
-ASMFILES := $(patsubst $(SOURCE_DIR)/%,%,$(wildcard ${SOURCE_DIR}/src/sel4_arch/$(SEL4_ARCH)/*.S))
+ASMFILES := $(sort $(patsubst $(SOURCE_DIR)/%,%,$(wildcard ${SOURCE_DIR}/src/sel4_arch/$(SEL4_ARCH)/*.S)))
 
 # Header files/directories this library provides
 HDRFILES := \
-    $(wildcard ${SOURCE_DIR}/include/*)
-HDRFILES += $(wildcard ${SOURCE_DIR}/arch_include/$(ARCH)/*)
-HDRFILES += $(wildcard ${SOURCE_DIR}/sel4_arch_include/$(SEL4_ARCH)/*)
+    $(sort $(wildcard ${SOURCE_DIR}/include/*))
+HDRFILES += $(sort $(wildcard ${SOURCE_DIR}/arch_include/$(ARCH)/*))
+HDRFILES += $(sort $(wildcard ${SOURCE_DIR}/sel4_arch_include/$(SEL4_ARCH)/*))
 
 include $(SEL4_COMMON)/common.mk

@@ -435,10 +435,15 @@ seL4_CPtr sel4utils_get_root(vspace_t *vspace);
 seL4_CPtr sel4utils_get_cap(vspace_t *vspace, void *vaddr);
 uintptr_t sel4utils_get_cookie(vspace_t *vspace, void *vaddr);
 
+void *sel4utils_map_pages(vspace_t *vspace, seL4_CPtr caps[], uintptr_t cookies[],
+                          seL4_CapRights_t rights, size_t num_pages, size_t size_bits,
+                          int cacheable);
 int sel4utils_map_pages_at_vaddr(vspace_t *vspace, seL4_CPtr caps[], uintptr_t cookies[], void *vaddr,
                                  size_t num_pages, size_t size_bits, reservation_t reservation);
 void sel4utils_unmap_pages(vspace_t *vspace, void *vaddr, size_t num_pages, size_t size_bits, vka_t *vka);
 
+void *sel4utils_new_pages(vspace_t *vspace, seL4_CapRights_t rights,
+                          size_t num_pages, size_t size_bits);
 int sel4utils_new_pages_at_vaddr(vspace_t *vspace, void *vaddr, size_t num_pages,
                                  size_t size_bits, reservation_t reservation, bool can_use_dev);
 

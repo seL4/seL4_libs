@@ -104,32 +104,6 @@ vspace_share_mem(vspace_t *from, vspace_t *to, void *start, int num_pages, size_
 }
 
 void *
-vspace_map_pages(vspace_t *vspace, seL4_CPtr caps[], uintptr_t cookies[], seL4_CapRights_t rights,
-                 size_t num_caps, size_t size_bits, int cacheable)
-{
-
-    void *vaddr;
-    reservation_t res = vspace_reserve_range_aligned(vspace,
-                                                     num_caps * SIZE_BITS_TO_BYTES(size_bits), size_bits,
-                                                     rights, cacheable, &vaddr);
-
-    if (res.res == NULL) {
-        ZF_LOGE("Failed to reserve range");
-        return NULL;
-    }
-
-    int error = vspace_map_pages_at_vaddr(vspace, caps, cookies, vaddr, num_caps, size_bits, res);
-
-    vspace_free_reservation(vspace, res);
-
-    if (error) {
-        return NULL;
-    }
-
-    return vaddr;
-}
-
-void *
 vspace_new_pages_with_config(vspace_t *vspace, vspace_new_pages_config_t *config, seL4_CapRights_t rights)
 {
     reservation_t res;
@@ -155,15 +129,6 @@ vspace_new_pages_with_config(vspace_t *vspace, vspace_new_pages_config_t *config
     }
 
     return config->vaddr;
-}
-
-void *
-vspace_new_pages(vspace_t *vspace, seL4_CapRights_t rights, size_t num_pages, size_t size_bits)
-{
-    vspace_new_pages_config_t config;
-    default_vspace_new_pages_config(num_pages, size_bits, &config);
-    return vspace_new_pages_with_config(vspace, &config, rights);
-
 }
 
 /* this function is for backwards compatibility after interface change */

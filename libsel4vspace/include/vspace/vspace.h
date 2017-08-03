@@ -16,6 +16,7 @@
 #include <assert.h>
 #include <stddef.h>
 #include <vka/object.h>
+#include <vspace/page.h>
 
 typedef struct vspace vspace_t;
 
@@ -121,25 +122,6 @@ void *vspace_share_mem(vspace_t *from, vspace_t *to, void *start, int num_pages,
                        size_t size_bits, seL4_CapRights_t rights, int cacheable);
 
 /**
- * Map in existing page capabilities, using contiguos virtual memory.
- *
- * @param vspace the virtual memory allocator used.
- * @param seL4_CPtr caps array of caps to map in
- * @param uint32_t cookies array of allocation cookies. Populate this if you want the vspace to
- *                         be able to free the caps for you with a vka. NULL acceptable.
- * @param rights the rights to map the pages in with
- * @param size_bits size, in bits, of an individual page -- all pages must be the same size.
- * @param num_pages the number of pages to map in (must correspond to the size of the array).
- * @param cacheable 1 if the pages should be mapped with cacheable attributes. 0 for DMA.
- *
- * @return vaddr at the start of the device mapping
- *         NULL on failure.
- */
-void *vspace_map_pages(vspace_t *vspace, seL4_CPtr caps[], uintptr_t cookies[],
-                       seL4_CapRights_t rights, size_t num_pages, size_t size_bits,
-                       int cacheable);
-
-/**
  * Create a virtually contiguous area of mapped pages.
  * This could be for shared memory or just allocating some pages.
  * Depending on the config passed in, this will create a reservation or
@@ -151,20 +133,6 @@ void *vspace_map_pages(vspace_t *vspace, seL4_CPtr caps[], uintptr_t cookies[],
  *         NULL on failure.
  */
 void * vspace_new_pages_with_config(vspace_t *vspace, vspace_new_pages_config_t *config, seL4_CapRights_t rights);
-
-/**
- * Create a virtually contiguous area of mapped pages.
- * This could be for shared memory or just allocating some pages.
- *
- * @param vspace the virtual memory allocator used.
- * @param rights the rights to map the pages in with
- * @param num_pages the number of pages to allocate and map.
- * @param size_bits size of the pages to allocate and map, in bits.
- *
- * @return vaddr at the start of the contiguous region
- *         NULL on failure.
- */
-void *vspace_new_pages(vspace_t *vspace, seL4_CapRights_t rights, size_t num_pages, size_t size_bits);
 
 /**
  * Create a stack. The determines stack size.
@@ -223,6 +191,13 @@ void *vspace_new_ipc_buffer(vspace_t *vspace, seL4_CPtr *page);
 void vspace_free_ipc_buffer(vspace_t *vspace, void *addr);
 
 /* IMPLEMENTATION SPECIFIC FUNCTIONS - function pointers of the vspace used */
+
+typedef void *(*vspace_new_pages_fn)(vspace_t *vspace, seL4_CapRights_t rights,
+                                     size_t num_pages, size_t size_bits);
+
+typedef void *(*vspace_map_pages_fn)(vspace_t *vspace,
+                                     seL4_CPtr caps[], uintptr_t cookies[], seL4_CapRights_t rights,
+                                     size_t num_pages, size_t size_bits, int cacheable);
 
 /**
  * Create a virtually contiguous area of mapped pages, at the specified virtual address.
@@ -423,6 +398,9 @@ typedef int (*vspace_share_mem_at_vaddr_fn)(vspace_t *from, vspace_t *to, void *
 struct vspace {
     void *data;
 
+    vspace_new_pages_fn new_pages;
+    vspace_map_pages_fn map_pages;
+
     vspace_new_pages_at_vaddr_fn new_pages_at_vaddr;
 
     vspace_map_pages_at_vaddr_fn map_pages_at_vaddr;
@@ -446,6 +424,84 @@ struct vspace {
 };
 
 /* convenient wrappers */
+
+/**
+ * Create a virtually contiguous area of mapped pages.
+ * This could be for shared memory or just allocating some pages.
+ *
+ * @param vspace the virtual memory allocator used.
+ * @param rights the rights to map the pages in with
+ * @param num_pages the number of pages to allocate and map.
+ * @param size_bits size of the pages to allocate and map, in bits.
+ *
+ * @return vaddr at the start of the contiguous region
+ *         NULL on failure.
+ */
+static inline void *
+vspace_new_pages(vspace_t *vspace, seL4_CapRights_t rights,
+                 size_t num_pages, size_t size_bits)
+{
+    if (vspace == NULL) {
+        ZF_LOGE("vspace is NULL.");
+        return NULL;
+    }
+    if (vspace->new_pages == NULL) {
+        ZF_LOGE("Supplied vspace doesn't implement new_pages().");
+        return NULL;
+    }
+    if (num_pages == 0) {
+        ZF_LOGE("Called with num_pages == 0. Intentional?");
+        return NULL;
+    }
+    if (!sel4_valid_size_bits(size_bits)) {
+        ZF_LOGE("Invalid size_bits %zu", size_bits);
+        return NULL;
+    }
+
+    return vspace->new_pages(vspace, rights, num_pages, size_bits);
+}
+
+/**
+ * Map in existing page capabilities, using contiguos virtual memory.
+ *
+ * @param vspace the virtual memory allocator used.
+ * @param seL4_CPtr caps array of caps to map in
+ * @param uint32_t cookies array of allocation cookies. Populate this if you want the vspace to
+ *                         be able to free the caps for you with a vka. NULL acceptable.
+ * @param rights the rights to map the pages in with
+ * @param size_bits size, in bits, of an individual page -- all pages must be the same size.
+ * @param num_pages the number of pages to map in (must correspond to the size of the array).
+ * @param cacheable 1 if the pages should be mapped with cacheable attributes. 0 for DMA.
+ *
+ * @return vaddr at the start of the device mapping
+ *         NULL on failure.
+ */
+static inline void *
+vspace_map_pages(vspace_t *vspace, seL4_CPtr caps[], uintptr_t cookies[],
+                 seL4_CapRights_t rights, size_t num_pages, size_t size_bits,
+                 int cacheable)
+{
+    if (vspace == NULL) {
+        ZF_LOGE("vspace is NULL.");
+        return NULL;
+    }
+    if (vspace->new_pages == NULL) {
+        ZF_LOGE("Supplied vspace doesn't implement map_pages().");
+        return NULL;
+    }
+    if (num_pages == 0) {
+        ZF_LOGE("Called with num_pages == 0. Intentional?");
+        return NULL;
+    }
+    if (!sel4_valid_size_bits(size_bits)) {
+        ZF_LOGE("Invalid size_bits %zu", size_bits);
+        return NULL;
+    }
+
+    return vspace->map_pages(vspace, caps, cookies, rights,
+                             num_pages, size_bits, cacheable);
+}
+
 static inline int
 vspace_new_pages_at_vaddr_with_config(vspace_t *vspace, vspace_new_pages_config_t *config, reservation_t res) {
     if (vspace == NULL) {

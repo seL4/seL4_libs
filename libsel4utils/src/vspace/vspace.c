@@ -374,6 +374,36 @@ sel4utils_map_pages_at_vaddr(vspace_t *vspace, seL4_CPtr caps[], uintptr_t cooki
                               res->rights, res->cacheable);
 }
 
+void *
+sel4utils_map_pages(vspace_t *vspace, seL4_CPtr caps[], uintptr_t cookies[],
+                    seL4_CapRights_t rights, size_t num_pages, size_t size_bits,
+                    int cacheable)
+{
+    sel4utils_alloc_data_t *data = get_alloc_data(vspace);
+    int error;
+    void *ret_vaddr;
+
+    assert(num_pages > 0);
+
+    ret_vaddr = find_range(data, num_pages, size_bits);
+    if (ret_vaddr == NULL) {
+        return NULL;
+    }
+
+    error = map_pages_at_vaddr(vspace, caps, cookies,
+                               ret_vaddr, num_pages, size_bits,
+                               rights, cacheable);
+    if (error != 0) {
+        if (clear_entries(vspace, (uintptr_t)ret_vaddr, size_bits) != 0) {
+            ZF_LOGE("FATAL: Failed to clear VMM metadata for vmem @0x%p, %lu pages.",
+                    ret_vaddr, BIT(size_bits));
+            /* This is probably cause for a panic, but continue anyway. */
+        }
+        return NULL;
+    }
+    return ret_vaddr;
+}
+
 seL4_CPtr
 sel4utils_get_cap(vspace_t *vspace, void *vaddr)
 {
@@ -457,6 +487,35 @@ sel4utils_new_pages_at_vaddr(vspace_t *vspace, void *vaddr, size_t num_pages,
     }
 
     return new_pages_at_vaddr(vspace, vaddr, num_pages, size_bits, res->rights, res->cacheable, can_use_dev);
+}
+
+void *
+sel4utils_new_pages(vspace_t *vspace, seL4_CapRights_t rights,
+                     size_t num_pages, size_t size_bits)
+{
+    sel4utils_alloc_data_t *data = get_alloc_data(vspace);
+    int error;
+    void *ret_vaddr;
+
+    assert(num_pages > 0);
+
+    ret_vaddr = find_range(data, num_pages, size_bits);
+    if (ret_vaddr == NULL) {
+        return NULL;
+    }
+
+    error = new_pages_at_vaddr(vspace, ret_vaddr, num_pages, size_bits, rights,
+                               (int)true, false);
+    if (error != 0) {
+        if (clear_entries(vspace, (uintptr_t)ret_vaddr, size_bits) != 0) {
+            ZF_LOGE("FATAL: Failed to clear VMM metadata for vmem @0x%p, %lu pages.",
+                    ret_vaddr, BIT(size_bits));
+            /* This is probably cause for a panic, but continue anyway. */
+        }
+        return NULL;
+    }
+
+    return ret_vaddr;
 }
 
 int sel4utils_reserve_range_no_alloc_aligned(vspace_t *vspace, sel4utils_res_t *reservation,

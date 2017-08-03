@@ -243,6 +243,9 @@ int sel4utils_get_cs_vspace(vspace_t *vspace, vka_t *vka, vspace_t *server, vspa
 
     vspace->data = cs_vspace;
 
+    vspace->new_pages = NULL;
+    vspace->map_pages = NULL;
+
     vspace->new_pages_at_vaddr = cs_new_pages_at_vaddr;
 
     vspace->map_pages_at_vaddr = cs_map_pages_at_vaddr;

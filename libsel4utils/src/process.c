@@ -669,6 +669,11 @@ sel4utils_destroy_process(sel4utils_process_t *process, vka_t *vka)
     if (process->own_vspace) {
         vka_free_object(vka, &process->pd);
     }
+
+    /* Free elf information */
+    if (process->elf_regions) {
+        free(process->elf_regions);
+    }
 }
 
 seL4_CPtr

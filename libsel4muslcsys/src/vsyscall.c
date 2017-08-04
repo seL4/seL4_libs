@@ -17,6 +17,7 @@
 #include <utils/util.h>
 #include <bits/syscall.h>
 #include <bits/errno.h>
+#include <sys/uio.h>
 #include <muslcsys/vsyscall.h>
 #include "syscalls.h"
 #ifdef CONFIG_LIB_SEL4_MUSLC_SYS_CPIO_FS
@@ -68,12 +69,33 @@ bool muslcsys_get_boot_set_tid_address(int **arg) {
     return boot_set_tid_address_happened;
 }
 
+/* Basic sys_writev for use during booting that will only use seL4_DebugPutChar */
+long boot_sys_writev(va_list ap) {
+    int UNUSED fildes = va_arg(ap, int);
+    struct iovec *iov = va_arg(ap, struct iovec *);
+    int iovcnt = va_arg(ap, int);
+
+    ssize_t ret = 0;
+
+    for(int i = 0; i < iovcnt; i++) {
+        char * UNUSED base = (char*)iov[i].iov_base;
+        for (int j = 0; j < iov[i].iov_len; j++) {
+#ifdef CONFIG_PRINTING
+            seL4_DebugPutChar(base[j]);
+#endif
+            ret++;
+        }
+    }
+
+    return ret;
+}
+
 static muslcsys_syscall_t syscall_table[MUSLC_NUM_SYSCALLS] = {
 #ifdef __NR_set_thread_area
     [__NR_set_thread_area] = boot_set_thread_area,
 #endif
     [__NR_set_tid_address] = boot_set_tid_address,
-    [__NR_writev] = sys_writev,
+    [__NR_writev] = boot_sys_writev,
     [__NR_sched_yield] = sys_sched_yield,
     [__NR_exit] = sys_exit,
     [__NR_rt_sigprocmask] = sys_rt_sigprocmask,
@@ -133,6 +155,8 @@ static void CONSTRUCTOR(CONSTRUCTOR_MIN_PRIORITY) init_syscall_table(void) {
     ret = muslcsys_install_syscall(__NR_set_thread_area, sys_set_thread_area);
     assert(ret == boot_set_thread_area);
 #endif
+    ret = muslcsys_install_syscall(__NR_writev, sys_writev);
+    assert(ret == boot_sys_writev);
 }
 
 /* If we have a default CPIO file interface defined in the config then install it here */

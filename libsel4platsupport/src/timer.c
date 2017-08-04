@@ -215,7 +215,7 @@ int sel4platsupport_init_default_timer_caps(vka_t *vka, vspace_t *vspace, simple
                                           &timer_objects->irqs[i].handler_path);
         }
         if (error) {
-            ZF_LOGE("Failed to get irq cap %d", i);
+            ZF_LOGE("Failed to get irq cap %zu", i);
             return error;
         }
         timer_objects->nirqs++;

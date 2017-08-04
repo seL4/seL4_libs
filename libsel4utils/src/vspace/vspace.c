@@ -327,7 +327,7 @@ new_pages_at_vaddr(vspace_t *vspace, void *vaddr, size_t num_pages, size_t size_
         vka_object_t object;
         if (vka_alloc_frame_maybe_device(data->vka, size_bits, can_use_dev, &object) != 0) {
             /* abort! */
-            ZF_LOGE("Failed to allocate page number: %d out of %d", i, num_pages);
+            ZF_LOGE("Failed to allocate page number: %d out of %zu", i, num_pages);
             error = seL4_NotEnoughMemory;
             break;
         }

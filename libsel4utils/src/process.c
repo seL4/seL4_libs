@@ -285,31 +285,48 @@ sel4utils_spawn_process_v(sel4utils_process_t *process, vka_t *vka, vspace_t *vs
                           char *argv[], int resume)
 {
     /* define an envp and auxp */
+    int error;
     int envc = 1;
     char ipc_buf_env[WORD_STRING_SIZE];
     sprintf(ipc_buf_env, "IPCBUFFER=0x%"PRIxPTR"", process->thread.ipc_buffer_addr);
     char *envp[] = {ipc_buf_env};
 
+    uintptr_t initial_stack_pointer = (uintptr_t) process->thread.stack_top - sizeof(seL4_Word);
+
+    /* Copy the elf headers */
+    uintptr_t at_phdr;
+    error = sel4utils_stack_write(vspace, &process->vspace, vka, process->elf_phdrs,
+                                  process->num_elf_phdrs * sizeof(Elf_Phdr), &initial_stack_pointer);
+    if (error) {
+        return -1;
+    }
+    at_phdr = initial_stack_pointer;
+
     /* initialize of aux vectors */
-    int auxc = 1;
-    Elf_auxv_t auxv[2];
+    int auxc = 4;
+    Elf_auxv_t auxv[5];
     auxv[0].a_type = AT_PAGESZ;
     auxv[0].a_un.a_val = process->pagesz;
+    auxv[1].a_type = AT_PHDR;
+    auxv[1].a_un.a_val = at_phdr;
+    auxv[2].a_type = AT_PHNUM;
+    auxv[2].a_un.a_val = process->num_elf_phdrs;
+    auxv[3].a_type = AT_PHENT;
+    auxv[3].a_un.a_val = sizeof(Elf_Phdr);
     if(process->sysinfo) {
-        auxv[1].a_type = AT_SYSINFO;
-        auxv[1].a_un.a_val = process->sysinfo;
+        auxv[4].a_type = AT_SYSINFO;
+        auxv[4].a_un.a_val = process->sysinfo;
         auxc++;
     }
 
     seL4_UserContext context = {0};
 
-    uintptr_t initial_stack_pointer = (uintptr_t) process->thread.stack_top - sizeof(seL4_Word);
     uintptr_t dest_argv[argc];
     uintptr_t dest_envp[envc];
 
     /* write all the strings into the stack */
     /* Copy over the user arguments */
-    int error = sel4utils_stack_copy_args(vspace, &process->vspace, vka, argc, argv, dest_argv, &initial_stack_pointer);
+    error = sel4utils_stack_copy_args(vspace, &process->vspace, vka, argc, argv, dest_argv, &initial_stack_pointer);
     if (error) {
         return -1;
     }
@@ -574,6 +591,15 @@ sel4utils_configure_process_custom(sel4utils_process_t *process, vka_t *vka,
         }
 
         process->sysinfo = sel4utils_elf_get_vsyscall(config.image_name);
+
+        /* Retrieve the ELF phdrs */
+        process->num_elf_phdrs = sel4utils_elf_num_phdrs(config.image_name);
+        process->elf_phdrs = calloc(process->num_elf_phdrs, sizeof(Elf_Phdr));
+        if (!process->elf_phdrs) {
+            ZF_LOGE("Failed to allocate memory for elf phdr information");
+            goto error;
+        }
+        sel4utils_elf_read_phdrs(config.image_name, process->num_elf_phdrs, process->elf_phdrs);
     } else {
         process->entry_point = config.entry_point;
         process->sysinfo = config.sysinfo;
@@ -626,6 +652,10 @@ error:
         free(process->elf_regions);
     }
 
+    if (process->elf_phdrs) {
+        free(process->elf_phdrs);
+    }
+
     if (data != NULL) {
         free(data);
     }
@@ -673,6 +703,10 @@ sel4utils_destroy_process(sel4utils_process_t *process, vka_t *vka)
     /* Free elf information */
     if (process->elf_regions) {
         free(process->elf_regions);
+    }
+
+    if (process->elf_phdrs) {
+        free(process->elf_phdrs);
     }
 }
 

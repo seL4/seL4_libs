@@ -45,6 +45,11 @@ typedef struct {
     uintptr_t sysinfo;
     seL4_Word pagesz;
     object_node_t *allocated_object_list_head;
+    /* ELF headers that describe the sections of the loaded image (at least as they
+     * existed at load time). Is different to the elf_regions, which have reservations,
+     * these are the original headers from the elf and include nonloaded information regions */
+    int num_elf_phdrs;
+    Elf_Phdr *elf_phdrs;
     /* if the elf wasn't loaded into the address space, this describes the regions.
      * this permits lazy loading / copy on write / page sharing / whatever crazy thing
      * you want to implement */

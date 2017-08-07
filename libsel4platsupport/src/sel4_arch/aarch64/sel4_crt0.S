@@ -39,6 +39,28 @@ _sel4_start:
     str     x1, [sp, #-8]!
     mov     x2, #32
     str     x2, [sp, #-8]!
+    /* Pass in information on our simulated TLS ELF headers, after constructing the missing pieces */
+    ldr     x1, =_tdata_end
+    ldr     x2, =_tdata_start
+    sub     x1, x1, x2
+    ldr     x3, =tls_filesize
+    str     x1, [x3]
+    ldr     x1, =_tbss_end
+    sub     x1, x1, x2
+    ldr     x3, =tls_memsize
+    str     x1, [x3]
+    ldr     x1, =program_headers
+    str     x1, [sp, #-8]!
+    mov     x1, #3
+    str     x1, [sp, #-8]!
+    mov     x1, #1
+    str     x1, [sp, #-8]!
+    mov     x1, #5
+    str     x1, [sp, #-8]!
+    mov     x1, #32
+    str     x1, [sp, #-8]!
+    mov     x1, #4
+    str     x1, [sp, #-8]!
     /* Give default page size */
     mov     x1, #4096
     str     x1, [sp, #-8]!
@@ -74,6 +96,18 @@ environment_string:
 .asciz "seL4=1"
 prog_name:
 .asciz "rootserver"
+
+program_headers:
+    .4byte 7 /* p_type is PT_TLS */
+    .4byte 0 /* dummy p_flags */
+    .8byte 0 /* dummy p_offset */
+    .8byte _tdata_start /* p_vaddr is _tdata_start */
+    .8byte 0 /* dummy p_paddr */
+tls_filesize:
+    .8byte 0 /* p_filesz will get calculated and filled in later with _tdata_end - _tdata_start) */
+tls_memsize:
+    .8byte 0 /* p_memsz will get calculated and filled in later with _tbss_end - _tdata_start) */
+    .8byte 8 /* p_align set to word alignment */
 
 .bss
 .align  8

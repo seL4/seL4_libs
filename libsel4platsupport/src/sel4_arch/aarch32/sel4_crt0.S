@@ -45,6 +45,28 @@ _sel4_start:
     push    {r1}
     mov     r2, #32
     push    {r2}
+    /* Pass in information on our simulated TLS ELF headers, after constructing the missing pieces */
+    ldr     r1, =_tdata_end
+    ldr     r2, =_tdata_start
+    sub     r1, r1, r2
+    ldr     r3, =tls_filesize
+    str     r1, [r3]
+    ldr     r1, =_tbss_end
+    sub     r1, r1, r2
+    ldr     r3, =tls_memsize
+    str     r1, [r3]
+    ldr     r1, =program_headers
+    push    {r1}
+    mov     r1, #3
+    push    {r1} /* AT_PHDR */
+    mov     r1, #1
+    push    {r1}
+    mov     r1, #5
+    push    {r1} /* AT_PNUM */
+    mov     r1, #32
+    push    {r1}
+    mov     r1, #4
+    push    {r1} /* AT_PHENT */
     /* Null terminate envp */
     push    {r0}
     /* Give bootinfo location */
@@ -78,6 +100,18 @@ environment_string:
     .asciz "seL4=1"
 prog_name:
     .asciz "rootserver"
+
+program_headers:
+    .4byte 7 /* p_type is PT_TLS */
+    .4byte 0 /* dummy p_offset */
+    .4byte _tdata_start /* p_vaddr is _tdata_start */
+    .4byte 0 /* dummy p_paddr */
+tls_filesize:
+    .4byte 0 /* p_filesz will get calculated and filled in later with _tdata_end - _tdata_start */
+tls_memsize:
+    .4byte 0 /* p_memsz will get calculated and filled in later with _tbss_end - _tdata_start */
+    .4byte 0 /* dummy p_flags */
+    .4byte 4 /* p_align set to word alignment */
 
     .bss
     .align  8

@@ -52,6 +52,25 @@ _sel4_start:
     leal sel4_vsyscall, %eax
     pushl %eax
     pushl $32 /* AT_SYSINFO */
+
+    /* Pass in information on our simulated TLS ELF headers, after constructing the missing pieces */
+    leal _tdata_end, %eax
+    leal _tdata_start, %ebx
+    sub %ebx, %eax
+    movl %eax, (tls_filesize)
+
+    leal _tbss_end, %eax
+    subl %ebx, %eax
+    movl %eax, (tls_memsize)
+
+    leal program_headers, %eax
+    pushl %eax
+    pushl $3 /* AT_PHDR */
+    pushl $1 /* we have 1 header defined */
+    pushl $5 /* AT_PNUM */
+    pushl $32 /* 32bit elf header is 32 bytes */
+    pushl $4 /* AT_PHENT */
+
     /* Null terminate envp */
     pushl $0
     /* Give bootinfo location */
@@ -84,6 +103,18 @@ environment_string:
     .asciz "seL4=1"
 prog_name:
     .asciz "rootserver"
+
+program_headers:
+    .4byte 7 /* p_type is PT_TLS */
+    .4byte 0 /* dummy p_offset */
+    .4byte _tdata_start /* p_vaddr is _tdata_start */
+    .4byte 0 /* dummy p_paddr */
+tls_filesize:
+    .4byte 0 /* p_filesz will get calculated and filled in later with _tdata_end - _tdata_start */
+tls_memsize:
+    .4byte 0 /* p_memsz will get calculated and filled in later with _tbss_end - _tdata_start */
+    .4byte 0 /* dummy p_flags */
+    .4byte 4 /* p_align set to word alignment */
 
     .bss
     .align  8

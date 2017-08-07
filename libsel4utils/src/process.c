@@ -292,7 +292,16 @@ sel4utils_spawn_process_v(sel4utils_process_t *process, vka_t *vka, vspace_t *vs
     if (error == -1) {
         return -1;
     }
-    char *envp[] = {ipc_buf_env};
+    AUTOFREE char *tcb_cptr_buf_env = NULL;
+    error = asprintf(&tcb_cptr_buf_env, "boot_tcb_cptr=0x%"PRIxPTR"", process->dest_tcb_cptr);
+    if (error == -1) {
+        return -1;
+    }
+    char *envp[] = {ipc_buf_env, tcb_cptr_buf_env};
+
+    if (process->dest_tcb_cptr != 0) {
+        envc++;
+    }
 
     uintptr_t initial_stack_pointer = (uintptr_t) process->thread.stack_top - sizeof(seL4_Word);
 
@@ -625,6 +634,9 @@ sel4utils_configure_process_custom(sel4utils_process_t *process, vka_t *vka,
         vka_cspace_make_path(vka, process->thread.tcb.cptr, &src);
         UNUSED seL4_CPtr slot = sel4utils_copy_path_to_process(process, src);
         assert(slot == SEL4UTILS_TCB_SLOT);
+        process->dest_tcb_cptr = SEL4UTILS_TCB_SLOT;
+    } else {
+        process->dest_tcb_cptr = config.dest_cspace_tcb_cptr;
     }
 
     if (error) {

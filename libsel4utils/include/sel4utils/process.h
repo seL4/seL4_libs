@@ -43,6 +43,8 @@ typedef struct {
     vka_object_t fault_endpoint;
     void *entry_point;
     uintptr_t sysinfo;
+    /* cptr (with respect to the process cnode) of the tcb of the first thread (0 means not supplied) */
+    seL4_CPtr dest_tcb_cptr;
     seL4_Word pagesz;
     object_node_t *allocated_object_list_head;
     /* ELF headers that describe the sections of the loaded image (at least as they

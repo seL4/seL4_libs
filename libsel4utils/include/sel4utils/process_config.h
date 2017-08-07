@@ -33,6 +33,9 @@ typedef struct {
     bool create_cspace;
     /* if so how big ? */
     int one_level_cspace_size_bits;
+    /* if not by what CPtr can the initial thread of the process
+     * invoke its own TCB (optional) */
+    seL4_CPtr dest_cspace_tcb_cptr;
 
     /* otherwise what is the root cnode ?*/
     /* Note if you use a custom cspace then

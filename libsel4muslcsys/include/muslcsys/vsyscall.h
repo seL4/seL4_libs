@@ -32,6 +32,6 @@ muslcsys_syscall_t muslcsys_install_syscall(int syscall, muslcsys_syscall_t new_
  * pointers for returning the arguments. Pointers must be non NULL
  */
 bool muslcsys_get_boot_set_tid_address(int **arg) NONNULL(1);
-#ifdef __NR_set_thread_area
+#if defined(__NR_set_thread_area) || defined(__ARM_NR_set_tls)
 bool muslcsys_get_boot_set_thread_area(void **arg) NONNULL(1);
 #endif

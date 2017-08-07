@@ -32,7 +32,7 @@
 static bool boot_set_tid_address_happened;
 static int *boot_set_tid_address_arg;
 
-#ifdef __NR_set_thread_area
+#if defined(__NR_set_thread_area) || defined(__ARM_NR_set_tls)
 static bool boot_set_thread_area_happened;
 static void *boot_set_thread_area_arg;
 
@@ -155,7 +155,7 @@ static sparse_syscall_t sparse_syscall_table[] = {
     {__ARM_NR_usr32, NULL},
 #endif
 #ifdef __ARM_NR_set_tls
-    {__ARM_NR_set_tls, NULL},
+    {__ARM_NR_set_tls, boot_set_thread_area},
 #endif
 };
 
@@ -195,6 +195,10 @@ static void CONSTRUCTOR(CONSTRUCTOR_MIN_PRIORITY) init_syscall_table(void) {
     assert(ret == boot_set_tid_address);
 #ifdef __NR_set_thread_area
     ret = muslcsys_install_syscall(__NR_set_thread_area, sys_set_thread_area);
+    assert(ret == boot_set_thread_area);
+#endif
+#ifdef __ARM_NR_set_tls
+    ret = muslcsys_install_syscall(__ARM_NR_set_tls, NULL);
     assert(ret == boot_set_thread_area);
 #endif
     ret = muslcsys_install_syscall(__NR_writev, sys_writev);

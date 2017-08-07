@@ -287,8 +287,11 @@ sel4utils_spawn_process_v(sel4utils_process_t *process, vka_t *vka, vspace_t *vs
     /* define an envp and auxp */
     int error;
     int envc = 1;
-    char ipc_buf_env[WORD_STRING_SIZE];
-    sprintf(ipc_buf_env, "IPCBUFFER=0x%"PRIxPTR"", process->thread.ipc_buffer_addr);
+    AUTOFREE char *ipc_buf_env = NULL;
+    error = asprintf(&ipc_buf_env, "IPCBUFFER=0x%"PRIxPTR"", process->thread.ipc_buffer_addr);
+    if (error == -1) {
+        return -1;
+    }
     char *envp[] = {ipc_buf_env};
 
     uintptr_t initial_stack_pointer = (uintptr_t) process->thread.stack_top - sizeof(seL4_Word);

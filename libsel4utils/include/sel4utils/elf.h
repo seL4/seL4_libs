@@ -17,6 +17,16 @@
 #include <vka/vka.h>
 
 #include <vspace/vspace.h>
+#include <elf.h>
+
+#if CONFIG_WORD_SIZE == 64
+#define Elf_Phdr Elf64_Phdr
+#elif CONFIG_WORD_SIZE == 32
+#define Elf_Phdr Elf32_Phdr
+#else
+#error "Word size unsupported"
+#endif /* CONFIG_WORD_SIZE */
+
 
 typedef struct sel4utils_elf_region {
     seL4_CapRights_t rights;
@@ -105,5 +115,25 @@ sel4utils_elf_num_regions(const char *image_name);
  * @return Address of vsyscall function or 0 if not found
  */
 uintptr_t sel4utils_elf_get_vsyscall(const char *image_name);
+
+/**
+ * Parses an elf file and returns the number of phdrs. The result of this
+ * can be used prior to a call to sel4utils_elf_read_phdrs
+ *
+ * @param image_name name of the image in the cpio archive to inspect
+ * @return Number of phdrs in the elf
+ */
+uint32_t sel4utils_elf_num_phdrs(const char *image_name);
+
+/**
+ * Parse an elf file and retrieve all the phdrs
+ *
+ * @param image_name name of the image in the cpio archive to inspect
+ * @param max_phdrs Maximum number of phdrs to retrieve
+ * @param phdrs Array to store the loaded phdrs into
+ *
+ * @return Number of phdrs retrieved
+ */
+void sel4utils_elf_read_phdrs(const char *image_name, uint32_t max_phdrs, Elf_Phdr *phdrs);
 
 #endif /* SEL4UTILS_ELF_H */

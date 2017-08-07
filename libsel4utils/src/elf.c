@@ -302,3 +302,35 @@ sel4utils_elf_load(vspace_t *loadee, vspace_t *loader, vka_t *loadee_vka, vka_t 
 {
     return sel4utils_elf_load_record_regions(loadee, loader, loadee_vka, loader_vka, image_name, NULL, 0);
 }
+
+uint32_t
+sel4utils_elf_num_phdrs(const char *image_name)
+{
+    unsigned long elf_size;
+    char *elf_file = cpio_get_file(_cpio_archive, image_name, &elf_size);
+    return elf_getNumProgramHeaders(elf_file);
+}
+
+void
+sel4utils_elf_read_phdrs(const char *image_name, uint32_t max_phdrs, Elf_Phdr *phdrs)
+{
+    unsigned long elf_size;
+    char *elf_file = cpio_get_file(_cpio_archive, image_name, &elf_size);
+    uint32_t num_phdrs = elf_getNumProgramHeaders(elf_file);
+    for (uint32_t i = 0; i < num_phdrs && i < max_phdrs; i++) {
+        /* cannot take addresses directly from the final struct as the types might
+         * be different, so store into locals first */
+        uint64_t p_vaddr, p_paddr, p_filesz, p_offset, p_memsz;
+        elf_getProgramHeaderInfo(elf_file, i, &p_vaddr, &p_paddr, &p_filesz, &p_offset, &p_memsz);
+        phdrs[i] = (Elf_Phdr) {
+            .p_type = elf_getProgramHeaderType(elf_file, i),
+            .p_offset = p_offset,
+            .p_vaddr = p_vaddr,
+            .p_paddr = p_paddr,
+            .p_filesz = p_filesz,
+            .p_memsz = p_memsz,
+            .p_flags = elf_getProgramHeaderFlags(elf_file,i),
+            .p_align = elf_getProgramHeaderAlign(elf_file, i)
+        };
+    }
+}

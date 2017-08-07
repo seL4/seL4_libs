@@ -43,6 +43,15 @@ static long boot_set_thread_area(va_list ap) {
         return -ESRCH;
     }
 
+    /* For platforms (such as aarch64) that have an architecturally defined thread pointer
+     * that is user accessible set_thread_area will happen internally in the C library.
+     * Unfortunately in x86-64 the method to *set* the thread pointer is not defined completely
+     * by the architecture, but the kernel *may* be using a strategy that allows us to
+     * write to it directly, but the C library will not know this. In this case we set the
+     * thread pointer here and then return, otherwise we have to resort to using the TCB invocation */
+#if defined(CONFIG_FSGSBASE_INST)
+    asm volatile("wrfsbase %0" :: "r"(tp));
+#else
     char *tcb_string = getenv("boot_tcb_cptr");
     if (tcb_string) {
         seL4_CPtr tcb;
@@ -50,7 +59,7 @@ static long boot_set_thread_area(va_list ap) {
             seL4_TCB_SetTLSBase(tcb, (seL4_Word)tp);
         }
     }
-
+#endif
     boot_set_thread_area_happened = true;
     boot_set_thread_area_arg = tp;
     return 0;

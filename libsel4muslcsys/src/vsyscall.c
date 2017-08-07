@@ -42,6 +42,15 @@ static long boot_set_thread_area(va_list ap) {
         ZF_LOGE("Boot version of set_thread_area somehow got called twice");
         return -ESRCH;
     }
+
+    char *tcb_string = getenv("boot_tcb_cptr");
+    if (tcb_string) {
+        seL4_CPtr tcb;
+        if (sscanf(tcb_string, "%p", (void**)&tcb) == 1) {
+            seL4_TCB_SetTLSBase(tcb, (seL4_Word)tp);
+        }
+    }
+
     boot_set_thread_area_happened = true;
     boot_set_thread_area_arg = tp;
     return 0;

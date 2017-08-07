@@ -117,7 +117,7 @@ tls_memsize:
     .4byte 4 /* p_align set to word alignment */
 
     .bss
-    .align  8
+    .align  16
 
 _stack_bottom:
     .space  16384

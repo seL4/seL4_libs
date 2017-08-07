@@ -133,12 +133,54 @@ static muslcsys_syscall_t syscall_table[MUSLC_NUM_SYSCALLS] = {
     [__NR_madvise] = sys_madvise,
 };
 
-muslcsys_syscall_t muslcsys_install_syscall(int syscall, muslcsys_syscall_t new_syscall) {
-    if (syscall >= ARRAY_SIZE(syscall_table)) {
-        ZF_LOGF("Syscall %d exceeds syscall table size of %zu", syscall, ARRAY_SIZE(syscall_table));
+/* Additional syscall lookup table for handling spare syscalls or syscalls that have large
+ * numbers. Currently The number of these is very small and so it's an unordered list that
+ * must be searched to find a syscall */
+typedef struct sparse_syscall {
+    int sysnum;
+    muslcsys_syscall_t syscall;
+} sparse_syscall_t;
+
+static sparse_syscall_t sparse_syscall_table[] = {
+#ifdef __ARM_NR_breakpoint
+    {__ARM_NR_breakpoint, NULL},
+#endif
+#ifdef __ARM_NR_cacheflush
+    {__ARM_NR_cacheflush, NULL},
+#endif
+#ifdef __ARM_NR_usr26
+    {__ARM_NR_usr26, NULL},
+#endif
+#ifdef __ARM_NR_usr32
+    {__ARM_NR_usr32, NULL},
+#endif
+#ifdef __ARM_NR_set_tls
+    {__ARM_NR_set_tls, NULL},
+#endif
+};
+
+static int find_sparse_syscall(int syscall) {
+    for (int i = 0; i < ARRAY_SIZE(sparse_syscall_table); i++) {
+        if (sparse_syscall_table[i].sysnum == syscall) {
+            return i;
+        }
     }
-    muslcsys_syscall_t ret = syscall_table[syscall];
-    syscall_table[syscall] = new_syscall;
+    return -1;
+}
+
+muslcsys_syscall_t muslcsys_install_syscall(int syscall, muslcsys_syscall_t new_syscall) {
+    muslcsys_syscall_t ret;
+    if (syscall >= ARRAY_SIZE(syscall_table)) {
+        int index = find_sparse_syscall(syscall);
+        if (index < 0) {
+            ZF_LOGF("Syscall %d exceeds syscall table size of %zu and not found in sparse table", syscall, ARRAY_SIZE(syscall_table));
+        }
+        ret = sparse_syscall_table[index].syscall;
+        sparse_syscall_table[index].syscall = ret;
+    } else {
+        ret = syscall_table[syscall];
+        syscall_table[syscall] = new_syscall;
+    }
     return ret;
 }
 
@@ -184,17 +226,24 @@ static void debug_error(int sysnum) {
 long sel4_vsyscall(long sysnum, ...) {
     va_list al;
     va_start(al, sysnum);
+    muslcsys_syscall_t syscall;
     if (sysnum < 0 || sysnum >= ARRAY_SIZE(syscall_table)) {
-        debug_error(sysnum);
-        return -ENOSYS;
+        int index = find_sparse_syscall(sysnum);
+        if (index < 0) {
+            debug_error(sysnum);
+            return -ENOSYS;
+        }
+        syscall = sparse_syscall_table[index].syscall;
+    } else {
+        syscall = syscall_table[sysnum];
     }
     /* Check a syscall is implemented there */
-    if (!syscall_table[sysnum]) {
+    if (!syscall) {
         debug_error(sysnum);
         return -ENOSYS;
     }
     /* Call it */
-    long ret = syscall_table[sysnum](al);
+    long ret = syscall(al);
     va_end(al);
     return ret;
 }

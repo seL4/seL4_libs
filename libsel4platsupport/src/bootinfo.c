@@ -33,3 +33,8 @@ seL4_BootInfo *platsupport_get_bootinfo(void)
     seL4_SetUserData((seL4_Word)bootinfo->ipcBuffer);
     return bootinfo;
 }
+
+seL4_CPtr sel4ps_get_seL4_CapInitThreadTCB(void)
+{
+    return seL4_CapInitThreadTCB;
+}

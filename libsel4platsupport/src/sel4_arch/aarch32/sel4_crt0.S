@@ -33,8 +33,17 @@ _sel4_start:
     ldr     r1, =bootinfo_format
     bl      sprintf
 
-    /* The series of pushes below will result in the final stack being 8 byte
-     * aligned as it must be */
+    /* Construct the boot_tcb_cptr environment variable */
+    /* First call out to C to get the value of seL4_CapInitThreadTCB */
+    bl      sel4ps_get_seL4_CapInitThreadTCB
+    mov     r2, r0
+    ldr     r0, =boot_tid_tcb_cptr_storage
+    ldr     r1, =boot_tid_tcb_cptr_format
+    bl      sprintf
+
+    /* The series of pushes below will result in the final stack being 4 byte
+     * aligned, instead of 8 byte, as it must be, so perform a dummy extra push here */
+    push    {r0}
     /* Setup stack frame ready for jumping to _start */
     /* null terminate auxv */
     mov     r0, #0
@@ -69,6 +78,9 @@ _sel4_start:
     push    {r1} /* AT_PHENT */
     /* Null terminate envp */
     push    {r0}
+    /* Give initial tcb location */
+    ldr     r1, =boot_tid_tcb_cptr_storage
+    push    {r1}
     /* Give bootinfo location */
     ldr     r1, =bootinfo_storage
     push    {r1}
@@ -96,6 +108,10 @@ bootinfo_format:
     .asciz "bootinfo=%p"
 bootinfo_storage:
     .space 21
+boot_tid_tcb_cptr_format:
+    .asciz "boot_tcb_cptr=%p"
+boot_tid_tcb_cptr_storage:
+    .space 27
 environment_string:
     .asciz "seL4=1"
 prog_name:

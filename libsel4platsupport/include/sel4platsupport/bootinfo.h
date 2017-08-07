@@ -17,3 +17,7 @@
 
 /* Helper function for pulling the bootinfo pointer out of the environment. */
 seL4_BootInfo *platsupport_get_bootinfo(void);
+
+/* Helper function for getting the value of seL4_CapInitThreadTCB, which is an enum,
+ * into assembly */
+seL4_CPtr sel4ps_get_seL4_CapInitThreadTCB(void);

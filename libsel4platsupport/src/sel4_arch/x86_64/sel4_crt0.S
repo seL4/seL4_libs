@@ -37,6 +37,14 @@ _sel4_start:
     leaq bootinfo_format, %rsi
     call sprintf
 
+    /* Construct the boot_tcb_cptr environment variable */
+    /* First call out to C to get the value of seL4_CapInitThreadTCB */
+    call sel4ps_get_seL4_CapInitThreadTCB
+    movq %rax, %rdx
+    leaq boot_tid_tcb_cptr_format, %rsi
+    leaq boot_tid_tcb_cptr_storage, %rdi
+    call sprintf
+
     /* Construct a System V ABI compatible stack frame so we can go to regular _start */
     /* NULL terminate auxv */
     pushq $0
@@ -66,6 +74,9 @@ _sel4_start:
 
     /* Null terminate envp */
     pushq $0
+    /* Give initial tcb location */
+    leaq boot_tid_tcb_cptr_storage, %rax
+    pushq %rax
     /* Give bootinfo location */
     leaq bootinfo_storage, %rax
     pushq %rax
@@ -92,6 +103,10 @@ bootinfo_format:
     .asciz "bootinfo=%p"
 bootinfo_storage:
     .space 29
+boot_tid_tcb_cptr_format:
+    .asciz "boot_tcb_cptr=%p"
+boot_tid_tcb_cptr_storage:
+    .space 35
 environment_string:
     .asciz "seL4=1"
 prog_name:

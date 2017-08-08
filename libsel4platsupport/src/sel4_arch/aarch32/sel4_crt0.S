@@ -90,7 +90,7 @@ _sel4_start:
 .pool
 
     .data
-    .align 4
+    .balign 4
 
 bootinfo_format:
     .asciz "bootinfo=%p"
@@ -114,7 +114,7 @@ tls_memsize:
     .4byte 4 /* p_align set to word alignment */
 
     .bss
-    .align  8
+    .balign  8
 
 _stack_bottom:
     .space  16384

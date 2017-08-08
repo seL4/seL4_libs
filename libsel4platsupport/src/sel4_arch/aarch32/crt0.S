@@ -48,7 +48,7 @@ _start:
 
 /* Stack for the image. */
 .bss
-.align  8
+.balign  8
 _stack_bottom:
 .space  16384
 _stack_top:

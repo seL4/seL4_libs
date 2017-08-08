@@ -49,7 +49,7 @@ _start:
 1:  jmp     1b
 
     .bss
-    .align  8
+    .balign  8
 
 _stack_bottom:
     .space  16384

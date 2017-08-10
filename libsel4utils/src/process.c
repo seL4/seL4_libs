@@ -641,7 +641,7 @@ sel4utils_configure_process_custom(sel4utils_process_t *process, vka_t *vka,
     }
 
     if (config.create_cspace && config_set(CONFIG_KERNEL_RT)) {
-        slot = sel4utils_copy_cap_to_process(process, vka, process->thread.sched_context.cptr);
+        seL4_CPtr slot = sel4utils_copy_cap_to_process(process, vka, process->thread.sched_context.cptr);
         assert(slot == SEL4UTILS_SCHED_CONTEXT_SLOT);
         slot = sel4utils_copy_cap_to_process(process, vka, process->thread.reply.cptr);
         assert(slot == SEL4UTILS_REPLY_SLOT);

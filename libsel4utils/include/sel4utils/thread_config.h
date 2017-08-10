@@ -175,13 +175,10 @@ thread_config_default(simple_t *simple, seL4_CPtr cnode, seL4_CapData_t data, se
     config = thread_config_cspace(config, cnode, data);
     config = thread_config_fault_endpoint(config, fault_ep);
     config = thread_config_priority(config, prio);
-    uint64_t timeslice;
-#ifdef CONFIG_BOOT_THREAD_TIME_SLICE
-    timeslice = CONFIG_BOOT_THREAD_TIME_SLICE;
-#else
-    timeslice = CONFIG_TIMER_TICK_MS;
-#endif
-    config.sched_params = sched_params_round_robin(config.sched_params, simple, 0, timeslice * US_IN_MS);
+    if (config_set(CONFIG_KERNEL_RT)) {
+        uint64_t timeslice = CONFIG_BOOT_THREAD_TIME_SLICE;
+        config.sched_params = sched_params_round_robin(config.sched_params, simple, 0, timeslice * US_IN_MS);
+    }
     config = thread_config_create_reply(config);
     return config;
 }

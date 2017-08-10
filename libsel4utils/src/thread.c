@@ -90,7 +90,13 @@ sel4utils_configure_thread_config(vka_t *vka, vspace_t *parent, vspace_t *alloc,
         res->reply.cptr = config.reply;
     }
 
-    if (config_set(CONFIG_KERNEL_RT) && config.sched_params.create_sc) {
+    if (config.sched_params.create_sc) {
+        if (!config_set(CONFIG_KERNEL_RT)) {
+            ZF_LOGE("Cannot create a scheduling context on a non-RT kernel");
+            sel4utils_clean_up_thread(vka, alloc, res);
+            return -1;
+        }
+
         /* allocate a scheduling context */
         if (vka_alloc_sched_context(vka, &res->sched_context)) {
             ZF_LOGE("Failed to allocate sched context");

@@ -14,6 +14,7 @@
 #define __VKA_OBJECT_H__
 
 #include <assert.h>
+#include <errno.h>
 #include <vka/vka.h>
 #include <vka/kobject_t.h>
 #include <stdio.h>
@@ -143,6 +144,31 @@ static inline int vka_alloc_tcb(vka_t *vka, vka_object_t *result)
 {
     return vka_alloc_object(vka, seL4_TCBObject, seL4_TCBBits, result);
 }
+
+static inline int vka_alloc_sched_context(UNUSED vka_t *vka, UNUSED vka_object_t *result)
+{
+#ifdef CONFIG_KERNEL_RT
+    return vka_alloc_object(vka, seL4_SchedContextObject, seL4_MinSchedContextBits, result);
+#else
+    ZF_LOGW("Allocating sched context on non RT kernel");
+    return ENOSYS;
+#endif
+}
+
+static inline int vka_alloc_sched_context_size(UNUSED vka_t *vka, UNUSED vka_object_t *result, UNUSED uint32_t size_bits)
+{
+#ifdef CONFIG_KERNEL_RT
+    if (size_bits < seL4_MinSchedContextBits) {
+        ZF_LOGE("Invalid size bits for sc");
+        return -1;
+    }
+    return vka_alloc_object(vka, seL4_SchedContextObject, size_bits, result);
+#else
+    ZF_LOGW("Allocating sched context on non RT kernel");
+    return ENOSYS;
+#endif
+}
+
 static inline int vka_alloc_endpoint(vka_t *vka, vka_object_t *result)
 {
     return vka_alloc_object(vka, seL4_EndpointObject, seL4_EndpointBits, result);
@@ -228,6 +254,7 @@ LEAKY(endpoint)
 LEAKY(notification)
 LEAKY(page_directory)
 LEAKY(page_table)
+LEAKY(sched_context)
 
 static inline DEPRECATED("use vka_alloc_notification_leaky") seL4_CPtr
 vka_alloc_async_endpoint_leaky(vka_t *vka)
@@ -265,6 +292,10 @@ vka_get_object_size(seL4_Word objectType, seL4_Word objectSize)
         return objectSize;
     case seL4_TCBObject:
         return seL4_TCBBits;
+#ifdef CONFIG_KERNEL_RT
+    case seL4_SchedContextObject:
+        return objectSize > seL4_MinSchedContextBits ? objectSize : seL4_MinSchedContextBits;
+#endif
     case seL4_EndpointObject:
         return seL4_EndpointBits;
     case seL4_NotificationObject:

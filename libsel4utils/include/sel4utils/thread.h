@@ -38,11 +38,13 @@
 
 typedef struct sel4utils_thread {
     vka_object_t tcb;
+    vka_object_t sched_context;
     void *stack_top;
     void *initial_stack_pointer;
     size_t stack_size;
     seL4_CPtr ipc_buffer;
     seL4_Word ipc_buffer_addr;
+    bool own_sc;
 } sel4utils_thread_t;
 
 typedef struct sel4utils_checkpoint {
@@ -55,6 +57,8 @@ typedef void (*sel4utils_thread_entry_fn)(void *arg0, void *arg1, void *ipc_buf)
 
 /**
  * Configure a thread, allocating any resources required. The thread will start at priority 0.
+ *
+ * If CONFIG_RT is enabled, the thread will not have a scheduling context, so it will not be able to run.
  *
  * @param vka initialised vka to allocate objects with
  * @param parent vspace structure of the thread calling this function, used for temporary mappings
@@ -174,6 +178,8 @@ void sel4utils_free_checkpoint(sel4utils_checkpoint_t *checkpoint);
 /**
  * Start a fault handling thread that will print the name of the thread that faulted
  * as well as debugging information. The thread will start at priority 0.
+ *
+ * If CONFIG_RT it be passive (not have a scheulding context) and will run on the SC of the faulter.
  *
  * @param fault_endpoint the fault_endpoint to wait on
  * @param vka allocator

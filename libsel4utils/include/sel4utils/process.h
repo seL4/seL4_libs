@@ -86,8 +86,11 @@ enum sel4utils_cspace_layout {
     /* the slot for this processes tcb */
     SEL4UTILS_TCB_SLOT = 5,
 
+    /* the slot for this processes sc */
+    SEL4UTILS_SCHED_CONTEXT_SLOT = 6,
+
     /* First free slot in the cspace configured by sel4utils */
-    SEL4UTILS_FIRST_FREE = 6
+    SEL4UTILS_FIRST_FREE = 7
 };
 
 /**
@@ -147,6 +150,8 @@ int sel4utils_spawn_process_v(sel4utils_process_t *process, vka_t *vka, vspace_t
  * This is the function to use if you just want to set up a process as fast as possible.
  * It creates a simple cspace and vspace for you, allocates a fault endpoint and puts
  * it into the new cspace. The process will start at priority 0.
+ *
+ * If CONFIG_RT is enabled, it will not have a scheduling context.
  *
  * It loads the elf file into the new vspace, parses the elf file and stores the entry point
  * into process->entry_point.

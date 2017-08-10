@@ -78,9 +78,36 @@ sel4utils_configure_thread_config(vka_t *vka, vspace_t *parent, vspace_t *alloc,
         }
     }
 
+    if (config_set(CONFIG_KERNEL_RT) && config.sched_params.create_sc) {
+        /* allocate a scheduling context */
+        if (vka_alloc_sched_context(vka, &res->sched_context)) {
+            ZF_LOGE("Failed to allocate sched context");
+            sel4utils_clean_up_thread(vka, alloc, res);
+            return -1;
+        }
+
+        /* configure the scheduling context */
+#ifdef CONFIG_KERNEL_RT
+        error = seL4_SchedControl_Configure(config.sched_params.sched_ctrl, res->sched_context.cptr,
+                                            config.sched_params.budget, config.sched_params.period,
+                                            config.sched_params.extra_refills);
+#endif
+        if (error != seL4_NoError) {
+            ZF_LOGE("Failed to configure sched context");
+            sel4utils_clean_up_thread(vka, alloc, res);
+            return -1;
+        }
+        res->own_sc = true;
+    } else {
+        res->sched_context.cptr = config.sched_params.sched_context;
+    }
     seL4_CapData_t null_cap_data = {{0}};
     error = seL4_TCB_Configure(res->tcb.cptr, config.fault_endpoint,
-                               seL4_PrioProps_new(config.sched_params.mcp, config.sched_params.priority), config.cspace,
+                               seL4_PrioProps_new(config.sched_params.mcp, config.sched_params.priority),
+#ifdef CONFIG_KERNEL_RT
+                               res->sched_context.cptr,
+#endif
+                               config.cspace,
                                config.cspace_root_data, vspace_get_root(alloc), null_cap_data, res->ipc_buffer_addr, res->ipc_buffer);
 
     if (error != seL4_NoError) {
@@ -144,6 +171,10 @@ sel4utils_clean_up_thread(vka_t *vka, vspace_t *alloc, sel4utils_thread_t *threa
 
     if (thread->stack_top != 0) {
         vspace_free_sized_stack(alloc, thread->stack_top, thread->stack_size);
+    }
+
+    if (thread->own_sc && thread->sched_context.cptr != 0) {
+        vka_free_object(vka, &thread->sched_context);
     }
 
     memset(thread, 0, sizeof(sel4utils_thread_t));

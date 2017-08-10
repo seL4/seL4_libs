@@ -109,6 +109,8 @@ typedef struct vmm {
     /* TCB of the VMM thread
      * TODO: Should eventually have one vmm thread per vcpu */
     seL4_CPtr tcb;
+    seL4_CPtr sc;
+    seL4_CPtr sched_ctrl;
 
     /* platform callback functions */
     platform_callbacks_t plat_callbacks;

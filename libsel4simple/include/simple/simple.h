@@ -178,6 +178,12 @@ typedef int (*simple_get_core_count_fn)(void *data);
 typedef seL4_Error (*simple_get_iospace_fn)(void *data, uint16_t domainID, uint16_t deviceID, cspacepath_t *path);
 #endif
 
+/*
+ * Get the sched ctrl for the requested core (0 for uniprocessor).
+ * @return seL4_CapNull if CONFIG_RT is disabled
+ */
+typedef seL4_CPtr (*simple_get_sched_ctrl_fn)(void *data, int core);
+
 /**
  *
  * Get simple to print all the information it has about its environment
@@ -232,6 +238,7 @@ typedef struct simple_t {
     simple_get_nth_userimage_fn nth_userimage;
     simple_get_core_count_fn core_count;
     simple_print_fn print;
+    simple_get_sched_ctrl_fn sched_ctrl;
     simple_get_arch_info_fn arch_info;
     simple_get_extended_bootinfo_len_fn extended_bootinfo_len;
     simple_get_extended_bootinfo_fn extended_bootinfo;
@@ -409,6 +416,16 @@ simple_get_tcb(simple_t *simple)
 }
 
 static inline seL4_CPtr
+simple_get_sc(UNUSED simple_t *simple)
+{
+#ifdef CONFIG_KERNEL_RT
+    return simple_init_cap(simple, seL4_CapInitThreadSC);
+#else
+    return seL4_CapNull;
+#endif
+}
+
+static inline seL4_CPtr
 simple_get_pd(simple_t *simple)
 {
     return simple_init_cap(simple, seL4_CapInitThreadPD);
@@ -574,6 +591,25 @@ simple_print(simple_t *simple)
     }
 
     simple->print(simple->data);
+}
+
+static inline seL4_CPtr
+simple_get_sched_ctrl(simple_t *simple, int core)
+{
+    if (!simple) {
+        ZF_LOGE("Simple is NULL");
+        return seL4_CapNull;
+    }
+    if (!simple->sched_ctrl) {
+        ZF_LOGE("%s not implemented", __FUNCTION__);
+        return seL4_CapNull;
+    }
+    if (core >= simple_get_core_count(simple)) {
+        ZF_LOGE("invalid core");
+        return seL4_CapNull;
+    }
+
+    return simple->sched_ctrl(simple->data, core);
 }
 
 static inline seL4_Word

@@ -185,5 +185,13 @@ process_config_default_simple(simple_t *simple, const char *image_name, uint8_t 
     config = process_config_create_cnode(config, CONFIG_SEL4UTILS_CSPACE_SIZE_BITS);
     config = process_config_create_vspace(config, NULL, 0);
     config = process_config_create_fault_endpoint(config);
+
+    uint64_t timeslice = 0;
+#ifdef CONFIG_BOOT_THREAD_TIME_SLICE
+    timeslice = CONFIG_BOOT_THREAD_TIME_SLICE;
+#else
+    timeslice = CONFIG_TIMER_TICK_MS;
+#endif
+    config.sched_params = sched_params_round_robin(config.sched_params, simple, 0, timeslice * US_IN_MS);
     return process_config_priority(config, prio);
 }

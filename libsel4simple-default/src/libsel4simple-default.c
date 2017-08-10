@@ -180,6 +180,17 @@ void simple_default_print(void *data) {
     debug_print_bootinfo(data);
 }
 
+seL4_CPtr simple_default_sched_control(void *data, int core)
+{
+    assert(core < simple_default_core_count(data));
+#if CONFIG_KERNEL_RT
+    return ((seL4_BootInfo) data)->schedcontrol.start + core;
+#else
+    ZF_LOGW("not implemented");
+    return seL4_CapNull;
+#endif
+}
+
 seL4_Word simple_default_arch_info(void *data) {
     if (data == NULL) {
         ZF_LOGE("Data is null!");
@@ -251,6 +262,7 @@ void simple_default_init_bootinfo(simple_t *simple, seL4_BootInfo *bi) {
     simple->core_count = &simple_default_core_count;
     simple->nth_userimage = &simple_default_nth_userimage;
     simple->print = &simple_default_print;
+    simple->sched_ctrl = &simple_default_sched_control;
     simple->arch_info = &simple_default_arch_info;
     simple->extended_bootinfo_len = &simple_default_get_extended_bootinfo_size;
     simple->extended_bootinfo = &simple_default_get_extended_bootinfo;

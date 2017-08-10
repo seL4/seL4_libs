@@ -28,6 +28,7 @@ enum _kobject_type {
     KOBJECT_UNTYPED,
     KOBJECT_ENDPOINT,
     KOBJECT_NOTIFICATION,
+    KOBJECT_REPLY,
     KOBJECT_SCHED_CONTEXT,
 #ifdef CONFIG_CACHE_COLORING
     KOBJECT_KERNEL_IMAGE,
@@ -65,6 +66,8 @@ kobject_get_size(kobject_t type, seL4_Word objectSize)
     case KOBJECT_PAGE_TABLE:
         return seL4_PageTableBits;
 #ifdef CONFIG_KERNEL_RT
+    case KOBJECT_REPLY:
+        return seL4_ReplyBits;
     case KOBJECT_SCHED_CONTEXT:
         return objectSize > seL4_MinSchedContextBits ? objectSize : seL4_MinSchedContextBits;
 #endif
@@ -97,6 +100,8 @@ kobject_get_type(kobject_t type, seL4_Word objectSize)
 #ifdef CONFIG_KERNEL_RT
     case KOBJECT_SCHED_CONTEXT:
         return seL4_SchedContextObject;
+    case KOBJECT_REPLY:
+        return seL4_ReplyObject;
 #endif
 #ifdef CONFIG_CACHE_COLORING
     case KOBJECT_KERNEL_IMAGE:

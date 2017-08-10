@@ -57,6 +57,10 @@ typedef struct sel4utils_thread_config {
     bool no_ipc_buffer;
     /* scheduling parameters */
     sched_params_t sched_params;
+    /* true if sel4utils should create a reply */
+    bool create_reply;
+    /* otherwise provide one */
+    seL4_CPtr reply;
 } sel4utils_thread_config_t;
 
 static inline sched_params_t
@@ -79,6 +83,21 @@ static inline sched_params_t
 sched_params_round_robin(sched_params_t params, simple_t *simple, seL4_Word core, uint64_t timeslice_us)
 {
     return sched_params_periodic(params, simple, core, timeslice_us, timeslice_us, 0, 0);
+}
+
+static inline sel4utils_thread_config_t
+thread_config_create_reply(sel4utils_thread_config_t config)
+{
+    config.create_reply = true;
+    return config;
+}
+
+static inline sel4utils_thread_config_t
+thread_config_reply(sel4utils_thread_config_t config, seL4_CPtr reply)
+{
+    config.create_reply = false;
+    config.reply = reply;
+    return config;
 }
 
 static inline sel4utils_thread_config_t

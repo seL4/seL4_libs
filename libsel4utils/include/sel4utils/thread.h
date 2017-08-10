@@ -45,6 +45,8 @@ typedef struct sel4utils_thread {
     seL4_CPtr ipc_buffer;
     seL4_Word ipc_buffer_addr;
     bool own_sc;
+    bool own_reply;
+    vka_object_t reply;
 } sel4utils_thread_t;
 
 typedef struct sel4utils_checkpoint {

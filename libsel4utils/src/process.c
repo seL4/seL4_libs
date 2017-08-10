@@ -619,6 +619,7 @@ sel4utils_configure_process_custom(sel4utils_process_t *process, vka_t *vka,
     thread_config = thread_config_cspace(thread_config, process->cspace.cptr, cspace_root_data);
     thread_config = thread_config_fault_endpoint(thread_config, SEL4UTILS_ENDPOINT_SLOT);
     thread_config.sched_params = config.sched_params;
+    thread_config.create_reply = config.create_cspace;
     error = sel4utils_configure_thread_config(vka, spawner_vspace, &process->vspace, thread_config,
                                               &process->thread);
     if (error) {
@@ -642,8 +643,12 @@ sel4utils_configure_process_custom(sel4utils_process_t *process, vka_t *vka,
     if (config.create_cspace && config_set(CONFIG_KERNEL_RT)) {
         slot = sel4utils_copy_cap_to_process(process, vka, process->thread.sched_context.cptr);
         assert(slot == SEL4UTILS_SCHED_CONTEXT_SLOT);
+        slot = sel4utils_copy_cap_to_process(process, vka, process->thread.reply.cptr);
+        assert(slot == SEL4UTILS_REPLY_SLOT);
     } else {
         /* skip the sc slot */
+        allocate_next_slot(process);
+        /* skip the reply object slot */
         allocate_next_slot(process);
     }
 

@@ -23,6 +23,7 @@
 #include <vka/cspacepath_t.h>
 #include <vka/object.h>
 
+#ifndef CONFIG_KERNEL_RT
 inline static int
 vka_cnode_saveCaller(const cspacepath_t* src)
 {
@@ -32,6 +33,7 @@ vka_cnode_saveCaller(const cspacepath_t* src)
                /* depth */         src->capDepth
            );
 }
+#endif
 
 inline static int
 vka_cnode_copy(const cspacepath_t* dest, const cspacepath_t* src, seL4_CapRights_t rights)

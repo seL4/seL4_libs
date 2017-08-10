@@ -267,6 +267,7 @@ irq_server_thread_new(vspace_t* vspace, vka_t* vka, seL4_CPtr cspace, seL4_Word 
 
 struct irq_server {
     seL4_CPtr delivery_ep;
+    vka_object_t reply;
     seL4_Word label;
     int max_irqs;
     vspace_t* vspace;
@@ -349,6 +350,13 @@ irq_server_new(vspace_t* vspace, vka_t* vka, seL4_CPtr cspace, seL4_Word priorit
         ZF_LOGE("malloc failed on irq server memory allocation");
         return -1;
     }
+
+    if (config_set(CONFIG_KERNEL_RT) && vka_alloc_reply(vka, &irq_server->reply) != 0) {
+        ZF_LOGE("Failed to allocate reply object");
+        free(irq_server);
+        return -1;
+    }
+
     irq_server->delivery_ep = sync_ep;
     irq_server->label = label;
     irq_server->max_irqs = nirqs;
@@ -384,7 +392,11 @@ irq_server_wait_for_irq(irq_server_t irq_server, seL4_Word* badge_ret)
     seL4_Word badge;
 
     /* Wait for an event */
+#ifdef CONFIG_KERNEL_RT
+    msginfo = seL4_Recv(irq_server->delivery_ep, &badge, irq_server->reply.cptr);
+#else
     msginfo = seL4_Recv(irq_server->delivery_ep, &badge);
+#endif
     if (badge_ret) {
         *badge_ret = badge;
     }

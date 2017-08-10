@@ -145,17 +145,9 @@ sel4utils_copy_path_to_process(sel4utils_process_t *process, cspacepath_t src)
 seL4_CPtr
 sel4utils_copy_cap_to_process(sel4utils_process_t *process, vka_t *vka, seL4_CPtr cap)
 {
-    seL4_CPtr copied_cap;
     cspacepath_t path;
-
     vka_cspace_make_path(vka, cap, &path);
-    copied_cap = sel4utils_copy_path_to_process(process, path);
-    if (copied_cap == 0) {
-        ZF_LOGF("Failed to copy cap to process");
-        return 0;
-    }
-
-    return copied_cap;
+    return sel4utils_copy_path_to_process(process, path);
 }
 
 seL4_CPtr

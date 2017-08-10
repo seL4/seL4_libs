@@ -184,16 +184,18 @@ void
 sel4utils_print_fault_message(seL4_MessageInfo_t tag, const char *thread_name)
 {
     seL4_Fault_t fault = seL4_getFault(tag);
+
     switch (seL4_Fault_get_seL4_FaultType(fault)) {
     case seL4_Fault_VMFault:
         assert(seL4_MessageInfo_get_length(tag) == seL4_VMFault_Length);
-        printf("%sPagefault from [%s]: %s %s at PC: %p vaddr: %p%s\n",
+        printf("%sPagefault from [%s]: %s %s at PC: %p vaddr: %p, FSR %p%s\n",
                COLOR_ERROR,
                thread_name,
                sel4utils_is_read_fault() ? "read" : "write",
                seL4_Fault_VMFault_get_PrefetchFault(fault) ? "prefetch fault" : "fault",
                (void*)seL4_Fault_VMFault_get_IP(fault),
                (void*)seL4_Fault_VMFault_get_Addr(fault),
+               (void *)seL4_Fault_VMFault_get_FSR(fault),
                COLOR_NORMAL);
         break;
 
@@ -214,8 +216,17 @@ sel4utils_print_fault_message(seL4_MessageInfo_t tag, const char *thread_name)
         printf("%sInvalid instruction from [%s] at PC: %p%s\n",
                COLOR_ERROR,
                thread_name,
-               (void*)seL4_GetMR(seL4_UserException_FaultIP),
+               (void*)seL4_Fault_UserException_get_FaultIP(fault),
                COLOR_NORMAL);
+        break;
+
+    case seL4_Fault_CapFault:
+        printf("%sCap fault from [%s] in phase %s\nPC = %p\nCPtr = %p%s\n",
+                COLOR_ERROR, thread_name,
+                seL4_Fault_CapFault_get_InRecvPhase(fault) ? "receive" : "send",
+                (void*) seL4_Fault_CapFault_get_IP(fault),
+                (void *) seL4_Fault_CapFault_get_Addr(fault),
+                COLOR_NORMAL);
         break;
 
     default:

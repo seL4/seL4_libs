@@ -20,14 +20,6 @@
 
 #include <utils/util.h>
 
-//#define DEBUG_IRQ_SERVER
-
-#ifdef DEBUG_IRQ_SERVER
-#define DIRQSERVER(...) printf("IRQ server: " __VA_ARGS__)
-#else
-#define DIRQSERVER(...) do{ }while(0)
-#endif
-
 #define NIRQS_PER_NODE        seL4_BadgeBits
 
 /*************************
@@ -71,7 +63,7 @@ irq_server_node_handle_irq(struct irq_server_node *n, uint32_t badge)
         struct irq_data* irq;
         irq_idx = CTZ(badge);
         irq = &irqs[irq_idx];
-        DIRQSERVER("Received IRQ %d, badge 0x%x, index %d\n", irq->irq, (unsigned)badge, irq_idx);
+        ZF_LOGD("Received IRQ %d, badge 0x%x, index %d\n", irq->irq, (unsigned)badge, irq_idx);
         irq->cb(irq);
         badge &= ~BIT(irq_idx);
     }
@@ -128,7 +120,7 @@ irq_bind(irq_t irq, seL4_CPtr notification_cap, int idx, vka_t* vka, simple_t *s
     /* Finally ACK any pending IRQ and enable the IRQ */
     seL4_IRQHandler_Ack(irq_cap);
 
-    DIRQSERVER("Registered IRQ %d with badge 0x%lx\n", irq, BIT(idx));
+    ZF_LOGD("Registered IRQ %d with badge 0x%lx\n", irq, BIT(idx));
     return irq_cap;
 }
 
@@ -146,7 +138,7 @@ irq_server_node_register_irq(irq_server_node_t n, irq_t irq, irq_handler_fn cb,
         if (irqs[i].cap == seL4_CapNull && (n->badge_mask & BIT(i))) {
             irqs[i].cap = irq_bind(irq, n->notification, i, vka, simple);
             if (irqs[i].cap == seL4_CapNull) {
-                DIRQSERVER("Failed to bind IRQ\n");
+                ZF_LOGD("Failed to bind IRQ\n");
                 return NULL;
             }
             irqs[i].irq = irq;
@@ -162,11 +154,10 @@ irq_server_node_register_irq(irq_server_node_t n, irq_t irq, irq_handler_fn cb,
 struct irq_server_node*
 irq_server_node_new(seL4_CPtr notification, seL4_Word badge_mask) {
     struct irq_server_node *n;
-    n = (irq_server_node_t)malloc(sizeof(*n));
+    n = calloc(1, sizeof(*n));
     if (n) {
         n->notification = notification;
         n->badge_mask = badge_mask;
-        memset(n->irqs, 0, sizeof(n->irqs));
     }
     return n;
 }
@@ -205,7 +196,7 @@ _irq_thread_entry(struct irq_server_thread* st)
     notification = st->node->notification;
     node_ptr = (uintptr_t)st->node;
     label = st->label;
-    DIRQSERVER("thread started. Waiting on endpoint %d\n", notification);
+    ZF_LOGD("thread started. Waiting on endpoint %d\n", notification);
 
     while (1) {
         seL4_Word badge;
@@ -232,7 +223,7 @@ irq_server_thread_new(vspace_t* vspace, vka_t* vka, seL4_CPtr cspace, seL4_Word 
     int err;
 
     /* Allocate memory for the structure */
-    st = (struct irq_server_thread*)malloc(sizeof(*st));
+    st = malloc(sizeof(*st));
     if (st == NULL) {
         return NULL;
     }
@@ -321,7 +312,7 @@ irq_server_register_irq(irq_server_t irq_server, irq_t irq,
     /* Try to create a new node */
     if (st == NULL && irq_server->max_irqs < 0) {
         /* Create the node */
-        DIRQSERVER("Spawning new IRQ server thread\n");
+        ZF_LOGD("Spawning new IRQ server thread\n");
         st = irq_server_thread_new(irq_server->vspace, irq_server->vka, irq_server->cspace,
                                    irq_server->thread_priority, &irq_server->simple,
                                    irq_server->label, irq_server->delivery_ep);
@@ -340,7 +331,7 @@ irq_server_register_irq(irq_server_t irq_server, irq_t irq,
         }
     }
     /* Give up */
-    DIRQSERVER("Failed to register for IRQ %d\n", irq);
+    ZF_LOGD("Failed to register for IRQ %d\n", irq);
     return NULL;
 }
 
@@ -353,7 +344,7 @@ irq_server_new(vspace_t* vspace, vka_t* vka, seL4_CPtr cspace, seL4_Word priorit
     struct irq_server* irq_server;
 
     /* Structure allocation and initialisation */
-    irq_server = (struct irq_server*)malloc(sizeof(*irq_server));
+    irq_server = malloc(sizeof(*irq_server));
     if (irq_server == NULL) {
         ZF_LOGE("malloc failed on irq server memory allocation");
         return -1;

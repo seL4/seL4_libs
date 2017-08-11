@@ -14,6 +14,7 @@
 /* Builder functions for process configs */
 #include <autoconf.h>
 #include <sel4/types.h>
+#include <sel4utils/api.h>
 #include <sel4utils/elf.h>
 #include <vka/vka.h>
 

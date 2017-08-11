@@ -20,6 +20,7 @@
 #include <autoconf.h>
 #include <sel4/types.h>
 #include <simple/simple.h>
+#include <sel4utils/api.h>
 
 /* Threads and processes use this struct as both need scheduling config parameters */
 typedef struct sched_params {

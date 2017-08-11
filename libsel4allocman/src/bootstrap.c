@@ -23,6 +23,7 @@
 #include <stdio.h>
 #include <vka/capops.h>
 #include <vka/object.h>
+#include <sel4utils/api.h>
 #include <sel4utils/mapping.h>
 #include <sel4utils/process.h>
 #include <simple/simple.h>
@@ -460,10 +461,8 @@ static int bootstrap_new_1level_cspace(bootstrap_info_t *bs, int size) {
         return 1;
     }
     /* now we can call set space */
-    error = seL4_TCB_SetSpace(bs->tcb.capPtr, 0,
-#ifdef CONFIG_KERNEL_RT
+    error = api_tcb_set_space(bs->tcb.capPtr, 0,
                 seL4_CapNull,
-#endif
                 node.capPtr,
                 seL4_CapData_Guard_new(0, seL4_WordBits - size),
                 bs->pd.capPtr, seL4_NilData);
@@ -597,10 +596,8 @@ static int bootstrap_new_2level_cspace(bootstrap_info_t *bs, size_t l1size, size
         return 1;
     }
     /* now we can call set space */
-    error = seL4_TCB_SetSpace(bs->tcb.capPtr, 0,
-#ifdef CONFIG_KERNEL_RT
+    error = api_tcb_set_space(bs->tcb.capPtr, 0,
                 seL4_CapNull,
-#endif
                 l1node.capPtr,
                 seL4_CapData_Guard_new(0, seL4_WordBits - l1size - l2size),
                 bs->pd.capPtr, seL4_NilData);

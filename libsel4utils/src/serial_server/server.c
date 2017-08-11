@@ -18,6 +18,7 @@
 #include <vka/capops.h>
 
 #include <utils/arith.h>
+#include <sel4utils/api.h>
 #include <sel4utils/strerror.h>
 #include <sel4platsupport/platsupport.h>
 
@@ -36,20 +37,12 @@ get_serial_server(void)
 
 static inline seL4_MessageInfo_t recv(seL4_Word *sender_badge)
 {
-#ifdef CONFIG_KERNEL_RT
-    return seL4_Recv(get_serial_server()->server_ep_obj.cptr, sender_badge, get_serial_server()->reply.cptr);
-#else
-    return seL4_Recv(get_serial_server()->server_ep_obj.cptr, sender_badge);
-#endif
+    return api_recv(get_serial_server()->server_ep_obj.cptr, sender_badge, get_serial_server()->reply.cptr);
 }
 
 static inline void reply(seL4_MessageInfo_t tag)
 {
-#ifdef CONFIG_KERNEL_RT
-    seL4_Send(get_serial_server()->reply.cptr, tag);
-#else
-    seL4_Reply(tag);
-#endif
+    api_reply(get_serial_server()->reply.cptr, tag);
 }
 
 serial_server_registry_entry_t *

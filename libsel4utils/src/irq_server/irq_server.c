@@ -392,11 +392,7 @@ irq_server_wait_for_irq(irq_server_t irq_server, seL4_Word* badge_ret)
     seL4_Word badge;
 
     /* Wait for an event */
-#ifdef CONFIG_KERNEL_RT
-    msginfo = seL4_Recv(irq_server->delivery_ep, &badge, irq_server->reply.cptr);
-#else
-    msginfo = seL4_Recv(irq_server->delivery_ep, &badge);
-#endif
+    msginfo = api_recv(irq_server->delivery_ep, &badge, irq_server->reply.cptr);
     if (badge_ret) {
         *badge_ret = badge;
     }

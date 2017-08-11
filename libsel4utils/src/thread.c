@@ -21,6 +21,7 @@
 #include <vka/vka.h>
 #include <vka/object.h>
 #include <vspace/vspace.h>
+#include <sel4utils/api.h>
 #include <sel4utils/mapping.h>
 #include <sel4utils/thread.h>
 #include <sel4utils/util.h>
@@ -120,16 +121,13 @@ sel4utils_configure_thread_config(vka_t *vka, vspace_t *parent, vspace_t *alloc,
         res->sched_context.cptr = config.sched_params.sched_context;
     }
     seL4_CapData_t null_cap_data = {{0}};
-    error = seL4_TCB_Configure(res->tcb.cptr, config.fault_endpoint,
-#ifdef CONFIG_KERNEL_RT
-                               seL4_CapNull,
-#endif
-                               seL4_PrioProps_new(config.sched_params.mcp, config.sched_params.priority),
-#ifdef CONFIG_KERNEL_RT
-                               res->sched_context.cptr,
-#endif
-                               config.cspace,
-                               config.cspace_root_data, vspace_get_root(alloc), null_cap_data, res->ipc_buffer_addr, res->ipc_buffer);
+    error = api_tcb_configure(res->tcb.cptr, config.fault_endpoint,
+                              seL4_CapNull,
+                              seL4_PrioProps_new(config.sched_params.mcp, config.sched_params.priority),
+                              res->sched_context.cptr,
+                              config.cspace,
+                              config.cspace_root_data, vspace_get_root(alloc),
+                              null_cap_data, res->ipc_buffer_addr, res->ipc_buffer);
 
     if (error != seL4_NoError) {
         ZF_LOGE("TCB configure failed with seL4 error code %d", error);
@@ -272,11 +270,7 @@ fault_handler(char *name, seL4_CPtr endpoint)
     seL4_MessageInfo_t info;
     while (1) {
         /* sleep so other things can run */
-#ifdef CONFIG_KERNEL_RT
-        info = seL4_Wait(endpoint, NULL);
-#else
-        info = seL4_Recv(endpoint, NULL);
-#endif
+        info = api_wait(endpoint, NULL);
         sel4utils_print_fault_message(info, name);
     }
     return 0;

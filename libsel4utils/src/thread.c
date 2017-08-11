@@ -168,6 +168,11 @@ sel4utils_configure_thread_config(vka_t *vka, vspace_t *parent, vspace_t *alloc,
     return 0;
 }
 
+/* prototype some functions that are hidden internal in muslc */
+size_t libc_get_tls_size();
+void *__copy_tls(unsigned char *);
+uintptr_t libc_tp_adj(uintptr_t);
+
 int
 sel4utils_start_thread(sel4utils_thread_t *thread, sel4utils_thread_entry_fn entry_point,
                        void *arg0, void *arg1, int resume)
@@ -175,8 +180,16 @@ sel4utils_start_thread(sel4utils_thread_t *thread, sel4utils_thread_entry_fn ent
     seL4_UserContext context = {0};
     size_t context_size = sizeof(seL4_UserContext) / sizeof(seL4_Word);
 
-    uintptr_t aligned_stack_pointer = ALIGN_DOWN((uintptr_t)thread->initial_stack_pointer,
-                                                 STACK_CALL_ALIGNMENT);
+    size_t tls_size = libc_get_tls_size();
+    /* make sure we're not going to use too much of the stack */
+    if (tls_size > thread->stack_size * PAGE_SIZE_4K / 8) {
+        ZF_LOGE("TLS would use more than 1/8th of the application stack %zu/%zu", tls_size, thread->stack_size);
+        return -1;
+    }
+    uintptr_t tls_base = (uintptr_t)thread->initial_stack_pointer - tls_size;
+    void *tp = __copy_tls((unsigned char*)tls_base);
+
+    uintptr_t aligned_stack_pointer = ALIGN_DOWN(tls_base, STACK_CALL_ALIGNMENT);
 
     int error = sel4utils_arch_init_local_context(entry_point, arg0, arg1,
                                               (void *) thread->ipc_buffer_addr,
@@ -186,7 +199,23 @@ sel4utils_start_thread(sel4utils_thread_t *thread, sel4utils_thread_entry_fn ent
         return error;
     }
 
-    return seL4_TCB_WriteRegisters(thread->tcb.cptr, resume, 0, context_size, &context);
+    error = seL4_TCB_WriteRegisters(thread->tcb.cptr, false, 0, context_size, &context);
+    if (error) {
+        return error;
+    }
+
+    /* Store the 'self' pointer in the TP region. This is needed by some architectures to
+     * do address calculations */
+    *(void**)tp = tp;
+    error = seL4_TCB_SetTLSBase(thread->tcb.cptr, (seL4_Word)libc_tp_adj((uintptr_t)tp));
+    if (error) {
+        return error;
+    }
+
+    if (resume) {
+        return seL4_TCB_Resume(thread->tcb.cptr);
+    }
+    return 0;
 }
 
 void

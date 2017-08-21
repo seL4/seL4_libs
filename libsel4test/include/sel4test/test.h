@@ -40,6 +40,21 @@ typedef struct env *env_t;
 /* Prototype of a test function. Returns false on failure. */
 typedef int (*test_fn)(env_t);
 
+/* Test types. */
+typedef enum test_type_name {BASIC} test_type_name_t;
+
+typedef struct test_type {
+    test_type_name_t name;
+    // Function called before and after all the tests for this test type have been run.
+    void (*set_up_env)();
+    void (*tear_down_env)();
+    // Function called before and after each test for this test type.
+    void (*set_up)();
+    void (*tear_down)();
+    // Function that gets the test result.
+    int (*get_test_result)();
+} test_type_t;
+
 /* Represents a single testcase.
  * Because this struct is used to declare variables that get
  * placed into custom sections, that we later treat as an array,
@@ -57,15 +72,19 @@ typedef struct testcase {
     const char *name;
     const char *description;
     test_fn function;
+    test_type_name_t test_type;
 } ALIGN(32) testcase_t;
 
 /* Declare a testcase. */
-#define DEFINE_TEST(_name, _description, _function) \
+#define DEFINE_TEST_WITH_TYPE(_name, _description, _function, _test_type) \
     __attribute__((used)) __attribute__((section("_test_case"))) struct testcase TEST_ ## _name = { \
     .name = #_name, \
     .description = _description, \
     .function = _function, \
-}; \
+    .test_type = _test_type, \
+};
+
+#define DEFINE_TEST(_name, _description, _function) DEFINE_TEST_WITH_TYPE(_name, _description, _function, BASIC)
 /**/
 
 static inline int

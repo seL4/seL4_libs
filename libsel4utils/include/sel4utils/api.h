@@ -37,7 +37,7 @@ static inline seL4_MessageInfo_t api_wait(seL4_CPtr ep, seL4_Word *badge)
 #endif
 }
 
-seL4_MessageInfo_t api_recv(seL4_CPtr ep, seL4_Word *badge, UNUSED seL4_CPtr reply)
+static inline seL4_MessageInfo_t api_recv(seL4_CPtr ep, seL4_Word *badge, UNUSED seL4_CPtr reply)
 {
 #ifdef CONFIG_KERNEL_RT
     return seL4_Recv(ep, badge, reply);
@@ -46,7 +46,7 @@ seL4_MessageInfo_t api_recv(seL4_CPtr ep, seL4_Word *badge, UNUSED seL4_CPtr rep
 #endif
 }
 
-seL4_MessageInfo_t api_nbrecv(seL4_CPtr ep, seL4_Word *badge, UNUSED seL4_CPtr reply)
+static inline seL4_MessageInfo_t api_nbrecv(seL4_CPtr ep, seL4_Word *badge, UNUSED seL4_CPtr reply)
 {
 #ifdef CONFIG_KERNEL_RT
     return seL4_NBRecv(ep, badge, reply);

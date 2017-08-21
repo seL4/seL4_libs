@@ -19,7 +19,7 @@ static inline seL4_Error allocman_sel4_arch_create_object_at_level(allocman_t *a
     struct object {
         seL4_Word bits;
         seL4_Word type;
-        long (*map)(seL4_CPtr, seL4_CPtr, seL4_Word, seL4_Word);
+        seL4_Error (*map)(seL4_CPtr, seL4_CPtr, seL4_Word, seL4_Word);
     };
     struct object objects[] = {
         [SEL4_MAPPING_LOOKUP_NO_PT] = {seL4_PageTableBits, seL4_ARM_PageTableObject, seL4_ARM_PageTable_Map},

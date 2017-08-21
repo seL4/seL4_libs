@@ -18,7 +18,7 @@
 #include <vka/vka.h>
 #include <vka/object.h>
 
-typedef long (*map_fn_t)(seL4_CPtr, seL4_CPtr, seL4_Word, seL4_ARM_VMAttributes);
+typedef seL4_Error (*map_fn_t)(seL4_CPtr, seL4_CPtr, seL4_Word, seL4_ARM_VMAttributes);
 typedef int (*alloc_fn_t)(vka_t *, vka_object_t *);
 
 static inline int

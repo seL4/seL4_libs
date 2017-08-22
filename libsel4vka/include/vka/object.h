@@ -307,6 +307,8 @@ vka_get_object_size(seL4_Word objectType, seL4_Word objectSize)
 #ifdef CONFIG_KERNEL_RT
     case seL4_SchedContextObject:
         return objectSize > seL4_MinSchedContextBits ? objectSize : seL4_MinSchedContextBits;
+    case seL4_ReplyObject:
+        return seL4_ReplyBits;
 #endif
     case seL4_EndpointObject:
         return seL4_EndpointBits;

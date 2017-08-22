@@ -37,12 +37,12 @@ get_serial_server(void)
 
 static inline seL4_MessageInfo_t recv(seL4_Word *sender_badge)
 {
-    return api_recv(get_serial_server()->server_ep_obj.cptr, sender_badge, get_serial_server()->reply.cptr);
+    return api_recv(get_serial_server()->server_ep_obj.cptr, sender_badge, get_serial_server()->server_thread.reply.cptr);
 }
 
 static inline void reply(seL4_MessageInfo_t tag)
 {
-    api_reply(get_serial_server()->reply.cptr, tag);
+    api_reply(get_serial_server()->server_thread.reply.cptr, tag);
 }
 
 serial_server_registry_entry_t *

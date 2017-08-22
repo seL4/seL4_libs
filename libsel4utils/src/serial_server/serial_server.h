@@ -131,7 +131,6 @@ typedef struct _serial_server_context {
 
     seL4_Word parent_badge_value;
     cspacepath_t _badged_server_ep_cspath;
-    vka_object_t reply;
 } serial_server_context_t;
 
 /* Global server instance accessor functions. */

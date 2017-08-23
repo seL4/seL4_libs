@@ -21,6 +21,7 @@
 
 #include <autoconf.h>
 #include <sel4/sel4.h>
+#include <sel4utils/sel4_zf_logif.h>
 
 #ifdef CONFIG_KERNEL_RT
 #define CONFIG_TIMER_TICK_MS CONFIG_BOOT_THREAD_TIME_SLICE
@@ -74,6 +75,18 @@ static inline seL4_MessageInfo_t api_reply_recv(seL4_CPtr ep, seL4_MessageInfo_t
 #endif
 }
 
+static inline seL4_MessageInfo_t api_nbsend_recv(UNUSED seL4_CPtr send, UNUSED seL4_MessageInfo_t info,
+                                                 UNUSED seL4_CPtr recv, UNUSED seL4_Word *badge,
+                                                 UNUSED seL4_CPtr reply)
+{
+    ZF_LOGF_IF(!config_set(CONFIG_KERNEL_RT), "Not available on non MCS kernel");
+#ifdef CONFIG_KERNEL_RT
+    return seL4_NBSendRecv(send, info, recv, badge, reply);
+#else
+    return seL4_MessageInfo_new(0, 0, 0, 0);
+#endif
+}
+
 static inline seL4_Error api_tcb_configure(seL4_CPtr tcb, seL4_CPtr ep, UNUSED seL4_CPtr timeout_ep,
                                            seL4_PrioProps_t props, UNUSED seL4_CPtr sc, seL4_CPtr cspace,
                                            seL4_CapData_t cdata, seL4_CPtr vspace, seL4_CapData_t vdata,
@@ -96,5 +109,47 @@ static inline seL4_Error api_tcb_set_space(seL4_CPtr tcb, seL4_CPtr ep, UNUSED s
     return seL4_TCB_SetSpace(tcb, ep, timeout_ep, cspace, cdata, vspace, vdata);
 #else
     return seL4_TCB_SetSpace(tcb, ep, cspace, cdata, vspace, vdata);
+#endif
+}
+
+static inline seL4_Error api_sc_bind(UNUSED seL4_CPtr sc, UNUSED seL4_CPtr tcb)
+{
+    if (!config_set(CONFIG_KERNEL_RT)) {
+        return (seL4_Error) -ENOSYS;
+    }
+#ifdef CONFIG_KERNEL_RT
+    return seL4_SchedContext_Bind(sc, tcb);
+#endif
+}
+
+static inline seL4_Error api_sc_unbind_object(UNUSED seL4_CPtr sc, UNUSED seL4_CPtr tcb)
+{
+    if (!config_set(CONFIG_KERNEL_RT)) {
+        return (seL4_Error) -ENOSYS;
+    }
+#ifdef CONFIG_KERNEL_RT
+    return seL4_SchedContext_UnbindObject(sc, tcb);
+#endif
+}
+
+static inline seL4_Error api_sc_unbind(UNUSED seL4_CPtr sc)
+{
+    if (!config_set(CONFIG_KERNEL_RT)) {
+        return (seL4_Error) -ENOSYS;
+    }
+#ifdef CONFIG_KERNEL_RT
+    return seL4_SchedContext_Unbind(sc);
+#endif
+}
+
+static inline seL4_Error api_sched_ctrl_configure(UNUSED seL4_CPtr sched_ctrl, UNUSED seL4_CPtr sc,
+                                                  UNUSED uint64_t budget, UNUSED uint64_t period,
+                                                  UNUSED seL4_Word refills, UNUSED seL4_Word badge)
+{
+    if (!config_set(CONFIG_KERNEL_RT)) {
+        return (seL4_Error) -ENOSYS;
+    }
+#ifdef CONFIG_KERNEL_RT
+    return seL4_SchedControl_Configure(sched_ctrl, sc, budget, period, refills, badge);
 #endif
 }

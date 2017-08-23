@@ -106,11 +106,11 @@ sel4utils_configure_thread_config(vka_t *vka, vspace_t *parent, vspace_t *alloc,
         }
 
         /* configure the scheduling context */
-#ifdef CONFIG_KERNEL_RT
-        error = seL4_SchedControl_Configure(config.sched_params.sched_ctrl, res->sched_context.cptr,
-                                            config.sched_params.budget, config.sched_params.period,
-                                            config.sched_params.extra_refills, config.sched_params.badge);
-#endif
+        if (config_set(CONFIG_KERNEL_RT)) {
+            error = api_sched_ctrl_configure(config.sched_params.sched_ctrl, res->sched_context.cptr,
+                                             config.sched_params.budget, config.sched_params.period,
+                                             config.sched_params.extra_refills, config.sched_params.badge);
+        }
         if (error != seL4_NoError) {
             ZF_LOGE("Failed to configure sched context");
             sel4utils_clean_up_thread(vka, alloc, res);

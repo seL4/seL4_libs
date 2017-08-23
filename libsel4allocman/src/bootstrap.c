@@ -502,7 +502,7 @@ int bootstrap_transfer_caps_simple(bootstrap_info_t *bs, simple_t *simple, int l
     size_t cap_count = simple_get_cap_count(simple);
     seL4_CPtr cnode = simple_get_cnode(simple);
 
-    for(i = SEL4UTILS_CNODE_SLOT + 1u; i < cap_count; i++) {
+    for(i = 0ul; i < cap_count; i++) {
         seL4_CPtr pos = simple_get_nth_cap(simple,i);
 
         /* Because we are going to switch root cnodes don't move the old cnode cap

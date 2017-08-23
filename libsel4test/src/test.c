@@ -151,6 +151,10 @@ void sel4_test_get_suite_results(int *out_num_tests, int *out_passed, int *out_f
     if (out_failed) (*out_failed) = num_tests - num_tests_passed;
 }
 
+/* Definitions so that we can find the test types */
+extern struct test_type __start__test_type[];
+extern struct test_type __stop__test_type[];
+
 /* Definitions so that we can find the test cases */
 extern struct testcase __start__test_case[];
 extern struct testcase __stop__test_case[];
@@ -173,6 +177,14 @@ sel4test_get_test(const char *name)
 
 void
 sel4test_run_tests(const char *name, int (*run_test)(struct testcase *t)) {
+    /* Iterate through test types. */
+    int max_test_types = (int) (__stop__test_type - __start__test_type);
+    UNUSED struct test_type *test_types[max_test_types];
+    int num_test_types = 0;
+    for (struct test_type *i = __start__test_type; i < __stop__test_type; i++) {
+        test_types[num_test_types] = i;
+        num_test_types++;
+    }
 
     /* Count how many tests actually exist and allocate space for them */
     int max_tests = (int)(__stop__test_case - __start__test_case);

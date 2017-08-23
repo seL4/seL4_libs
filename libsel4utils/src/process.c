@@ -636,20 +636,20 @@ sel4utils_configure_process_custom(sel4utils_process_t *process, vka_t *vka,
         process->dest_tcb_cptr = SEL4UTILS_TCB_SLOT;
     } else {
         process->dest_tcb_cptr = config.dest_cspace_tcb_cptr;
-        /* skip the tcb slot */
-        allocate_next_slot(process);
     }
 
-    if (config.create_cspace && config_set(CONFIG_KERNEL_RT)) {
-        seL4_CPtr slot = sel4utils_copy_cap_to_process(process, vka, process->thread.sched_context.cptr);
-        assert(slot == SEL4UTILS_SCHED_CONTEXT_SLOT);
-        slot = sel4utils_copy_cap_to_process(process, vka, process->thread.reply.cptr);
-        assert(slot == SEL4UTILS_REPLY_SLOT);
-    } else {
-        /* skip the sc slot */
-        allocate_next_slot(process);
-        /* skip the reply object slot */
-        allocate_next_slot(process);
+    if (config.create_cspace) {
+        if(config_set(CONFIG_KERNEL_RT)) {
+            seL4_CPtr slot = sel4utils_copy_cap_to_process(process, vka, process->thread.sched_context.cptr);
+            assert(slot == SEL4UTILS_SCHED_CONTEXT_SLOT);
+            slot = sel4utils_copy_cap_to_process(process, vka, process->thread.reply.cptr);
+            assert(slot == SEL4UTILS_REPLY_SLOT);
+        } else {
+            /* skip the sc slot */
+            allocate_next_slot(process);
+            /* skip the reply object slot */
+            allocate_next_slot(process);
+        }
     }
 
     return 0;

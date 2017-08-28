@@ -1,4 +1,4 @@
-/**
+/* @TAG(CUSTOM) *//**
  * \file  hw_edma3cc.h
  *
  * \brief EDMA3CC register definitions

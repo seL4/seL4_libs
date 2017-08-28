@@ -1,4 +1,4 @@
-/**
+/* @TAG(CUSTOM) *//**
  *  @Component:   INTC
  *
  *  @Filename:    intc_header.h

@@ -1,4 +1,4 @@
-/**
+/* @TAG(CUSTOM) *//**
  *  \file   dmtimer.h
  *
  *  \brief  DMTimer API prototypes and macros.

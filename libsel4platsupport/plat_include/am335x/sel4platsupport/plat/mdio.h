@@ -1,4 +1,4 @@
-/**
+/* @TAG(CUSTOM) *//**
  *  \file   mdio.h
  *
  *  \brief  MDIO APIs and macros.

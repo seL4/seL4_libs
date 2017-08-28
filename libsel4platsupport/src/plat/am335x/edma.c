@@ -1,4 +1,4 @@
-/**
+/* @TAG(CUSTOM) *//**
  * \file  edma.c
  *
  * \brief This file contains device abstraction layer APIs for the EDMA device.

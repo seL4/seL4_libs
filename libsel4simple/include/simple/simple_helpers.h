@@ -10,8 +10,7 @@
  * @TAG(DATA61_BSD)
  */
 
-#ifndef _SIMPLE_HELPERS_H_
-#define _SIMPLE_HELPERS_H_
+#pragma once
 
 #include <sel4/sel4.h>
 
@@ -27,5 +26,3 @@ int simple_is_untyped_cap(simple_t *simple, seL4_CPtr pos);
 seL4_CPtr simple_last_valid_cap(simple_t *simple);
 
 void simple_make_vka(simple_t *simple, vka_t *vka);
-
-#endif /* _SIMPLE_HELPERS_H_ */

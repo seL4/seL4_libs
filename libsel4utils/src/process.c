@@ -496,8 +496,10 @@ create_cspace(vka_t *vka, int size_bits, sel4utils_process_t *process,
     if (!config_set(CONFIG_X86_64)) {
         vka_cspace_make_path(vka, get_asid_pool(asid_pool), &src);
         slot = sel4utils_copy_path_to_process(process, src);
-        assert(slot == SEL4UTILS_ASID_POOL_SLOT);
+    } else {
+        allocate_next_slot(process);
     }
+    assert(slot == SEL4UTILS_ASID_POOL_SLOT);
 
     return 0;
 }

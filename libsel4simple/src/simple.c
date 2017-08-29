@@ -26,36 +26,6 @@ bool simple_is_untyped_cap(simple_t *simple, seL4_CPtr pos)
     return false;
 }
 
-seL4_Error simple_copy_caps(simple_t *simple, seL4_CNode cspace, int copy_untypeds)
-{
-    int i;
-    seL4_Error error = seL4_NoError;
-
-    for (i = 0; i < simple_get_cap_count(simple); i++) {
-        seL4_CPtr pos = simple_get_nth_cap(simple, i);
-        /* Don't copy this, put the cap to the new cspace */
-        if (pos == seL4_CapInitThreadCNode) {
-            continue;
-        }
-
-        /* If we don't want to copy untypeds and it is one move on */
-        if (!copy_untypeds && simple_is_untyped_cap(simple, pos)) {
-            continue;
-        }
-
-        error = seL4_CNode_Copy(
-                    cspace, pos, seL4_WordBits,
-                    seL4_CapInitThreadCNode, pos, seL4_WordBits,
-                    seL4_AllRights);
-        /* Don't error on the low cap numbers, we might have tried to copy a control cap */
-        if (error && i > 10) {
-            return error;
-        }
-    }
-
-    return error;
-}
-
 int simple_vka_cspace_alloc(void *data, seL4_CPtr *slot)
 {
     assert(data && slot);

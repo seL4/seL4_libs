@@ -478,7 +478,7 @@ static int bootstrap_new_1level_cspace(bootstrap_info_t *bs, int size) {
         .cnode = new_cnode,
         .cnode_size_bits = size,
         .cnode_guard_bits = seL4_WordBits - size,
-        .first_slot = simple_get_cap_count(bs->simple),
+        .first_slot = simple_last_valid_cap(bs->simple) + 1,
         .end_slot = BIT(size) - 2u}); // subtract 2 as the last slot is occupied
     if (error) {
         return error;
@@ -1184,7 +1184,7 @@ static allocman_t *bootstrap_new_simple(simple_t *simple, int levels, size_t l1s
             .cnode = simple_get_cnode(simple),
             .cnode_size_bits = simple_get_cnode_size_bits(simple),
             .cnode_guard_bits = seL4_WordBits - simple_get_cnode_size_bits(simple),
-            .first_slot = simple_get_nth_cap(simple, simple_get_cap_count(simple)-1) + 1,
+            .first_slot = simple_last_valid_cap(simple) + 1,
             .end_slot = BIT(simple_get_cnode_size_bits(simple))
     });
 

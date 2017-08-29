@@ -12,14 +12,14 @@
 
 #pragma once
 
+#include <stdbool.h>
 #include <sel4/sel4.h>
-
 #include <simple/simple.h>
 #include <vka/vka.h>
 
 seL4_Error simple_copy_caps(simple_t *simple, seL4_CNode cspace, int copy_untypeds);
 
-int simple_is_untyped_cap(simple_t *simple, seL4_CPtr pos);
+bool simple_is_untyped_cap(simple_t *simple, seL4_CPtr pos);
 
 /* Returns the capability with the largest CPtr. This allows for any potential free slots
  * at the end of cspace to be found */

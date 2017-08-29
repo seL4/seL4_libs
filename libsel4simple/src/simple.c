@@ -12,18 +12,18 @@
 
 #include <simple/simple_helpers.h>
 
-int simple_is_untyped_cap(simple_t *simple, seL4_CPtr pos)
+bool simple_is_untyped_cap(simple_t *simple, seL4_CPtr pos)
 {
     int i;
 
     for (i = 0; i < simple_get_untyped_count(simple); i++) {
         seL4_CPtr ut_pos = simple_get_nth_untyped(simple, i, NULL, NULL, NULL);
         if (ut_pos == pos) {
-            return 1;
+            return true;
         }
     }
 
-    return 0;
+    return false;
 }
 
 seL4_Error simple_copy_caps(simple_t *simple, seL4_CNode cspace, int copy_untypeds)

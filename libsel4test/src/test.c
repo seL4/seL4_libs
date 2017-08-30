@@ -202,50 +202,50 @@ sel4test_run_tests(const char *name, int (*run_test)(struct testcase *t)) {
     /* Now that they are sorted we can easily ensure there are no duplicate tests.
      * this just ensures some sanity as if there are duplicates, they could have some
      * arbitrary ordering, which might result in difficulty reproducing test failures */
-     for (int i = 1; i < num_tests; i++) {
-         test_assert_fatal(strcmp(tests[i]->name, tests[i - 1]->name) != 0);
-     }
+    for (int i = 1; i < num_tests; i++) {
+        test_assert_fatal(strcmp(tests[i]->name, tests[i - 1]->name) != 0);
+    }
 
-     sel4test_start_suite(name);
-     /* Run tests */
-     test_assert_fatal(num_tests > 0);
-     for (int i = 0; i < num_tests; i++) {
-         sel4test_start_test(tests[i]->name);
-         int result = run_test(tests[i]);
-         if (result != SUCCESS) {
+    sel4test_start_suite(name);
+    /* Run tests */
+    test_assert_fatal(num_tests > 0);
+    for (int i = 0; i < num_tests; i++) {
+        sel4test_start_test(tests[i]->name);
+        int result = run_test(tests[i]);
+        if (result != SUCCESS) {
+            current_test_passed = false;
+        }
+        sel4test_end_test();
+    }
+
+    /* Run the tests backwards... */
+    for (int i = num_tests - 1; i >= 0; i--) {
+        assert(tests[i]->name != NULL);
+        /* junit doesn't like duplicate test names */
+        int length = strlen(tests[i]->name);
+        char name_copy[length + 2];
+        strncpy(name_copy, tests[i]->name, length);
+        name_copy[length] = '2';
+        name_copy[length + 1] = '\0';
+        sel4test_start_test(name_copy);
+        int result = run_test(tests[i]);
+        if (result != SUCCESS) {
              current_test_passed = false;
-         }
-         sel4test_end_test();
-     }
+        }
+        sel4test_end_test();
+    }
 
-     /* Run the tests backwards... */
-     for (int i = num_tests - 1; i >= 0; i--) {
-         assert(tests[i]->name != NULL);
-         /* junit doesn't like duplicate test names */
-         int length = strlen(tests[i]->name);
-         char name_copy[length + 2];
-         strncpy(name_copy, tests[i]->name, length);
-         name_copy[length] = '2';
-         name_copy[length + 1] = '\0';
-         sel4test_start_test(name_copy);
-         int result = run_test(tests[i]);
-         if (result != SUCCESS) {
-              current_test_passed = false;
-         }
-         sel4test_end_test();
-     }
+    sel4test_end_suite();
 
-     sel4test_end_suite();
-
-     /* Print closing banner. */
-     printf("\n");
-     int tests_run, passes, failures;
-     sel4_test_get_suite_results(&tests_run, &passes, &failures);
-     printf("%d/%d tests passed.\n", tests_run - failures, tests_run);
-     if (failures > 0) {
-         printf("*** FAILURES DETECTED ***\n");
-     } else {
-         printf("All is well in the universe.\n");
-     }
-     printf("\n\n");
+    /* Print closing banner. */
+    printf("\n");
+    int tests_run, passes, failures;
+    sel4_test_get_suite_results(&tests_run, &passes, &failures);
+    printf("%d/%d tests passed.\n", tests_run - failures, tests_run);
+    if (failures > 0) {
+        printf("*** FAILURES DETECTED ***\n");
+    } else {
+        printf("All is well in the universe.\n");
+    }
+    printf("\n\n");
 }

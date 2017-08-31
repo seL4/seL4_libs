@@ -1,4 +1,4 @@
-/**
+/* @TAG(CUSTOM) *//**
  *  @Component:   CM
  *
  *  @Filename:    ../../CredDataBase/prcmCRED/cm_per_cred.h

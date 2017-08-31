@@ -1,4 +1,4 @@
-/**
+/* @TAG(CUSTOM) *//**
  * \file  phy.h
  *
  * \brief Macros and function definitions for EMAC PHY

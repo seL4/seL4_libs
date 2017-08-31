@@ -1,4 +1,4 @@
-/**
+/* @TAG(CUSTOM) *//**
  * \file  hw_mdio.h
  *
  * \brief MDIO register definitions

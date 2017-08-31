@@ -1,4 +1,4 @@
-/**
+/* @TAG(CUSTOM) *//**
  * \file   beaglebone.h
  *
  * \brief  This file contains prototype declarations of functions which

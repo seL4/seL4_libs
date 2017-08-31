@@ -1,4 +1,4 @@
-/* TODO work out licensing  W.A. is responsible for this version */
+/* @TAG(OTHER_GPL) */
 
 /*
  * Local APIC virtualization

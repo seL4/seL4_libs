@@ -1,4 +1,4 @@
-/**
+/* @TAG(CUSTOM) *//**
  *  \file       edma.h
  *
  *  \brief      This file contains the function prototypes for the device

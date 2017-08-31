@@ -1,4 +1,4 @@
-/**
+/* @TAG(CUSTOM) *//**
  *  @Component:   CPSW
  *
  *  @Filename:    cpsw_sl_cred.h

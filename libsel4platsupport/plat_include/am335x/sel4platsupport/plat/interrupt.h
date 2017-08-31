@@ -1,4 +1,4 @@
-/**
+/* @TAG(CUSTOM) *//**
  *  \file   interrupt.h
  *
  *  \brief  Interrupt related API declarations.

@@ -1,4 +1,4 @@
-/**
+/* @TAG(CUSTOM) *//**
  *  @Component:   DMTIMER
  *
  *  @Filename:    hw_dmtimer.h

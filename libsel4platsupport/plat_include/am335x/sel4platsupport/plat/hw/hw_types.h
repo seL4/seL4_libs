@@ -1,4 +1,4 @@
-/**
+/* @TAG(CUSTOM) *//**
  * \file  hw_types.h
  *
  * \brief Common type definitions and macros

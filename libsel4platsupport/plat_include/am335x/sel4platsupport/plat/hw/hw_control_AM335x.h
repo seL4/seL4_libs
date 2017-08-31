@@ -1,4 +1,4 @@
-/**
+/* @TAG(CUSTOM) *//**
  *  @Component:   CONTROL
  *
  *  @Filename:    ../../CredDataBase/CONTROL_cred.h

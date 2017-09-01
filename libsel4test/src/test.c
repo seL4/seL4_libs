@@ -21,6 +21,7 @@
 
 #include <sel4test/prototype.h>
 #include <sel4test/test.h>
+
 #include <utils/util.h>
 
 #define MAX_NAME_SIZE 100
@@ -151,12 +152,17 @@ void sel4_test_get_suite_results(int *out_num_tests, int *out_passed, int *out_f
     if (out_failed) (*out_failed) = num_tests - num_tests_passed;
 }
 
+/* Definitions so that we can find the test types */
+extern struct test_type __start__test_type[];
+extern struct test_type __stop__test_type[];
+
 /* Definitions so that we can find the test cases */
 extern struct testcase __start__test_case[];
 extern struct testcase __stop__test_case[];
 
-/* Force the _test_case section to be created even if no tests are defined. */
-static USED SECTION("_test_case") struct {} dummy;
+/* Force the _test_type and _test_case section to be created even if no tests are defined. */
+static USED SECTION("_test_type") struct {} dummy_test_type;
+static USED SECTION("_test_case") struct {} dummy_test_case;
 
 testcase_t*
 sel4test_get_test(const char *name)
@@ -172,7 +178,18 @@ sel4test_get_test(const char *name)
 }
 
 void
-sel4test_run_tests(const char *name, int (*run_test)(struct testcase *t)) {
+sel4test_run_tests(const char *name, struct env* e) {
+    /* Iterate through test types. */
+    int max_test_types = (int) (__stop__test_type - __start__test_type);
+    struct test_type *test_types[max_test_types];
+    int num_test_types = 0;
+    for (struct test_type *i = __start__test_type; i < __stop__test_type; i++) {
+        test_types[num_test_types] = i;
+        num_test_types++;
+    }
+
+    /* Ensure we iterate through test types in order of ID. */
+    qsort(test_types, num_test_types, sizeof(struct test_type*), test_type_comparator);
 
     /* Count how many tests actually exist and allocate space for them */
     int max_tests = (int)(__stop__test_case - __start__test_case);
@@ -206,36 +223,47 @@ sel4test_run_tests(const char *name, int (*run_test)(struct testcase *t)) {
         test_assert_fatal(strcmp(tests[i]->name, tests[i - 1]->name) != 0);
     }
 
+    /* Check that we don't miss any tests because of an undeclared test type */
+    int tests_done = 0;
+
     sel4test_start_suite(name);
-    /* Run tests */
-    test_assert_fatal(num_tests > 0);
-    for (int i = 0; i < num_tests; i++) {
-        sel4test_start_test(tests[i]->name);
-        int result = run_test(tests[i]);
-        if (result != SUCCESS) {
-            current_test_passed = false;
+    /* Iterate through test types so that we run them in order of test type, then name.
+     * Test types are ordered by ID in test.h. */
+    for (int tt = 0; tt < num_test_types; tt++) {
+        if (test_types[tt]->set_up_test_type != NULL) {
+            test_types[tt]->set_up_test_type(e);
         }
-        sel4test_end_test();
-    }
 
-    /* Run the tests backwards... */
-    for (int i = num_tests - 1; i >= 0; i--) {
-        assert(tests[i]->name != NULL);
-        /* junit doesn't like duplicate test names */
-        int length = strlen(tests[i]->name);
-        char name_copy[length + 2];
-        strncpy(name_copy, tests[i]->name, length);
-        name_copy[length] = '2';
-        name_copy[length + 1] = '\0';
-        sel4test_start_test(name_copy);
-        int result = run_test(tests[i]);
-        if (result != SUCCESS) {
-             current_test_passed = false;
+        /* Run tests */
+        test_assert_fatal(num_tests > 0);
+        for (int i = 0; i < num_tests; i++) {
+            if (tests[i]->test_type == test_types[tt]->id) {
+                if (test_types[tt]->set_up != NULL) {
+                    test_types[tt]->set_up(e);
+                }
+
+                sel4test_start_test(tests[i]->name);
+                int result = test_types[tt]->run_test(tests[i], e);
+                if (result != SUCCESS) {
+                    current_test_passed = false;
+                }
+                sel4test_end_test();
+
+                if (test_types[tt]->tear_down != NULL) {
+                    test_types[tt]->tear_down(e);
+                }
+
+                tests_done++;
+            }
         }
-        sel4test_end_test();
-    }
 
+        if (test_types[tt]->tear_down_test_type != NULL) {
+            test_types[tt]->tear_down_test_type(e);
+        }
+    }
     sel4test_end_suite();
+
+    test_assert_fatal(tests_done == num_tests);
 
     /* Print closing banner. */
     printf("\n");

@@ -271,10 +271,9 @@ sel4test_basic_run_test(struct testcase *t)
  * Use CONFIG_TESTPRINTER_REGEX to filter tests.
  *
  * @param name the name of the test suite
- * @param run_test function that runs the tests.
  *
  */
-void sel4test_run_tests(const char *name, int (*run_test)(struct testcase *t));
+void sel4test_run_tests(const char *name, env_t e);
 
 /*
  * Get a testcase.

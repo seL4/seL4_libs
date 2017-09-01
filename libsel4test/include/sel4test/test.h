@@ -40,53 +40,20 @@ typedef struct env *env_t;
 /* Prototype of a test function. Returns false on failure. */
 typedef int (*test_fn)(env_t);
 
-/* Test type definitions. */
+/* Test types. */
 typedef enum test_type_name {BASIC} test_type_name_t;
 
 typedef struct test_type {
-    /* Represents a single test type. See comment for `struct testcase` for info about ALIGN(32). */
-    const char *name;
-    test_type_name_t id;
+    test_type_name_t name;
     // Function called before and after all the tests for this test type have been run.
-    void (*set_up_test_type)();
-    void (*tear_down_test_type)();
+    void (*set_up_env)();
+    void (*tear_down_env)();
     // Function called before and after each test for this test type.
     void (*set_up)();
     void (*tear_down)();
     // Function that gets the test result.
     int (*get_test_result)();
-} ALIGN(32) test_type_t;
-
-/* Declare a test type.
- * For now, we put the test types in a separate elf section. */
-#define DEFINE_TEST_TYPE(_name, _id, _set_up_test_type, _tear_down_test_type, _set_up, _tear_down, _get_test_result) \
-    __attribute__((used)) __attribute__((section("_test_type"))) struct test_type TEST_TYPE_ ##_name = { \
-    .name = #_name, \
-    .id = _id, \
-    .set_up_test_type = _set_up_test_type, \
-    .tear_down_test_type = _tear_down_test_type, \
-    .set_up = _set_up, \
-    .tear_down = _tear_down, \
-    .get_test_result = _get_test_result, \
-};
-
-/* Basic test type. */
-static inline void basic_set_up_test_type() {
-    printf("setting up test type\n");
-}
-static inline void basic_tear_down_test_type() {
-    printf("tearing down test type\n");
-}
-static inline void basic_set_up() {
-    printf("set up test\n");
-}
-static inline void basic_tear_down() {
-    printf("tear down test\n");
-}
-static inline int basic_get_test_result() {
-    return 0;
-}
-static DEFINE_TEST_TYPE(BASIC, BASIC, basic_set_up_test_type, basic_tear_down_test_type, basic_set_up, basic_tear_down, basic_get_test_result);
+} test_type_t;
 
 /* Represents a single testcase.
  * Because this struct is used to declare variables that get

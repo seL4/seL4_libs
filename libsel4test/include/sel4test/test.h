@@ -40,6 +40,36 @@ typedef struct env *env_t;
 /* Prototype of a test function. Returns false on failure. */
 typedef int (*test_fn)(env_t);
 
+/* Test type definitions. */
+typedef enum test_type_name {BOOTSTRAP = 0, BASIC} test_type_name_t;
+typedef struct testcase testcase_t; // Forward type declaration.
+typedef struct test_type {
+    /* Represents a single test type. See comment for `struct testcase` for info about ALIGN(32). */
+    const char *name;
+    test_type_name_t id;
+    // Function called before and after all the tests for this test type have been run.
+    void (*set_up_test_type)(env_t e);
+    void (*tear_down_test_type)(env_t e);
+    // Function called before and after each test for this test type.
+    void (*set_up)(env_t e);
+    void (*tear_down)(env_t e);
+    // Run the test.
+    int (*run_test)(struct testcase* test, env_t e);
+} ALIGN(32) test_type_t;
+
+/* Declare a test type.
+ * For now, we put the test types in a separate elf section. */
+#define DEFINE_TEST_TYPE(_name, _id, _set_up_test_type, _tear_down_test_type, _set_up, _tear_down, _run_test) \
+    __attribute__((used)) __attribute__((section("_test_type"))) struct test_type TEST_TYPE_ ##_name = { \
+    .name = #_name, \
+    .id = _id, \
+    .set_up_test_type = _set_up_test_type, \
+    .tear_down_test_type = _tear_down_test_type, \
+    .set_up = _set_up, \
+    .tear_down = _tear_down, \
+    .run_test = _run_test, \
+};
+
 /* Represents a single testcase.
  * Because this struct is used to declare variables that get
  * placed into custom sections, that we later treat as an array,
@@ -57,16 +87,36 @@ typedef struct testcase {
     const char *name;
     const char *description;
     test_fn function;
+    test_type_name_t test_type;
 } ALIGN(32) testcase_t;
 
 /* Declare a testcase. */
-#define DEFINE_TEST(_name, _description, _function) \
+#define DEFINE_TEST_WITH_TYPE(_name, _description, _function, _test_type) \
     __attribute__((used)) __attribute__((section("_test_case"))) struct testcase TEST_ ## _name = { \
     .name = #_name, \
     .description = _description, \
     .function = _function, \
-}; \
+    .test_type = _test_type, \
+};
+
+#define DEFINE_TEST(_name, _description, _function) DEFINE_TEST_WITH_TYPE(_name, _description, _function, BASIC)
+
+#define DEFINE_TEST_BOOTSTRAP(_name, _description, _function) DEFINE_TEST_WITH_TYPE(_name, _description, _function, BOOTSTRAP)
 /**/
+
+static inline int
+test_type_comparator(const void *a, const void *b)
+{
+    const struct test_type **ta = (const struct test_type**) a;
+    const struct test_type **tb = (const struct test_type**) b;
+    if ((*ta)->id > (*tb)->id) {
+        return 1;
+    } else if ((*ta)->id < (*tb)->id) {
+        return -1;
+    }
+
+    return 0;
+}
 
 static inline int
 test_comparator(const void *a, const void *b)

@@ -233,26 +233,25 @@ sel4test_run_tests(const char *name, struct env* e) {
         if (test_types[tt]->set_up_test_type != NULL) {
             test_types[tt]->set_up_test_type(e);
         }
-
         /* Run tests */
         test_assert_fatal(num_tests > 0);
         for (int i = 0; i < num_tests; i++) {
             if (tests[i]->test_type == test_types[tt]->id) {
+                sel4test_start_test(tests[i]->name);
                 if (test_types[tt]->set_up != NULL) {
                     test_types[tt]->set_up(e);
                 }
 
-                sel4test_start_test(tests[i]->name);
                 int result = test_types[tt]->run_test(tests[i], e);
                 if (result != SUCCESS) {
                     current_test_passed = false;
                 }
-                sel4test_end_test();
 
                 if (test_types[tt]->tear_down != NULL) {
                     test_types[tt]->tear_down(e);
                 }
 
+                sel4test_end_test();
                 tests_done++;
             }
         }

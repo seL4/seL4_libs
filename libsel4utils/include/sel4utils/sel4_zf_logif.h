@@ -14,6 +14,7 @@
 #define _SEL4_ZF_LOGIF_H
 
 #include <utils/zf_log.h>
+#include <utils/zf_log_if.h>
 #include <sel4utils/strerror.h>
 
 /*  sel4_zf_logif.h:
@@ -24,21 +25,7 @@
  *  These will call the relevant ZF_LOG?() macro if "condition" evaluates to
  *  true at runtime.
  *
- * ZF_LOG?_IFERR(errorcode, fmt, ...):
- *  These will call the relevant ZF_LOG?() macro if "errorcode" is not 0, at
- *  runtime.
  */
-
-#define ZF_LOGD_IF(cond, fmt, ...) \
-	if (cond) { ZF_LOGD("[Cond failed: %s]\n\t" fmt, #cond, ## __VA_ARGS__); }
-#define ZF_LOGI_IF(cond, fmt, ...) \
-	if (cond) { ZF_LOGI("[Cond failed: %s]\n\t" fmt, #cond, ## __VA_ARGS__); }
-#define ZF_LOGW_IF(cond, fmt, ...) \
-	if (cond) { ZF_LOGW("[Cond failed: %s]\n\t" fmt, #cond, ## __VA_ARGS__); }
-#define ZF_LOGE_IF(cond, fmt, ...) \
-	if (cond) { ZF_LOGE("[Cond failed: %s]\n\t" fmt, #cond, ## __VA_ARGS__); }
-#define ZF_LOGF_IF(cond, fmt, ...) \
-	if (cond) { ZF_LOGF("[Cond failed: %s]\n\t" fmt, #cond, ## __VA_ARGS__); }
 
 #define ZF_LOGD_IFERR(err, fmt, ...) \
 	if ((err) != seL4_NoError) \

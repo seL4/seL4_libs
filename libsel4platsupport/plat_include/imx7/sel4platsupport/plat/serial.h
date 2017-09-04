@@ -13,7 +13,5 @@
 
 #include <platsupport/plat/serial.h>
 
-#define DEFAULT_SERIAL_PADDR        UART2_PADDR
-#define DEFAULT_SERIAL_INTERRUPT    UART2_IRQ
-
-
+#define DEFAULT_SERIAL_PADDR        UART1_PADDR
+#define DEFAULT_SERIAL_INTERRUPT    UART1_IRQ

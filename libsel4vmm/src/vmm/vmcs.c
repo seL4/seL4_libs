@@ -32,7 +32,7 @@ int vmm_vmcs_read(seL4_CPtr vcpu, seL4_Word field) {
 /*write a field and its value into the VMCS*/
 void vmm_vmcs_write(seL4_CPtr vcpu, seL4_Word field, seL4_Word value) {
 
-    seL4_X86_VCPU_WriteVMCS_t result;
+    seL4_X86_VCPU_WriteVMCS_t UNUSED result;
     assert(vcpu);
 
     result = seL4_X86_VCPU_WriteVMCS(vcpu, field, value);

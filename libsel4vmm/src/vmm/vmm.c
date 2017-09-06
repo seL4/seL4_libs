@@ -176,7 +176,7 @@ void vmm_run(vmm_t *vmm) {
             seL4_SetMR(0, vmm_guest_state_get_eip(&vcpu->guest_state));
             seL4_SetMR(1, vmm_guest_state_get_control_ppc(&vcpu->guest_state));
             seL4_SetMR(2, vmm_guest_state_get_control_entry(&vcpu->guest_state));
-            fault = seL4_VMEnter(vcpu->guest_vcpu, &badge);
+            fault = seL4_VMEnter(&badge);
 
             if (fault == SEL4_VMENTER_RESULT_FAULT) {
                 /* We in a fault */

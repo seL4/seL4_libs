@@ -10,34 +10,22 @@
  * @TAG(DATA61_BSD)
  */
 
-#ifndef SEL4_TEST_PROTOTYPE_H
-#define SEL4_TEST_PROTOTYPE_H
+#pragma once
 
 /* Include Kconfig variables. */
 #include <autoconf.h>
 
+#include <stdbool.h>
+
 #ifdef CONFIG_BUFFER_OUTPUT
 void sel4test_printf(const char *out);
+void sel4test_reset_buffer_index(void);
+void sel4test_disable_buffering(void);
+void sel4test_clear_buffer(void);
+void sel4test_print_buffer(void);
 #endif /* CONFIG_BUFFER_OUTPUT */
 
-/**
- * Start a test suite
- *
- * @name name of test suite
- */
-void sel4test_start_suite(const char *name);
-
-/**
- * End test suite
- */
-void sel4test_end_suite(void);
-
-/**
- * Start a test case.
- *
- * @param name the name of the test
- */
-void sel4test_start_test(const char *name);
+void _sel4test_start_new_test(void);
 
 /**
  * Report an error in a test case.
@@ -53,18 +41,18 @@ void _sel4test_report_error(const char *error, const char *file, int line);
 void _sel4test_failure(const char *failure, const char *file, int line);
 
 /*
- * End the current test case
+ * Mark the current test as fatally failed. The test will be terminated and
+ * will not proceed beyond this point.
  */
-void sel4test_end_test(void);
+void _sel4test_abort(const char *failure, const char *file, int line);
 
-/**
- * Gets the results of current suite. Results of current
- * suite is valid until next sel4test_start_suite call.
- *
- * @param out_num_tests number of tests (may be NULL)
- * @param out_passed how many tests passed (may be NULL)
- * @param out_failed how many tests failed (may be NULL)
+/*
+ * Indicates if current test passed.
  */
-void sel4_test_get_suite_results(int *out_num_tests, int *out_passed, int *out_failed);
+int sel4test_get_result(void);
 
-#endif /* SEL4_TEST_H */
+/*
+ * Indicates whether current test aborted.
+ */
+bool is_aborted(void);
+

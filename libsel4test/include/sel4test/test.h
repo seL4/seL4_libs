@@ -10,17 +10,15 @@
  * @TAG(DATA61_BSD)
  */
 
-#ifndef SEL4_TEST_H
-#define SEL4_TEST_H
+#pragma once
 
 /* Include Kconfig variables. */
 #include <autoconf.h>
 
 #include <sel4/sel4.h>
 
-#include <sel4test/prototype.h>
-#include <sel4test/macros.h>
 #include <utils/attribute.h>
+#include <sel4test/testutil.h>
 
 #include <inttypes.h>
 #include <stdbool.h>
@@ -130,15 +128,6 @@ test_comparator(const void *a, const void *b)
 static inline int _test_fail(const char *condition, const char *file, int line)
 {
     _sel4test_failure(condition, file, line);
-#ifdef CONFIG_TESTPRINTER_HALT_ON_TEST_FAILURE
-    printf("Halting on first test failure...\n");
-    sel4test_end_test();
-    sel4test_end_suite();
-#ifdef CONFIG_DEBUG_BUILD
-    seL4_DebugHalt();
-#endif /* CONFIG_DEBUG_BUILD */
-    while(1);
-#endif /* CONFIG_TESTPRINTER_HALT_ON_TEST_FAILURE */
     return FAILURE;
 }
 
@@ -147,29 +136,12 @@ static inline void _test_error(const char *condition, const char *file, int line
 {
 
     _sel4test_report_error(condition, file, line);
-#ifdef CONFIG_TESTPRINTER_HALT_ON_TEST_FAILURE
-    printf("Halting on first test failure...\n");
-    sel4test_end_test();
-    sel4test_end_suite();
-#ifdef CONFIG_DEBUG_BUILD
-    seL4_DebugHalt();
-#endif /* CONFIG_DEBUG_BUILD */
-    while(1);
-#endif /* CONFIG_TESTPRINTER_HALT_ON_TEST_FAILURE */
-
 }
 
 /* Fails a test case, stop everything. */
 static inline void _test_abort(const char *condition, const char *file, int line)
 {
     _sel4test_failure(condition, file, line);
-    printf("Halting on fatal assertion...\n");
-    sel4test_end_test();
-    sel4test_end_suite();
-#ifdef CONFIG_DEBUG_BUILD
-    seL4_DebugHalt();
-#endif /* CONFIG_DEBUG_BUILD */
-    while(1);
 }
 
 #define test_assert(e) if (!(e)) return _test_fail(#e, __FILE__, __LINE__)
@@ -256,32 +228,3 @@ static inline void _test_abort(const char *condition, const char *file, int line
 
 env_t sel4test_get_env(void);
 
-/*
- * Example basic run test
- */
-static inline int
-sel4test_basic_run_test(struct testcase *t)
-{
-    return t->function(sel4test_get_env());
-}
-
-/*
- * Run every test defined with the DEFINE_TEST macro.
- *
- * Use CONFIG_TESTPRINTER_REGEX to filter tests.
- *
- * @param name the name of the test suite
- *
- */
-void sel4test_run_tests(const char *name, env_t e);
-
-/*
- * Get a testcase.
- *
- * @param name the name of the test to retrieve.
- * @return the test corresponding to name, NULL if test not found.
- */
-testcase_t* sel4test_get_test(const char *name);
-
-bool sel4test_get_result(void);
-#endif /* SEL4_TEST_H */

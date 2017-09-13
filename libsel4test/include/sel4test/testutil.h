@@ -25,7 +25,7 @@ void sel4test_clear_buffer(void);
 void sel4test_print_buffer(void);
 #endif /* CONFIG_BUFFER_OUTPUT */
 
-void _sel4test_start_new_test(void);
+void sel4test_start_new_test(void);
 
 /**
  * Report an error in a test case.

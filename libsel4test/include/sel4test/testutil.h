@@ -17,13 +17,12 @@
 
 #include <stdbool.h>
 
-#ifdef CONFIG_BUFFER_OUTPUT
+/* A buffered printf to avoid corrupting xml output */
 void sel4test_printf(const char *out);
-void sel4test_reset_buffer_index(void);
-void sel4test_disable_buffering(void);
-void sel4test_clear_buffer(void);
-void sel4test_print_buffer(void);
-#endif /* CONFIG_BUFFER_OUTPUT */
+/* enable printf buffering */
+void sel4test_start_printf_buffer(void);
+/* dump the current buffer and disable printf buffering */
+void sel4test_end_printf_buffer(void);
 
 void sel4test_start_new_test(void);
 

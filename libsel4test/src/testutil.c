@@ -24,25 +24,25 @@
 
 #include <utils/util.h>
 
-#define MAX_NAME_SIZE 100
+/* buffer for test stdout size */
 #define STDOUT_CACHE 50000
 
-#define BUFFERING_DISABLED (-1)
 
-#ifdef CONFIG_BUFFER_OUTPUT
+/* buffer stdout here during a test if we're outputting xml */
 static char current_stdout_bank[STDOUT_CACHE];
-static int buf_index = BUFFERING_DISABLED;
-#endif
+/* index we are up to in the buffer */
+static int buf_index = 0;
+/* is the buffer currently enabled? otherwise just printf */
+static bool do_buffer_printf = false;
 
 static bool current_test_passed = true;
 static bool current_test_aborted = false;
 
-#ifdef CONFIG_BUFFER_OUTPUT
 #undef printf
 void
 sel4test_printf(const char *string)
 {
-    if (buf_index == BUFFERING_DISABLED) {
+    if (!do_buffer_printf) {
         printf("%s", string);
     } else if (buf_index < STDOUT_CACHE && buf_index >= 0) {
         size_t len = STDOUT_CACHE - buf_index;
@@ -53,29 +53,22 @@ sel4test_printf(const char *string)
     }
 }
 
-void sel4test_reset_buffer_index(void)
+void sel4test_start_printf_buffer(void)
 {
-    buf_index = 0;
+    /* only enable the printf buffer if we are buffering output */
+    if (config_set(CONFIG_PRINT_XML)) {
+        buf_index = 0;
+        do_buffer_printf = true;
+    }
 }
 
-void sel4test_disable_buffering(void)
+void sel4test_end_printf_buffer(void)
 {
-    buf_index = BUFFERING_DISABLED;
-}
-
-void sel4test_clear_buffer(void)
-{
-    memset(current_stdout_bank, 0, STDOUT_CACHE);
-}
-
-void sel4test_print_buffer(void)
-{
+    do_buffer_printf = false;
     if (buf_index != 0) {
         printf("\t\t<system-out>%s</system-out>\n", current_stdout_bank);
         buf_index = 0;
     }
-}
-#endif /* CONFIG_BUFFER_OUTPUT */
 
 void
 sel4test_start_new_test(void)
@@ -87,22 +80,22 @@ sel4test_start_new_test(void)
 void
 _sel4test_report_error(const char *error, const char *file, int line)
 {
-#ifdef CONFIG_PRINT_XML
-    printf("\t\t<error>%s at line %d of file %s</error>\n", error, line, file);
-#else
-    printf("\tError: %s at line %d of file %s\n", error, line, file);
-#endif /* CONFIG_PRINT_XML */
+    if (config_set(CONFIG_PRINT_XML)) {
+        printf("\t\t<error>%s at line %d of file %s</error>\n", error, line, file);
+    } else {
+        printf("\tError: %s at line %d of file %s\n", error, line, file);
+    }
     current_test_passed = false;
 }
 
 void
 _sel4test_failure(const char *failure, const char *file, int line)
 {
-#ifdef CONFIG_PRINT_XML
-    printf("\t\t<failure type=\"failure\">%s at line %d of file %s</failure>\n", failure, line, file);
-#else
-    printf("\tFailure: %s at line %d of file %s\n", failure, line, file);
-#endif /* CONFIG_PRINT_XML */
+    if (config_set(CONFIG_PRINT_XML)) {
+        printf("\t\t<failure type=\"failure\">%s at line %d of file %s</failure>\n", failure, line, file);
+    } else {
+        printf("\tFailure: %s at line %d of file %s\n", failure, line, file);
+    }
     current_test_passed = false;
 }
 

@@ -21,16 +21,16 @@
 /**
  * When running a test suite, we want to output any output from the suite in a
  * <stdout></stdout> section. But for debugging we do not want this. Therefore
- * you should *disable* CONFIG_BUFFER_OUTPUT while debugging tests.
+ * you should *disable* CONFIG_PRINT_XML while debugging tests.
  */
-#ifdef CONFIG_BUFFER_OUTPUT
+#ifdef CONFIG_PRINT_XML
 #include <stdio.h>
 #define printf(x, ...)  do {\
     char buffer[SEL4TEST_PRINT_BUFFER];\
     snprintf(buffer, SEL4TEST_PRINT_BUFFER, x, ##__VA_ARGS__);\
     sel4test_printf(buffer);\
 } while(0)
-#endif /* CONFIG_BUFFER_OUTPUT */
+#endif /* CONFIG_PRINT_XML */
 
 #define sel4test_case_with_message(condition, message) do {\
     if(!(condition)) {\

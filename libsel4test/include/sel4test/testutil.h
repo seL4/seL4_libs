@@ -14,7 +14,6 @@
 
 /* Include Kconfig variables. */
 #include <autoconf.h>
-
 #include <stdbool.h>
 
 typedef enum test_result {
@@ -53,7 +52,7 @@ void _sel4test_failure(const char *failure, const char *file, int line);
  * Mark the current test as fatally failed. The test will be terminated and
  * will not proceed beyond this point.
  */
-test_result_t _sel4test_abort(const char *failure, const char *file, int line);
+void _sel4test_abort(const char *failure, const char *file, int line);
 
 /*
  * Indicates if current test passed.

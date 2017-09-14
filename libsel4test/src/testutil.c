@@ -12,7 +12,6 @@
 
 #include <autoconf.h>
 
-#include <regex.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -72,8 +71,7 @@ void sel4test_end_printf_buffer(void)
 
 }
 
-void
-_sel4test_report_error(const char *error, const char *file, int line)
+void _sel4test_report_error(const char *error, const char *file, int line)
 {
     if (config_set(CONFIG_PRINT_XML)) {
         printf("\t\t<error>%s at line %d of file %s</error>\n", error, line, file);
@@ -83,8 +81,7 @@ _sel4test_report_error(const char *error, const char *file, int line)
     current_test_result = FAILURE;
 }
 
-void
-_sel4test_failure(const char *failure, const char *file, int line)
+void _sel4test_failure(const char *failure, const char *file, int line)
 {
     if (config_set(CONFIG_PRINT_XML)) {
         printf("\t\t<failure type=\"failure\">%s at line %d of file %s</failure>\n", failure, line, file);
@@ -94,8 +91,7 @@ _sel4test_failure(const char *failure, const char *file, int line)
     current_test_result = FAILURE;
 }
 
-void
-_sel4test_abort(const char *failure, const char *file, int line)
+void _sel4test_abort(const char *failure, const char *file, int line)
 {
     if (config_set(CONFIG_PRINT_XML)) {
         printf("\t\t<failure type=\"failure\">%s at line %d of file %s</failure>\n", failure, line, file);
@@ -114,4 +110,3 @@ test_result_t sel4test_get_result(void)
 {
     return current_test_result;
 }
-

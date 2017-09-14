@@ -35,8 +35,8 @@ static int buf_index = 0;
 /* is the buffer currently enabled? otherwise just printf */
 static bool do_buffer_printf = false;
 
-static bool current_test_passed = true;
-static bool current_test_aborted = false;
+/* global to track if the current test has passed */
+static test_result_t current_test_result = SUCCESS;
 
 #undef printf
 void
@@ -70,11 +70,6 @@ void sel4test_end_printf_buffer(void)
         buf_index = 0;
     }
 
-void
-sel4test_start_new_test(void)
-{
-    current_test_passed = true;
-    current_test_aborted = false;
 }
 
 void
@@ -85,7 +80,7 @@ _sel4test_report_error(const char *error, const char *file, int line)
     } else {
         printf("\tError: %s at line %d of file %s\n", error, line, file);
     }
-    current_test_passed = false;
+    current_test_result = FAILURE;
 }
 
 void
@@ -96,25 +91,27 @@ _sel4test_failure(const char *failure, const char *file, int line)
     } else {
         printf("\tFailure: %s at line %d of file %s\n", failure, line, file);
     }
-    current_test_passed = false;
+    current_test_result = FAILURE;
 }
 
 void
 _sel4test_abort(const char *failure, const char *file, int line)
 {
-    current_test_aborted = true;
-    _sel4test_failure(failure, file, line);
+    if (config_set(CONFIG_PRINT_XML)) {
+        printf("\t\t<failure type=\"failure\">%s at line %d of file %s</failure>\n", failure, line, file);
+    } else {
+        printf("\tFailure: %s at line %d of file %s\n", failure, line, file);
+    }
+    current_test_result = ABORT;
 }
 
-bool
-is_aborted()
+void sel4test_reset(void)
 {
-    return current_test_aborted;
+    current_test_result = SUCCESS;
 }
 
-int
-sel4test_get_result(void)
+test_result_t sel4test_get_result(void)
 {
-    return current_test_passed;
+    return current_test_result;
 }
 

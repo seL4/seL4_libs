@@ -27,9 +27,6 @@
 #include <stdio.h>
 #include <string.h>
 
-#define SUCCESS true
-#define FAILURE false
-
 /* Contains information about the test environment.
  * Define struct env in your application. */
 struct env;
@@ -52,7 +49,7 @@ typedef struct test_type {
     void (*set_up)(env_t e);
     void (*tear_down)(env_t e);
     // Run the test.
-    int (*run_test)(struct testcase* test, env_t e);
+    test_result_t (*run_test)(struct testcase* test, env_t e);
 } ALIGN(32) test_type_t;
 
 /* Declare a test type.
@@ -125,7 +122,7 @@ test_comparator(const void *a, const void *b)
 }
 
 /* Fails a test case, stop running the rest of the test, but keep running other tests. */
-static inline int _test_fail(const char *condition, const char *file, int line)
+static inline test_result_t _test_fail(const char *condition, const char *file, int line)
 {
     _sel4test_failure(condition, file, line);
     return FAILURE;
@@ -139,14 +136,15 @@ static inline void _test_error(const char *condition, const char *file, int line
 }
 
 /* Fails a test case, stop everything. */
-static inline void _test_abort(const char *condition, const char *file, int line)
+static inline test_result_t _test_abort(const char *condition, const char *file, int line)
 {
     _sel4test_failure(condition, file, line);
+    return ABORT;
 }
 
 #define test_assert(e) if (!(e)) return _test_fail(#e, __FILE__, __LINE__)
 #define test_check(e) if (!(e)) _test_error(#e, __FILE__, __LINE__)
-#define test_assert_fatal(e) if (!(e)) _test_abort(#e, __FILE__, __LINE__)
+#define test_assert_fatal(e) if (!(e)) return _test_abort(#e, __FILE__, __LINE__)
 
 #define __TEST_BUFFER_SIZE 200
 #define test_op_type(a, b, op, t, name_a, name_b, cast) \

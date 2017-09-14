@@ -99,6 +99,14 @@ typedef struct testcase {
 #define DEFINE_TEST_BOOTSTRAP(_name, _description, _function) DEFINE_TEST_WITH_TYPE(_name, _description, _function, BOOTSTRAP)
 /**/
 
+/* Definitions so that we can find the test types */
+extern struct test_type __start__test_type[];
+extern struct test_type __stop__test_type[];
+
+/* Definitions so that we can find the test cases */
+extern struct testcase __start__test_case[];
+extern struct testcase __stop__test_case[];
+
 static inline int
 test_type_comparator(const void *a, const void *b)
 {

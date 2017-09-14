@@ -10,8 +10,7 @@
  * @TAG(DATA61_BSD)
  */
 
-#ifndef SEL4_TEST_MACRO_H
-#define SEL4_TEST_MACRO_H
+#pragma once
 
 /* Include Kconfig variables. */
 #include <autoconf.h>
@@ -55,5 +54,3 @@
  * Report a failure in the test
  */
 #define sel4test_failure(x) _sel4test_failure(x, __FILE__, __LINE__)
-
-#endif /* SEL4_TEST_H */

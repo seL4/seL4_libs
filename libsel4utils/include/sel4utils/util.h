@@ -9,9 +9,7 @@
  *
  * @TAG(DATA61_BSD)
  */
-
-#ifndef _SEL4_UTILS_UTIL_H_
-#define _SEL4_UTILS_UTIL_H_
+#pragma once
 
 #include <autoconf.h>
 #include <assert.h>
@@ -24,4 +22,3 @@
 #include <sel4utils/sel4_zf_logif.h>
 #include <sel4utils/strerror.h>
 
-#endif

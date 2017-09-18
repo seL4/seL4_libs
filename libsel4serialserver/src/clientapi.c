@@ -22,7 +22,7 @@
 #include <vspace/vspace.h>
 
 #include "serial_server.h"
-#include <sel4utils/serial_server/client.h>
+#include <serial_server/client.h>
 
 /** Single-call connection to the server thread, using the parent as a
  * proxy.

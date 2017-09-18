@@ -11,6 +11,6 @@
  */
 #pragma once
 
-// TODO temporary work around to ensure tests are included
+/* TODO This temporary work around to ensure tests are included. Find a better solution. */
 void get_serial_server_parent_tests();
 

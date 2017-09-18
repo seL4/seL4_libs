@@ -22,7 +22,7 @@
 #include <vka/object_capops.h>
 
 #include "serial_server.h"
-#include <sel4utils/serial_server/parent.h>
+#include <serial_server/parent.h>
 
 seL4_Error
 serial_server_parent_spawn_thread(simple_t *parent_simple, vka_t *parent_vka,

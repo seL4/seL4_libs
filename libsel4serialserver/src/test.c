@@ -1,18 +1,30 @@
+/*
+ * Copyright 2017, Data61
+ * Commonwealth Scientific and Industrial Research Organisation (CSIRO)
+ * ABN 41 687 119 230.
+ *
+ * This software may be distributed and modified according to the terms of
+ * the BSD 2-Clause license. Note that NO WARRANTY is provided.
+ * See "LICENSE_BSD2.txt" for details.
+ *
+ * @TAG(DATA61_BSD)
+ */
+
 #include <string.h>
 #include <stdio.h>
 
 #include <sel4/sel4.h>
 #include <vka/capops.h>
 #include <sel4utils/thread.h>
-#include <sel4utils/serial_server/parent.h>
-#include <sel4utils/serial_server/client.h>
+#include <serial_server/parent.h>
+#include <serial_server/client.h>
 
 #include <sel4test/test.h>
 #include <sel4test/testutil.h>
-#define SERSERV_TEST_PRIO_SERVER    (seL4_MaxPrio - 1)
-// TODO struct env
 
+#define SERSERV_TEST_PRIO_SERVER    (seL4_MaxPrio - 1)
 #define MAX_REGIONS 4
+
 struct env {
     /* An initialised vka that may be used by the test. */
     vka_t vka;
@@ -22,37 +34,11 @@ struct env {
     seL4_timer_t timer;
     /* abstract interface over application init */
     simple_t simple;
-    /* notification for timer */
-    vka_object_t timer_notification;
-
-    /* caps for the current process */
-    seL4_CPtr cspace_root;
-    seL4_CPtr page_directory;
-    seL4_CPtr endpoint;
-    seL4_CPtr tcb;
-    seL4_CPtr timer_untyped;
-    seL4_CPtr asid_pool;
-    seL4_CPtr asid_ctrl;
-    seL4_CPtr sched_ctrl;
-#ifdef CONFIG_IOMMU
-    seL4_CPtr io_space;
-#endif /* CONFIG_IOMMU */
-#ifdef CONFIG_ARM_SMMU
-    seL4_SlotRegion io_space_caps;
-#endif
-    seL4_Word cores;
-    seL4_CPtr domain;
-
-    int priority;
-    int cspace_size_bits;
-    int num_regions;
-    sel4utils_elf_region_t regions[MAX_REGIONS];
 };
 
 static const char *test_str = "Hello, world!\n";
 
 void get_serial_server_parent_tests() {
-    printf("get serial server parent tests\n");
 }
 
 static int

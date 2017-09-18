@@ -23,8 +23,8 @@
 #include <sel4platsupport/platsupport.h>
 
 #include "serial_server.h"
-#include <sel4utils/serial_server/client.h>
-#include <sel4utils/serial_server/parent.h>
+#include <serial_server/client.h>
+#include <serial_server/parent.h>
 
 /* Define global instance. */
 static serial_server_context_t serial_server;

@@ -83,20 +83,24 @@ typedef struct testcase {
     const char *description;
     test_fn function;
     test_type_name_t test_type;
+    bool enabled;
 } ALIGN(32) testcase_t;
 
 /* Declare a testcase. */
-#define DEFINE_TEST_WITH_TYPE(_name, _description, _function, _test_type) \
+#define DEFINE_TEST_WITH_TYPE(_name, _description, _function, _test_type, _enabled) \
     __attribute__((used)) __attribute__((section("_test_case"))) struct testcase TEST_ ## _name = { \
     .name = #_name, \
     .description = _description, \
     .function = _function, \
     .test_type = _test_type, \
+    .enabled = _enabled, \
 };
 
-#define DEFINE_TEST(_name, _description, _function) DEFINE_TEST_WITH_TYPE(_name, _description, _function, BASIC)
+#define DEFINE_TEST_MAYBE(_name, _description, _function, _enabled) DEFINE_TEST_WITH_TYPE(_name, _description, _function, BASIC, _enabled)
 
-#define DEFINE_TEST_BOOTSTRAP(_name, _description, _function) DEFINE_TEST_WITH_TYPE(_name, _description, _function, BOOTSTRAP)
+#define DEFINE_TEST(_name, _description, _function) DEFINE_TEST_MAYBE(_name, _description, _function, true)
+
+#define DEFINE_TEST_BOOTSTRAP(_name, _description, _function) DEFINE_TEST_WITH_TYPE(_name, _description, _function, BOOTSTRAP, true)
 /**/
 
 /* Definitions so that we can find the test types */

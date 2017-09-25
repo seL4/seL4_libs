@@ -27,6 +27,9 @@
 #include <stdio.h>
 #include <string.h>
 
+/* max test name size */
+#define TEST_NAME_MAX 32
+
 /* Contains information about the test environment.
  * Define struct env in your application. */
 struct env;
@@ -79,21 +82,25 @@ typedef struct test_type {
  * by sizeof(struct testcase), allowing as to treat the items
  * in the section as an array */
 typedef struct testcase {
-    const char *name;
+    const char name[TEST_NAME_MAX];
     const char *description;
     test_fn function;
     test_type_name_t test_type;
     bool enabled;
 } ALIGN(32) testcase_t;
 
-/* Declare a testcase. */
+/* Declare a testcase.
+ * Must be declared using C89 style (#_name, _desc, _func...) instead of
+ * C99 style (name = _name, desc = _desc, func = _func...) to make sure
+ * that it is accepted by C++ compilers.
+ */
 #define DEFINE_TEST_WITH_TYPE(_name, _description, _function, _test_type, _enabled) \
     __attribute__((used)) __attribute__((section("_test_case"))) struct testcase TEST_ ## _name = { \
-    .name = #_name, \
-    .description = _description, \
-    .function = _function, \
-    .test_type = _test_type, \
-    .enabled = _enabled, \
+    #_name, \
+    _description, \
+    _function, \
+    _test_type, \
+    _enabled, \
 };
 
 #define DEFINE_TEST_MAYBE(_name, _description, _function, _enabled) DEFINE_TEST_WITH_TYPE(_name, _description, _function, BASIC, _enabled)

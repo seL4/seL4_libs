@@ -82,7 +82,6 @@ int sel4platsupport_init_default_timer_caps(vka_t *vka, vspace_t *vspace, simple
  * @param ntfn         notification object capability for irqs to be delivered to.
  * @param timer        a timer structure to initialise.
  * @return             0 on success.
- * C
  */
 int sel4platsupport_init_default_timer(vka_t *vka, vspace_t *vspace, simple_t *simple,
                                 seL4_CPtr notification, seL4_timer_t *timer);

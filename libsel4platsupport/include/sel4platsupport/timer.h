@@ -75,13 +75,23 @@ int sel4platsupport_init_default_timer_caps(vka_t *vka, vspace_t *vspace, simple
  * provided notification object with badges of BIT(seL4_BadgeBits - 1) - n where n is the index
  * of the irq in the default ltimer.
  *
+ * The passed ops interface is retained by the timer and must stay valid until the timer is destroyed
+ *
  * @param vka          an initialised vka implementation that can allocate the physical
  *                     addresses (if any) required by the ltimer.
  * @param vspace       an initialised vspace for manging virtual memory.
  * @param simple       for getting irq capabilities for the ltimer irqs.
+ * @param ops          I/O ops interface for interacting with hardware resources
  * @param ntfn         notification object capability for irqs to be delivered to.
  * @param timer        a timer structure to initialise.
  * @return             0 on success.
+ */
+int sel4platsupport_init_default_timer_ops(vka_t *vka, vspace_t *vspace, simple_t *simple, ps_io_ops_t ops,
+                                seL4_CPtr notification, seL4_timer_t *timer);
+
+/*
+ * Wrapper around sel4platsupport_init_default_timer_ops that generates as much of an
+ * io_ops interface as it can from the given vka and vspace
  */
 int sel4platsupport_init_default_timer(vka_t *vka, vspace_t *vspace, simple_t *simple,
                                 seL4_CPtr notification, seL4_timer_t *timer);

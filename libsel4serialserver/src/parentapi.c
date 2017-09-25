@@ -95,7 +95,7 @@ serial_server_parent_spawn_thread(simple_t *parent_simple, vka_t *parent_vka,
      * message register.
      */
     get_serial_server()->frame_cap_recv_cspaths = calloc(shmem_max_n_pages,
-                                                   sizeof(cspacepath_t));
+                                                         sizeof(cspacepath_t));
     if (get_serial_server()->frame_cap_recv_cspaths == NULL) {
         error = seL4_NotEnoughMemory;
         goto out;
@@ -106,16 +106,16 @@ serial_server_parent_spawn_thread(simple_t *parent_simple, vka_t *parent_vka,
                                       &get_serial_server()->frame_cap_recv_cspaths[i]);
         if (error != 0) {
             ZF_LOGE(SERSERVP"spawn_thread: Failed to alloc enough cnode slots "
-                "to receive shmem frame caps equal to %zd bytes.",
-                shmem_max_size);
+                    "to receive shmem frame caps equal to %zd bytes.",
+                    shmem_max_size);
             goto out;
         }
     }
 
     sel4utils_thread_config_t config = thread_config_default(parent_simple, parent_cspace_cspath.root,
-            seL4_NilData, get_serial_server()->server_ep_obj.cptr, priority);
+                                                             seL4_NilData, get_serial_server()->server_ep_obj.cptr, priority);
     error = sel4utils_configure_thread_config(parent_vka, parent_vspace, parent_vspace,
-                                       config, &get_serial_server()->server_thread);
+                                              config, &get_serial_server()->server_thread);
     if (error != 0) {
         ZF_LOGE(SERSERVP"spawn_thread: sel4utils_configure_thread failed "
                 "with %d.", error);
@@ -184,7 +184,7 @@ out:
 
 int
 serial_server_parent_vka_mint_endpoint(vka_t *client_vka,
-                                   cspacepath_t *badged_server_ep_cspath)
+                                       cspacepath_t *badged_server_ep_cspath)
 {
     if (client_vka == NULL || badged_server_ep_cspath == NULL) {
         return seL4_InvalidArgument;

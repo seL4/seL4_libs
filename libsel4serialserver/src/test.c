@@ -38,7 +38,8 @@ struct env {
 
 static const char *test_str = "Hello, world!\n";
 
-void get_serial_server_parent_tests() {
+void get_serial_server_parent_tests()
+{
 }
 
 static int
@@ -72,7 +73,7 @@ test_parent_connect(struct env *env)
     test_eq(error, 0);
 
     error = serial_server_client_connect(badged_server_ep_cspath.capPtr,
-                                        &env->vka, &env->vspace, &conn);
+                                         &env->vka, &env->vspace, &conn);
     test_eq(error, 0);
 
     return  sel4test_get_result();
@@ -96,7 +97,7 @@ test_parent_printf(struct env *env)
     test_eq(error, 0);
 
     error = serial_server_client_connect(badged_server_ep_cspath.capPtr,
-                                        &env->vka, &env->vspace, &conn);
+                                         &env->vka, &env->vspace, &conn);
     test_eq(error, 0);
 
     error = serial_server_printf(&conn, test_str);
@@ -122,7 +123,7 @@ test_parent_write(struct env *env)
     test_eq(error, 0);
 
     error = serial_server_client_connect(badged_server_ep_cspath.capPtr,
-                                        &env->vka, &env->vspace, &conn);
+                                         &env->vka, &env->vspace, &conn);
     test_eq(error, 0);
 
     error = serial_server_write(&conn, test_str, strlen(test_str));
@@ -149,7 +150,7 @@ test_parent_disconnect_reconnect_write_and_printf(struct env *env)
     test_eq(error, 0);
 
     error = serial_server_client_connect(badged_server_ep_cspath.capPtr,
-                                        &env->vka, &env->vspace, &conn);
+                                         &env->vka, &env->vspace, &conn);
     test_eq(error, 0);
 
     error = serial_server_printf(&conn, test_str);
@@ -168,7 +169,7 @@ test_parent_disconnect_reconnect_write_and_printf(struct env *env)
     test_eq(error, 0);
 
     error = serial_server_client_connect(badged_server_ep_cspath.capPtr,
-                                        &env->vka, &env->vspace, &conn);
+                                         &env->vka, &env->vspace, &conn);
     test_eq(error, 0);
 
     error = serial_server_write(&conn, test_str, strlen(test_str));
@@ -199,7 +200,7 @@ test_kill_from_parent(struct env *env)
     test_eq(error, 0);
 
     error = serial_server_client_connect(badged_server_ep_cspath.capPtr,
-                                        &env->vka, &env->vspace, &conn);
+                                         &env->vka, &env->vspace, &conn);
     test_eq(error, 0);
 
     /* Kill the Server from the parent. */
@@ -255,16 +256,16 @@ test_connect_inputs(struct env *env)
     test_eq(error, 0);
 
     error = serial_server_client_connect(0,
-                                        &env->vka, &env->vspace, &conn);
+                                         &env->vka, &env->vspace, &conn);
     test_neq(error, 0);
     error = serial_server_client_connect(badged_server_ep_cspath.capPtr,
-                                        NULL, &env->vspace, &conn);
+                                         NULL, &env->vspace, &conn);
     test_neq(error, 0);
     error = serial_server_client_connect(badged_server_ep_cspath.capPtr,
-                                        &env->vka, NULL, &conn);
+                                         &env->vka, NULL, &conn);
     test_neq(error, 0);
     error = serial_server_client_connect(badged_server_ep_cspath.capPtr,
-                                        &env->vka, &env->vspace, NULL);
+                                         &env->vka, &env->vspace, NULL);
     test_neq(error, 0);
 
     return sel4test_get_result();
@@ -287,7 +288,7 @@ test_printf_inputs(struct env *env)
     error = serial_server_parent_vka_mint_endpoint(&env->vka, &badged_server_ep_cspath);
     test_eq(error, 0);
     error = serial_server_client_connect(badged_server_ep_cspath.capPtr,
-                                        &env->vka, &env->vspace, &conn);
+                                         &env->vka, &env->vspace, &conn);
     test_eq(error, 0);
 
     error = serial_server_printf(NULL, test_str);
@@ -315,7 +316,7 @@ test_write_inputs(struct env *env)
     error = serial_server_parent_vka_mint_endpoint(&env->vka, &badged_server_ep_cspath);
     test_eq(error, 0);
     error = serial_server_client_connect(badged_server_ep_cspath.capPtr,
-                                        &env->vka, &env->vspace, &conn);
+                                         &env->vka, &env->vspace, &conn);
     test_eq(error, 0);
 
     error = serial_server_write(NULL, test_str, strlen(test_str));

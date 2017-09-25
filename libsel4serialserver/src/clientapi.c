@@ -48,7 +48,7 @@ serial_server_client_connect(seL4_CPtr badged_server_ep_cap,
     cspacepath_t frame_cspath;
 
     if (badged_server_ep_cap == 0 || client_vka == NULL || client_vspace == NULL
-        || conn == NULL) {
+            || conn == NULL) {
         return seL4_InvalidArgument;
     }
 
@@ -91,7 +91,7 @@ serial_server_client_connect(seL4_CPtr badged_server_ep_cap,
     seL4_SetMR(SSMSGREG_FUNC, FUNC_CONNECT_REQ);
     seL4_SetMR(SSMSGREG_CONNECT_REQ_SHMEM_SIZE,
                SERIAL_SERVER_SHMEM_MAX_SIZE);
-   /* extraCaps doubles up as the number of shmem pages. */
+    /* extraCaps doubles up as the number of shmem pages. */
     tag = seL4_MessageInfo_new(0, 0,
                                shmem_n_pages,
                                SSMSGREG_CONNECT_REQ_END);
@@ -196,10 +196,10 @@ serial_server_printf(serial_client_context_t *conn, const char *fmt, ...)
 
     if ((size_t)expanded_fmt_length >= conn->shmem_size) {
         ZF_LOGE(SERSERVC"printf: This printf call's total expanded length (%zd) "
-            "exceeds your %zd bytes shmem buffer.\n\tMessage not sent to "
-            "server.",
-            expanded_fmt_length,
-            conn->shmem_size);
+                "exceeds your %zd bytes shmem buffer.\n\tMessage not sent to "
+                "server.",
+                expanded_fmt_length,
+                conn->shmem_size);
         return -seL4_RangeError;
     }
 
@@ -250,7 +250,8 @@ serial_server_disconnect(serial_client_context_t *conn)
 }
 
 int
-serial_server_kill(serial_client_context_t *conn) {
+serial_server_kill(serial_client_context_t *conn)
+{
     seL4_MessageInfo_t tag;
 
     if (conn == NULL) {

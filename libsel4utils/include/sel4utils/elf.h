@@ -9,8 +9,7 @@
  *
  * @TAG(DATA61_BSD)
  */
-#ifndef SEL4UTILS_ELF_H
-#define SEL4UTILS_ELF_H
+#pragma once
 
 #include <autoconf.h>
 
@@ -149,4 +148,3 @@ uint32_t sel4utils_elf_num_phdrs(const char *image_name);
  */
 void sel4utils_elf_read_phdrs(const char *image_name, uint32_t max_phdrs, Elf_Phdr *phdrs);
 
-#endif /* SEL4UTILS_ELF_H */

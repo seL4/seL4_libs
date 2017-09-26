@@ -207,6 +207,19 @@ serial_server_printf(serial_client_context_t *conn, const char *fmt, ...)
     return serial_server_write_ipc_invoke(conn, expanded_fmt_length);
 }
 
+ssize_t serial_server_flush(serial_client_context_t *conn, ssize_t len)
+{
+    if (len > conn->shmem_size) {
+        return -seL4_RangeError;
+    }
+
+    if (len == 0) {
+        return 0;
+    }
+
+    return serial_server_write_ipc_invoke(conn, len);
+}
+
 ssize_t
 serial_server_write(serial_client_context_t *conn, const char *in_buff, ssize_t len)
 {

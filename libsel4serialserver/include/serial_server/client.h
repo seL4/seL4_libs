@@ -100,6 +100,18 @@ int serial_server_client_connect(seL4_CPtr server_ep_cap,
  */
 ssize_t serial_server_printf(serial_client_context_t *ctxt, const char *fmt, ...);
 
+
+/** Sends the server a request to print the current contents of the shared memory buffer.
+ *  For use when the client uses the shared memory buffer directly.
+ *
+ * @param ctxt Valid connection token returned by serial_server_client_connect().
+ * @param len the size of the buffer data.
+ * @return The number of bytes written (positive integer), or a negative integer
+ *         for error condition.
+ *
+ */
+ssize_t serial_server_flush(serial_client_context_t *ctxt, ssize_t len);
+
 /** Sends a request to the server to write a fixed-length buffer to the serial.
  *
  * @param ctxt Valid connection token returned by serial_server_client_connect().

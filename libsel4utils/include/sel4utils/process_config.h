@@ -164,6 +164,15 @@ static inline sel4utils_process_config_t
 process_config_fault_endpoint(sel4utils_process_config_t config, vka_object_t fault_endpoint)
 {
     config.fault_endpoint = fault_endpoint;
+    config.create_fault_endpoint = false;
+    return config;
+}
+
+static inline sel4utils_process_config_t
+process_config_fault_cptr(sel4utils_process_config_t config, seL4_CPtr fault_cptr)
+{
+    config.fault_endpoint.cptr = fault_cptr;
+    config.create_fault_endpoint = false;
     return config;
 }
 

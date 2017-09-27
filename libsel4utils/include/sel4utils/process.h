@@ -59,6 +59,7 @@ typedef struct {
     sel4utils_elf_region_t *elf_regions;
     bool own_vspace;
     bool own_cspace;
+    bool own_ep;
 } sel4utils_process_t;
 
 /* sel4utils processes start with some caps in their cspace.

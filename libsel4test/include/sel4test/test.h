@@ -103,11 +103,9 @@ typedef struct testcase {
     _enabled, \
 };
 
-#define DEFINE_TEST_MAYBE(_name, _description, _function, _enabled) DEFINE_TEST_WITH_TYPE(_name, _description, _function, BASIC, _enabled)
+#define DEFINE_TEST(_name, _description, _function, _enabled) DEFINE_TEST_WITH_TYPE(_name, _description, _function, BASIC, _enabled)
 
-#define DEFINE_TEST(_name, _description, _function) DEFINE_TEST_MAYBE(_name, _description, _function, true)
-
-#define DEFINE_TEST_BOOTSTRAP(_name, _description, _function) DEFINE_TEST_WITH_TYPE(_name, _description, _function, BOOTSTRAP, true)
+#define DEFINE_TEST_BOOTSTRAP(_name, _description, _function, _enabled) DEFINE_TEST_WITH_TYPE(_name, _description, _function, BOOTSTRAP, _enabled)
 /**/
 
 /* Definitions so that we can find the test types */

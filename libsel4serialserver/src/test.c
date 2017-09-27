@@ -54,7 +54,7 @@ test_server_spawn(struct env *env)
     test_eq(error, 0);
     return sel4test_get_result();
 }
-DEFINE_TEST(SERSERV_PARENT_001, "Serial server spawn test", test_server_spawn)
+DEFINE_TEST(SERSERV_PARENT_001, "Serial server spawn test", test_server_spawn, true)
 
 static int
 test_parent_connect(struct env *env)
@@ -78,7 +78,7 @@ test_parent_connect(struct env *env)
 
     return  sel4test_get_result();
 }
-DEFINE_TEST(SERSERV_PARENT_002, "Test connecting to the server from a parent thread", test_parent_connect)
+DEFINE_TEST(SERSERV_PARENT_002, "Test connecting to the server from a parent thread", test_parent_connect, true)
 
 static int
 test_parent_printf(struct env *env)
@@ -104,7 +104,7 @@ test_parent_printf(struct env *env)
     test_eq(error, (int)strlen(test_str));
     return sel4test_get_result();
 }
-DEFINE_TEST(SERSERV_PARENT_003, "Printf() from a connected parent thread", test_parent_printf)
+DEFINE_TEST(SERSERV_PARENT_003, "Printf() from a connected parent thread", test_parent_printf, true)
 
 static int
 test_parent_write(struct env *env)
@@ -131,7 +131,7 @@ test_parent_write(struct env *env)
 
     return sel4test_get_result();
 }
-DEFINE_TEST(SERSERV_PARENT_004, "Write() from a connected parent thread", test_parent_write)
+DEFINE_TEST(SERSERV_PARENT_004, "Write() from a connected parent thread", test_parent_write, true)
 
 static int
 test_parent_disconnect_reconnect_write_and_printf(struct env *env)
@@ -182,7 +182,8 @@ test_parent_disconnect_reconnect_write_and_printf(struct env *env)
 DEFINE_TEST(SERSERV_PARENT_005,
             "Test printf() and write() from a parent thread when after a "
             "connection reset (disconnect/reconnect)",
-            test_parent_disconnect_reconnect_write_and_printf)
+            test_parent_disconnect_reconnect_write_and_printf,
+            true)
 
 static int
 test_kill_from_parent(struct env *env)
@@ -210,7 +211,7 @@ test_kill_from_parent(struct env *env)
     return sel4test_get_result();
 }
 DEFINE_TEST(SERSERV_PARENT_006, "Kill the Server from the Parent thread",
-            test_kill_from_parent)
+            test_kill_from_parent, true)
 
 static int
 test_spawn_thread_inputs(struct env *env)
@@ -234,7 +235,7 @@ test_spawn_thread_inputs(struct env *env)
     return sel4test_get_result();
 }
 DEFINE_TEST(SERSERV_PARENT_007, "Test a series of unexpected input values to spawn_thread",
-            test_spawn_thread_inputs)
+            test_spawn_thread_inputs, true)
 
 static int
 test_connect_inputs(struct env *env)
@@ -271,7 +272,7 @@ test_connect_inputs(struct env *env)
     return sel4test_get_result();
 }
 DEFINE_TEST(SERSERV_PARENT_008, "Test a series of unexpected input values to connect()",
-            test_connect_inputs)
+            test_connect_inputs, true)
 
 static int
 test_printf_inputs(struct env *env)
@@ -299,7 +300,7 @@ test_printf_inputs(struct env *env)
     return sel4test_get_result();
 }
 DEFINE_TEST(SERSERV_PARENT_009, "Test a series of unexpected input values to printf()",
-            test_printf_inputs)
+            test_printf_inputs, true)
 
 static int
 test_write_inputs(struct env *env)
@@ -329,5 +330,5 @@ test_write_inputs(struct env *env)
     return sel4test_get_result();
 }
 DEFINE_TEST(SERSERV_PARENT_010, "Test a series of unexpected input values to write()",
-            test_write_inputs)
+            test_write_inputs, true)
 

@@ -9,6 +9,7 @@
  *
  * @TAG(DATA61_BSD)
  */
+#pragma once
 
 #include <sel4/types.h>
 

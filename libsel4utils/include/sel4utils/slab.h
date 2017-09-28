@@ -9,6 +9,8 @@
  *
  * @TAG(DATA61_BSD)
  */
+#pragma once
+
 #include <vka/vka.h>
 #include <sel4/sel4.h>
 

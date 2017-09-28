@@ -28,7 +28,7 @@
 #include <string.h>
 
 /* max test name size */
-#define TEST_NAME_MAX 32
+#define TEST_NAME_MAX (64 - 4 * sizeof(seL4_Word))
 
 /* Contains information about the test environment.
  * Define struct env in your application. */
@@ -71,23 +71,21 @@ typedef struct test_type {
 /* Represents a single testcase.
  * Because this struct is used to declare variables that get
  * placed into custom sections, that we later treat as an array,
- * we need to provide some additional alignment. The reason for
- * this is because these are independent static variables gcc
- * is permitted to place arbitrary padding between them. This
- * is annoying as we wish to treat all the items in the section
- * as an array. To work around this we use the fact that GCC
- * seems to be wanting to align to 32byte boundaries and set
- * the struct alignment to 32. Therefore the actual size of
+ * we need to make sure the struct is aligned and filled to the
+ * nearest power of two to avoid gcc placing arbitrary padding between them.
+ *
+ * The declaration below ensures that the actual size of
  * the objects in the section is the same as the size reported
  * by sizeof(struct testcase), allowing as to treat the items
  * in the section as an array */
-typedef struct testcase {
+struct testcase {
     const char name[TEST_NAME_MAX];
     const char *description;
     test_fn function;
     test_type_name_t test_type;
-    bool enabled;
-} ALIGN(32) testcase_t;
+    seL4_Word enabled;
+} PACKED;
+typedef struct testcase ALIGN(sizeof(struct testcase)) testcase_t;
 
 /* Declare a testcase.
  * Must be declared using C89 style (#_name, _desc, _func...) instead of

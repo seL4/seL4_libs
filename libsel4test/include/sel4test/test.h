@@ -79,7 +79,7 @@ typedef struct test_type {
  * by sizeof(struct testcase), allowing as to treat the items
  * in the section as an array */
 struct testcase {
-    const char name[TEST_NAME_MAX];
+    char name[TEST_NAME_MAX];
     const char *description;
     test_fn function;
     test_type_name_t test_type;

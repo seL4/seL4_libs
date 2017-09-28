@@ -10,8 +10,7 @@
  * @TAG(DATA61_GPL)
  */
 
-#ifndef _LIB_VMM_PLATFORM_BOOT_H_
-#define _LIB_VMM_PLATFORM_BOOT_H_
+#pragma once
 
 #include <simple/simple.h>
 #include <vka/vka.h>
@@ -24,4 +23,3 @@ int vmm_init_host(vmm_t *vmm);
 int vmm_init_guest(vmm_t *vmm, int priority);
 int vmm_init_guest_multi(vmm_t *vmm, int priority, int num_vcpus);
 
-#endif /* _LIB_VMM_PLATFORM_BOOT_H_ */

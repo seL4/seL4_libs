@@ -10,8 +10,7 @@
  * @TAG(DATA61_GPL)
  */
 
-#ifndef _LIB_VMM_VMEXIT_H_
-#define _LIB_VMM_VMEXIT_H_
+#pragma once
 
 #include <vmm/interrupt.h>
 #include <vmm/vmm.h>
@@ -29,4 +28,3 @@ int vmm_vmx_timer_handler(vmm_vcpu_t *vcpu);
 int vmm_cr_access_handler(vmm_vcpu_t *vcpu);
 int vmm_vmcall_handler(vmm_vcpu_t *vcpu);
 
-#endif

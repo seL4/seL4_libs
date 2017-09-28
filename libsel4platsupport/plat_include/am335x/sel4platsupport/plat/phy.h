@@ -38,8 +38,7 @@
 *
 */
 
-#ifndef _PHY_H_
-#define _PHY_H_
+#pragma once
 
 #ifdef __cplusplus
 extern "C" {
@@ -138,5 +137,4 @@ extern "C" {
                                             unsigned int phyAddr);
 #ifdef __cplusplus
 }
-#endif
 #endif

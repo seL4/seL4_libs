@@ -10,8 +10,7 @@
  * @TAG(DATA61_BSD)
  */
 
-#ifndef _INTERFACE_VSPACE_H_
-#define _INTERFACE_VSPACE_H_
+#pragma once
 
 #include <assert.h>
 #include <stddef.h>
@@ -798,4 +797,3 @@ vspace_share_mem_at_vaddr(vspace_t *from, vspace_t *to, void *start, int num_pag
     return from->share_mem_at_vaddr(from, to, start, num_pages, size_bits, vaddr, res);
 }
 
-#endif /* _INTERFACE_VSPACE_H_ */

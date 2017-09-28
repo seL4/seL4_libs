@@ -10,8 +10,7 @@
  * @TAG(DATA61_BSD)
  */
 
-#ifndef _KOBJECT_T_H_
-#define _KOBJECT_T_H_
+#pragma once
 
 #include <sel4/types.h>
 #include <assert.h>
@@ -112,4 +111,3 @@ kobject_get_type(kobject_t type, seL4_Word objectSize)
     }
 }
 
-#endif /* _KOBJECT_T_H_ */

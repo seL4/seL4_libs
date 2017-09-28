@@ -19,8 +19,7 @@
  * Currently cannot correctly handle stacks (since their size is unknown to us)
  * and cacheability attributes (currently assume all cached mappings)
  */
-#ifndef _UTILS_CLIENT_SERVER_VSPACE_H
-#define _UTILS_CLIENT_SERVER_VSPACE_H
+#pragma once
 
 #include <autoconf.h>
 
@@ -77,4 +76,3 @@ int sel4utils_cs_vspace_for_each(vspace_t *vspace, void *addr, uint32_t len,
  */
 int sel4utils_cs_vspace_set_root(vspace_t *vspace, seL4_CPtr page_directory);
 
-#endif /* _UTILS_CLIENT_SERVER_VSPACE_H */

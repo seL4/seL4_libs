@@ -10,8 +10,7 @@
  * @TAG(DATA61_GPL)
  */
 
-#ifndef _LIB_VMM_PLATFORM_VMEXIT_H_
-#define _LIB_VMM_PLATFORM_VMEXIT_H_
+#pragma once
 
 #define VMX_EXIT_REASONS_FAILED_VMENTRY         0x80000000
 
@@ -96,4 +95,3 @@
     { EXIT_REASON_EPT_MISCONFIG,         "EPT_MISCONFIG" }, \
     { EXIT_REASON_WBINVD,                "WBINVD" }
 
-#endif

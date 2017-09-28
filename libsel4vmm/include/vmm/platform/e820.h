@@ -10,8 +10,7 @@
  * @TAG(DATA61_GPL)
  */
 
-#ifndef __LIB_VMM_E820_H_
-#define __LIB_VMM_E820_H_
+#pragma once
 
 /* e820 memory region types. */
 #define E820_RAM        1
@@ -22,4 +21,3 @@
 
 #define E820_MAX_REGIONS 128 /* E820 supports up to 128. */
 
-#endif /* __LIB_VMM_E820_H_ */

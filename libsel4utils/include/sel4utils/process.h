@@ -9,8 +9,7 @@
  *
  * @TAG(DATA61_BSD)
  */
-#ifndef SEL4UTILS_PROCESS_H
-#define SEL4UTILS_PROCESS_H
+#pragma once
 
 #include <autoconf.h>
 
@@ -298,4 +297,3 @@ seL4_CPtr sel4utils_process_init_cap(void *data, seL4_CPtr cap);
  * @return 0 on success.
  */
 int sel4utils_copy_timer_caps_to_process(timer_objects_t *to, timer_objects_t *from, vka_t *vka, sel4utils_process_t *process);
-#endif /* SEL4UTILS_PROCESS_H */

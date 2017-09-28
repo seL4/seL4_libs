@@ -10,8 +10,7 @@
  * @TAG(DATA61_BSD)
  */
 
-#ifndef _VSPACE_PAGE_H_
-#define _VSPACE_PAGE_H_
+#pragma once
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -50,4 +49,3 @@ sel4_page_size_bits_for_memory_region(size_t size_bytes) {
     return sel4_page_sizes[frame_size_index];
 }
 
-#endif /* _VSPACE_PAGE_H_ */

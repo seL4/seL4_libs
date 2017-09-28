@@ -10,8 +10,7 @@
  * @TAG(DATA61_GPL)
  */
 
-#ifndef _LIB_VMM_PLATFORM_IOPORTS_H_
-#define _LIB_VMM_PLATFORM_IOPORTS_H_
+#pragma once
 
 /* Some IO ports in x86 systems. */
 
@@ -67,4 +66,3 @@
 #define X86_IO_PCI_CONFIG_START 0xcf8
 #define X86_IO_PCI_CONFIG_END   0xcff
 
-#endif

@@ -10,8 +10,7 @@
  * @TAG(DATA61_BSD)
  */
 
-#ifndef _ALLOCMAN_PROPERTIES_H_
-#define _ALLOCMAN_PROPERTIES_H_
+#pragma once
 
 /* For every type of resource allocator we have some properties we would
    like to know about it to make allocation decisions. These are gathered
@@ -38,4 +37,3 @@ static const struct allocman_properties allocman_default_properties = {
     .free_can_free = 0
 };
 
-#endif

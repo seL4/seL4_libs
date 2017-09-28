@@ -10,8 +10,7 @@
  * @TAG(DATA61_BSD)
  */
 
-#ifndef SEL4UTILS_HELPERS_H
-#define SEL4UTILS_HELPERS_H
+#pragma once
 
 #include <sel4/types.h>
 #include <sel4utils/thread.h>
@@ -77,4 +76,3 @@ sel4utils_arch_init_local_context(sel4utils_thread_entry_fn entry_point,
     return sel4utils_arch_init_context_with_args(entry_point, arg0, arg1, arg2, true, stack_top, context, NULL, NULL, NULL);
 }
 
-#endif /* SEL4UTILS_HELPERS_H */

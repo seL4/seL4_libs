@@ -28,8 +28,7 @@
  * make sure you tell it if you do any external mapping.
  *
  */
-#ifndef _UTILS_VSPACE_H
-#define _UTILS_VSPACE_H
+#pragma once
 
 #include <autoconf.h>
 
@@ -310,4 +309,3 @@ void sel4utils_get_image_region(uintptr_t *va_start, uintptr_t *va_end);
  */
 uintptr_t sel4utils_get_paddr(vspace_t *vspace, void *vaddr, seL4_Word type, seL4_Word size_bits);
 
-#endif /* _UTILS_VSPACE_H */

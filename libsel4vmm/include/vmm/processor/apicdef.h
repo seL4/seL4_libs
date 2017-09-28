@@ -15,8 +15,7 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef _ASM_X86_APICDEF_H
-#define _ASM_X86_APICDEF_H
+#pragma once
 
 /*
  * Constants for various Intel APICs. (local APIC, IOAPIC, etc.)
@@ -459,4 +458,3 @@ enum ioapic_irq_destination_types {
     dest_ExtINT     = 7
 };
 
-#endif /* _ASM_X86_APICDEF_H */

@@ -9,8 +9,7 @@
  *
  * @TAG(DATA61_BSD)
  */
-#ifndef __SEL4UTILS_STACK_H
-#define __SEL4UTILS_STACK_H
+#pragma once
 
 #include <vspace/vspace.h>
 
@@ -27,4 +26,3 @@
  */
 int sel4utils_run_on_stack(vspace_t *vspace, void * (*func)(void *arg), void *arg, void **retval);
 
-#endif /* __SEL4UTILS_STACK_H */

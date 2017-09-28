@@ -41,8 +41,7 @@
 *
 */
 
-#ifndef __CPSW_H__
-#define __CPSW_H__
+#pragma once
 
 #include "hw/hw_cpsw_ale.h"
 #include "hw/hw_cpsw_cpdma.h"
@@ -350,4 +349,3 @@ extern "C" {
 }
 #endif
 
-#endif /* __CPSW_H__ */

@@ -38,8 +38,7 @@
 *
 */
 
-#ifndef _HW_CONTROL_H_
-#define _HW_CONTROL_H_
+#pragma once
 
 #ifdef __cplusplus
 extern "C" {
@@ -7346,4 +7345,3 @@ extern "C" {
 }
 #endif
 
-#endif

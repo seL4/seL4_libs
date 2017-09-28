@@ -38,8 +38,7 @@
 *
 */
 
-#ifndef _HW_MDIO_H_
-#define _HW_MDIO_H_
+#pragma once
 
 #ifdef __cplusplus
 extern "C" {
@@ -223,4 +222,3 @@ extern "C" {
 }
 #endif
 
-#endif

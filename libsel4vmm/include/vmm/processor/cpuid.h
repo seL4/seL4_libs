@@ -18,8 +18,7 @@
  *         Qian Ge
  */
 
-#ifndef _LIB_VMM_CPUID_H_
-#define _LIB_VMM_CPUID_H_
+#pragma once
 
 #include <utils/util.h>
 
@@ -51,4 +50,3 @@ struct cpuid_val {
     unsigned int edx;
 };
 
-#endif /* _LIB_VMM_CPUID_H_ */

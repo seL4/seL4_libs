@@ -9,8 +9,7 @@
  *
  * @TAG(DATA61_BSD)
  */
-#ifndef __VKA_OBJECT_CAPOPS_H
-#define __VKA_OBJECT_CAPOPS_H
+#pragma once
 
 #include <vka/vka.h>
 #include <vka/capops.h>
@@ -54,4 +53,3 @@ vka_mint_object(vka_t *vka, vka_object_t *object, cspacepath_t *result,
     return vka_mint_object_inter_cspace(vka, object, vka, result, rights, badge);
 }
 
-#endif /* __VKA_OBJECT_CAPOPS_H */

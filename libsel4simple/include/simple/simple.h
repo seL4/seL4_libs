@@ -10,8 +10,7 @@
  * @TAG(DATA61_BSD)
  */
 
-#ifndef _INTERFACE_SIMPLE_H_
-#define _INTERFACE_SIMPLE_H_
+#pragma once
 
 #include <autoconf.h>
 
@@ -655,4 +654,3 @@ simple_get_extended_bootinfo(simple_t *simple, seL4_Word type, void *dest, ssize
     return simple->extended_bootinfo(simple->data, type, dest, max_len);
 }
 
-#endif /* _INTERFACE_SIMPLE_H_ */

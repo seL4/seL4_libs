@@ -39,8 +39,7 @@
 *
 */
 
-#ifndef _HW_CM_GFX_H_
-#define _HW_CM_GFX_H_
+#pragma once
 
 /***********************************************************************\
  * Register arrays Definition
@@ -138,4 +137,3 @@
 #define CM_GFX_L4LS_GFX_CLKSTCTRL_CLKTRCTRL_SW_SLEEP   (0x1u)
 #define CM_GFX_L4LS_GFX_CLKSTCTRL_CLKTRCTRL_SW_WKUP   (0x2u)
 
-#endif

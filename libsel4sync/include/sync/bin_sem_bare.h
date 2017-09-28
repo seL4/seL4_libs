@@ -10,8 +10,7 @@
  * @TAG(DATA61_BSD)
  */
 
-#ifndef _SYNC_BIN_SEM_BARE_H_
-#define _SYNC_BIN_SEM_BARE_H_
+#pragma once
 
 /* An unmanaged binary semaphore; i.e. the caller stores the state related to
  * the semaphore itself. This can be useful in scenarios such as CAmkES, where
@@ -53,4 +52,3 @@ static inline int sync_bin_sem_bare_post(seL4_CPtr notification, volatile int *v
     return 0;
 }
 
-#endif

@@ -10,8 +10,7 @@
  * @TAG(DATA61_GPL)
  */
 
-#ifndef _LIB_VMM_DEBUG_H_
-#define _LIB_VMM_DEBUG_H_
+#pragma once
 
 #include <autoconf.h>
 #include "vmm/vmm.h"
@@ -63,4 +62,3 @@
 
 void vmm_print_guest_context(int, vmm_vcpu_t*);
 
-#endif /* _LIB_VMM_DEBUG_H_ */

@@ -10,8 +10,7 @@
  * @TAG(DATA61_BSD)
  */
 
-#ifndef _ALLOCMAN_MSPACE_VSPACE_POOL_H_
-#define _ALLOCMAN_MSPACE_VSPACE_POOL_H_
+#pragma once
 
 #include <autoconf.h>
 #include <stdint.h>
@@ -58,4 +57,3 @@ static inline struct mspace_interface mspace_vspace_pool_make_interface(mspace_v
     };
 }
 
-#endif

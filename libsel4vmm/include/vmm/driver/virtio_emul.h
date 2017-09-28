@@ -10,8 +10,7 @@
  * @TAG(DATA61_GPL)
  */
 
-#ifndef LIBSEL4VMM_DRIVER_VIRTIO_EMUL_H
-#define LIBSEL4VMM_DRIVER_VIRTIO_EMUL_H
+#pragma once
 
 #include <platsupport/io.h>
 #include <ethdrivers/raw.h>
@@ -33,4 +32,3 @@ typedef struct ethif_virtio_emul {
 
 ethif_virtio_emul_t *ethif_virtio_emul_init(ps_io_ops_t io_ops, int queue_size, vspace_t *guest_vspace, ethif_driver_init driver, void *config);
 
-#endif

@@ -41,8 +41,7 @@
 *
 */
 
-#ifndef INTERRUPT_H
-#define INTERRUPT_H
+#pragma once
 
 #include "hw/hw_intc.h"
 #include "hw/hw_types.h"
@@ -216,5 +215,4 @@ extern "C" {
 
 #ifdef __cplusplus
 }
-#endif
 #endif

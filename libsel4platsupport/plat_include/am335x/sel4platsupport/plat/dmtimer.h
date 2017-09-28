@@ -40,8 +40,7 @@
 *
 */
 
-#ifndef _DMTIMER_H_
-#define _DMTIMER_H_
+#pragma once
 
 #include "hw/hw_dmtimer.h"
 #include "hw/hw_types.h"
@@ -214,6 +213,5 @@ extern "C" {
 }
 #endif
 
-#endif
 
 /******************************** END OF FILE *********************************/

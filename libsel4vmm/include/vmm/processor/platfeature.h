@@ -15,8 +15,7 @@
  *         Qian Ge
  */
 
-#ifndef _LIB_VMM_PLATFEATURE_H_
-#define _LIB_VMM_PLATFEATURE_H_
+#pragma once
 
 /* Exception vector. */
 
@@ -269,4 +268,3 @@ enum vm_instruction_error_number {
     VMXERR_INVALID_OPERAND_TO_INVEPT_INVVPID = 28,
 };
 
-#endif /* _LIB_VMM_PLATFEATURE_H_ */

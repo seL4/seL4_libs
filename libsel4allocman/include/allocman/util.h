@@ -10,8 +10,7 @@
  * @TAG(DATA61_BSD)
  */
 
-#ifndef _ALLOCMAN_UTIL_H_
-#define _ALLOCMAN_UTIL_H_
+#pragma once
 
 /* Define a bunch of helper routines. To avoid conflicts with multiple potential util libraries
    always use #ifndef */
@@ -26,4 +25,3 @@
 
 #include <sel4utils/util.h>
 
-#endif

@@ -10,8 +10,7 @@
  * @TAG(DATA61_BSD)
  */
 
-#ifndef SEL4UTILS_SEL4_ARCH_VSPACE_H
-#define SEL4UTILS_SEL4_ARCH_VSPACE_H
+#pragma once
 
 #include <autoconf.h>
 
@@ -26,4 +25,3 @@
 #define VSPACE_LEVEL_BITS 10
 #define VSPACE_NUM_LEVELS 2
 
-#endif /* SEL4UTILS_SEL4_ARCH_VSPACE_H */

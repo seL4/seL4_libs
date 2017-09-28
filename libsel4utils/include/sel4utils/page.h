@@ -10,8 +10,7 @@
  * @TAG(DATA61_BSD)
  */
 
-#ifndef _SEL4UTILS_PAGE_H_
-#define _SEL4UTILS_PAGE_H_
+#pragma once
 
 #include <vspace/page.h>
 #include <utils/arith.h>
@@ -24,4 +23,3 @@ utils_valid_size_bits(size_t size_bits)
     return sel4_valid_size_bits(size_bits);
 }
 
-#endif /* _SEL4UTILS_PAGE_H_ */

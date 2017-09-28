@@ -39,8 +39,7 @@
 *
 */
 
-#ifndef _HW_CM_DEVICE_H_
-#define _HW_CM_DEVICE_H_
+#pragma once
 
 /***********************************************************************\
  * Register arrays Definition
@@ -89,4 +88,3 @@
 #define CM_DEVICE_CM_CLKOUT_CTRL_CLKOUT2SOURCE_SEL4   (0x3u)
 #define CM_DEVICE_CM_CLKOUT_CTRL_CLKOUT2SOURCE_SEL5   (0x4u)
 
-#endif

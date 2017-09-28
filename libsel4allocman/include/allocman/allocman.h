@@ -49,8 +49,7 @@
  * and knowing how they work.
  */
 
-#ifndef _ALLOCMAN_H_
-#define _ALLOCMAN_H_
+#pragma once
 
 #include <assert.h>
 #include <autoconf.h>
@@ -423,4 +422,3 @@ static inline uintptr_t allocman_utspace_paddr(allocman_t *alloc, seL4_Word cook
  */
 int allocman_add_untypeds_from_timer_objects(allocman_t *alloc, timer_objects_t *to);
 
-#endif

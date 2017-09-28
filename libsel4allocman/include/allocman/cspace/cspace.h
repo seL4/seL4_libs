@@ -10,8 +10,7 @@
  * @TAG(DATA61_BSD)
  */
 
-#ifndef _ALLOCMAN_CSPACE_H_
-#define _ALLOCMAN_CSPACE_H_
+#pragma once
 
 #include <sel4/types.h>
 #include <allocman/properties.h>
@@ -27,4 +26,3 @@ typedef struct cspace_interface {
     void *cspace;
 } cspace_interface_t;
 
-#endif

@@ -10,8 +10,7 @@
  * @TAG(DATA61_BSD)
  */
 
-#ifndef _INTERFACE_ARCH_SIMPLE_H_
-#define _INTERFACE_ARCH_SIMPLE_H_
+#pragma once
 
 #include <autoconf.h>
 
@@ -50,4 +49,3 @@ arch_simple_get_IOPort_cap(UNUSED arch_simple_t *simple, UNUSED uint16_t start_p
     return -1;
 }
 
-#endif /* _INTERFACE_ARCH_SIMPLE_H_ */

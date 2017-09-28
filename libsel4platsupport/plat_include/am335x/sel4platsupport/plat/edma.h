@@ -40,8 +40,7 @@
 *
 */
 
-#ifndef __EDMA_H__
-#define __EDMA_H__
+#pragma once
 
 #define am335x 1
 
@@ -465,7 +464,6 @@ extern "C" {
 
 #ifdef __cplusplus
 }
-#endif
 #endif
 
 /* !! EOF !!                                                                  */

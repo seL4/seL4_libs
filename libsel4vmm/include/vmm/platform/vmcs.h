@@ -10,8 +10,7 @@
  * @TAG(DATA61_GPL)
  */
 
-#ifndef _LIB_VMM_VMCS_PLATFORM_H_
-#define _LIB_VMM_VMCS_PLATFORM_H_
+#pragma once
 
 /*control fields in vmcs*/
 #define VMX_GUEST_ES_SELECTOR 0x00000800
@@ -99,4 +98,3 @@
 #define VMX_CONTROL_EXIT_CONTROLS 0x0000400C
 #define VMX_CONTROL_ENTRY_INTERRUPTION_INFO 0x00004016
 
-#endif

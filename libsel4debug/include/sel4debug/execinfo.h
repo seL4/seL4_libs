@@ -10,8 +10,7 @@
  * @TAG(DATA61_BSD)
  */
 
-#ifndef _LIBSEL4DEBUG_EXECINFO_H_
-#define _LIBSEL4DEBUG_EXECINFO_H_
+#pragma once
 
 /* Retrieve a backtrace for the current thread as a list of pointers and place
  * the information in buffer. The argument size should be the number of void*
@@ -22,4 +21,3 @@
  */
 int backtrace(void **buffer, int size) __attribute__((no_instrument_function));
 
-#endif

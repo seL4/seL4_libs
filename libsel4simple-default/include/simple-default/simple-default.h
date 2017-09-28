@@ -10,8 +10,7 @@
  * @TAG(DATA61_BSD)
  */
 
-#ifndef _SIMPLE_DEFAULT_H_
-#define _SIMPLE_DEFAULT_H_
+#pragma once
 
 #include <sel4/sel4.h>
 
@@ -20,4 +19,3 @@
 void simple_default_init_bootinfo(simple_t *simple, seL4_BootInfo *bi);
 void simple_default_init_arch_simple(arch_simple_t *simple, void *data);
 
-#endif /* _SIMPLE_DEFAULT_H_ */

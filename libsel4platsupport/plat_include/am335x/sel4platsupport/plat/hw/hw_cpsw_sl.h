@@ -39,8 +39,7 @@
 *
 */
 
-#ifndef _HW_CPSW_SL_H_
-#define _HW_CPSW_SL_H_
+#pragma once
 
 #ifdef __cplusplus
 extern "C" {
@@ -219,4 +218,3 @@ extern "C" {
 }
 #endif
 
-#endif

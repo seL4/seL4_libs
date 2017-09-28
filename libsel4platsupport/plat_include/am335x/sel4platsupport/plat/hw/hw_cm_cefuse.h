@@ -38,8 +38,7 @@
 *
 */
 
-#ifndef _HW_CM_CEFUSE_H_
-#define _HW_CM_CEFUSE_H_
+#pragma once
 
 /***********************************************************************\
  * Register arrays Definition
@@ -97,4 +96,3 @@
 #define CM_CEFUSE_CEFUSE_CLKCTRL_MODULEMODE_RESERVED   (0x3u)
 #define CM_CEFUSE_CEFUSE_CLKCTRL_MODULEMODE_RESERVED_1   (0x1u)
 
-#endif

@@ -10,8 +10,7 @@
  * @TAG(DATA61_BSD)
  */
 
-#ifndef _ALLOCMAN_MSPACE_K_R_MALLOC_H_
-#define _ALLOCMAN_MSPACE_K_R_MALLOC_H_
+#pragma once
 
 #include <stdlib.h>
 
@@ -37,4 +36,3 @@ void mspace_k_r_malloc_init(mspace_k_r_malloc_t *k_r_malloc, size_t cookie, k_r_
 void *mspace_k_r_malloc_alloc(mspace_k_r_malloc_t *k_r_malloc, size_t nbytes);
 void mspace_k_r_malloc_free(mspace_k_r_malloc_t *k_r_malloc, void *ap);
 
-#endif

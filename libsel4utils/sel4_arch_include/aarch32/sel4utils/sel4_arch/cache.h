@@ -9,8 +9,7 @@
  *
  * @TAG(DATA61_BSD)
  */
-#ifndef SEL4UTILS_SEL4_ARCH_CACHE_H
-#define SEL4UTILS_SEL4_ARCH_CACHE_H
+#pragma once
 
 #include <sel4/sel4.h>
 
@@ -34,4 +33,3 @@ static inline int seL4_ARCH_PageDirectory_Unify_Instruction(seL4_CPtr root, seL4
     return seL4_ARM_PageDirectory_Unify_Instruction(root, start, end);
 }
 
-#endif /* SEL4UTILS_SEL4_ARCH_CACHE_H */

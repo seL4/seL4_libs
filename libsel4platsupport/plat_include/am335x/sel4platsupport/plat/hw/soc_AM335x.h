@@ -40,8 +40,7 @@
 *
 */
 
-#ifndef _SOC_AM33XX_H_
-#define _SOC_AM33XX_H_
+#pragma once
 
 #ifdef __cplusplus
 extern "C" {
@@ -196,4 +195,3 @@ extern "C" {
 }
 #endif
 
-#endif  /* _SOC_AM33XX_H_ */

@@ -10,8 +10,7 @@
  * @TAG(DATA61_GPL)
  */
 
-#ifndef __LIB_VMM_GUEST_MEMORY_H_
-#define __LIB_VMM_GUEST_MEMORY_H_
+#pragma once
 
 #include <stdint.h>
 #include <vspace/vspace.h>
@@ -51,4 +50,3 @@ int vmm_map_guest_device_at(struct vmm *vmm, uintptr_t vaddr, uintptr_t paddr, s
 int vmm_alloc_guest_ram_at(struct vmm *vmm, uintptr_t start, size_t bytes);
 int vmm_alloc_guest_ram(struct vmm *vmm, size_t bytes, int onetoone);
 
-#endif /* __LIB_VMM_GUEST_MEMORY_H_ */

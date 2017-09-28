@@ -10,8 +10,7 @@
  * @TAG(DATA61_GPL)
  */
 
-#ifndef _LIB_VMM_GUEST_STATE_H_
-#define _LIB_VMM_GUEST_STATE_H_
+#pragma once
 
 #include <stdlib.h>
 
@@ -364,4 +363,3 @@ static inline void vmm_guest_exit_next_instruction(guest_state_t *gs, seL4_CPtr 
     vmm_guest_state_set_eip(gs, vmm_guest_state_get_eip(gs) + vmm_guest_exit_get_int_len(gs));
 }
 
-#endif

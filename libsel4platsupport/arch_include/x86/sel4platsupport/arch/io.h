@@ -9,8 +9,7 @@
  *
  * @TAG(DATA61_BSD)
  */
-#ifndef _IA32_PLATSUPPORT_IO_H
-#define _IA32_PLATSUPPORT_IO_H
+#pragma once
 
 #include <sel4/sel4.h>
 #include <platsupport/io.h>
@@ -27,4 +26,3 @@
  */
 int sel4platsupport_get_io_port_ops(ps_io_port_ops_t *ops, simple_t *simple);
 
-#endif /* _IA32_PLATSUPPORT_IO_H */

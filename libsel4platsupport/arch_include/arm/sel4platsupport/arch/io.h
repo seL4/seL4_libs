@@ -9,9 +9,7 @@
  *
  * @TAG(DATA61_BSD)
  */
-#ifndef _IA32_PLATSUPPORT_IO_H
-#define _IA32_PLATSUPPORT_IO_H
+#pragma once
 
 /* nothing - this is here so we don't have to wrap #ifdef ARCH/IA32 around arch/io.h includes */
 
-#endif /* _IA32_PLATSUPPORT_IO_H */

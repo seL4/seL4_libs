@@ -10,8 +10,7 @@
  * @TAG(DATA61_BSD)
  */
 
-#ifndef _VKA_SEL4_ARCH_OBJECT_H__
-#define _VKA_SEL4_ARCH_OBJECT_H__
+#pragma once
 
 #include <vka/vka.h>
 #include <vka/kobject_t.h>
@@ -56,4 +55,3 @@ vka_arm_mode_get_object_size(seL4_Word objectType)
     }
 }
 
-#endif /* _VKA_SEL4_ARCH_OBJECT_H__ */

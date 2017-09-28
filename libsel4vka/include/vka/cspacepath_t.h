@@ -10,8 +10,7 @@
  * @TAG(DATA61_BSD)
  */
 
-#ifndef _CSPACEPATH_T_H_
-#define _CSPACEPATH_T_H_
+#pragma once
 
 #include <inttypes.h>
 #include <sel4/sel4.h>
@@ -113,4 +112,3 @@ inline static void cspacepath_t_print(const cspacepath_t* src)
     CSPACEPATHPRINT("window:     0x%" PRIxPTR "\n", src->window);
 }
 
-#endif /* _CSPACEPATH_T_H_ */

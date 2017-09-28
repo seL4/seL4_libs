@@ -9,8 +9,7 @@
  *
  * @TAG(DATA61_BSD)
  */
-#ifndef _SEL4UTILS_SEL4_ARCH_UTIL_H
-#define _SEL4UTILS_SEL4_ARCH_UTIL_H
+#pragma once
 
 #include <stdint.h>
 #include <sel4/sel4.h>
@@ -107,4 +106,3 @@ static inline int sel4utils_ia32_tcb_set_tls_base(seL4_CPtr tcb_cap, seL4_Word t
     return seL4_MessageInfo_get_label(tag);
 }
 
-#endif /* _SEL4UTILS_SEL4_ARCH_UTIL_H */

@@ -10,8 +10,7 @@
  * @TAG(DATA61_GPL)
  */
 
-#ifndef __LIB_VMM_DRIVER_PCI_HELPER_H__
-#define __LIB_VMM_DRIVER_PCI_HELPER_H__
+#pragma once
 
 #include <stdint.h>
 #include <pci/pci.h>
@@ -100,4 +99,3 @@ vmm_pci_entry_t vmm_pci_no_msi_cap_emulation(vmm_pci_entry_t existing);
  * Creates at most 6 bars, returns how many it created, negative on error */
 int vmm_pci_helper_map_bars(vmm_t *vmm, libpci_device_iocfg_t *cfg, vmm_pci_bar_t *bars);
 
-#endif /* __LIB_VMM_DRIVER_PCI_HELPER_H__ */

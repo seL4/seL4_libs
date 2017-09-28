@@ -10,8 +10,7 @@
  * @TAG(DATA61_BSD)
  */
 
-#ifndef _SEL4UTILS_SEL4_ARCH_UTIL_H
-#define _SEL4UTILS_SEL4_ARCH_UTIL_H
+#pragma once
 
 #include <sel4/sel4.h>
 #include <utils/arith.h>
@@ -55,4 +54,3 @@ sel4utils_get_sp(seL4_UserContext regs)
     return regs.sp;
 }
 
-#endif /* _SEL4UTILS_SEL4_ARCH_UTIL_H */

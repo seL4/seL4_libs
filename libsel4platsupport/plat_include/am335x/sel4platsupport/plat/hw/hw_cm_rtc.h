@@ -38,8 +38,7 @@
 *
 */
 
-#ifndef _HW_CM_RTC_H_
-#define _HW_CM_RTC_H_
+#pragma once
 
 /***********************************************************************\
  * Register arrays Definition
@@ -97,4 +96,3 @@
 #define CM_RTC_CLKSTCTRL_CLKTRCTRL_SW_SLEEP   (0x1u)
 #define CM_RTC_CLKSTCTRL_CLKTRCTRL_SW_WKUP   (0x2u)
 
-#endif

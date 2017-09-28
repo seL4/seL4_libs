@@ -10,8 +10,7 @@
  * @TAG(DATA61_GPL)
  */
 
-#ifndef _LIB_VMM_INTERRUPT_H_
-#define _LIB_VMM_INTERRUPT_H_
+#pragma once
 
 typedef struct vmm_vcpu vmm_vcpu_t;
 
@@ -35,4 +34,3 @@ void vmm_vcpu_accept_interrupt(vmm_vcpu_t *vcpu);
 /* This function is called when a new interrupt has occured. */
 void vmm_have_pending_interrupt(vmm_vcpu_t *vcpu);
 
-#endif

@@ -10,8 +10,7 @@
  * @TAG(DATA61_GPL)
  */
 
-#ifndef _LIB_VMM_VMCS_H_
-#define _LIB_VMM_VMCS_H_
+#pragma once
 
 #include <sel4/sel4.h>
 
@@ -21,4 +20,3 @@ int vmm_vmcs_read(seL4_CPtr vcpu, seL4_Word field);
 void vmm_vmcs_write(seL4_CPtr vcpu, seL4_Word field, seL4_Word value);
 void vmm_vmcs_init_guest(vmm_vcpu_t *vcpu);
 
-#endif /* _LIB_VMM_VMCS_H_ */

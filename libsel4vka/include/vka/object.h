@@ -10,8 +10,7 @@
  * @TAG(DATA61_BSD)
  */
 
-#ifndef __VKA_OBJECT_H__
-#define __VKA_OBJECT_H__
+#pragma once
 
 #include <assert.h>
 #include <errno.h>
@@ -325,4 +324,3 @@ vka_get_object_size(seL4_Word objectType, seL4_Word objectSize)
     }
 }
 
-#endif /* __VKA_OBJECT_H__ */

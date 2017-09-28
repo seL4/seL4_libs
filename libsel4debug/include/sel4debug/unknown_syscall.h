@@ -10,12 +10,10 @@
  * @TAG(DATA61_BSD)
  */
 
-#ifndef _LIBSEL4DEBUG_UNKNOWN_SYSCALL_H_
-#define _LIBSEL4DEBUG_UNKNOWN_SYSCALL_H_
+#pragma once
 
 #include <sel4/sel4.h>
 
 void debug_unknown_syscall_message(int (*printfn)(const char *format, ...),
                                    seL4_Word* mrs);
 
-#endif

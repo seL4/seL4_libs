@@ -10,8 +10,7 @@
  * @TAG(DATA61_BSD)
  */
 
-#ifndef _ALLOCMAN_UTSPACE_VKA_H_
-#define _ALLOCMAN_UTSPACE_VKA_H_
+#pragma once
 
 #include <autoconf.h>
 #include <sel4/types.h>
@@ -92,4 +91,3 @@ static inline struct utspace_interface utspace_vka_make_interface(vka_t *vka) {
     };
 }
 
-#endif

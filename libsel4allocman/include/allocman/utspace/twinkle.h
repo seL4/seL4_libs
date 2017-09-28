@@ -10,8 +10,7 @@
  * @TAG(DATA61_BSD)
  */
 
-#ifndef _ALLOCMAN_UTSPACE_TWINKLE_H_
-#define _ALLOCMAN_UTSPACE_TWINKLE_H_
+#pragma once
 
 #include <autoconf.h>
 #include <sel4/types.h>
@@ -56,4 +55,3 @@ static inline struct utspace_interface utspace_twinkle_make_interface(utspace_tw
     };
 }
 
-#endif

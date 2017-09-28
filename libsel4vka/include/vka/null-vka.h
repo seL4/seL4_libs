@@ -10,8 +10,7 @@
  * @TAG(DATA61_BSD)
  */
 
-#ifndef _VKA_NULL_VKA_H_
-#define _VKA_NULL_VKA_H_
+#pragma once
 
 #include <vka/vka.h>
 
@@ -20,4 +19,3 @@
  */
 void vka_init_nullvka(vka_t *vka);
 
-#endif

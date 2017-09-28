@@ -10,8 +10,7 @@
  * @TAG(DATA61_GPL)
  */
 
-#ifndef __VCHAN_COPY
-#define __VCHAN_COPY
+#pragma once
 
 #define VCHAN_EVENT_IRQ 10
 
@@ -95,4 +94,3 @@ typedef struct vchan_packet {
     int guard;
 } vchan_packet_t;
 
-#endif

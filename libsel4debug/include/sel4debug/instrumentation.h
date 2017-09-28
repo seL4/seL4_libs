@@ -10,8 +10,7 @@
  * @TAG(DATA61_BSD)
  */
 
-#ifndef _LIBSEL4DEBUG_INSTRUMENTATION_H_
-#define _LIBSEL4DEBUG_INSTRUMENTATION_H_
+#pragma once
 
 /* Instrumentation functions that are optionally provided by this library.
  * These need to be explicitly tagged as no_instrument_function or GCC will
@@ -26,4 +25,3 @@ __attribute__((no_instrument_function));
 void __cyg_profile_func_exit(void *func, void *caller)
 __attribute__((no_instrument_function));
 
-#endif

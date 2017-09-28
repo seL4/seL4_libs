@@ -10,8 +10,7 @@
  * @TAG(DATA61_BSD)
  */
 
-#ifndef VKA_CAPOPS_H
-#define VKA_CAPOPS_H
+#pragma once
 
 /* This file provides convenient wrappers around seL4 invocations (on CNodes and Untypeds)
  * such that allocator operations are allocator independent.
@@ -146,4 +145,3 @@ vka_untyped_retype(vka_object_t *untyped, int type, int size_bits, int num_objec
     return seL4_Untyped_Retype(untyped->cptr, type, size_bits, dest->root, dest->dest, dest->destDepth, dest->offset, num_objects);
 }
 
-#endif /* VKA_CAPOPS_H */

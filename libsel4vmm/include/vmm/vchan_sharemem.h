@@ -10,8 +10,7 @@
  * @TAG(DATA61_GPL)
  */
 
-#ifndef _VCHAN_SHARED_MEM
-#define _VCHAN_SHARED_MEM
+#pragma once
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -44,4 +43,3 @@ typedef struct vchan_shared_mem_headers {
     int token;
 } vchan_headers_t;
 
-#endif

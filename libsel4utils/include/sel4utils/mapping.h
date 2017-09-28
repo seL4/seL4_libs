@@ -10,8 +10,7 @@
  * @TAG(DATA61_BSD)
  */
 
-#ifndef _SEL4UTILS_MAPPING_H_
-#define _SEL4UTILS_MAPPING_H_
+#pragma once
 
 #include <autoconf.h>
 #include <utils/util.h>
@@ -108,4 +107,3 @@ int sel4utils_map_ept_page(vka_t *vka, seL4_CPtr pd, seL4_CPtr frame, seL4_Word 
 
 #endif /* CONFIG_VTX */
 
-#endif /* _SEL4UTILS_MAPPING_H_ */

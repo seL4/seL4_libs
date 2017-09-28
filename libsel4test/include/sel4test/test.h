@@ -82,7 +82,7 @@ struct testcase {
     char name[TEST_NAME_MAX];
     const char *description;
     test_fn function;
-    test_type_name_t test_type;
+    seL4_Word test_type;
     seL4_Word enabled;
 } PACKED;
 typedef struct testcase ALIGN(sizeof(struct testcase)) testcase_t;

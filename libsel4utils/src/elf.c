@@ -281,7 +281,7 @@ sel4utils_elf_load_record_regions(vspace_t *loadee, vspace_t *loader, vka_t *loa
 
 uintptr_t sel4utils_elf_get_vsyscall(const char *image_name)
 {
-    uintptr_t* addr = sel4utils_elf_get_section(image_name, "__vsyscall", NULL);
+    uintptr_t* addr = (uintptr_t*)sel4utils_elf_get_section(image_name, "__vsyscall", NULL);
     /* Hope everything is good and just dereference it */
     return *addr;
 }

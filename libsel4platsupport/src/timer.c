@@ -143,7 +143,7 @@ static int init_timer_internal(vka_t *vka, simple_t *simple, seL4_CPtr ntfn, seL
     return 0;
 }
 
-int sel4platsupport_init_default_timer_ops(vka_t *vka, vspace_t *vspace, simple_t *simple, ps_io_ops_t ops,
+int sel4platsupport_init_default_timer_ops(vka_t *vka, UNUSED vspace_t *vspace, simple_t *simple, ps_io_ops_t ops,
                   seL4_CPtr ntfn, seL4_timer_t *timer)
 {
     int error;

@@ -10,8 +10,7 @@
  * @TAG(DATA61_BSD)
  */
 
-#ifndef _ALLOCMAN_CSPACEOPS_H_
-#define _ALLOCMAN_CSPACEOPS_H_
+#pragma once
 
 #include <allocman/allocman.h>
 #include <allocman/cspace/cspace.h>
@@ -33,4 +32,3 @@ static inline int cspace_move_alloc_cptr(allocman_t *alloc, cspace_interface_t s
     return cspace_move_alloc(alloc, source_cspace.make_path(source_cspace.cspace, slot), result);
 }
 
-#endif

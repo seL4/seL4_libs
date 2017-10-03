@@ -38,8 +38,7 @@
 *
 */
 
-#ifndef _HW_CPSW_CPDMA_H_
-#define _HW_CPSW_CPDMA_H_
+#pragma once
 
 #ifdef __cplusplus
 extern "C" {
@@ -910,4 +909,3 @@ extern "C" {
 }
 #endif
 
-#endif

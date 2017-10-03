@@ -19,8 +19,7 @@
  *
  */
 
-#ifndef _LIBVCHAN_H
-#define _LIBVCHAN_H
+#pragma once
 
 #include <stdint.h>
 #include <stddef.h>
@@ -114,4 +113,3 @@ int libvchan_fd_for_select(libvchan_t *ctrl);
  */
 void libvchan_close(libvchan_t *ctrl);
 
-#endif /* _LIBVCHAN_H */

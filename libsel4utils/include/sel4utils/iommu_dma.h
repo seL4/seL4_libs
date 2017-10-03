@@ -10,8 +10,7 @@
  * @TAG(DATA61_BSD)
  */
 
-#ifndef SEL4UTILS_IOMMU_DMA_H
-#define SEL4UTILS_IOMMU_DMA_H
+#pragma once
 
 #include <autoconf.h>
 
@@ -63,4 +62,3 @@ int sel4utils_make_iommu_dma_alloc(vka_t *vka, vspace_t *vspace, ps_dma_man_t *d
  */
 int sel4utils_iommu_dma_alloc_iospace(void *dma_cookie, void *vaddr, size_t size);
 #endif /* CONFIG_IOMMU */
-#endif /* SEL4_UTILS_IOMMU_DMA_H */

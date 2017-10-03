@@ -18,8 +18,7 @@
  * sel4utils_thread_t->tcb.cptr.
  *
  */
-#ifndef _SEL4UTILS_THREAD_H
-#define _SEL4UTILS_THREAD_H
+#pragma once
 
 #include <autoconf.h>
 
@@ -216,4 +215,3 @@ sel4utils_suspend_thread(sel4utils_thread_t *thread)
     return seL4_TCB_Suspend(thread->tcb.cptr);
 }
 
-#endif /* _SEL4UTILS_THREAD_H */

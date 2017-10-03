@@ -10,8 +10,7 @@
  * @TAG(DATA61_BSD)
  */
 
-#ifndef _ALLOCMAN_UTSPACE_H_
-#define _ALLOCMAN_UTSPACE_H_
+#pragma once
 
 #include <stdbool.h>
 #include <sel4/types.h>
@@ -68,4 +67,3 @@ typedef struct utspace_interface {
     void *utspace;
 }utspace_interface_t;
 
-#endif

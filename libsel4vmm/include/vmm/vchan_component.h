@@ -10,8 +10,7 @@
  * @TAG(DATA61_GPL)
  */
 
-#ifndef __VCHAN_COMPONENT
-#define __VCHAN_COMPONENT
+#pragma once
 
 #include "libvchan.h"
 #include "vchan_sharemem.h"
@@ -57,4 +56,3 @@ void vevent_wait(void);
 int vevent_poll(void);
 int vevent_reg_callback(void (*callback)(void*), void *arg);
 
-#endif

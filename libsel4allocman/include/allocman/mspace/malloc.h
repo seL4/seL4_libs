@@ -10,8 +10,7 @@
  * @TAG(DATA61_BSD)
  */
 
-#ifndef _ALLOCMAN_MSPACE_MALLOC_H_
-#define _ALLOCMAN_MSPACE_MALLOC_H_
+#pragma once
 
 #include <autoconf.h>
 #include <sel4/types.h>
@@ -37,4 +36,3 @@ static const struct mspace_interface mspace_malloc_interface = {
     .mspace = NULL
 };
 
-#endif

@@ -23,8 +23,8 @@
 #include <sel4platsupport/platsupport.h>
 
 #include "serial_server.h"
-#include <sel4utils/serial_server/client.h>
-#include <sel4utils/serial_server/parent.h>
+#include <serial_server/client.h>
+#include <serial_server/parent.h>
 
 /* Define global instance. */
 static serial_server_context_t serial_server;
@@ -49,13 +49,13 @@ serial_server_registry_entry_t *
 serial_server_registry_get_entry_by_badge(seL4_Word badge_value)
 {
     if (badge_value == SERIAL_SERVER_BADGE_VALUE_EMPTY
-        || get_serial_server()->registry == NULL
-        || badge_value > get_serial_server()->registry_n_entries) {
+            || get_serial_server()->registry == NULL
+            || badge_value > get_serial_server()->registry_n_entries) {
         return NULL;
     }
     /* If the badge value has been released, return NULL. */
     if (get_serial_server()->registry[badge_value - 1].badge_value
-        == SERIAL_SERVER_BADGE_VALUE_EMPTY) {
+            == SERIAL_SERVER_BADGE_VALUE_EMPTY) {
         return NULL;
     }
 
@@ -76,8 +76,11 @@ serial_server_badge_is_allocated(seL4_Word badge_value)
 }
 
 seL4_Word
-serial_server_badge_value_get_unused(void) {
-    if (get_serial_server()->registry == NULL) { return SERIAL_SERVER_BADGE_VALUE_EMPTY; }
+serial_server_badge_value_get_unused(void)
+{
+    if (get_serial_server()->registry == NULL) {
+        return SERIAL_SERVER_BADGE_VALUE_EMPTY;
+    }
 
     for (int i = 0; i < get_serial_server()->registry_n_entries; i++) {
         if (get_serial_server()->registry[i].badge_value != SERIAL_SERVER_BADGE_VALUE_EMPTY) {
@@ -108,7 +111,7 @@ serial_server_badge_value_alloc(void)
 
     tmp = realloc(get_serial_server()->registry,
                   sizeof(*get_serial_server()->registry)
-                    * (get_serial_server()->registry_n_entries + 1));
+                  * (get_serial_server()->registry_n_entries + 1));
     if (tmp == NULL) {
         ZF_LOGD(SERSERVS"badge_value_alloc: Failed resize pool.");
         return SERIAL_SERVER_BADGE_VALUE_EMPTY;
@@ -215,7 +218,7 @@ serial_server_func_connect(seL4_MessageInfo_t tag,
      * is resized as well, so badge allocation is also metadata allocation.
      */
     if (client_badge_value == SERIAL_SERVER_BADGE_VALUE_EMPTY
-        || !serial_server_badge_is_allocated(client_badge_value)) {
+            || !serial_server_badge_is_allocated(client_badge_value)) {
         ZF_LOGW(SERSERVS"connect: Please allocate a badge value to this new "
                 "client.\n");
         return -1;
@@ -279,7 +282,7 @@ serial_server_func_connect(seL4_MessageInfo_t tag,
 
         client_frame_caps[i] = client_frame_cspath_tmp.capPtr;
         ZF_LOGD("connect: moved received client Frame cap %d from recv slot %"PRIxPTR" to slot %"PRIxPTR".",
-                i+1, get_serial_server()->frame_cap_recv_cspaths[i].capPtr,
+                i + 1, get_serial_server()->frame_cap_recv_cspaths[i].capPtr,
                 client_frame_caps[i]);
     }
 
@@ -296,7 +299,7 @@ serial_server_func_connect(seL4_MessageInfo_t tag,
     }
 
     serial_server_registry_insert(client_badge_value, shmem_tmp,
-                               client_frame_caps, client_shmem_size);
+                                  client_frame_caps, client_shmem_size);
 
     ZF_LOGI(SERSERVS"connect: New client: badge %x, shmem %p, %d pages.",
             client_badge_value, shmem_tmp, client_shmem_n_pages);
@@ -368,7 +371,7 @@ serial_server_func_kill(void)
         serial_server_registry_entry_t *curr = &get_serial_server()->registry[i];
 
         if (curr->badge_value == SERIAL_SERVER_BADGE_VALUE_EMPTY
-            || BYTES_TO_4K_PAGES(curr->shmem_size) == 0) {
+                || BYTES_TO_4K_PAGES(curr->shmem_size) == 0) {
             continue;
         }
 
@@ -397,12 +400,12 @@ void serial_server_registry_dump(bool dump_frame_caps)
                 tmp->shmem_frame_caps);
 
         if (!dump_frame_caps) {
-                continue;
+            continue;
         }
 
         for (int j = 0; j < BYTES_TO_4K_PAGES(tmp->shmem_size); j++) {
             ZF_LOGD("Reg badge %d: frame cap %d: %"PRIxPTR".",
-                    tmp->badge_value, j+1, tmp->shmem_frame_caps[j]);
+                    tmp->badge_value, j + 1, tmp->shmem_frame_caps[j]);
         }
     }
 }
@@ -420,8 +423,8 @@ serial_server_main(void)
 
     /* Bind to the serial driver. */
     error = platsupport_serial_setup_simple(get_serial_server()->server_vspace,
-                                    get_serial_server()->server_simple,
-                                    get_serial_server()->server_vka);
+                                            get_serial_server()->server_simple,
+                                            get_serial_server()->server_vka);
     if (error != 0) {
         ZF_LOGE(SERSERVS"main: Failed to bind to serial.");
     } else {

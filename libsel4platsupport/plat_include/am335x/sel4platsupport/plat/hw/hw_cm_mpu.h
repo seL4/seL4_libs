@@ -39,8 +39,7 @@
 *
 */
 
-#ifndef _HW_CM_MPU_H_
-#define _HW_CM_MPU_H_
+#pragma once
 
 /***********************************************************************\
  * Register arrays Definition
@@ -98,4 +97,3 @@
 #define CM_MPU_MPU_CLKCTRL_STBYST_FUNC   (0x0u)
 #define CM_MPU_MPU_CLKCTRL_STBYST_STANDBY   (0x1u)
 
-#endif

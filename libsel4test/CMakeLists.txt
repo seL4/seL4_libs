@@ -28,15 +28,10 @@ config_option(LibSel4TestPrinterHaltOnTestFailure TESTPRINTER_HALT_ON_TEST_FAILU
     DEFAULT OFF
 )
 config_option(LibSel4TestPrintXML PRINT_XML
-    "Print XML output"
-    DEFAULT OFF
-)
-
-config_option(LibSel4BufferOutput BUFFER_OUTPUT
-    "Buffer the test output and print in <stdout> blocks so that bamboo \
+    "Print XML output. This will \
+    buffer the test output and print in <stdout> blocks so that bamboo \
     can parse the test logs properly. Turn this off for debugging your test suite"
     DEFAULT OFF
-    DEPENDS "NOT LibSel4TestPrintXML" DEFAULT_DISABLED ON
 )
 
 add_config_library(sel4test "${configure_string}")

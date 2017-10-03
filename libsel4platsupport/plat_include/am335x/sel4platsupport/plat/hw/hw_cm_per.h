@@ -38,8 +38,7 @@
 *
 */
 
-#ifndef _HW_CM_PER_H_
-#define _HW_CM_PER_H_
+#pragma once
 
 /***********************************************************************\
  * Register arrays Definition
@@ -1326,4 +1325,3 @@
 #define CM_PER_CLK_24MHZ_CLKSTCTRL_CLKTRCTRL_SW_SLEEP   (0x1u)
 #define CM_PER_CLK_24MHZ_CLKSTCTRL_CLKTRCTRL_SW_WKUP   (0x2u)
 
-#endif

@@ -20,8 +20,7 @@
  * IPC buffer, these locks will not work for you.
  */
 
-#ifndef _SYNC_RECURSIVE_MUTEX_H_
-#define _SYNC_RECURSIVE_MUTEX_H_
+#pragma once
 
 #include <sel4/sel4.h>
 #include <vka/vka.h>
@@ -64,4 +63,3 @@ int sync_recursive_mutex_new(vka_t *vka, sync_recursive_mutex_t *mutex);
  * @return              0 on success, an error code on failure. */
 int sync_recursive_mutex_destroy(vka_t *vka, sync_recursive_mutex_t *mutex);
 
-#endif

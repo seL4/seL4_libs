@@ -10,8 +10,7 @@
  * @TAG(DATA61_BSD)
  */
 
-#ifndef _ALLOCMAN_MSPACE_H_
-#define _ALLOCMAN_MSPACE_H_
+#pragma once
 
 #include <stdlib.h>
 #include <allocman/properties.h>
@@ -25,4 +24,3 @@ struct mspace_interface {
     void *mspace;
 };
 
-#endif

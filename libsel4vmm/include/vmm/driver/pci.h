@@ -13,8 +13,7 @@
  * read & writes.
 */
 
-#ifndef __LIB_VMM_DRIVER_PCI_H__
-#define __LIB_VMM_DRIVER_PCI_H__
+#pragma once
 
 #include <stdint.h>
 
@@ -62,4 +61,3 @@ int vmm_pci_add_entry(vmm_pci_space_t *space, vmm_pci_entry_t entry, vmm_pci_add
 int vmm_pci_io_port_in(void *cookie, unsigned int port_no, unsigned int size, unsigned int *result);
 int vmm_pci_io_port_out(void *cookie, unsigned int port_no, unsigned int size, unsigned int value);
 
-#endif /* __LIB_VMM_DRIVER_PCI_H__ */

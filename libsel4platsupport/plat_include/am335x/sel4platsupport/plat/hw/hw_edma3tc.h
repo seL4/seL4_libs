@@ -38,8 +38,7 @@
 *
 */
 
-#ifndef _HW_EDMA3TC_H_
-#define _HW_EDMA3TC_H_
+#pragma once
 
 #ifdef __cplusplus
 extern "C" {
@@ -381,4 +380,3 @@ extern "C" {
 }
 #endif
 
-#endif

@@ -48,8 +48,7 @@
  *   steady state.
  */
 
-#ifndef SEL4UTILS_IRQ_SERVER_H
-#define SEL4UTILS_IRQ_SERVER_H
+#pragma once
 
 #include <autoconf.h>
 
@@ -192,4 +191,3 @@ void irq_server_handle_irq_ipc(irq_server_t irq_server);
  */
 seL4_MessageInfo_t irq_server_wait_for_irq(irq_server_t irq_server, seL4_Word* badge_ret);
 
-#endif /* SEL4UTILS_IRQ_SERVER_H */

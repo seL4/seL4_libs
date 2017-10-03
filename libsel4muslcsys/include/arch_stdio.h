@@ -10,8 +10,7 @@
  * @TAG(DATA61_BSD)
  */
 
-#ifndef _ARCH_STDIO_H_
-#define _ARCH_STDIO_H_
+#pragma once
 
 #include <autoconf.h>
 
@@ -31,4 +30,3 @@ void __arch_putchar(int c) __attribute__((noinline));
  */
 int __arch_getchar(void);
 
-#endif /* _ARCH_STDIO_H_ */

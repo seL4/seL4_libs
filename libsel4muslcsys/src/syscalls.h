@@ -10,8 +10,7 @@
  * @TAG(DATA61_BSD)
  */
 
-#ifndef LIBSEL4MUSLCSYS_SYSCALLS_H_
-#define LIBSEL4MUSLCSYS_SYSCALLS_H_
+#pragma once
 
 #include <stdarg.h>
 
@@ -43,4 +42,3 @@ long sys_mremap(va_list ap);
 long sys_writev(va_list ap);
 long sys_madvise(va_list ap);
 
-#endif

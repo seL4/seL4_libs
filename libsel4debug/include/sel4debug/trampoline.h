@@ -10,8 +10,7 @@
  * @TAG(DATA61_BSD)
  */
 
-#ifndef _LIBSEL4DEBUG_DEBUG_H_
-#define _LIBSEL4DEBUG_DEBUG_H_
+#pragma once
 
 /* Quick and dirty way of acquiring a stack before you call a function. Use
  * this as a debugging helper when you need to call a function from a context
@@ -29,4 +28,3 @@
  */
 void __attribute__((noreturn)) debug_trampoline(void);
 
-#endif

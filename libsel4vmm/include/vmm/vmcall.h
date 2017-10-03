@@ -10,8 +10,7 @@
  * @TAG(DATA61_GPL)
  */
 
-#ifndef _VM_VMCALL_INTF
-#define _VM_VMCALL_INTF
+#pragma once
 
 #include "vmm.h"
 
@@ -36,4 +35,3 @@ int vmm_vmcall_handler(vmm_vcpu_t *vcpu);
 /* Handlers that can be registered */
 int vchan_handler(vmm_vcpu_t *vcpu);
 
-#endif

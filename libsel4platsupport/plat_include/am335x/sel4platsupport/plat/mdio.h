@@ -40,8 +40,7 @@
 *
 */
 
-#ifndef __MDIO_H__
-#define __MDIO_H__
+#pragma once
 
 #include "hw/hw_mdio.h"
 
@@ -72,4 +71,3 @@ extern "C" {
 #ifdef __cplusplus
 }
 #endif
-#endif /* __MDIO_H__ */

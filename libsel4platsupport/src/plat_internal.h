@@ -10,8 +10,7 @@
  * @TAG(DATA61_BSD)
  */
 
-#ifndef __PLAT_INTERNAL_H__
-#define __PLAT_INTERNAL_H__
+#pragma once
 
 #include <sel4/sel4.h>
 #include <utils/util.h>
@@ -25,4 +24,3 @@ __plat_putchar(int c);
 int
 __plat_getchar(void);
 
-#endif /* __PLAT_INTERNAL_H__ */

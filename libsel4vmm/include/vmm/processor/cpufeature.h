@@ -16,8 +16,7 @@
  *         Qian Ge
  */
 
-#ifndef _LIB_VMM_CPUFEATURE_H_
-#define _LIB_VMM_CPUFEATURE_H_
+#pragma once
 
 /* Intel-defined CPU features, CPUID level 0x00000001 (edx), word 0 */
 #define X86_FEATURE_FPU     (0*32+ 0) /* Onboard FPU */
@@ -217,4 +216,3 @@
 #define X86_FEATURE_ADX     (9*32+19) /* The ADCX and ADOX instructions */
 #define X86_FEATURE_SMAP    (9*32+20) /* Supervisor Mode Access Prevention */
 
-#endif /* _LIB_VMM_CPUFEATURE_H_ */

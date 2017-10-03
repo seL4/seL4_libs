@@ -38,8 +38,7 @@
 *
 */
 
-#ifndef _HW_CM_WKUP_H_
-#define _HW_CM_WKUP_H_
+#pragma once
 
 /***********************************************************************\
  * Register arrays Definition
@@ -1135,4 +1134,3 @@
 #define CM_WKUP_CM_DIV_M6_DPLL_CORE_ST_HSDIVIDER_CLKOUT3_CLK_ENABLED   (0x0u)
 #define CM_WKUP_CM_DIV_M6_DPLL_CORE_ST_HSDIVIDER_CLKOUT3_CLK_GATED   (0x1u)
 
-#endif

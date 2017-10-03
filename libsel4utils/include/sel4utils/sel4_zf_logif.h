@@ -10,8 +10,7 @@
  * @TAG(DATA61_BSD)
  */
 
-#ifndef _SEL4_ZF_LOGIF_H
-#define _SEL4_ZF_LOGIF_H
+#pragma once
 
 #include <utils/zf_log.h>
 #include <utils/zf_log_if.h>
@@ -47,4 +46,3 @@
 	if ((err) != seL4_NoError) \
 		{ ZF_LOGF("[Err %s]:\n\t" fmt, sel4_strerror(err), ## __VA_ARGS__); }
 
-#endif /* _SEL4_ZF_LOGIF_H */

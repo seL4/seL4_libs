@@ -10,8 +10,7 @@
  * @TAG(DATA61_BSD)
  */
 
-#ifndef _SEL4_ARCH_KOBJECT_T_H_
-#define _SEL4_ARCH_KOBJECT_T_H_
+#pragma once
 
 #include <sel4/types.h>
 #include <assert.h>
@@ -69,4 +68,3 @@ arm_mode_kobject_get_type(kobject_t type, seL4_Word objectSize)
     }
 }
 
-#endif /* _SEL4_ARCH_KOBJECT_T_H_ */

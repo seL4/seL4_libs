@@ -9,9 +9,7 @@
  *
  * @TAG(DATA61_BSD)
  */
-#ifndef _SEL4UTILS_ARCH_PAGE_H
-#define _SEL4UTILS_ARCH_PAGE_H
+#pragma once
 
 #include <vspace/arch/page.h>
 
-#endif /* _SEL4UTILS_ARCH_PAGE_H */

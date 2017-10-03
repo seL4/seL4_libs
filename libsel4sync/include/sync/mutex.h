@@ -10,8 +10,7 @@
  * @TAG(DATA61_BSD)
  */
 
-#ifndef _SYNC_MUTEX_H_
-#define _SYNC_MUTEX_H_
+#pragma once
 
 #include <sel4/sel4.h>
 #include <vka/vka.h>
@@ -57,4 +56,3 @@ static inline int sync_mutex_destroy(vka_t *vka, sync_mutex_t *mutex) {
     return sync_bin_sem_destroy(vka, mutex);
 }
 
-#endif

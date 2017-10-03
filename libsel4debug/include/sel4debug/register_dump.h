@@ -10,11 +10,9 @@
  * @TAG(DATA61_BSD)
  */
 
-#ifndef _LIBSEL4DEBUG_REGISTER_DUMP_H_
-#define _LIBSEL4DEBUG_REGISTER_DUMP_H_
+#pragma once
 
 #include <sel4debug/arch/registers.h>
 
 void sel4debug_dump_registers(seL4_CPtr tcb);
 
-#endif /* !_LIBSEL4DEBUG_REGISTER_DUMP_H_ */

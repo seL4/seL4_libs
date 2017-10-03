@@ -281,17 +281,27 @@ sel4utils_elf_load_record_regions(vspace_t *loadee, vspace_t *loader, vka_t *loa
 
 uintptr_t sel4utils_elf_get_vsyscall(const char *image_name)
 {
+    uintptr_t* addr = (uintptr_t*)sel4utils_elf_get_section(image_name, "__vsyscall", NULL);
+    /* Hope everything is good and just dereference it */
+    return *addr;
+}
+
+uintptr_t sel4utils_elf_get_section(const char *image_name, const char *section_name, uint64_t* section_size)
+{
     unsigned long elf_size;
     char *elf_file = cpio_get_file(_cpio_archive, image_name, &elf_size);
     if (elf_file == NULL) {
         ZF_LOGE("ERROR: failed to lookup elf file %s", image_name);
         return 0;
     }
-    /* See if we can find the __vsyscall section */
-    void *addr = elf_getSectionNamed(elf_file, "__vsyscall");
+    /* See if we can find the section */
+    int section_id;
+    void *addr = elf_getSectionNamed(elf_file, section_name, &section_id);
     if (addr) {
-        /* Hope everything is good and just dereference it */
-        return *(uintptr_t*)addr;
+        if (section_size != NULL) {
+            *section_size = elf_getSectionSize(elf_file, section_id);
+        }
+        return (uintptr_t) addr;
     } else {
         return 0;
     }

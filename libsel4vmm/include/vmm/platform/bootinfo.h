@@ -12,8 +12,7 @@
 
 /* Pretty sure most of this header was ripped straight from Linux */
 
-#ifndef _LIB_VMM_PLAT_BOOTINFO_H_
-#define _LIB_VMM_PLAT_BOOTINFO_H_
+#pragma once
 
 #define EDD_MBR_SIG_MAX 16        /* max number of signatures to store */
 #define E820MAX 128     /* number of entries in E820MAP */
@@ -301,4 +300,3 @@ struct boot_params {
     uint8_t  _pad9[276];               /* 0xeec */
 } __attribute__((packed));
 
-#endif

@@ -10,8 +10,7 @@
  * @TAG(DATA61_BSD)
  */
 
-#ifndef _VKA_SEL4_ARCH_OBJECT_H__
-#define _VKA_SEL4_ARCH_OBJECT_H__
+#pragma once
 
 #include <vka/vka.h>
 #include <vka/kobject_t.h>
@@ -46,4 +45,3 @@ static inline int vka_alloc_vspace_root(vka_t *vka, vka_object_t *result)
 #endif
 }
 
-#endif /* _VKA_SEL4_ARCH_OBJECT_H__ */

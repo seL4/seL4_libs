@@ -12,9 +12,7 @@
 
 /* See description in identity.h for the purpose of this function. */
 
-#ifndef _LIBSEL4DEBUG_IDENTITY_INTERNAL_H_
-#define _LIBSEL4DEBUG_IDENTITY_INTERNAL_H_
+#pragma once
 
 const char *debug_get_id(void);
 
-#endif

@@ -509,6 +509,7 @@ create_fault_endpoint(vka_t *vka, sel4utils_process_t *process)
 {
     /* create a fault endpoint and put it into the cspace */
     int error = vka_alloc_endpoint(vka, &process->fault_endpoint);
+    process->own_ep = true;
     if (error) {
         ZF_LOGE("Failed to allocate fault endpoint: %d\n", error);
         return error;
@@ -722,7 +723,7 @@ sel4utils_destroy_process(sel4utils_process_t *process, vka_t *vka)
     }
 
     /* destroy the endpoint */
-    if (process->fault_endpoint.cptr != 0) {
+    if (process->own_ep && process->fault_endpoint.cptr != 0) {
         vka_free_object(vka, &process->fault_endpoint);
     }
 

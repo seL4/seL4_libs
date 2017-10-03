@@ -9,9 +9,7 @@
  *
  * @TAG(DATA61_BSD)
  */
-#ifndef SEL4UTILS_ARCH_CACHE_H
-#define SEL4UTILS_ARCH_CACHE_H
+#pragma once
 
 #include <sel4utils/sel4_arch/cache.h>
 
-#endif /* SEL4UTILS_ARCH_CACHE_H */

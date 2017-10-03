@@ -10,8 +10,7 @@
  * @TAG(DATA61_BSD)
  */
 
-#ifndef _ALLOCMAN_CSPACE_SIMPLE1LEVEL_H_
-#define _ALLOCMAN_CSPACE_SIMPLE1LEVEL_H_
+#pragma once
 
 #include <autoconf.h>
 #include <stdlib.h>
@@ -76,4 +75,3 @@ static inline struct cspace_interface cspace_simple1level_make_interface(cspace_
     };
 }
 
-#endif

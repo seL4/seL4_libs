@@ -48,8 +48,7 @@
  *
  */
 
-#ifndef _AM_BOOTSTRAP_H_
-#define _AM_BOOTSTRAP_H_
+#pragma once
 
 #include <sel4/sel4.h>
 #include <string.h>
@@ -302,4 +301,3 @@ bootstrap_info_t *bootstrap_create_info(size_t pool_size, void *pool);
  */
 allocman_t *bootstrap_create_allocman(size_t pool_size, void *pool);
 
-#endif

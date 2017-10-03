@@ -10,8 +10,7 @@
  * @TAG(DATA61_BSD)
  */
 
-#ifndef _ALLOCMAN_UTSPACE_SPLIT_H_
-#define _ALLOCMAN_UTSPACE_SPLIT_H_
+#pragma once
 
 #include <autoconf.h>
 #include <sel4/types.h>
@@ -67,4 +66,3 @@ static inline struct utspace_interface utspace_split_make_interface(utspace_spli
     };
 }
 
-#endif

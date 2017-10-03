@@ -38,8 +38,7 @@
 *
 */
 
-#ifndef _HW_CM_DPLL_H_
-#define _HW_CM_DPLL_H_
+#pragma once
 
 /***********************************************************************\
  * Register arrays Definition
@@ -183,4 +182,3 @@
 #define CM_DPLL_CLKSEL_GPIO0_DBCLK_CLKSEL_SEL2   (0x1u)
 #define CM_DPLL_CLKSEL_GPIO0_DBCLK_CLKSEL_SEL3   (0x2u)
 
-#endif

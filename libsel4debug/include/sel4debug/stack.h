@@ -10,8 +10,7 @@
  * @TAG(DATA61_BSD)
  */
 
-#ifndef _LIBSEL4DEBUG_STACK_H_
-#define _LIBSEL4DEBUG_STACK_H_
+#pragma once
 
 /* Run the given function on a static stack as a last-ditch debugging measure.
  * Note that this function *does* switch back to the originating stack and
@@ -20,4 +19,3 @@
  */
 void *debug_run_on_emergency_stack(void *(*f)(void *), void *arg);
 
-#endif

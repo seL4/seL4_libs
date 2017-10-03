@@ -10,8 +10,7 @@
  * @TAG(DATA61_BSD)
  */
 
-#ifndef _VKA_DEBUG_VKA_H_
-#define _VKA_DEBUG_VKA_H_
+#pragma once
 
 #include <vka/vka.h>
 
@@ -29,4 +28,3 @@
  */
 int vka_init_debugvka(vka_t *vka, vka_t *tracee);
 
-#endif

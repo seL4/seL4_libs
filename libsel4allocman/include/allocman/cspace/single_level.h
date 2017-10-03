@@ -10,8 +10,7 @@
  * @TAG(DATA61_BSD)
  */
 
-#ifndef _ALLOCMAN_CSPACE_SINGLE_LEVEL_H_
-#define _ALLOCMAN_CSPACE_SINGLE_LEVEL_H_
+#pragma once
 
 #include <autoconf.h>
 #include <stdlib.h>
@@ -72,4 +71,3 @@ static inline cspace_interface_t cspace_single_level_make_interface(cspace_singl
     };
 }
 
-#endif

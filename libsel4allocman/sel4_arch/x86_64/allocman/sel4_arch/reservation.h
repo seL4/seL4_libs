@@ -10,8 +10,7 @@
  * @TAG(DATA61_BSD)
  */
 
-#ifndef __ALLOCMAN_SEL4_ARCH_RESERVATION__
-#define __ALLOCMAN_SEL4_ARCH_RESERVATION__
+#pragma once
 
 #include <allocman/allocman.h>
 
@@ -20,4 +19,3 @@ static inline void allocman_sel4_arch_configure_reservations(allocman_t *alloc) 
     allocman_configure_utspace_reserve(alloc, (struct allocman_utspace_chunk) {vka_get_object_size(seL4_X86_PDPTObject, 0), seL4_X86_PDPTObject, 1});
 }
 
-#endif

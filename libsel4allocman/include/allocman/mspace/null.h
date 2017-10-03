@@ -10,8 +10,7 @@
  * @TAG(DATA61_BSD)
  */
 
-#ifndef _ALLOCMAN_MSPACE_NULL_H_
-#define _ALLOCMAN_MSPACE_NULL_H_
+#pragma once
 
 /* Implements a null memory manager. This is useful if you are using allocators
    that do not perform any dynamic book keeping */
@@ -40,4 +39,3 @@ static const struct mspace_interface mspace_null_interface = {
     .mspace = NULL
 };
 
-#endif

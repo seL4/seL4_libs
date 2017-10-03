@@ -10,8 +10,7 @@
  * @TAG(DATA61_GPL)
  */
 
-#ifndef _LIB_VMM_IO_H_
-#define _LIB_VMM_IO_H_
+#pragma once
 
 #include <stdint.h>
 
@@ -53,4 +52,3 @@ int vmm_io_port_add_handler(vmm_io_port_list_t *io_list, uint16_t start, uint16_
 /* Add io ports to guest vcpu */
 int vmm_io_port_init_guest(vmm_io_port_list_t *io_list, simple_t *simple, seL4_CPtr vcpu);
 
-#endif

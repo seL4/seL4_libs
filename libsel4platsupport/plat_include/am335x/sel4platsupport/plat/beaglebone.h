@@ -39,8 +39,7 @@
 *
 */
 
-#ifndef _BEAGLEBONE_H_
-#define _BEAGLEBONE_H_
+#pragma once
 
 #ifdef __cplusplus
 extern "C" {
@@ -78,6 +77,5 @@ extern "C" {
 }
 #endif
 
-#endif
 
 /******************************** End of file *******************************/

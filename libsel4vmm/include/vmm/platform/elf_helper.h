@@ -10,8 +10,7 @@
  * @TAG(DATA61_GPL)
  */
 
-#ifndef _LIB_VMM_PLATFORM_ELF_HELPER_H_
-#define _LIB_VMM_PLATFORM_ELF_HELPER_H_
+#pragma once
 
 #include "vmm/vmm.h"
 #include <stdio.h>
@@ -22,4 +21,3 @@
 */
 int vmm_read_elf_headers(void *buf, vmm_t *vmm, FILE *file, size_t buf_size);
 
-#endif

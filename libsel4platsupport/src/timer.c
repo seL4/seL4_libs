@@ -143,19 +143,15 @@ static int init_timer_internal(vka_t *vka, simple_t *simple, seL4_CPtr ntfn, seL
     return 0;
 }
 
-int sel4platsupport_init_default_timer(vka_t *vka, vspace_t *vspace, simple_t *simple,
+int sel4platsupport_init_default_timer_ops(vka_t *vka, vspace_t *vspace, simple_t *simple, ps_io_ops_t ops,
                   seL4_CPtr ntfn, seL4_timer_t *timer)
 {
+    int error;
     if (timer == NULL) {
         return EINVAL;
     }
 
-    /* initialise io ops */
-    ps_io_ops_t ops;
-    int error = sel4platsupport_new_io_ops(*vspace, *vka, &ops);
-    if (!error) {
-        error = ltimer_default_describe(&timer->ltimer, ops);
-    }
+    error = ltimer_default_describe(&timer->ltimer, ops);
 
     if (!error) {
         size_t nirqs = get_nirqs(&timer->ltimer);
@@ -170,6 +166,22 @@ int sel4platsupport_init_default_timer(vka_t *vka, vspace_t *vspace, simple_t *s
 
     if (!error)  {
         error = ltimer_default_init(&timer->ltimer, ops);
+    }
+    return error;
+}
+
+int sel4platsupport_init_default_timer(vka_t *vka, vspace_t *vspace, simple_t *simple,
+                  seL4_CPtr ntfn, seL4_timer_t *timer)
+{
+    int error;
+
+    /* initialise io ops */
+    ps_io_ops_t ops = { 0 };
+    error = sel4platsupport_new_io_ops(*vspace, *vka, &ops);
+    if (!error) {
+        /* we have no way of storing the fact that we allocated these io ops so we'll just leak
+         * them forever */
+        return sel4platsupport_init_default_timer_ops(vka, vspace, simple, ops, ntfn, timer);
     }
     return error;
 }
@@ -190,7 +202,7 @@ int sel4platsupport_init_timer_irqs(vka_t *vka, simple_t *simple,
 int sel4platsupport_init_default_timer_caps(vka_t *vka, vspace_t *vspace, simple_t *simple, timer_objects_t *timer_objects)
 {
     /* initialise io ops */
-    ps_io_ops_t ops;
+    ps_io_ops_t ops = { 0 };
     int error = sel4platsupport_new_io_ops(*vspace, *vka, &ops);
     if (error) {
         ZF_LOGE("Failed to get io ops");

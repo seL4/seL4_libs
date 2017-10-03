@@ -9,6 +9,7 @@
  *
  * @TAG(DATA61_BSD)
  */
+#pragma once
 
 #include <sel4bench/sel4bench.h>
 #include "../../event_counters.h"

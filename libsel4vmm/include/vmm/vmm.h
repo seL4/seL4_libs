@@ -12,8 +12,7 @@
 
 /*This file contains structure definitions and function prototype related with VMM.*/
 
-#ifndef _LIB_VMM_VMM_H_
-#define _LIB_VMM_VMM_H_
+#pragma once
 
 #include <sel4/sel4.h>
 
@@ -160,4 +159,3 @@ void vmm_reply_vm_exit(vmm_vcpu_t *vcpu);
 /* mint a badged copy of the vmm's async event notification cap */
 seL4_CPtr vmm_create_async_event_notification_cap(vmm_t *vmm, seL4_Word badge);
 
-#endif

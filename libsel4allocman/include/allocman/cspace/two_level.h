@@ -10,8 +10,7 @@
  * @TAG(DATA61_BSD)
  */
 
-#ifndef _ALLOCMAN_CSPACE_TWO_LEVEL_H_
-#define _ALLOCMAN_CSPACE_TWO_LEVEL_H_
+#pragma once
 
 #include <autoconf.h>
 #include <sel4/types.h>
@@ -89,4 +88,3 @@ static inline cspace_interface_t cspace_two_level_make_interface(cspace_two_leve
     };
 }
 
-#endif

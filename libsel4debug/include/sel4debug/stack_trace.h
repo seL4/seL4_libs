@@ -10,9 +10,7 @@
  * @TAG(DATA61_BSD)
  */
 
-#ifndef _LIBSEL4DEBUG_STACK_TRACE_H_
-#define _LIBSEL4DEBUG_STACK_TRACE_H_
+#pragma once
 
 void print_stack_trace(void);
 
-#endif /* !_LIBSEL4DEBUG_STACK_TRACE_H_ */

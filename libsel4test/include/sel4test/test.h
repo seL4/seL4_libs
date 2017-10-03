@@ -10,17 +10,15 @@
  * @TAG(DATA61_BSD)
  */
 
-#ifndef SEL4_TEST_H
-#define SEL4_TEST_H
+#pragma once
 
 /* Include Kconfig variables. */
 #include <autoconf.h>
 
 #include <sel4/sel4.h>
 
-#include <sel4test/prototype.h>
-#include <sel4test/macros.h>
 #include <utils/attribute.h>
+#include <sel4test/testutil.h>
 
 #include <inttypes.h>
 #include <stdbool.h>
@@ -29,8 +27,8 @@
 #include <stdio.h>
 #include <string.h>
 
-#define SUCCESS true
-#define FAILURE false
+/* max test name size */
+#define TEST_NAME_MAX (64 - 4 * sizeof(seL4_Word))
 
 /* Contains information about the test environment.
  * Define struct env in your application. */
@@ -54,7 +52,7 @@ typedef struct test_type {
     void (*set_up)(env_t e);
     void (*tear_down)(env_t e);
     // Run the test.
-    int (*run_test)(struct testcase* test, env_t e);
+    test_result_t (*run_test)(struct testcase* test, env_t e);
 } ALIGN(32) test_type_t;
 
 /* Declare a test type.
@@ -73,36 +71,48 @@ typedef struct test_type {
 /* Represents a single testcase.
  * Because this struct is used to declare variables that get
  * placed into custom sections, that we later treat as an array,
- * we need to provide some additional alignment. The reason for
- * this is because these are independent static variables gcc
- * is permitted to place arbitrary padding between them. This
- * is annoying as we wish to treat all the items in the section
- * as an array. To work around this we use the fact that GCC
- * seems to be wanting to align to 32byte boundaries and set
- * the struct alignment to 32. Therefore the actual size of
+ * we need to make sure the struct is aligned and filled to the
+ * nearest power of two to avoid gcc placing arbitrary padding between them.
+ *
+ * The declaration below ensures that the actual size of
  * the objects in the section is the same as the size reported
  * by sizeof(struct testcase), allowing as to treat the items
  * in the section as an array */
-typedef struct testcase {
-    const char *name;
+struct testcase {
+    char name[TEST_NAME_MAX];
     const char *description;
     test_fn function;
-    test_type_name_t test_type;
-} ALIGN(32) testcase_t;
+    seL4_Word test_type;
+    seL4_Word enabled;
+} PACKED;
+typedef struct testcase ALIGN(sizeof(struct testcase)) testcase_t;
 
-/* Declare a testcase. */
-#define DEFINE_TEST_WITH_TYPE(_name, _description, _function, _test_type) \
+/* Declare a testcase.
+ * Must be declared using C89 style (#_name, _desc, _func...) instead of
+ * C99 style (name = _name, desc = _desc, func = _func...) to make sure
+ * that it is accepted by C++ compilers.
+ */
+#define DEFINE_TEST_WITH_TYPE(_name, _description, _function, _test_type, _enabled) \
     __attribute__((used)) __attribute__((section("_test_case"))) struct testcase TEST_ ## _name = { \
-    .name = #_name, \
-    .description = _description, \
-    .function = _function, \
-    .test_type = _test_type, \
+    #_name, \
+    _description, \
+    _function, \
+    _test_type, \
+    _enabled, \
 };
 
-#define DEFINE_TEST(_name, _description, _function) DEFINE_TEST_WITH_TYPE(_name, _description, _function, BASIC)
+#define DEFINE_TEST(_name, _description, _function, _enabled) DEFINE_TEST_WITH_TYPE(_name, _description, _function, BASIC, _enabled)
 
-#define DEFINE_TEST_BOOTSTRAP(_name, _description, _function) DEFINE_TEST_WITH_TYPE(_name, _description, _function, BOOTSTRAP)
+#define DEFINE_TEST_BOOTSTRAP(_name, _description, _function, _enabled) DEFINE_TEST_WITH_TYPE(_name, _description, _function, BOOTSTRAP, _enabled)
 /**/
+
+/* Definitions so that we can find the test types */
+extern struct test_type __start__test_type[];
+extern struct test_type __stop__test_type[];
+
+/* Definitions so that we can find the test cases */
+extern struct testcase __start__test_case[];
+extern struct testcase __stop__test_case[];
 
 static inline int
 test_type_comparator(const void *a, const void *b)
@@ -127,18 +137,9 @@ test_comparator(const void *a, const void *b)
 }
 
 /* Fails a test case, stop running the rest of the test, but keep running other tests. */
-static inline int _test_fail(const char *condition, const char *file, int line)
+static inline test_result_t _test_fail(const char *condition, const char *file, int line)
 {
     _sel4test_failure(condition, file, line);
-#ifdef CONFIG_TESTPRINTER_HALT_ON_TEST_FAILURE
-    printf("Halting on first test failure...\n");
-    sel4test_end_test();
-    sel4test_end_suite();
-#ifdef CONFIG_DEBUG_BUILD
-    seL4_DebugHalt();
-#endif /* CONFIG_DEBUG_BUILD */
-    while(1);
-#endif /* CONFIG_TESTPRINTER_HALT_ON_TEST_FAILURE */
     return FAILURE;
 }
 
@@ -147,34 +148,18 @@ static inline void _test_error(const char *condition, const char *file, int line
 {
 
     _sel4test_report_error(condition, file, line);
-#ifdef CONFIG_TESTPRINTER_HALT_ON_TEST_FAILURE
-    printf("Halting on first test failure...\n");
-    sel4test_end_test();
-    sel4test_end_suite();
-#ifdef CONFIG_DEBUG_BUILD
-    seL4_DebugHalt();
-#endif /* CONFIG_DEBUG_BUILD */
-    while(1);
-#endif /* CONFIG_TESTPRINTER_HALT_ON_TEST_FAILURE */
-
 }
 
 /* Fails a test case, stop everything. */
-static inline void _test_abort(const char *condition, const char *file, int line)
+static inline test_result_t _test_abort(const char *condition, const char *file, int line)
 {
     _sel4test_failure(condition, file, line);
-    printf("Halting on fatal assertion...\n");
-    sel4test_end_test();
-    sel4test_end_suite();
-#ifdef CONFIG_DEBUG_BUILD
-    seL4_DebugHalt();
-#endif /* CONFIG_DEBUG_BUILD */
-    while(1);
+    return ABORT;
 }
 
 #define test_assert(e) if (!(e)) return _test_fail(#e, __FILE__, __LINE__)
 #define test_check(e) if (!(e)) _test_error(#e, __FILE__, __LINE__)
-#define test_assert_fatal(e) if (!(e)) _test_abort(#e, __FILE__, __LINE__)
+#define test_assert_fatal(e) if (!(e)) return _test_abort(#e, __FILE__, __LINE__)
 
 #define __TEST_BUFFER_SIZE 200
 #define test_op_type(a, b, op, t, name_a, name_b, cast) \
@@ -256,32 +241,3 @@ static inline void _test_abort(const char *condition, const char *file, int line
 
 env_t sel4test_get_env(void);
 
-/*
- * Example basic run test
- */
-static inline int
-sel4test_basic_run_test(struct testcase *t)
-{
-    return t->function(sel4test_get_env());
-}
-
-/*
- * Run every test defined with the DEFINE_TEST macro.
- *
- * Use CONFIG_TESTPRINTER_REGEX to filter tests.
- *
- * @param name the name of the test suite
- *
- */
-void sel4test_run_tests(const char *name, env_t e);
-
-/*
- * Get a testcase.
- *
- * @param name the name of the test to retrieve.
- * @return the test corresponding to name, NULL if test not found.
- */
-testcase_t* sel4test_get_test(const char *name);
-
-bool sel4test_get_result(void);
-#endif /* SEL4_TEST_H */

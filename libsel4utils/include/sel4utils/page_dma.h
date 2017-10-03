@@ -10,8 +10,7 @@
  * @TAG(DATA61_BSD)
  */
 
-#ifndef SEL4UTILS_PAGE_DMA_H
-#define SEL4UTILS_PAGE_DMA_H
+#pragma once
 
 #include <autoconf.h>
 
@@ -32,4 +31,3 @@
  */
 int sel4utils_new_page_dma_alloc(vka_t *vka, vspace_t *vspace, ps_dma_man_t *dma_man);
 
-#endif /* SEL4_UTILS_PAGE_DMA_H */

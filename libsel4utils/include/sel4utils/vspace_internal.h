@@ -10,8 +10,7 @@
  * @TAG(DATA61_BSD)
  */
 
-#ifndef __SEL4UILS_VSPACE_PRIVATE_H
-#define __SEL4UILS_VSPACE_PRIVATE_H
+#pragma once
 
 #include <autoconf.h>
 #include <vka/vka.h>
@@ -457,4 +456,3 @@ void sel4utils_tear_down(vspace_t *vspace, vka_t *vka);
 int sel4utils_share_mem_at_vaddr(vspace_t *from, vspace_t *to, void *start, int num_pages,
                                  size_t size_bits, void *vaddr, reservation_t reservation);
 
-#endif /* __SEL4UILS_VSPACE_PRIVATE_H */

@@ -9,8 +9,7 @@
  *
  * @TAG(DATA61_BSD)
  */
-#ifndef _SEL4UTILS_SEL4_ARCH_UTIL_H
-#define _SEL4UTILS_SEL4_ARCH_UTIL_H
+#pragma once
 
 #include <stdint.h>
 #include <sel4/sel4.h>
@@ -43,4 +42,3 @@ sel4utils_set_stack_pointer(seL4_UserContext *regs, seL4_Word value)
     regs->rsp = value;
 }
 
-#endif /* _SEL4UTILS_SEL4_ARCH_UTIL_H */

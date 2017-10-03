@@ -10,8 +10,7 @@
  * @TAG(DATA61_BSD)
  */
 
-#ifndef __DEBUG_SEL4_ARCH_REGISTERS_H
-#define __DEBUG_SEL4_ARCH_REGISTERS_H
+#pragma once
 
 #include <sel4/sel4.h>
 #include <stddef.h>
@@ -48,4 +47,3 @@ compile_time_assert(tls_base_correct_position, offsetof(seL4_UserContext, tls_ba
 compile_time_assert(fs_correct_position, offsetof(seL4_UserContext, fs)             == 11 * sizeof(seL4_Word));
 compile_time_assert(gs_correct_position, offsetof(seL4_UserContext, gs)             == 12 * sizeof(seL4_Word));
 
-#endif /* __DEBUG_SEL4_ARCH_REGISTERS_H */

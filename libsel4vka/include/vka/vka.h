@@ -10,8 +10,7 @@
  * @TAG(DATA61_BSD)
  */
 
-#ifndef _INTERFACE_VKA_H_
-#define _INTERFACE_VKA_H_
+#pragma once
 
 #include <autoconf.h>
 
@@ -312,4 +311,3 @@ vka_utspace_paddr(vka_t *vka, seL4_Word target, seL4_Word type, seL4_Word size_b
     return vka->utspace_paddr(vka->data, target, type, size_bits);
 }
 
-#endif /* _INTERFACE_VKA_H_ */

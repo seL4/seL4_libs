@@ -10,8 +10,7 @@
  * @TAG(DATA61_BSD)
  */
 
-#ifndef _UTILS_PROFILE_H_
-#define _UTILS_PROFILE_H_
+#pragma once
 
 #include <sel4utils/util.h>
 #include <stdint.h>
@@ -81,4 +80,3 @@ void profile_reset(void);
 #define PEND_TIME(x) do { } while(0)
 #endif
 
-#endif

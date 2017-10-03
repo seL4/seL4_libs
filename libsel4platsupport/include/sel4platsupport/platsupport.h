@@ -10,8 +10,7 @@
  * @TAG(DATA61_BSD)
  */
 
-#ifndef __SEL4PLATSUPPORT_PLATSUPPORT_H__
-#define __SEL4PLATSUPPORT_PLATSUPPORT_H__
+#pragma once
 
 #include <vspace/vspace.h>
 #include <simple/simple.h>
@@ -44,4 +43,3 @@ platsupport_undo_serial_setup(void);
 void
 platsupport_serial_input_init_IRQ(void);
 
-#endif /* __SEL4PLATSUPPORT_PLATSUPPORT_H__ */

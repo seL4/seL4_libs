@@ -10,8 +10,7 @@
  * @TAG(DATA61_GPL)
  */
 
-#ifndef _LIB_VMM_PLATFORM_BOOT_GUEST_H_
-#define _LIB_VMM_PLATFORM_BOOT_GUEST_H_
+#pragma once
 
 #include <stdint.h>
 #include "vmm/vmm.h"
@@ -22,4 +21,3 @@ void vmm_plat_init_guest_boot_structure(vmm_t *vmm, const char *cmdline);
 void vmm_init_guest_thread_state(vmm_vcpu_t *vcpu);
 int vmm_load_guest_elf(vmm_t *vmm, const char *elfname, size_t alignment);
 
-#endif /* _LIB_VMM_PLATFORM_BOOT_GUEST_H_ */

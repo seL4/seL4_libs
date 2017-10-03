@@ -10,8 +10,7 @@
  * @TAG(DATA61_BSD)
  */
 
-#ifndef _SEL4UTILS_SEL4_ARCH_MAPPING_H
-#define _SEL4UTILS_SEL4_ARCH_MAPPING_H
+#pragma once
 
 #include <vspace/page.h>
 #include <vka/vka.h>
@@ -26,4 +25,3 @@ sel4utils_create_object_at_level(vka_t *vka, seL4_Word failed_bits, vka_object_t
      return seL4_InvalidArgument;
 }
 
-#endif /* _SEL4UTILS_SEL4_ARCH_MAPPING_H */

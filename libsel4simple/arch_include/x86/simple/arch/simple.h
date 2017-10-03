@@ -10,8 +10,7 @@
  * @TAG(DATA61_BSD)
  */
 
-#ifndef _INTERFACE_ARCH_SIMPLE_H_
-#define _INTERFACE_ARCH_SIMPLE_H_
+#pragma once
 
 #include <autoconf.h>
 
@@ -156,4 +155,3 @@ arch_simple_get_iospace(arch_simple_t *arch_simple, uint16_t domainID, uint16_t 
 }
 #endif
 
-#endif /* _INTERFACE_ARCH_SIMPLE_H_ */

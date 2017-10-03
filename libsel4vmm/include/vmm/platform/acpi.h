@@ -10,6 +10,8 @@
  * @TAG(DATA61_GPL)
  */
 
+#pragma once
+
 #define ACPI_START (0xE0000) // Start of ACPI tables; RSD PTR is right here
 #define MAX_ACPI_TABLES (2)
 

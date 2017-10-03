@@ -38,8 +38,7 @@
 *
 */
 
-#ifndef _HW_TYPES_H_
-#define _HW_TYPES_H_
+#pragma once
 
 //*****************************************************************************
 //
@@ -83,4 +82,3 @@ typedef unsigned char tBoolean;
 #define TRUE    1
 #define FALSE   0
 
-#endif // __HW_TYPES_H__

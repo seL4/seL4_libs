@@ -10,8 +10,7 @@
  * @TAG(DATA61_BSD)
  */
 
-#ifndef __AM_VKA__
-#define __AM_VKA__
+#pragma once
 
 #include <vka/vka.h>
 #include <allocman/allocman.h>
@@ -38,4 +37,3 @@ void allocman_make_vka(vka_t *vka, allocman_t *alloc);
  */
 int allocman_make_from_vka(vka_t *vka, allocman_t *alloc);
 
-#endif

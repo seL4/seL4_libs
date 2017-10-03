@@ -23,9 +23,8 @@ CONFIG_PRINT_XML
 
 Bamboo requires XML. Humans can choose.
 
-CONFIG_BUFFER_OUTPUT
-
-JUnit output requires that stdout be wrapped in an xml element, which is
+Stdout will be buffered to avoid corrupting the xml as JUnit output
+requires that stdout be wrapped in an xml element, which is
 what the above option does. Turn that option off (in Kconfig) whilst
 debugging your test suite. This buffering will currently only apply to
 printf.

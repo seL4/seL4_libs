@@ -10,9 +10,7 @@
  * @TAG(DATA61_BSD)
  */
 
-#ifndef __DEBUG_ARCH_REGISTERS_H
-#define __DEBUG_ARCH_REGISTERS_H
+#pragma once
 
 #include <sel4debug/sel4_arch/registers.h>
 
-#endif /* __DEBUG_ARCH_REGISTERS_H */

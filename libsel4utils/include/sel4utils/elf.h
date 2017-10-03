@@ -9,8 +9,7 @@
  *
  * @TAG(DATA61_BSD)
  */
-#ifndef SEL4UTILS_ELF_H
-#define SEL4UTILS_ELF_H
+#pragma once
 
 #include <autoconf.h>
 
@@ -117,6 +116,19 @@ sel4utils_elf_num_regions(const char *image_name);
 uintptr_t sel4utils_elf_get_vsyscall(const char *image_name);
 
 /**
+ * Finds the section_name section in an elf file and returns the address.
+ *
+ * @param image_name name of the image in the cpio archive to inspect
+ *
+ * @param section_name name of the section to find
+ *
+ * @param section_size optional pointer to uint64_t to return the section size
+ *
+ * @return Address of section or 0 if not found
+ */
+uintptr_t sel4utils_elf_get_section(const char *image_name, const char *section_name, uint64_t* section_size);
+
+/**
  * Parses an elf file and returns the number of phdrs. The result of this
  * can be used prior to a call to sel4utils_elf_read_phdrs
  *
@@ -136,4 +148,3 @@ uint32_t sel4utils_elf_num_phdrs(const char *image_name);
  */
 void sel4utils_elf_read_phdrs(const char *image_name, uint32_t max_phdrs, Elf_Phdr *phdrs);
 
-#endif /* SEL4UTILS_ELF_H */

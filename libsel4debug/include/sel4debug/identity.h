@@ -18,10 +18,8 @@
  * in order to print a helpful debugging message.
  */
 
-#ifndef _LIBSEL4DEBUG_IDENTITY_H_
-#define _LIBSEL4DEBUG_IDENTITY_H_
+#pragma once
 
 void debug_set_id(const char *s);
 void debug_set_id_fn(const char * (*fn)(void));
 
-#endif

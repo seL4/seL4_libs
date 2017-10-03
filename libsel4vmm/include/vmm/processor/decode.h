@@ -9,8 +9,7 @@
  *
  * @TAG(DATA61_GPL)
  */
-#ifndef _VMM_DECODE_H
-#define _VMM_DECODE_H
+#pragma once
 
 #include "vmm/vmm.h"
 #include "vmm/guest_state.h"
@@ -47,4 +46,3 @@ const static int vmm_decoder_reg_mapb[] = {
     USER_CONTEXT_EBX
 };
 
-#endif

@@ -10,8 +10,7 @@
  * @TAG(DATA61_BSD)
  */
 
-#ifndef _LIBSEL4DEBUG_DEBUG_H_
-#define _LIBSEL4DEBUG_DEBUG_H_
+#pragma once
 
 #include <autoconf.h>
 
@@ -34,4 +33,3 @@ void debug_print_bootinfo(seL4_BootInfo *info);
 #define debug_print_bootinfo(x)
 #endif /* CONFIG_USER_DEBUG_BUILD */
 
-#endif /* !_LIBSEL4DEBUG_DEBUG_H_ */

@@ -15,8 +15,7 @@
  *         Qian Ge
  */
 
-#ifndef _LIB_VMM_MSR_H_
-#define _LIB_VMM_MSR_H_
+#pragma once
 
 /* Intel MSRs. Some also available on other CPUs */
 
@@ -291,4 +290,3 @@
 
 #define MSR_IA32_TSC_DEADLINE       0x000006E0
 
-#endif /* _LIB_VMM_MSR_H_ */

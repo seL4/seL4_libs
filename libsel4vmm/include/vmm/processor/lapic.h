@@ -10,8 +10,7 @@
  * @TAG(DATA61_GPL)
  */
 
-#ifndef __VMM_X86_LAPIC_H
-#define __VMM_X86_LAPIC_H
+#pragma once
 
 enum vmm_lapic_state {
     LAPIC_STATE_NEW,
@@ -77,4 +76,3 @@ void vmm_apic_mmio_read(vmm_vcpu_t *vcpu, void *cookie, uint32_t offset,
 uint64_t vmm_get_lapic_tscdeadline_msr(vmm_vcpu_t *vcpu);
 void vmm_set_lapic_tscdeadline_msr(vmm_vcpu_t *vcpu, uint64_t data);
 
-#endif

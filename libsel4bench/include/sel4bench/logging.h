@@ -10,8 +10,7 @@
  * @TAG(DATA61_BSD)
  */
 
-#ifndef __LOGGING_H__
-#define __LOGGING_H__
+#pragma once
 
 #include <sel4/types.h>
 #include <sel4/constants.h>
@@ -61,4 +60,3 @@ void logging_stable_sort_log(kernel_log_entry_t *logs, unsigned int num_logs);
 void logging_group_log_by_key(kernel_log_entry_t *logs, unsigned int num_logs,
                               unsigned int *sizes, unsigned int *offsets,
                               unsigned int max_groups);
-#endif

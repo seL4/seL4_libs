@@ -10,8 +10,7 @@
  * @TAG(DATA61_BSD)
  */
 
-#ifndef _SYNC_BIN_SEM_H_
-#define _SYNC_BIN_SEM_H_
+#pragma once
 
 #include <autoconf.h>
 #include <assert.h>
@@ -110,4 +109,3 @@ static inline int sync_bin_sem_destroy(vka_t *vka, sync_bin_sem_t *sem) {
     return 0;
 }
 
-#endif

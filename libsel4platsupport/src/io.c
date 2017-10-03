@@ -278,14 +278,12 @@ sel4platsupport_new_malloc_ops(ps_malloc_ops_t *ops)
 int
 sel4platsupport_new_io_ops(vspace_t vspace, vka_t vka, ps_io_ops_t *io_ops)
 {
+    memset(io_ops, 0, sizeof(ps_io_ops_t));
+
     int err = sel4platsupport_new_io_mapper(vspace, vka, &io_ops->io_mapper);
     if (err) {
         return err;
     }
-#ifdef CONFIG_ARCH_ARM
-    clock_sys_init(io_ops, &io_ops->clock_sys);
-    mux_sys_init(io_ops, &io_ops->mux_sys);
-#endif
 
     sel4platsupport_new_malloc_ops(&io_ops->malloc_ops);
     return err;

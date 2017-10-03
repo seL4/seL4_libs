@@ -88,3 +88,12 @@ sel4platsupport_get_io_port_ops(ps_io_port_ops_t *ops, simple_t *simple)
 
     return 0;
 }
+
+int sel4platsupport_new_arch_ops(ps_io_ops_t *ops, simple_t *simple)
+{
+    if (!ops || !simple) {
+        return EINVAL;
+    }
+
+    return sel4platsupport_get_io_port_ops(&ops->io_port_ops, simple);
+}

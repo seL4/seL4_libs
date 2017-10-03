@@ -15,6 +15,7 @@
 #include <vka/vka.h>
 #include <vspace/vspace.h>
 #include <platsupport/io.h>
+#include <simple/simple.h>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -51,3 +52,13 @@ int sel4platsupport_new_malloc_ops(ps_malloc_ops_t *ops);
  * @return returns 0 on success
  */
 int sel4platsupport_new_io_ops(vspace_t vspace, vka_t vka, ps_io_ops_t *io_ops);
+
+/* Initialise all arch-specific io ops for this platform
+ *
+ * sel4platsupport_new_io_ops should have already populated relevant non-arch specific
+ * io ops (memory allocation, mapping).
+ *
+ * @param simple a simple interface which must remain valid after this call.
+ * @return 0 on success.
+ */
+int sel4platsupport_new_arch_ops(ps_io_ops_t *ops, simple_t *simple);

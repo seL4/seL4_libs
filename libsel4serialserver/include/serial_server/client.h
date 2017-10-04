@@ -24,6 +24,10 @@
 
 /** @file API for making requests to a serial server multiplexing thread.
  *
+ * If CONFIG_SERIAL_SERVER_COLOURED_OUTPUT is set, the output will also
+ * be wrapped in ansi escape codes which allow client code to be identified
+ * in a terminal.
+ *
  * By default, the new thread which is created by this API will share the
  * CSpace and VSpace of its creator. Each client of the server thread is required
  * to have a badged cap to the Endpoint that the Server is listening on. The

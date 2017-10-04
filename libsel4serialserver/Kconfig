@@ -17,6 +17,11 @@ menuconfig LIB_SEL4_SERIAL_SERVER
     help
         Serial server.
 
+config SERIAL_SERVER_COLOURED_OUTPUT
+    depends on LIB_SEL4_SERIAL_SERVER
+    bool "Annotate output with differnet ansi colours for each client"
+    default y
+
 config HAVE_LIB_SEL4_SERIAL_SERVER
     default y
     bool

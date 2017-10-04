@@ -9,6 +9,7 @@
  *
  * @TAG(DATA61_BSD)
  */
+#include <autoconf.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -18,6 +19,7 @@
 #include <vka/capops.h>
 
 #include <utils/arith.h>
+#include <utils/ansi.h>
 #include <sel4utils/api.h>
 #include <sel4utils/strerror.h>
 #include <sel4platsupport/platsupport.h>
@@ -28,6 +30,39 @@
 
 /* Define global instance. */
 static serial_server_context_t serial_server;
+
+static char *colors[] = {
+    ANSI_COLOR(RED),
+    ANSI_COLOR(GREEN),
+    ANSI_COLOR(YELLOW),
+    ANSI_COLOR(BLUE),
+    ANSI_COLOR(MAGENTA),
+    ANSI_COLOR(CYAN),
+
+    ANSI_COLOR(RED, BOLD),
+    ANSI_COLOR(GREEN, BOLD),
+    ANSI_COLOR(YELLOW, BOLD),
+    ANSI_COLOR(BLUE, BOLD),
+    ANSI_COLOR(MAGENTA, BOLD),
+    ANSI_COLOR(CYAN, BOLD),
+
+    ANSI_COLOR(RED, ITALIC),
+    ANSI_COLOR(GREEN, ITALIC),
+    ANSI_COLOR(YELLOW, ITALIC),
+    ANSI_COLOR(BLUE, ITALIC),
+    ANSI_COLOR(MAGENTA, ITALIC),
+    ANSI_COLOR(CYAN, ITALIC),
+
+    ANSI_COLOR(RED, UNDERLINE),
+    ANSI_COLOR(GREEN, UNDERLINE),
+    ANSI_COLOR(YELLOW, UNDERLINE),
+    ANSI_COLOR(BLUE, UNDERLINE),
+    ANSI_COLOR(MAGENTA, UNDERLINE),
+    ANSI_COLOR(CYAN, UNDERLINE),
+};
+
+#define NUM_COLORS ARRAY_SIZE(colors)
+#define BADGE_TO_COLOR(badge) (colors[(badge) % NUM_COLORS])
 
 serial_server_context_t *
 get_serial_server(void)
@@ -346,7 +381,14 @@ serial_server_func_write(serial_server_registry_entry_t *client_data,
     }
 
     /* Write out */
+    if (config_set(CONFIG_SERIAL_SERVER_COLOURED_OUTPUT)) {
+        printf("%s", COLOR_RESET);
+        printf("%s", BADGE_TO_COLOR(client_data->badge_value));
+    }
     fwrite((void *)client_data->shmem, message_len, 1, stdout);
+    if (config_set(CONFIG_SERIAL_SERVER_COLOURED_OUTPUT)) {
+        printf("%s", COLOR_RESET);
+    }
     *bytes_written = message_len;
     return 0;
 }

@@ -14,6 +14,16 @@ cmake_minimum_required(VERSION 3.7.2)
 
 project(libsel4serialserver C)
 
+set (configure_string "")
+
+config_string(LibSel4SerialServerColoredOutput SERIAL_SERVER_COLOURED_OUTPUT
+    "Annotate output with different ansi colours for each client"
+    DEFAULT ON
+    UNQUOTE
+)
+
+add_config_library(sel4serialserver "${configure_string}")
+
 file(GLOB deps src/*.c)
 
 list(SORT deps)

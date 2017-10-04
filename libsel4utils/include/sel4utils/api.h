@@ -87,6 +87,17 @@ static inline seL4_MessageInfo_t api_nbsend_recv(UNUSED seL4_CPtr send, UNUSED s
 #endif
 }
 
+static inline seL4_MessageInfo_t api_nbsend_wait(UNUSED seL4_CPtr send, UNUSED seL4_MessageInfo_t info,
+                                                 UNUSED seL4_CPtr recv, UNUSED seL4_Word *badge)
+{
+    ZF_LOGF_IF(!config_set(CONFIG_KERNEL_RT), "Not available on non MCS kernel");
+#ifdef CONFIG_KERNEL_RT
+    return seL4_NBSendWait(send, info, recv, badge);
+#else
+    return seL4_MessageInfo_new(0, 0, 0, 0);
+#endif
+}
+
 static inline seL4_Error api_tcb_configure(seL4_CPtr tcb, seL4_CPtr ep, UNUSED seL4_CPtr timeout_ep,
                                            seL4_PrioProps_t props, UNUSED seL4_CPtr sc, seL4_CPtr cspace,
                                            seL4_CapData_t cdata, seL4_CPtr vspace, seL4_CapData_t vdata,

@@ -447,7 +447,7 @@ static int bootstrap_new_1level_cspace(bootstrap_info_t *bs, int size) {
     error = seL4_CNode_Mint(
         node.capPtr, new_cnode, size,
         node.root, node.capPtr, node.capDepth,
-        seL4_AllRights, seL4_CapData_Guard_new(0, seL4_WordBits - size));
+        seL4_AllRights, api_make_guard_skip_word(seL4_WordBits - size));
     if (error != seL4_NoError) {
         return 1;
     }
@@ -464,7 +464,7 @@ static int bootstrap_new_1level_cspace(bootstrap_info_t *bs, int size) {
     error = api_tcb_set_space(bs->tcb.capPtr, 0,
                 seL4_CapNull,
                 node.capPtr,
-                seL4_CapData_Guard_new(0, seL4_WordBits - size),
+                api_make_guard_skip_word(seL4_WordBits - size),
                 bs->pd.capPtr, seL4_NilData);
     if (error != seL4_NoError) {
         return 1;
@@ -559,7 +559,7 @@ static int bootstrap_new_2level_cspace(bootstrap_info_t *bs, size_t l1size, size
     error = seL4_CNode_Mint(
         l2node.capPtr, cnode, l2size,
         l1node.root, l1node.capPtr, l1node.capDepth,
-        seL4_AllRights, seL4_CapData_Guard_new(0, seL4_WordBits - l1size - l2size));
+        seL4_AllRights, api_make_guard_skip_word(seL4_WordBits - l1size - l2size));
     if (error != seL4_NoError) {
         return 1;
     }
@@ -599,7 +599,7 @@ static int bootstrap_new_2level_cspace(bootstrap_info_t *bs, size_t l1size, size
     error = api_tcb_set_space(bs->tcb.capPtr, 0,
                 seL4_CapNull,
                 l1node.capPtr,
-                seL4_CapData_Guard_new(0, seL4_WordBits - l1size - l2size),
+                api_make_guard_skip_word(seL4_WordBits - l1size - l2size),
                 bs->pd.capPtr, seL4_NilData);
     if (error != seL4_NoError) {
         return 1;

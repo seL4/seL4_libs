@@ -76,7 +76,7 @@ static int setup_irq(vka_t *vka, sel4ps_irq_t *irq, seL4_Word badge,
     if (!error) {
         /* badge it */
         error = vka_cnode_mint(&irq->badged_ntfn_path, &path,
-                seL4_AllRights, seL4_CapData_Badge_new(badge));
+                seL4_AllRights, badge);
     }
     if (!error) {
         /* set notification *before* acking any pending IRQ to ensure there is no race where

@@ -43,7 +43,7 @@ write_ipc_buffer_user_data(vka_t *vka, vspace_t *vspace, seL4_CPtr ipc_buf, uint
 }
 
 int sel4utils_configure_thread(vka_t *vka, vspace_t *parent, vspace_t *alloc, seL4_CPtr fault_endpoint,
-                               seL4_CNode cspace, seL4_CapData_t cspace_root_data, sel4utils_thread_t *res)
+                               seL4_CNode cspace, seL4_Word cspace_root_data, sel4utils_thread_t *res)
 {
 
     sel4utils_thread_config_t config = {0};
@@ -120,7 +120,7 @@ sel4utils_configure_thread_config(vka_t *vka, vspace_t *parent, vspace_t *alloc,
     } else {
         res->sched_context.cptr = config.sched_params.sched_context;
     }
-    seL4_CapData_t null_cap_data = {{0}};
+    seL4_Word null_cap_data = seL4_NilData;
     error = api_tcb_configure(res->tcb.cptr, config.fault_endpoint,
                               seL4_CapNull,
                               seL4_PrioProps_new(config.sched_params.mcp, config.sched_params.priority),
@@ -278,7 +278,7 @@ fault_handler(char *name, seL4_CPtr endpoint)
 
 int
 sel4utils_start_fault_handler(seL4_CPtr fault_endpoint, vka_t *vka, vspace_t *vspace,
-                              seL4_CPtr cspace, seL4_CapData_t cap_data, char *name,
+                              seL4_CPtr cspace, seL4_Word cap_data, char *name,
                               sel4utils_thread_t *res)
 {
     int error = sel4utils_configure_thread(vka, vspace, vspace, 0, cspace,

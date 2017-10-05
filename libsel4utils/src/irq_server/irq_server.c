@@ -75,7 +75,7 @@ irq_bind(irq_t irq, seL4_CPtr notification_cap, int idx, vka_t* vka, simple_t *s
 {
     seL4_CPtr irq_cap, bnotification_cap;
     cspacepath_t irq_path, notification_path, bnotification_path;
-    seL4_CapData_t badge;
+    seL4_Word badge;
     int err;
 
     /* Create an IRQ cap */
@@ -101,7 +101,7 @@ irq_bind(irq_t irq, seL4_CPtr notification_cap, int idx, vka_t* vka, simple_t *s
     }
     vka_cspace_make_path(vka, notification_cap, &notification_path);
     vka_cspace_make_path(vka, bnotification_cap, &bnotification_path);
-    badge = seL4_CapData_Badge_new(BIT(idx));
+    badge = BIT(idx);
     err = vka_cnode_mint(&bnotification_path, &notification_path, seL4_AllRights, badge);
     if (err != seL4_NoError) {
         ZF_LOGE("Failed to badge IRQ notification endpoint\n");

@@ -73,7 +73,7 @@ typedef void (*sel4utils_thread_entry_fn)(void *arg0, void *arg1, void *ipc_buf)
  * @return 0 on success, -1 on failure. Use CONFIG_DEBUG to see error messages.
  */
 int sel4utils_configure_thread(vka_t *vka, vspace_t *parent, vspace_t *alloc, seL4_CPtr fault_endpoint,
-                               seL4_CNode cspace, seL4_CapData_t cspace_root_data,
+                               seL4_CNode cspace, seL4_Word cspace_root_data,
                                sel4utils_thread_t *res);
 
 /**
@@ -193,7 +193,7 @@ void sel4utils_free_checkpoint(sel4utils_checkpoint_t *checkpoint);
  * @return 0 on success.
  */
 int sel4utils_start_fault_handler(seL4_CPtr fault_endpoint, vka_t *vka, vspace_t *vspace,
-                                  seL4_CPtr cspace, seL4_CapData_t data, char *name, sel4utils_thread_t *res);
+                                  seL4_CPtr cspace, seL4_Word data, char *name, sel4utils_thread_t *res);
 
 /**
  * Pretty print a fault message.

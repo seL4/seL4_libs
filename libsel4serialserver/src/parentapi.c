@@ -77,7 +77,7 @@ serial_server_parent_spawn_thread(simple_t *parent_simple, vka_t *parent_vka,
     error = vka_mint_object(parent_vka, &get_serial_server()->server_ep_obj,
                             &get_serial_server()->_badged_server_ep_cspath,
                             seL4_AllRights,
-                            seL4_CapData_Badge_new(get_serial_server()->parent_badge_value));
+                            get_serial_server()->parent_badge_value);
     if (error != 0) {
         ZF_LOGE(SERSERVP"spawn_thread: Failed to mint badged Endpoint cap to "
                 "server.\n"
@@ -201,7 +201,7 @@ serial_server_parent_vka_mint_endpoint(vka_t *client_vka,
                                         client_vka,
                                         badged_server_ep_cspath,
                                         seL4_AllRights,
-                                        seL4_CapData_Badge_new(new_badge_value));
+                                        new_badge_value);
 }
 
 static inline void
@@ -227,7 +227,7 @@ serial_server_allocate_client_badged_ep(cspacepath_t dest_slot)
 
     parent_ep_obj_to_cspath(&server_ep_cspath);
     return vka_cnode_mint(&dest_slot, &server_ep_cspath, seL4_AllRights,
-                          seL4_CapData_Badge_new(new_badge_value));
+                          new_badge_value);
 }
 
 seL4_CPtr
@@ -246,5 +246,5 @@ serial_server_parent_mint_endpoint_to_process(sel4utils_process_t *p)
     parent_ep_obj_to_cspath(&server_ep_cspath);
     return sel4utils_mint_cap_to_process(p, server_ep_cspath,
                                          seL4_AllRights,
-                                         seL4_CapData_Badge_new(new_badge_value));
+                                         new_badge_value);
 }

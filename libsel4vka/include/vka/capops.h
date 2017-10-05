@@ -60,7 +60,7 @@ vka_cnode_delete(const cspacepath_t* src)
 
 inline static int
 vka_cnode_mint(const cspacepath_t* dest, const cspacepath_t* src,
-               seL4_CapRights_t rights, seL4_CapData_t badge)
+               seL4_CapRights_t rights, seL4_Word badge)
 {
     return seL4_CNode_Mint(
                /* _service */      dest->root,
@@ -89,7 +89,7 @@ vka_cnode_move(const cspacepath_t* dest, const cspacepath_t* src)
 
 inline static int
 vka_cnode_mutate(const cspacepath_t* dest, const cspacepath_t* src,
-                 seL4_CapData_t badge)
+                 seL4_Word badge)
 {
     return seL4_CNode_Mutate(
                /* _service */      dest->root,
@@ -123,8 +123,8 @@ vka_cnode_revoke(const cspacepath_t* src)
 }
 
 inline static int
-vka_cnode_rotate(const cspacepath_t *dest, seL4_CapData_t dest_badge, const cspacepath_t *pivot,
-                 seL4_CapData_t pivot_badge, const cspacepath_t *src)
+vka_cnode_rotate(const cspacepath_t *dest, seL4_Word dest_badge, const cspacepath_t *pivot,
+                 seL4_Word pivot_badge, const cspacepath_t *src)
 {
     return seL4_CNode_Rotate(dest->root, dest->capPtr, dest->capDepth, dest_badge,
                              pivot->root, pivot->capPtr, pivot->capDepth, pivot_badge,

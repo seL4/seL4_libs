@@ -100,7 +100,7 @@ static inline seL4_MessageInfo_t api_nbsend_wait(UNUSED seL4_CPtr send, UNUSED s
 
 static inline seL4_Error api_tcb_configure(seL4_CPtr tcb, seL4_CPtr ep, UNUSED seL4_CPtr timeout_ep,
                                            seL4_PrioProps_t props, UNUSED seL4_CPtr sc, seL4_CPtr cspace,
-                                           seL4_CapData_t cdata, seL4_CPtr vspace, seL4_CapData_t vdata,
+                                           seL4_Word cdata, seL4_CPtr vspace, seL4_Word vdata,
                                            seL4_Word ipc_buffer_addr, seL4_CPtr ipc_buffer_cap)
 {
 #ifdef CONFIG_KERNEL_RT
@@ -114,7 +114,7 @@ static inline seL4_Error api_tcb_configure(seL4_CPtr tcb, seL4_CPtr ep, UNUSED s
 
 static inline seL4_Error api_tcb_set_space(seL4_CPtr tcb, seL4_CPtr ep, UNUSED seL4_CPtr timeout_ep,
                                            seL4_CPtr cspace,
-                                           seL4_CapData_t cdata, seL4_CPtr vspace, seL4_CapData_t vdata)
+                                           seL4_Word cdata, seL4_CPtr vspace, seL4_Word vdata)
 {
 #ifdef CONFIG_KERNEL_RT
     return seL4_TCB_SetSpace(tcb, ep, timeout_ep, cspace, cdata, vspace, vdata);

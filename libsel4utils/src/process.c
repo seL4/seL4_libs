@@ -105,7 +105,7 @@ sel4utils_create_word_args(char strings[][WORD_STRING_SIZE], char *argv[], int a
 }
 
 seL4_CPtr
-sel4utils_mint_cap_to_process(sel4utils_process_t *process, cspacepath_t src, seL4_CapRights_t rights, seL4_CapData_t data)
+sel4utils_mint_cap_to_process(sel4utils_process_t *process, cspacepath_t src, seL4_CapRights_t rights, seL4_Word data)
 {
     cspacepath_t dest = { 0 };
     if (next_free_slot(process, &dest) == -1) {
@@ -459,7 +459,7 @@ assign_asid_pool(seL4_CPtr asid_pool, seL4_CPtr pd)
 
 static int
 create_cspace(vka_t *vka, int size_bits, sel4utils_process_t *process,
-              seL4_CapData_t cspace_root_data, seL4_CPtr asid_pool)
+              seL4_Word cspace_root_data, seL4_CPtr asid_pool)
 {
     /* create a cspace */
     int error = vka_alloc_cnode_object(vka, size_bits, &process->cspace);
@@ -525,8 +525,7 @@ sel4utils_configure_process_custom(sel4utils_process_t *process, vka_t *vka,
     int error;
     sel4utils_alloc_data_t * data = NULL;
     memset(process, 0, sizeof(sel4utils_process_t));
-    seL4_CapData_t cspace_root_data = seL4_CapData_Guard_new(0,
-                                                             seL4_WordBits - config.one_level_cspace_size_bits);
+    seL4_Word cspace_root_data = api_make_guard_skip_word(seL4_WordBits - config.one_level_cspace_size_bits);
 
     /* create a page directory */
     process->own_vspace = config.create_vspace;

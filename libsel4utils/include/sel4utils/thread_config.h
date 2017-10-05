@@ -49,7 +49,7 @@ typedef struct sel4utils_thread_config {
    /* root of the cspace to start the thread in */
     seL4_CNode cspace;
     /* data for cspace access */
-    seL4_CapData_t cspace_root_data;
+    seL4_Word cspace_root_data;
     /* use a custom stack size? */
     bool custom_stack_size;
     /* custom stack size in 4k pages for this thread */
@@ -110,7 +110,7 @@ thread_config_sched_context(sel4utils_thread_config_t config, seL4_CPtr sched_co
 }
 
 static inline sel4utils_thread_config_t
-thread_config_cspace(sel4utils_thread_config_t config, seL4_CPtr cspace_root, seL4_CapData_t cspace_root_data)
+thread_config_cspace(sel4utils_thread_config_t config, seL4_CPtr cspace_root, seL4_Word cspace_root_data)
 {
     config.cspace = cspace_root;
     config.cspace_root_data = cspace_root_data;
@@ -128,7 +128,7 @@ static inline sel4utils_thread_config_t
 thread_config_new(simple_t *simple)
 {
     sel4utils_thread_config_t config = {0};
-    seL4_CapData_t data = seL4_CapData_Guard_new(0, seL4_WordBits - simple_get_cnode_size_bits(simple));
+    seL4_Word data = api_make_guard_skip_word(seL4_WordBits - simple_get_cnode_size_bits(simple));
     config = thread_config_auth(config, simple_get_tcb(simple));
     return thread_config_cspace(config, simple_get_cnode(simple), data);
 }
@@ -170,7 +170,7 @@ thread_config_fault_endpoint(sel4utils_thread_config_t config, seL4_CPtr fault_e
 }
 
 static inline sel4utils_thread_config_t
-thread_config_default(simple_t *simple, seL4_CPtr cnode, seL4_CapData_t data, seL4_CPtr fault_ep, uint8_t prio)
+thread_config_default(simple_t *simple, seL4_CPtr cnode, seL4_Word data, seL4_CPtr fault_ep, uint8_t prio)
 {
     sel4utils_thread_config_t config = thread_config_new(simple);
     config = thread_config_cspace(config, cnode, data);

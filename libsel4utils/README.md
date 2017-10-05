@@ -43,8 +43,6 @@ Repository overview
 
 *include/sel4utils*:
 
-  * client_server_vspace.h -- a virtual address space that proxies calls between two different
-                              vspaces
   * elf.h -- elf loading.
   * mapping.h -- page mapping.
   * process.h -- process creation, deletion.

@@ -79,11 +79,12 @@ static int setup_irq(vka_t *vka, sel4ps_irq_t *irq, seL4_Word badge,
                 seL4_AllRights, seL4_CapData_Badge_new(badge));
     }
     if (!error) {
-        error = seL4_IRQHandler_Ack(irq->handler_path.capPtr);
+        /* set notification *before* acking any pending IRQ to ensure there is no race where
+         * we lose an IRQ */
+        error =  seL4_IRQHandler_SetNotification(irq->handler_path.capPtr, irq->badged_ntfn_path.capPtr);
     }
     if (!error) {
-        /* set notification */
-        error =  seL4_IRQHandler_SetNotification(irq->handler_path.capPtr, irq->badged_ntfn_path.capPtr);
+        error = seL4_IRQHandler_Ack(irq->handler_path.capPtr);
     }
     return error;
 }

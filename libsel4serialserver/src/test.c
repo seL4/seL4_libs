@@ -23,18 +23,6 @@
 #include <sel4test/testutil.h>
 
 #define SERSERV_TEST_PRIO_SERVER    (seL4_MaxPrio - 1)
-#define MAX_REGIONS 4
-
-struct env {
-    /* An initialised vka that may be used by the test. */
-    vka_t vka;
-    /* virtual memory management interface */
-    vspace_t vspace;
-    /* initialised timer */
-    seL4_timer_t timer;
-    /* abstract interface over application init */
-    simple_t simple;
-};
 
 static const char *test_str = "Hello, world!\n";
 

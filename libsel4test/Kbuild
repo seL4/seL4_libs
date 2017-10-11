@@ -11,4 +11,4 @@
 #
 
 libs-$(CONFIG_LIB_SEL4_TEST) += libsel4test
-libsel4test: $(libc) libsel4 common libutils
+libsel4test: $(libc) libsel4 common libutils libsel4vka libsel4vspace libsel4platsupport libsel4sync libsel4simple libsel4utils

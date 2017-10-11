@@ -42,4 +42,4 @@ list(SORT deps)
 
 add_library(sel4test STATIC EXCLUDE_FROM_ALL ${deps})
 target_include_directories(sel4test PUBLIC include)
-target_link_libraries(sel4test Configuration muslc sel4 utils)
+target_link_libraries(sel4test Configuration muslc sel4 utils sel4vka sel4vspace sel4platsupport sel4sync sel4simple sel4utils)

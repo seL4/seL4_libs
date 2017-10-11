@@ -36,7 +36,7 @@ struct env;
 typedef struct env *env_t;
 
 /* Prototype of a test function. Returns false on failure. */
-typedef int (*test_fn)(env_t);
+typedef int (*test_fn)(uintptr_t environment);
 
 /* Test type definitions. */
 typedef enum test_type_name {BOOTSTRAP = 0, BASIC} test_type_name_t;
@@ -46,13 +46,13 @@ typedef struct test_type {
     const char *name;
     test_type_name_t id;
     // Function called before and after all the tests for this test type have been run.
-    void (*set_up_test_type)(env_t e);
-    void (*tear_down_test_type)(env_t e);
+    void (*set_up_test_type)(uintptr_t e);
+    void (*tear_down_test_type)(uintptr_t e);
     // Function called before and after each test for this test type.
-    void (*set_up)(env_t e);
-    void (*tear_down)(env_t e);
-    // Run the test.
-    test_result_t (*run_test)(struct testcase* test, env_t e);
+    void (*set_up)(uintptr_t e);
+    void (*tear_down)(uintptr_t e);
+    // Run the test. Different tests take different environments
+    test_result_t (*run_test)(struct testcase* test, uintptr_t e);
 } ALIGN(32) test_type_t;
 
 /* Declare a test type.
@@ -96,7 +96,7 @@ typedef struct testcase ALIGN(sizeof(struct testcase)) testcase_t;
     __attribute__((used)) __attribute__((section("_test_case"))) struct testcase TEST_ ## _name = { \
     #_name, \
     _description, \
-    _function, \
+    (test_fn)_function, \
     _test_type, \
     _enabled, \
 };

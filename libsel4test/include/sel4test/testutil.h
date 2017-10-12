@@ -22,8 +22,18 @@ typedef enum test_result {
     /* test failed */
     FAILURE,
     /* test corrupted environment, abort tests */
-    ABORT
+    ABORT,
+    /* Start of the free slot/ID to be used to request
+     * operations from sel4test-test to sel4test-driver
+     * using the same end point
+     */
+    SEL4TEST_RESULT_FREE
 } test_result_t;
+
+typedef enum _sel4test_communication_codes {
+    SEL4TEST_TIME_SLEEP = SEL4TEST_RESULT_FREE,
+    SEL4TEST_TIME_TIMESTAMP
+} sel4test_output_t;
 
 /* A buffered printf to avoid corrupting xml output */
 void sel4test_printf(const char *out);

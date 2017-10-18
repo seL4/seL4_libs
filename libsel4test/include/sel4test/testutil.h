@@ -32,6 +32,8 @@ typedef enum test_result {
 
 typedef enum _sel4test_communication_codes {
     SEL4TEST_TIME_SLEEP = SEL4TEST_RESULT_FREE,
+    SEL4TEST_TIME_PERIODIC_START,
+    SEL4TEST_TIME_PERIODIC_STOP,
     SEL4TEST_TIME_TIMESTAMP
 } sel4test_output_t;
 

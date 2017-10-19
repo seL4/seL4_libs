@@ -30,11 +30,23 @@ typedef enum test_result {
     SEL4TEST_RESULT_FREE
 } test_result_t;
 
+/* Communication codes/requests between a server and a client */
 typedef enum _sel4test_communication_codes {
-    SEL4TEST_TIME_SLEEP = SEL4TEST_RESULT_FREE,
-    SEL4TEST_TIME_PERIODIC_START,
-    SEL4TEST_TIME_PERIODIC_STOP,
-    SEL4TEST_TIME_TIMESTAMP
+    SEL4TEST_TIME_MIN = SEL4TEST_RESULT_FREE,
+    /* Client: requests a timeout from the server
+     * Server: Notify clients after the elapsed requested time.
+     * Previous timeout requests will be overwritten (if ongoing) with
+     * new timeout requests.
+     */
+    SEL4TEST_TIME_TIMEOUT,
+    /* Client: requests a timer reset and cancel previous requests
+     * Server: Cleans up the resources used from previous requests
+     * and stop notifying clients.
+     */
+    SEL4TEST_TIME_RESET,
+    SEL4TEST_TIME_TIMESTAMP,
+
+    SEL4TEST_TIME_MAX
 } sel4test_output_t;
 
 /* A buffered printf to avoid corrupting xml output */
@@ -71,4 +83,6 @@ void _sel4test_abort(const char *failure, const char *file, int line);
  */
 test_result_t sel4test_get_result(void);
 
-
+static inline bool sel4test_isTimerRPC(int output) {
+    return (output > SEL4TEST_TIME_MIN && output < SEL4TEST_TIME_MAX);
+}

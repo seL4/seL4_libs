@@ -310,6 +310,7 @@ sel4utils_get_vspace_with_map(vspace_t *loader, vspace_t *new_vspace, sel4utils_
     if (data->top_level == NULL) {
         return -1;
     }
+    memset(data->top_level, 0, sizeof(vspace_mid_level_t));
 
     common_init_post_bootstrap(new_vspace, map_page);
 

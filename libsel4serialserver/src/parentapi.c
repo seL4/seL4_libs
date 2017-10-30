@@ -122,6 +122,7 @@ serial_server_parent_spawn_thread(simple_t *parent_simple, vka_t *parent_vka,
         goto out;
     }
 
+    NAME_THREAD(get_serial_server()->server_thread.tcb.cptr, "serial server");
     error = sel4utils_start_thread(&get_serial_server()->server_thread,
                                    (sel4utils_thread_entry_fn)&serial_server_main,
                                    NULL, NULL, 1);

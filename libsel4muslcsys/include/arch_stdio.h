@@ -21,11 +21,6 @@
 void __arch_putchar(int c) __attribute__((noinline));
 size_t __arch_write(char *data, size_t count) __attribute__((noinline));
 
-#ifdef CONFIG_LIB_SEL4_MUSLC_SYS_ARCH_PUTCHAR_WEAK
-    void __arch_putchar(int c) __attribute__((weak));
-    size_t __arch_write(char *data, size_t count) __attribute__((weak));
-#endif
-
 /*
  * Each architecture implements the following simple getchar function, usually
  * setup to receive from serial.

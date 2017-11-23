@@ -302,7 +302,10 @@ static void __serial_setup()
     }
 }
 
-void WEAK NO_INLINE
+void NO_INLINE
+#ifdef CONFIG_LIB_SEL4_MUSLC_SYS_ARCH_PUTCHAR_WEAK
+WEAK
+#endif
 __arch_putchar(int c)
 {
     if (setup_status != SETUP_COMPLETE) {
@@ -311,7 +314,10 @@ __arch_putchar(int c)
     __plat_putchar(c);
 }
 
-size_t WEAK NO_INLINE
+size_t NO_INLINE
+#ifdef CONFIG_LIB_SEL4_MUSLC_SYS_ARCH_PUTCHAR_WEAK
+WEAK
+#endif
 __arch_write(char *data, size_t count) {
     for (int i = 0; i < count; i++) {
         __arch_putchar(data[i]);

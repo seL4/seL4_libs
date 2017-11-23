@@ -177,12 +177,8 @@ get_fd_struct(int fd)
 static size_t
 sys_platform_write(void *data, size_t count)
 {
-    size_t i;
     char *realdata = data;
-    for (i = 0; i < count; i++) {
-        __arch_putchar(realdata[i]);
-    }
-    return count;
+    return __arch_write(realdata, count);
 }
 
 static long

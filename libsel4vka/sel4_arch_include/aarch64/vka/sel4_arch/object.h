@@ -42,8 +42,8 @@ static inline unsigned long
 vka_arm_mode_get_object_size(seL4_Word objectType)
 {
     switch (objectType) {
-    case seL4_ARM_LargePageObject:
-        return seL4_PageBits;
+    case seL4_ARM_HugePageObject:
+        return seL4_HugePageBits;
     case seL4_ARM_PageGlobalDirectoryObject:
         return seL4_PGDBits;
     case seL4_ARM_PageUpperDirectoryObject:

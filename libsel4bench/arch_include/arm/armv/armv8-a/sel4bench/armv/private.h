@@ -13,6 +13,7 @@
 
 #include <stdint.h>
 #include <sel4bench/armv/events.h>
+#include <sel4bench/sel4_arch/sel4bench.h>
 #include <utils/util.h>
 
 //function attributes
@@ -29,33 +30,32 @@
 // select whether user mode gets access to the PMCs
 static FASTFN void sel4bench_private_switch_user_pmc(unsigned long state)
 {
-    asm volatile (
-        "mcr p15, 0, %0, c9, c14, 0\n"
-        : /* no outputs */
-        : "r" (state) /* input on/off state */
-    );
+    PMU_WRITE(PMUSERENR, state);
 }
 
 /*
- * INTENS/INTENC
+ * INTENS
  *
- * determines if an interrupt is generated on overflow.
+ * Enables the generation of interrupt requests on overflows from the Cycle Count Register,
+ * PMCCNTR_EL0, and the event counters PMEVCNTR<n>_EL0. Reading the register shows which
+ * overflow interrupt requests are enabled.
  */
 static FASTFN void sel4bench_private_write_intens(uint32_t mask)
 {
-    asm volatile (
-        "mcr p15, 0, %0, c9, c14, 1\n"
-        :
-        : "r"(mask)
-    );
+    PMU_WRITE(PMINTENSET, mask);
 }
+
+/*
+ * INTENC
+ *
+ * Disables the generation of interrupt requests on overflows from the Cycle Count Register,
+ * PMCCNTR_EL0, and the event counters PMEVCNTR<n>_EL0. Reading the register shows which
+ * overflow interrupt requests are enabled.
+ *
+ */
 static FASTFN void sel4bench_private_write_intenc(uint32_t mask)
 {
-    asm volatile (
-        "mcr p15, 0, %0, c9, c14, 2\n"
-        :
-        : "r"(mask)
-    );
+    PMU_WRITE(PMINTENCLR, mask);
 }
 
 static inline void sel4bench_private_init(void* data)
@@ -91,117 +91,83 @@ static inline void sel4bench_private_deinit(void* data)
 #define SEL4BENCH_ARMV8A_PMCR_RESET_ALL  BIT(1)
 #define SEL4BENCH_ARMV8A_PMCR_RESET_CCNT BIT(2)
 #define SEL4BENCH_ARMV8A_PMCR_DIV64      BIT(3) /* Should CCNT be divided by 64? */
+
 static FASTFN void sel4bench_private_write_pmcr(uint32_t val)
 {
-    asm volatile (
-        "mcr p15, 0, %0, c9, c12, 0\n"
-        :
-        : "r"(val)
-    );
+    PMU_WRITE(PMCR, val);
 }
 static FASTFN uint32_t sel4bench_private_read_pmcr(void)
 {
     uint32_t val;
-    asm volatile (
-        "mrc p15, 0, %0, c9, c12, 0\n"
-        : "=r"(val)
-        :
-    );
+    PMU_READ(PMCR, val);
     return val;
 }
 
 /*
  * CNTENS/CNTENC (Count Enable Set/Clear)
  *
- * bit corresponds to which counter.
+ * Enables the Cycle Count Register, PMCCNTR_EL0, and any implemented event counters
+ * PMEVCNTR<x>. Reading this register shows which counters are enabled.
+ *
  */
 static FASTFN void sel4bench_private_write_cntens(uint32_t mask)
 {
-    asm volatile (
-        "mcr p15, 0, %0, c9, c12, 1\n"
-        :
-        : "r"(mask)
-    );
+    PMU_WRITE(PMCNTENSET, mask);
 }
-static FASTFN uint32_t sel4bench_private_read_cntens()
+
+static FASTFN uint32_t sel4bench_private_read_cntens(void)
 {
     uint32_t mask;
-    asm volatile (
-        "mrc p15, 0, %0, c9, c12, 1\n"
-        : "=r"(mask)
-        :
-    );
+    PMU_READ(PMCNTENSET, mask);
     return mask;
-}
-static FASTFN void sel4bench_private_write_cntenc(uint32_t mask)
-{
-    asm volatile (
-        "mcr p15, 0, %0, c9, c12, 2\n"
-        :
-        : "r"(mask)
-    );
 }
 
 /*
- * PMCNT0-3: event count
- *
- * counter is selected by PMNXSEL register.
+ * Disables the Cycle Count Register, PMCCNTR_EL0, and any implemented event counters
+ * PMEVCNTR<x>. Reading this register shows which counters are enabled.
+ */
+static FASTFN void sel4bench_private_write_cntenc(uint32_t mask)
+{
+    PMU_WRITE(PMCNTENCLR, mask);
+}
+
+/*
+ * Reads or writes the value of the selected event counter, PMEVCNTR<n>_EL0.
+ * PMSELR_EL0.SEL determines which event counter is selected.
  */
 static FASTFN uint32_t sel4bench_private_read_pmcnt(void)
 {
     uint32_t val;
-    asm volatile (
-        "mrc p15, 0, %0, c9, c13, 2\n"
-        : "=r"(val)
-        :
-    );
+    PMU_READ(PMXEVCNTR, val);
     return val;
 }
+
 static FASTFN void sel4bench_private_write_pmcnt(uint32_t val)
 {
-    asm volatile (
-        "mcr p15, 0, %0, c9, c13, 2\n"
-        : "=r"(val)
-        :
-    );
+    PMU_WRITE(PMXEVCNTR, val);
 }
 
 /*
- * PMNXSEL
- *
- * selects which counter is used by get_pmnct.
+ * Selects the current event counter PMEVCNTR<x> or the cycle counter, CCNT
  */
 static FASTFN void sel4bench_private_write_pmnxsel(uint32_t val)
 {
-    asm volatile (
-        "mcr p15, 0, %0, c9, c12, 5\n"
-        :
-        : "r"(val)
-    );
+    PMU_WRITE(PMSELR, val);
 }
 
 /*
- * EVTSEL
- *
- * determines which events are counted by a performance counter.
- * counter is selected by PMNXSEL register.
+ * When PMSELR_EL0.SEL selects an event counter, this accesses a PMEVTYPER<n>_EL0
+ * register. When PMSELR_EL0.SEL selects the cycle counter, this accesses PMCCFILTR_EL0.
  */
 static FASTFN uint32_t sel4bench_private_read_evtsel(void)
 {
+
     uint32_t val;
-    asm volatile (
-        "mrc p15, 0, %0, c9, c13, 1\n"
-        : "=r"(val)
-        :
-    );
+    PMU_READ(PMXEVTYPER, val);
     return val;
 }
 
 static FASTFN void sel4bench_private_write_evtsel(uint32_t val)
 {
-    asm volatile (
-        "mcr p15, 0, %0, c9, c13, 1\n"
-        :
-        : "r"(val)
-    );
+    PMU_WRITE(PMXEVTYPER, val);
 }

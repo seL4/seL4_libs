@@ -11,12 +11,6 @@
  */
 #pragma once
 
-#define SEL4BENCH_READ_CCNT(var) do { \
-    asm volatile("mrc p15, 0, %0, c9, c13, 0\n" \
-        : "=r"(var) \
-    ); \
-} while(0)
-
 #include <autoconf.h>
 #include <sel4bench/types.h>
 #include <sel4bench/armv/private.h>
@@ -25,6 +19,8 @@
 
 //utility macros
 #define MODIFY_PMCR(op, val) sel4bench_private_write_pmcr(sel4bench_private_read_pmcr() op (val))
+
+#define SEL4BENCH_READ_CCNT(var) PMU_READ(PMCCNTR, var);
 
 /* Silence warnings about including the following functions when seL4_DebugRun
  * is not enabled when we are not calling them. If we actually call these

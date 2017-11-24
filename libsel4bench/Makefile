@@ -25,6 +25,7 @@ HDRFILES := \
 	$(sort $(wildcard $(SOURCE_DIR)/include/*)) \
 	$(sort $(wildcard $(SOURCE_DIR)/arch_include/$(ARCH)/*)) \
 	$(sort $(wildcard $(SOURCE_DIR)/arch_include/$(ARCH)/armv/$(ARMV)/*)) \
-	$(sort $(wildcard $(SOURCE_DIR)/arch_include/$(ARCH)/cpu/$(CPU)/*)) 
+	$(sort $(wildcard $(SOURCE_DIR)/arch_include/$(ARCH)/cpu/$(CPU)/*)) \
+	$(sort $(wildcard $(SOURCE_DIR)/sel4_arch_include/$(SEL4_ARCH)/*))
 
 include $(SEL4_COMMON)/common.mk

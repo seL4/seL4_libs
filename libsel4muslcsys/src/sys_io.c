@@ -276,6 +276,16 @@ sys_close(va_list ap)
     return 0;
 }
 
+
+static write_buf_fn stdio_write = sys_platform_write;
+
+write_buf_fn sel4muslcsys_register_stdio_write_fn(write_buf_fn write_fn) {
+    write_buf_fn old = stdio_write;
+    stdio_write = write_fn;
+    return old;
+}
+
+
 /* Writev syscall implementation for muslc. Only implemented for stdin and stdout. */
 long
 sys_writev(va_list ap)
@@ -308,8 +318,15 @@ sys_writev(va_list ap)
 
     /* Write the buffer to console if the fd is for stdout or stderr. */
     if (fildes == STDOUT_FILENO || fildes == STDERR_FILENO) {
+        if (stdio_write == NULL) {
+            ZF_LOGD("No standard out function registered");
+        }
         for (int i = 0; i < iovcnt; i++) {
-            ret += sys_platform_write(iov[i].iov_base, iov[i].iov_len);
+            if (stdio_write == NULL) {
+                ret += iov[i].iov_len;
+            } else {
+                ret += stdio_write(iov[i].iov_base, iov[i].iov_len);
+            }
         }
     } else {
         assert(!"Not implemented");

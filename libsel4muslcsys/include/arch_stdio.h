@@ -13,6 +13,7 @@
 #pragma once
 
 #include <autoconf.h>
+#include <stddef.h>
 
 /*
  * Each architecture implements the following simple putchar function, usually

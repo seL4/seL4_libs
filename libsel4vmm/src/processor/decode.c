@@ -23,6 +23,7 @@ Author: W.A.
 #include "vmm/platform/guest_vspace.h"
 #include "vmm/platform/guest_memory.h"
 #include "vmm/guest_state.h"
+#include "vmm/processor/platfeature.h"
 
 /* TODO are these defined elsewhere? */
 #define IA32_PDE_SIZE(pde) (pde & BIT(7))
@@ -52,6 +53,12 @@ int vmm_fetch_instruction(vmm_vcpu_t *vcpu, uint32_t eip, uintptr_t cr3,
         int len, uint8_t *buf) {
     /* Walk page tables to get physical address of instruction */
     uintptr_t instr_phys = 0;
+
+    /* ensure that PAE is not enabled */
+    if (vmm_guest_state_get_cr4(&vcpu->guest_state, vcpu->guest_vcpu) & X86_CR4_PAE) {
+        ZF_LOGE("Do not support walking PAE paging structures");
+        return -1;
+    }
 
     // TODO implement page-boundary crossing properly
     assert((eip >> 12) == ((eip + len) >> 12));

@@ -85,7 +85,7 @@ void vmm_vmcs_init_guest(vmm_vcpu_t *vcpu) {
     vmm_vmcs_write(vcpu->guest_vcpu, VMX_GUEST_RFLAGS, BIT(1));
     vmm_vmcs_write(vcpu->guest_vcpu, VMX_GUEST_SYSENTER_ESP, 0);
     vmm_vmcs_write(vcpu->guest_vcpu, VMX_GUEST_SYSENTER_EIP, 0);
-    vcpu->guest_state.machine.control_ppc = VMX_CONTROL_PPC_HLT_EXITING;
+    vcpu->guest_state.machine.control_ppc = VMX_CONTROL_PPC_HLT_EXITING | VMX_CONTROL_PPC_CR3_LOAD_EXITING | VMX_CONTROL_PPC_CR3_STORE_EXITING;
     vmm_vmcs_write(vcpu->guest_vcpu, VMX_CONTROL_PRIMARY_PROCESSOR_CONTROLS, vcpu->guest_state.machine.control_ppc);
     vcpu->guest_state.machine.control_entry = vmm_vmcs_read(vcpu->guest_vcpu, VMX_CONTROL_ENTRY_INTERRUPTION_INFO);
 

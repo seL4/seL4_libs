@@ -20,10 +20,20 @@
 #include "vmm/platform/vmcs.h"
 
 typedef struct guest_cr_virt_state {
+    /* mask represents bits that are owned by us, the host */
     unsigned int cr0_mask;
-    unsigned int cr0_shadow;
     unsigned int cr4_mask;
+    /* the shadow represents what the values of our owned bits should be seen as by the guest.
+     * i.e. the value they set it to */
+    unsigned int cr0_shadow;
     unsigned int cr4_shadow;
+    /* for any bits owned by us, this represents what those bits should actually be set to */
+    unsigned int cr0_host_bits;
+    unsigned int cr4_host_bits;
+    /* the raw cr3 is only valid if we're trapping guest accesses to cr3, which we
+     * only do if the guest has not yet enabled paging for itself. If the guest has
+     * enabled paging then the value should be retrieved from the guest machine state */
+    uint32_t cr3_guest;
 } guest_cr_virt_state_t;
 
 typedef struct  guest_exit_information {

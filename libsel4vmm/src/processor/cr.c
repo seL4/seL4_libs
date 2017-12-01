@@ -24,21 +24,51 @@
 
 #include "vmm/vmm.h"
 
+static inline unsigned int apply_cr_bits(unsigned int cr, unsigned int mask, unsigned int host_bits) {
+    /* force any bit in the mask to be the value from the shadow (both enabled and disabled) */
+    cr |= (mask & host_bits);
+    cr &= ~(mask & (~host_bits));
+    return cr;
+}
+
 static int vmm_cr_set_cr0(vmm_vcpu_t *vcpu, unsigned int value) {
 
     if (value & CR0_RESERVED_BITS)
         return -1;
 
-    /*read the cr0 value*/
-    int set = vmm_guest_state_get_cr0(&vcpu->guest_state, vcpu->guest_vcpu);
+    /* check if paging is being enabled */
+    if ((value & X86_CR0_PG) && !(vcpu->guest_state.virt.cr.cr0_shadow & X86_CR0_PG)) {
+        /* guest is taking over paging. So we can no longer care about some of our CR4 values, and
+         * we don't need cr3 load/store exiting anymore */
+        unsigned int new_mask = vcpu->guest_state.virt.cr.cr4_mask & ~(X86_CR4_PSE | X86_CR4_PAE);
+        unsigned int cr4_value = vmm_guest_state_get_cr4(&vcpu->guest_state, vcpu->guest_vcpu);
+        /* for any bits that have changed in the mask, grab them from the shadow */
+        cr4_value = apply_cr_bits(cr4_value, new_mask ^ vcpu->guest_state.virt.cr.cr4_mask, vcpu->guest_state.virt.cr.cr4_shadow);
+        /* update mask and cr4 value */
+        vcpu->guest_state.virt.cr.cr4_mask = new_mask;
+        vmm_vmcs_write(vcpu->guest_vcpu, VMX_CONTROL_CR4_MASK, new_mask);
+        vmm_guest_state_set_cr4(&vcpu->guest_state, cr4_value);
+        /* now turn of cr3 load/store exiting */
+        unsigned int ppc = vmm_guest_state_get_control_ppc(&vcpu->guest_state);
+        ppc &= ~(VMX_CONTROL_PPC_CR3_LOAD_EXITING | VMX_CONTROL_PPC_CR3_STORE_EXITING);
+        vmm_guest_state_set_control_ppc(&vcpu->guest_state, ppc);
+        /* load the cached cr3 value */
+        vmm_guest_state_set_cr3(&vcpu->guest_state, vcpu->guest_state.virt.cr.cr3_guest);
+    }
 
-    DPRINTF(4, "cr0 val 0x%x guest set 0x%x\n", set, value);
+    /* check if paging is being disabled */
+    if (!(value & X86_CR0_PG) && (vcpu->guest_state.virt.cr.cr0_shadow & X86_CR0_PG)) {
+        ZF_LOGE("Do not support paging being disabled");
+        /* if we did support disabling paging we should re-enable cr3 load/store exiting,
+         * watch the pae bit in cr4 again and then */
+        return -1;
+    }
 
-    /*set the cr0 value with the shadow value*/
-    value |= (vcpu->guest_state.virt.cr.cr0_mask & vcpu->guest_state.virt.cr.cr0_shadow);
+    /* update the guest shadow */
+    vcpu->guest_state.virt.cr.cr0_shadow = value;
+    vmm_vmcs_write(vcpu->guest_vcpu, VMX_CONTROL_CR0_READ_SHADOW, value);
 
-    if (value == set)
-        return 0;
+    value = apply_cr_bits(value, vcpu->guest_state.virt.cr.cr0_mask, vcpu->guest_state.virt.cr.cr0_host_bits);
 
     vmm_guest_state_set_cr0(&vcpu->guest_state, value);
 
@@ -46,12 +76,20 @@ static int vmm_cr_set_cr0(vmm_vcpu_t *vcpu, unsigned int value) {
 }
 
 static int vmm_cr_set_cr3(vmm_vcpu_t *vcpu, unsigned int value) {
-    assert(!"Should not get cr3 access");
-    return -1;
+    /* if the guest hasn't turned on paging then just cache this */
+    vcpu->guest_state.virt.cr.cr3_guest = value;
+    if (vcpu->guest_state.virt.cr.cr0_shadow & X86_CR0_PG) {
+        vmm_guest_state_set_cr3(&vcpu->guest_state, value);
+    }
+    return 0;
 }
 
 static int vmm_cr_get_cr3(vmm_vcpu_t *vcpu, unsigned int *value) {
-    *value = vmm_guest_state_get_cr3(&vcpu->guest_state, vcpu->guest_vcpu);
+    if (vcpu->guest_state.virt.cr.cr0_shadow & X86_CR0_PG) {
+        *value = vmm_guest_state_get_cr3(&vcpu->guest_state, vcpu->guest_vcpu);
+    } else {
+        *value = vcpu->guest_state.virt.cr.cr3_guest;
+    }
     return 0;
 
 }
@@ -61,15 +99,11 @@ static int vmm_cr_set_cr4(vmm_vcpu_t *vcpu, unsigned int value) {
     if (value & CR4_RESERVED_BITS)
         return -1;
 
-    int set = vmm_guest_state_get_cr4(&vcpu->guest_state, vcpu->guest_vcpu);
+    /* update the guest shadow */
+    vcpu->guest_state.virt.cr.cr4_shadow = value;
+    vmm_vmcs_write(vcpu->guest_vcpu, VMX_CONTROL_CR4_READ_SHADOW, value);
 
-    DPRINTF(4, "cr4 val 0x%x guest set 0x%x\n", set, value);
-
-    /*set the cr0 value with the shadow value*/
-    value |= (vcpu->guest_state.virt.cr.cr4_shadow & vcpu->guest_state.virt.cr.cr4_mask);
-
-    if (set == value)
-        return 0;
+    value = apply_cr_bits(value, vcpu->guest_state.virt.cr.cr4_mask, vcpu->guest_state.virt.cr.cr4_host_bits);
 
     vmm_guest_state_set_cr4(&vcpu->guest_state, value);
 

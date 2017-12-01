@@ -37,10 +37,12 @@
 #include <sel4/arch/bootinfo_types.h>
 
 #define VMM_VMCS_CR0_MASK           (X86_CR0_PG | X86_CR0_PE)
-#define VMM_VMCS_CR0_SHADOW         (X86_CR0_PG | X86_CR0_PE)
+#define VMM_VMCS_CR0_VALUE          VMM_VMCS_CR0_MASK
 
-#define VMM_VMCS_CR4_MASK           (X86_CR4_PSE)
-#define VMM_VMCS_CR4_SHADOW         VMM_VMCS_CR4_MASK
+// We need to own the PSE and PAE bits up until the guest has actually turned on paging,
+// then it can control them
+#define VMM_VMCS_CR4_MASK           (X86_CR4_PSE | X86_CR4_PAE | X86_CR4_VMXE)
+#define VMM_VMCS_CR4_VALUE          (X86_CR4_PSE | X86_CR4_VMXE)
 
 typedef struct boot_guest_cookie {
     vmm_t *vmm;
@@ -423,15 +425,17 @@ void vmm_init_guest_thread_state(vmm_vcpu_t *vcpu) {
 
     /* Set the initial CR state */
     vcpu->guest_state.virt.cr.cr0_mask = VMM_VMCS_CR0_MASK;
-    vcpu->guest_state.virt.cr.cr0_shadow = VMM_VMCS_CR0_SHADOW;
+    vcpu->guest_state.virt.cr.cr0_shadow = 0;
+    vcpu->guest_state.virt.cr.cr0_host_bits = VMM_VMCS_CR0_VALUE;
 
     vcpu->guest_state.virt.cr.cr4_mask = VMM_VMCS_CR4_MASK;
-    vcpu->guest_state.virt.cr.cr4_shadow = VMM_VMCS_CR4_SHADOW;
+    vcpu->guest_state.virt.cr.cr4_shadow = 0;
+    vcpu->guest_state.virt.cr.cr4_host_bits = VMM_VMCS_CR4_VALUE;
 
     /* Set the initial CR states */
-    vmm_guest_state_set_cr0(&vcpu->guest_state, VMM_VMCS_CR0_SHADOW);
+    vmm_guest_state_set_cr0(&vcpu->guest_state, vcpu->guest_state.virt.cr.cr0_host_bits);
     vmm_guest_state_set_cr3(&vcpu->guest_state, vcpu->vmm->guest_image.pd);
-    vmm_guest_state_set_cr4(&vcpu->guest_state, VMM_VMCS_CR4_SHADOW);
+    vmm_guest_state_set_cr4(&vcpu->guest_state, vcpu->guest_state.virt.cr.cr4_host_bits);
 
     /* Init guest OS vcpu state. */
     vmm_vmcs_init_guest(vcpu);

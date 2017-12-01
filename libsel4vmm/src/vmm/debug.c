@@ -26,8 +26,8 @@
 void vmm_print_guest_context(int level, vmm_vcpu_t *vcpu) {
     DPRINTF(level, "================== GUEST OS CONTEXT =================\n");
 
-    DPRINTF(level, "exit info : reason 0x%x    qualification 0x%x   instruction len 0x%x\n",
-                    vmm_guest_exit_get_reason(&vcpu->guest_state), vmm_guest_exit_get_qualification(&vcpu->guest_state), vmm_guest_exit_get_int_len(&vcpu->guest_state));
+    DPRINTF(level, "exit info : reason 0x%x    qualification 0x%x   instruction len 0x%x interrupt info 0x%x interrupt error 0x%x\n",
+                    vmm_guest_exit_get_reason(&vcpu->guest_state), vmm_guest_exit_get_qualification(&vcpu->guest_state), vmm_guest_exit_get_int_len(&vcpu->guest_state), vmm_vmcs_read(vcpu->guest_vcpu, VMX_DATA_EXIT_INTERRUPT_INFO), vmm_vmcs_read(vcpu->guest_vcpu, VMX_DATA_EXIT_INTERRUPT_ERROR));
     DPRINTF(level, "            guest physical 0x%x     rflags 0x%x \n",
                    vmm_guest_exit_get_physical(&vcpu->guest_state), vmm_guest_state_get_rflags(&vcpu->guest_state, vcpu->guest_vcpu));
     DPRINTF(level, "            guest interruptibility 0x%x   control entry 0x%x\n",
@@ -43,5 +43,4 @@ void vmm_print_guest_context(int level, vmm_vcpu_t *vcpu) {
                    vmm_read_user_context(&vcpu->guest_state, USER_CONTEXT_EBP));
 
     DPRINTF(level, "cr0 0x%x      cr3 0x%x   cr4 0x%x\n", vmm_guest_state_get_cr0(&vcpu->guest_state, vcpu->guest_vcpu), vmm_guest_state_get_cr3(&vcpu->guest_state, vcpu->guest_vcpu), vmm_guest_state_get_cr4(&vcpu->guest_state, vcpu->guest_vcpu));
-
 }

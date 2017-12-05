@@ -16,10 +16,9 @@ project(libsel4serialserver C)
 
 set (configure_string "")
 
-config_string(LibSel4SerialServerColoredOutput SERIAL_SERVER_COLOURED_OUTPUT
+config_option(LibSel4SerialServerColoredOutput SERIAL_SERVER_COLOURED_OUTPUT
     "Annotate output with different ansi colours for each client"
     DEFAULT ON
-    UNQUOTE
 )
 
 add_config_library(sel4serialserver "${configure_string}")

@@ -55,7 +55,7 @@ void sel4platsupport_handle_timer_irq(seL4_timer_t *timer, seL4_Word badge)
         long irq = seL4_BadgeBits - i - 1;
         if (badge & BIT(irq)) {
             /* mask the bit out of the badge */
-            badge |= ~BIT(irq);
+            badge &= ~BIT(irq);
             if (timer->to.irqs[i].irq.type != PS_NONE) {
                 ltimer_handle_irq(&timer->ltimer, &timer->to.irqs[i].irq);
                 int error = seL4_IRQHandler_Ack(timer->to.irqs[i].handler_path.capPtr);

@@ -50,7 +50,7 @@ config_option(LibSel4MuslcSysArchPutcharWeak LIB_SEL4_MUSLC_SYS_ARCH_PUTCHAR_WEA
 
 add_config_library(sel4muslcsys "${configure_string}")
 
-file(GLOB deps src/*.c src/${KernelArch}/*.c)
+file(GLOB deps src/*.c)
 
 list(SORT deps)
 

@@ -203,6 +203,17 @@ int sel4utils_start_fault_handler(seL4_CPtr fault_endpoint, vka_t *vka, vspace_t
  */
 void sel4utils_print_fault_message(seL4_MessageInfo_t tag, const char *name);
 
+/* Set the affinity of a thread, which will cause migration if the thread
+ * is running on a different core.
+ *
+ * On master, only use sched_params_set_core to set the core then call this function.
+ *
+ * If CONFIG_KERNEL_RT is set, the sched params must be fully populated or the scheduling
+ * context will be empty when it changes core as scheduling parameters of scheduling
+ * contexts are not maintained across migrations.
+ */
+int sel4utils_set_sched_affinity(sel4utils_thread_t *thread, sched_params_t params);
+
 static inline seL4_TCB
 sel4utils_get_tcb(sel4utils_thread_t *thread)
 {

@@ -41,6 +41,8 @@ typedef struct sched_params {
     seL4_Word badge;
     /* otherwise use this provided sc */
     seL4_CPtr sched_context;
+    /* affinity for this tcb. Must set sched_ctrl if CONFIG_RT */
+    seL4_Word core;
 } sched_params_t;
 
 typedef struct sel4utils_thread_config {
@@ -84,6 +86,16 @@ static inline sched_params_t
 sched_params_round_robin(sched_params_t params, simple_t *simple, seL4_Word core, uint64_t timeslice_us)
 {
     return sched_params_periodic(params, simple, core, timeslice_us, timeslice_us, 0, 0);
+}
+
+static inline sched_params_t
+sched_params_core(sched_params_t params, seL4_Word core)
+{
+    if (!config_set(CONFIG_KERNEL_RT)) {
+        ZF_LOGW("Setting core on RT kernel will have no effect - sched ctrl required");
+    }
+    params.core = core;
+    return params;
 }
 
 static inline sel4utils_thread_config_t

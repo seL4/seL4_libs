@@ -349,11 +349,15 @@ sel4utils_free_checkpoint(sel4utils_checkpoint_t *checkpoint)
 }
 
 int sel4utils_set_sched_affinity(sel4utils_thread_t *thread, sched_params_t params) {
+#if CONFIG_MAX_NUM_NODES > 1
 #ifdef CONFIG_KERNEL_RT
     return api_sched_ctrl_configure(params.sched_ctrl, thread->sched_context.cptr, params.budget, params.period,
                                     params.extra_refills, params.badge);
 
 #else
     return seL4_TCB_SetAffinity(thread->tcb.cptr, params.core);
+#endif
+#else
+    return -ENOSYS;
 #endif
 }

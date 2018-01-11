@@ -97,7 +97,7 @@ sel4utils_create_word_args(char strings[][WORD_STRING_SIZE], char *argv[], int a
     for (int i = 0; i < argc; i++) {
         seL4_Word arg = va_arg(args, seL4_Word);
         argv[i] = strings[i];
-        snprintf(argv[i], WORD_STRING_SIZE, "%"PRIiPTR"", arg);
+        snprintf(argv[i], WORD_STRING_SIZE, "%"PRIuPTR"", arg);
 
     }
 

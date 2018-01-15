@@ -162,6 +162,8 @@ static FASTFN uint64_t sel4bench_private_rdpmc(uint32_t counter)
 #define sel4bench_private_serialize_pmc sel4bench_private_lfence
 #endif //SEL4BENCH_STRICT_PMC_SERIALIZATION
 
+/* Hide these definitions if using kernel exported PMC to prevent warnings */
+#ifndef CONFIG_EXPORT_PMC_USER
 //enable user-level pmc access
 static KERNELFN void sel4bench_private_enable_user_pmc(void* arg)
 {
@@ -216,6 +218,7 @@ static KERNELFN void sel4bench_private_disable_user_pmc(void* arg)
     );
 #endif
 }
+#endif
 
 //read an MSR
 static KERNELFN void sel4bench_private_rdmsr(void* arg)

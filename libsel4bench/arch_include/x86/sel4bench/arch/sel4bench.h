@@ -89,7 +89,9 @@ static FASTFN void sel4bench_init()
     }
 
     //enable user-mode RDPMC
+#ifndef CONFIG_EXPORT_PMC_USER
     seL4_DebugRun(&sel4bench_private_enable_user_pmc, NULL);
+#endif
 }
 
 static FASTFN ccnt_t sel4bench_get_cycle_count()
@@ -330,7 +332,9 @@ static FASTFN void sel4bench_destroy()
     sel4bench_stop_counters(-1);
 
     //disable user-mode RDPMC
+#ifndef CONFIG_EXPORT_PMC_USER
     seL4_DebugRun(&sel4bench_private_disable_user_pmc, NULL);
+#endif
 }
 
 static FASTFN void sel4bench_reset_counters(void)

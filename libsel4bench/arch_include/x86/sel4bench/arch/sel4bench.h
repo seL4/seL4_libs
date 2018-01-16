@@ -183,34 +183,6 @@ static FASTFN void sel4bench_set_count_event(counter_t counter, event_id_t event
     seL4_DebugRun(&sel4bench_private_wrmsr, msr_data);
 }
 
-static FASTFN void sel4bench_set_count_intx_bits(counter_t counter, bool in_tx, bool in_txcp)
-{
-    /* The Haswell uArch enhances perfevtsel_t with bit 32 to only count cycles in a RTM
-       transactional region and bit 33 to exclude cycles in a RTM transactional region
-       that abort in the cycle count. */
-    unsigned int in_tx_bit, in_txcp_bit;
-
-    assert(counter < sel4bench_get_num_counters());
-    assert( !(counter != 2 && in_txcp) );
-
-    //{RD,WR}MSR support data structure
-    uint32_t msr_data[3];
-    msr_data[0] = IA32_MSR_PMC_PERFEVTSEL_BASE + counter;
-    msr_data[1] = 0;
-    msr_data[2] = 0;
-
-    //read current event-select MSR
-    seL4_DebugRun(&sel4bench_private_rdmsr, msr_data);
-
-    in_tx_bit = (in_tx ? IN_TX_BIT : 0);
-    in_txcp_bit = (in_txcp ? IN_TXCP_BIT : 0);
-    msr_data[2] &= (~(IN_TX_BIT)) & (~(IN_TXCP_BIT));
-    msr_data[2] |= in_tx_bit | in_txcp_bit;
-
-    //write back to the event-select MSR
-    seL4_DebugRun(&sel4bench_private_wrmsr, msr_data);
-}
-
 static FASTFN void sel4bench_start_counters(counter_bitfield_t mask)
 {
     /* On P6, only the first counter has an enable flag, which controls both counters

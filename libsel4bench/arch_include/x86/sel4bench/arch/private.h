@@ -220,6 +220,7 @@ static KERNELFN void sel4bench_private_disable_user_pmc(void* arg)
 }
 #endif
 
+#ifndef CONFIG_KERNEL_X86_DANGEROUS_MSR
 //read an MSR
 static KERNELFN void sel4bench_private_rdmsr(void* arg)
 {
@@ -246,6 +247,7 @@ static KERNELFN void sel4bench_private_wrmsr(void* arg)
         , "c" (msr[0])  /* input MSR index */
     );
 }
+#endif
 
 //generic event tables for lookup fn below
 //they use direct event numbers, rather than the constants in events.h, because it's smaller

@@ -66,6 +66,25 @@ typedef uint64_t ccnt_t;
  */
 void seL4_DebugRun(void (* userfn) (void *), void* userarg);
 
+static inline uint64_t sel4bench_x86_rdmsr(uint32_t reg) {
+    uint32_t msr_data[3];
+    msr_data[0] = reg;
+    msr_data[1] = 0;
+    msr_data[2] = 0;
+
+    seL4_DebugRun(&sel4bench_private_rdmsr, msr_data);
+    return (uint64_t)msr_data[1] + ((uint64_t)msr_data[2] << 32);
+}
+
+static inline void sel4bench_x86_wrmsr(uint32_t reg, uint64_t val) {
+    uint32_t msr_data[3];
+    msr_data[0] = reg;
+    msr_data[1] = val & 0xffffffff;
+    msr_data[2] = val >> 32;
+
+    seL4_DebugRun(&sel4bench_private_wrmsr, msr_data);
+}
+
 static FASTFN void sel4bench_init()
 {
     uint32_t cpuid_eax;
@@ -157,30 +176,18 @@ static FASTFN void sel4bench_set_count_event(counter_t counter, event_id_t event
 
     assert(counter < sel4bench_get_num_counters());
 
-    //{RD,WR}MSR support data structure
-    uint32_t msr_data[3];
-    msr_data[0] = IA32_MSR_PMC_PERFEVTSEL_BASE + counter;
-    msr_data[1] = 0;
-    msr_data[2] = 0;
-
-    //read current event-select MSR
-    seL4_DebugRun(&sel4bench_private_rdmsr, msr_data);
+    ia32_pmc_perfevtsel_t evtsel_msr;
+    evtsel_msr.raw = sel4bench_x86_rdmsr(IA32_MSR_PMC_PERFEVTSEL_BASE + counter);
 
     //preserve the reserved flag, like the docs tell us
-    uint32_t res_flag = ((ia32_pmc_perfevtsel_t)msr_data[1]).res;
+    uint32_t res_flag = evtsel_msr.res;
 
     //rewrite the MSR to what we want
-    ia32_pmc_perfevtsel_t evtsel_msr;
     evtsel_msr.raw   = sel4bench_private_lookup_event(event);
     evtsel_msr.USR   = 1;
     evtsel_msr.OS    = 1;
     evtsel_msr.res   = res_flag;
-    msr_data[1] = evtsel_msr.raw;
-
-    assert(evtsel_msr.event != 0);
-
-    //write back to the event-select MSR
-    seL4_DebugRun(&sel4bench_private_wrmsr, msr_data);
+    sel4bench_x86_wrmsr(IA32_MSR_PMC_PERFEVTSEL_BASE + counter, evtsel_msr.raw);
 }
 
 static FASTFN void sel4bench_start_counters(counter_bitfield_t mask)
@@ -211,9 +218,6 @@ static FASTFN void sel4bench_start_counters(counter_bitfield_t mask)
         }
     }
 
-    //{RD,WR}MSR support data structure
-    uint32_t msr_data[3];
-
     counter_t counter;
     //NOT your average for loop!
     for (counter = 0; mask; counter++) {
@@ -224,24 +228,17 @@ static FASTFN void sel4bench_start_counters(counter_bitfield_t mask)
         mask &= ~(BIT(counter));
 
         //read appropriate MSR
-        msr_data[0] = IA32_MSR_PMC_PERFEVTSEL_BASE + counter;
-        msr_data[1] = 0;
-        msr_data[2] = 0;
-        seL4_DebugRun(&sel4bench_private_rdmsr, msr_data);
+        ia32_pmc_perfevtsel_t temp;
+        temp.raw = sel4bench_x86_rdmsr(IA32_MSR_PMC_PERFEVTSEL_BASE + counter);
 
         //twiddle enable bit
-        ia32_pmc_perfevtsel_t temp = { .raw = msr_data[1] };
         temp.EN = 1;
-        msr_data[1] = temp.raw;
 
         //write back appropriate MSR
-        seL4_DebugRun(&sel4bench_private_wrmsr, msr_data);
+        sel4bench_x86_wrmsr(IA32_MSR_PMC_PERFEVTSEL_BASE + counter, temp.raw);
 
         //zero the counter
-        msr_data[0] = IA32_MSR_PMC_PERFEVTCNT_BASE + counter;
-        msr_data[1] = 0;
-        msr_data[2] = 0;
-        seL4_DebugRun(&sel4bench_private_wrmsr, msr_data);
+        sel4bench_x86_wrmsr(IA32_MSR_PMC_PERFEVTCNT_BASE + counter, 0);
     }
 
 }
@@ -270,9 +267,6 @@ static FASTFN void sel4bench_stop_counters(counter_bitfield_t mask)
         mask = 1;
     }
 
-    //{RD,WR}MSR support data structure
-    uint32_t msr_data[3];
-
     counter_t counter;
     //NOT your average for loop!
     for (counter = 0; mask; counter++) {
@@ -283,18 +277,14 @@ static FASTFN void sel4bench_stop_counters(counter_bitfield_t mask)
         mask &= ~(BIT(counter));
 
         //read appropriate MSR
-        msr_data[0] = IA32_MSR_PMC_PERFEVTSEL_BASE + counter;
-        msr_data[1] = 0;
-        msr_data[2] = 0;
-        seL4_DebugRun(&sel4bench_private_rdmsr, msr_data);
+        ia32_pmc_perfevtsel_t temp;
+        temp.raw = sel4bench_x86_rdmsr(IA32_MSR_PMC_PERFEVTSEL_BASE + counter);
 
         //twiddle enable bit
-        ia32_pmc_perfevtsel_t temp = { .raw = msr_data[1] };
         temp.EN = 0;
-        msr_data[1] = temp.raw;
 
         //write back appropriate MSR
-        seL4_DebugRun(&sel4bench_private_wrmsr, msr_data);
+        sel4bench_x86_wrmsr(IA32_MSR_PMC_PERFEVTSEL_BASE + counter, temp.raw);
     }
 }
 
@@ -311,13 +301,7 @@ static FASTFN void sel4bench_destroy()
 
 static FASTFN void sel4bench_reset_counters(void)
 {
-    uint32_t msr_data[3];
-    msr_data[0] = IA32_MSR_PMC_PERFEVTCNT_BASE;
-    msr_data[1] = 0;
-    msr_data[2] = 0;
-
     for (int i = 0; i < sel4bench_get_num_counters(); i++) {
-        seL4_DebugRun(&sel4bench_private_wrmsr, msr_data);
-        msr_data[0]++;
+        sel4bench_x86_wrmsr(IA32_MSR_PMC_PERFEVTCNT_BASE + i, 0);
     }
 }

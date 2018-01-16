@@ -14,7 +14,7 @@
 
 #include <autoconf.h>
 
-#define KERNEL_RESERVED_START 0xffffff8000000000
+#define KERNEL_RESERVED_START 0x00007ffffffff000
 #define VSPACE_MAP_PAGING_OBJECTS 5
 
 #define VSPACE_LEVEL_BITS 9

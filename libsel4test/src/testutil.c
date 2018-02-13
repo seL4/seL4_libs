@@ -104,6 +104,10 @@ void _sel4test_abort(const char *failure, const char *file, int line)
 void sel4test_reset(void)
 {
     current_test_result = SUCCESS;
+
+    if (config_set(CONFIG_ENABLE_BENCHMARKS)) {
+        seL4_BenchmarkResetLog();
+    }
 }
 
 test_result_t sel4test_get_result(void)

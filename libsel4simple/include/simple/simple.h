@@ -191,12 +191,6 @@ typedef void (*simple_print_fn)(void *data);
 
 /**
  *
- * Get archInfo from the bootinfo struct.  On x86 this is the tsc freq, on ARM it is unused.
- */
-typedef seL4_Word (*simple_get_arch_info_fn)(void *data);
-
-/**
- *
  * Retrieve the length of a particular kind of extended boot information. The information will always
  * be prefixed with a seL4_BootInfoHeader, which is included in the length
  *
@@ -238,7 +232,6 @@ typedef struct simple_t {
     simple_get_core_count_fn core_count;
     simple_print_fn print;
     simple_get_sched_ctrl_fn sched_ctrl;
-    simple_get_arch_info_fn arch_info;
     simple_get_extended_bootinfo_len_fn extended_bootinfo_len;
     simple_get_extended_bootinfo_fn extended_bootinfo;
     arch_simple_t arch_simple;
@@ -609,21 +602,6 @@ simple_get_sched_ctrl(simple_t *simple, int core)
     }
 
     return simple->sched_ctrl(simple->data, core);
-}
-
-static inline seL4_Word
-simple_get_arch_info(simple_t *simple)
-{
-    if (!simple) {
-        ZF_LOGE("Simple is NULL");
-        return 0;
-    }
-    if (!simple->arch_info) {
-        ZF_LOGE("%s not implemented", __FUNCTION__);
-        return 0;
-    }
-
-    return simple->arch_info(simple->data);
 }
 
 static inline ssize_t

@@ -134,13 +134,17 @@ sel4utils_configure_thread_config(vka_t *vka, vspace_t *parent, vspace_t *alloc,
         return -1;
     }
 
-    error = seL4_TCB_SetSchedParams(res->tcb.cptr, config.sched_params.auth,
+    /* only set the prio fields if the value is > 0. As we just allocated the 
+     * TCB above, the prio and mcp are already 0. */
+    if (config.sched_params.mcp || config.sched_params.priority) {
+        error = seL4_TCB_SetSchedParams(res->tcb.cptr, config.sched_params.auth,
                                     config.sched_params.mcp,
                                     config.sched_params.priority);
-    if (error) {
-        ZF_LOGE("Failed to set sched params, %d", error);
-        sel4utils_clean_up_thread(vka, alloc, res);
-        return -1;
+        if (error) {
+            ZF_LOGE("Failed to set sched params, %d", error);
+            sel4utils_clean_up_thread(vka, alloc, res);
+            return -1;
+        }
     }
 
     if (config.custom_stack_size) {

@@ -124,17 +124,8 @@ load_segment(vspace_t *loadee_vspace, vspace_t *loader_vspace,
     return error;
 }
 
-int
-sel4utils_elf_num_regions(const char *image_name)
-{
-    unsigned long elf_size;
-    assert(image_name);
-    char *elf_file = cpio_get_file(_cpio_archive, image_name, &elf_size);
-    if (elf_file == NULL) {
-        ZF_LOGE("ERROR: failed to load elf file %s", image_name);
-        return 0;
-    }
-
+static int
+count_loadable_regions(char* elf_file) {
     int num_headers = elf_getNumProgramHeaders(elf_file);
     int loadable_headers = 0;
 
@@ -145,6 +136,19 @@ sel4utils_elf_num_regions(const char *image_name)
         }
     }
     return loadable_headers;
+}
+
+int
+sel4utils_elf_num_regions(const char *image_name)
+{
+    unsigned long elf_size;
+    assert(image_name);
+    char *elf_file = cpio_get_file(_cpio_archive, image_name, &elf_size);
+    if (elf_file == NULL) {
+        ZF_LOGE("ERROR: failed to load elf file %s", image_name);
+        return 0;
+    }
+    return count_loadable_regions(elf_file);
 }
 
 static int

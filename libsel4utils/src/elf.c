@@ -177,6 +177,19 @@ make_region(vspace_t *loadee, unsigned long flags, unsigned long segment_size,
     return 0;
 }
 
+static void *
+entry_point(char *elf_file) {
+    uint64_t entry_point = elf_getEntryPoint(elf_file);
+    if ((uint32_t) (entry_point >> 32) != 0) {
+        ZF_LOGE("ERROR: this code hasn't been tested for 64bit!");
+        return NULL;
+    }
+    assert(entry_point != 0);
+    return (void*)(seL4_Word)entry_point;
+
+}
+
+
 void *
 sel4utils_elf_reserve(vspace_t *loadee, const char *image_name, sel4utils_elf_region_t *regions)
 {
@@ -211,13 +224,7 @@ sel4utils_elf_reserve(vspace_t *loadee, const char *image_name, sel4utils_elf_re
         }
     }
 
-    uint64_t entry_point = elf_getEntryPoint(elf_file);
-    if ((uint32_t) (entry_point >> 32) != 0) {
-        ZF_LOGE("ERROR: this code hasn't been tested for 64bit!");
-        return NULL;
-    }
-    assert(entry_point != 0);
-    return (void*)(seL4_Word)entry_point;
+    return entry_point(elf_file);
 }
 
 void *
@@ -234,12 +241,6 @@ sel4utils_elf_load_record_regions(vspace_t *loadee, vspace_t *loader, vka_t *loa
     int error = seL4_NoError;
     int region_count = 0;
 
-    uint64_t entry_point = elf_getEntryPoint(elf_file);
-    if ((uint32_t) (entry_point >> 32) != 0) {
-        ZF_LOGE("ERROR: this code hasn't been tested for 64bit!");
-        return NULL;
-    }
-    assert(entry_point != 0);
 
     for (int i = 0; i < num_headers; i++) {
         char *source_addr;
@@ -280,7 +281,7 @@ sel4utils_elf_load_record_regions(vspace_t *loadee, vspace_t *loader, vka_t *loa
         }
     }
 
-    return error == seL4_NoError ? (void*)(seL4_Word)entry_point : NULL;
+    return error == seL4_NoError ? entry_point(elf_file) : NULL;
 }
 
 uintptr_t sel4utils_elf_get_vsyscall(const char *image_name)

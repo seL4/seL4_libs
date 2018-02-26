@@ -123,7 +123,6 @@ sel4utils_configure_thread_config(vka_t *vka, vspace_t *parent, vspace_t *alloc,
     seL4_Word null_cap_data = seL4_NilData;
     error = api_tcb_configure(res->tcb.cptr, config.fault_endpoint,
                               seL4_CapNull,
-                              seL4_PrioProps_new(config.sched_params.mcp, config.sched_params.priority),
                               res->sched_context.cptr,
                               config.cspace,
                               config.cspace_root_data, vspace_get_root(alloc),
@@ -131,6 +130,15 @@ sel4utils_configure_thread_config(vka_t *vka, vspace_t *parent, vspace_t *alloc,
 
     if (error != seL4_NoError) {
         ZF_LOGE("TCB configure failed with seL4 error code %d", error);
+        sel4utils_clean_up_thread(vka, alloc, res);
+        return -1;
+    }
+
+    error = seL4_TCB_SetSchedParams(res->tcb.cptr, config.sched_params.auth,
+                                    config.sched_params.mcp,
+                                    config.sched_params.priority);
+    if (error) {
+        ZF_LOGE("Failed to set sched params, %d", error);
         sel4utils_clean_up_thread(vka, alloc, res);
         return -1;
     }

@@ -127,7 +127,7 @@ void test_new_1level_cspace_bootinfo() {
     error = cspace_move_alloc_cptr(allocman, cspace_simple1level_make_interface(boot_cspace), seL4_CapInitThreadTCB, &new_path);
     assert(!error);
     /* drop our priority */
-    error = seL4_TCB_SetPriority(new_path.capPtr, 100);
+    error = seL4_TCB_SetPriority(new_path.capPtr, new_path.capPtr, 100);
     assert(error == seL4_NoError);
     /* no longer need that boot cspace information */
     allocman_mspace_free(allocman, boot_cspace, sizeof(*boot_cspace));
@@ -178,7 +178,7 @@ void test_new_1level_cspace() {
     error = cspace_move_alloc_cptr(allocman, cspace_simple1level_make_interface(&boot_cspace), seL4_CapInitThreadTCB, &new_path);
     assert(!error);
     /* drop our priority */
-    error = seL4_TCB_SetPriority(new_path.capPtr, 100);
+    error = seL4_TCB_SetPriority(new_path.capPtr, new_path.capPtr, 100);
     assert(error == seL4_NoError);
 }
 
@@ -195,7 +195,7 @@ void test_new_2level_cspace_bootinfo() {
     error = cspace_move_alloc_cptr(allocman, cspace_simple1level_make_interface(boot_cspace), seL4_CapInitThreadTCB, &new_path);
     assert(!error);
     /* drop our priority */
-    error = seL4_TCB_SetPriority(new_path.capPtr, 100);
+    error = seL4_TCB_SetPriority(new_path.capPtr, new_path.capPtr, 100);
     assert(error == seL4_NoError);
     /* no longer need that boot cspace information */
     allocman_mspace_free(allocman, boot_cspace, sizeof(*boot_cspace));
@@ -246,7 +246,7 @@ void test_new_2level_cspace() {
     error = cspace_move_alloc_cptr(allocman, cspace_simple1level_make_interface(&boot_cspace), seL4_CapInitThreadTCB, &new_path);
     assert(!error);
     /* drop our priority */
-    error = seL4_TCB_SetPriority(new_path.capPtr, 100);
+    error = seL4_TCB_SetPriority(new_path.capPtr, new_path.capPtr, 100);
     assert(error == seL4_NoError);
 }
 

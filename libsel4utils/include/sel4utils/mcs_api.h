@@ -112,6 +112,17 @@ static inline seL4_Error api_tcb_configure(seL4_CPtr tcb, seL4_CPtr ep, UNUSED s
 #endif
 }
 
+static inline seL4_Error api_tcb_set_sched_params(seL4_CPtr tcb, seL4_CPtr auth, seL4_Word prio,
+                                                  seL4_Word mcp, seL4_CPtr sc)
+{
+#ifdef CONFIG_KERNEL_RT
+    return seL4_TCB_SetSchedParams(tcb, auth, mcp, prio, sc);
+#else
+    return seL4_TCB_SetSchedParams(tcb, auth, mcp, prio);
+#endif
+
+}
+
 static inline seL4_Error api_tcb_set_space(seL4_CPtr tcb, seL4_CPtr ep, UNUSED seL4_CPtr timeout_ep,
                                            seL4_CPtr cspace,
                                            seL4_Word cdata, seL4_CPtr vspace, seL4_Word vdata)

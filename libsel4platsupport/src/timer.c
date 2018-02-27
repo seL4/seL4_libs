@@ -177,7 +177,7 @@ int sel4platsupport_init_default_timer(vka_t *vka, vspace_t *vspace, simple_t *s
     int error;
 
     /* initialise io ops */
-    ps_io_ops_t ops = { 0 };
+    ps_io_ops_t ops = {{ 0 }};
     error = sel4platsupport_new_io_ops(*vspace, *vka, &ops);
     if (!error) {
         /* we have no way of storing the fact that we allocated these io ops so we'll just leak
@@ -203,7 +203,7 @@ int sel4platsupport_init_timer_irqs(vka_t *vka, simple_t *simple,
 int sel4platsupport_init_default_timer_caps(vka_t *vka, vspace_t *vspace, simple_t *simple, timer_objects_t *timer_objects)
 {
     /* initialise io ops */
-    ps_io_ops_t ops = { 0 };
+    ps_io_ops_t ops = {{ 0 }};
     int error = sel4platsupport_new_io_ops(*vspace, *vka, &ops);
     if (error) {
         ZF_LOGE("Failed to get io ops");

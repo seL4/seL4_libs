@@ -42,11 +42,13 @@ rights_from_elf(unsigned long permissions)
 static int
 load_segment(vspace_t *loadee_vspace, vspace_t *loader_vspace,
              vka_t *loadee_vka, vka_t *loader_vka,
-             char *src, size_t segment_size, size_t file_size, uint32_t dst,
-             reservation_t reservation)
+             char *src, size_t file_size, int num_regions,
+             sel4utils_elf_region_t regions[num_regions], int region_index)
 {
     int error = seL4_NoError;
-
+    sel4utils_elf_region_t region = regions[region_index];
+    size_t segment_size = region.size;
+    uintptr_t dst = (uintptr_t) region.elf_vstart;
     if (file_size > segment_size) {
         ZF_LOGE("Error, file_size %zu > segment_size %zu", file_size, segment_size);
         return seL4_InvalidArgument;
@@ -69,8 +71,34 @@ load_segment(vspace_t *loadee_vspace, vspace_t *loader_vspace,
         void *loader_vaddr = 0;
         void *loadee_vaddr = (void *) ((seL4_Word)ROUND_DOWN(dst, PAGE_SIZE_4K));
 
-        /* create and map the frame in the loadee address space */
-        error = vspace_new_pages_at_vaddr(loadee_vspace, loadee_vaddr, 1, seL4_PageBits, reservation);
+        /* Find the reservation that this frame belongs to.
+         * The reservation may belong to an adjacent region */
+        reservation_t reservation;
+        if (loadee_vaddr < region.reservation_vstart) {
+            //  Have to use reservation from adjacent region
+            if ((region_index - 1) < 0) {
+                ZF_LOGE("Invalid regions: bad elf file.");
+                return 1;
+            }
+            reservation = regions[region_index-1].reservation;
+        } else if (loadee_vaddr + (MIN(segment_size - pos, PAGE_SIZE_4K)) >
+            (region.reservation_vstart + region.reservation_size)) {
+            if ((region_index + 1) >= num_regions) {
+                ZF_LOGE("Invalid regions: bad elf file.");
+                return 1;
+            }
+            reservation = regions[region_index+1].reservation;
+        } else {
+            reservation = region.reservation;
+        }
+
+        /* We need to check if the frame has already been mapped by another region.
+         * Currently this check is done on every frame because it is assumed to be cheap. */
+        seL4_CPtr cap = vspace_get_cap(loadee_vspace, loadee_vaddr);
+        if (cap == seL4_CapNull) {
+            error = vspace_new_pages_at_vaddr(loadee_vspace, loadee_vaddr, 1, seL4_PageBits, reservation);
+        }
+
         if (error != seL4_NoError) {
             ZF_LOGE("ERROR: failed to allocate frame by loadee vka: %d", error);
             continue;
@@ -124,6 +152,46 @@ load_segment(vspace_t *loadee_vspace, vspace_t *loader_vspace,
     return error;
 }
 
+/**
+ * Load an array of regions into a vspace.
+ *
+ * The region array passed in won't be mutated by this function or functions it calls.
+ * State in the vspaces and vkas will be mutated to track resources used.
+ * If this function fails, any allocated and mapped frames will not be freed.
+ *
+ * @param loadee_vspace target vspace to map frames into.
+ * @param loader_vspace vspace of the caller.  Frames are temporarily mapped into this to init with
+ *                      elf data from elf file.
+ * @param loadee_vka target vka
+ * @param loader_vka caller vka
+ * @param elf_file pointer to elf object
+ * @param num_regions total number of segments/regions to load.
+ * @param regions region array containing segment info.
+ *
+ * @return 0 on success.
+ */
+static int
+load_segments(vspace_t *loadee_vspace, vspace_t *loader_vspace,
+             vka_t *loadee_vka, vka_t *loader_vka, char *elf_file,
+             int num_regions, sel4utils_elf_region_t regions[num_regions]) {
+    for (int i = 0; i < num_regions; i++) {
+        int segment_index = regions[i].segment_index;
+        char *source_addr = elf_file + elf_getProgramHeaderOffset(elf_file, segment_index);
+        size_t file_size = elf_getProgramHeaderFileSize(elf_file, segment_index);
+
+        int error = load_segment(loadee_vspace, loader_vspace, loadee_vka, loader_vka,
+            source_addr, file_size, num_regions, regions, i);
+        if (error) {
+            return error;
+        }
+    }
+    return 0;
+}
+
+static bool is_loadable_section(char* elf_file, int index) {
+    return elf_getProgramHeaderType(elf_file, index) == PT_LOAD;
+}
+
 static int
 count_loadable_regions(char* elf_file) {
     int num_headers = elf_getNumProgramHeaders(elf_file);
@@ -131,7 +199,7 @@ count_loadable_regions(char* elf_file) {
 
     for (int i = 0; i < num_headers; i++) {
         /* Skip non-loadable segments (such as debugging data). */
-        if (elf_getProgramHeaderType(elf_file, i) == PT_LOAD) {
+        if (is_loadable_section(elf_file, i)) {
             loadable_headers++;
         }
     }
@@ -151,29 +219,233 @@ sel4utils_elf_num_regions(const char *image_name)
     return count_loadable_regions(elf_file);
 }
 
+/**
+ * Create reservations for regions in a target vspace.
+ *
+ * The region position and size fields should have already been calculated by prepare_reservations.
+ *
+ * @param loadee the vspace to load into.
+ * @param total_regions the size of the regions array
+ * @param regions the array of regions.
+ * @param anywhere some legacy parameter that throws away the vspace address.  It is supposedly to support
+                   loading a segment for inspection rather than execution.
+ *
+ * @return 0 on success.
+ */
 static int
-make_region(vspace_t *loadee, unsigned long flags, unsigned long segment_size,
-            unsigned long vaddr, sel4utils_elf_region_t *region, int anywhere)
-{
-    region->cacheable = 1;
-    region->rights = rights_from_elf(flags);
-    region->elf_vstart = (void*)PAGE_ALIGN_4K(vaddr);
-    region->size = PAGE_ALIGN_4K(vaddr + segment_size - 1) + PAGE_SIZE_4K - (uint32_t)((seL4_Word)region->elf_vstart);
-
-    if (loadee) {
-        if (anywhere) {
-            region->reservation = vspace_reserve_range(loadee, region->size, region->rights, 1, (void**)&region->reservation_vstart);
-        } else {
-            region->reservation_vstart = region->elf_vstart;
-            region->reservation = vspace_reserve_range_at(loadee,
-                                                          region->elf_vstart,
-                                                          region->size,
-                                                          region->rights,
-                                                          1);
+create_reservations(vspace_t *loadee, size_t total_regions, sel4utils_elf_region_t regions[total_regions], int anywhere) {
+    for (int i = 0; i < total_regions; i++) {
+        if (regions[i].reservation_size == 0) {
+            ZF_LOGD("Empty reservation detected. This should indicate that this segments"
+                "data is entirely stored in other section reservations.");
+            continue;
         }
-        return !region->reservation.res;
+        if (anywhere) {
+            regions[i].reservation = vspace_reserve_range(loadee, regions[i].reservation_size,
+                regions[i].rights, regions[i].cacheable, (void**)&regions[i].reservation_vstart);
+        } else {
+            regions[i].reservation = vspace_reserve_range_at(loadee,
+                                                          regions[i].reservation_vstart,
+                                                          regions[i].reservation_size,
+                                                          regions[i].rights,
+                                                          regions[i].cacheable);
+        }
+        if (regions[i].reservation.res == NULL) {
+            ZF_LOGE("Failed to make reservation: %p, %zd", regions[i].reservation_vstart, regions[i].reservation_size);
+            return -1;
+        }
+    }
+    return 0;
+
+}
+
+/**
+ * Function for deciding whether a frame needs to be moved to a different reservation.
+ *
+ * Mapping permissions are set for a whole reservation.  With adjacent segments of different
+ * permissions, we need to give the shared frame mapping to the reservation with the more permissive
+ * permissions.  Currently this assumes that every region will have read permissions, and the frame
+ * only needs to be moved if the lower region doesn't have write permissions and the upper one does.
+ *
+ * @param a CapRights for reservation a.
+ * @param b CapRights for reservation b.
+ * @param result whether the frame should be moved.
+ *
+ * @return 0 on success.
+ */
+static int
+cap_writes_check_move_frame(seL4_CapRights_t a, seL4_CapRights_t b, bool *result) {
+    if (!seL4_CapRights_get_capAllowRead(a) || !seL4_CapRights_get_capAllowRead(b)) {
+        ZF_LOGE("Regions do not have read rights.");
+        return -1;
+    }
+    if (!seL4_CapRights_get_capAllowWrite(a) && seL4_CapRights_get_capAllowWrite(b)) {
+        *result = true;
+        return 0;
+    }
+    *result = false;
+    return 0;
+}
+
+/**
+ * Prepares a list of regions to have reservations reserved by a vspace.
+ *
+ * Iterates through a region array in ascending order.
+ * For each region it tries to place a reservation that contains the segment.
+ * Reservations are rounded up to 4k alignments.  This means that the previous reservation
+ * may overlap with the start of the current region.  When this occurs, the last frame of the
+ * previous reservation may need to be moved to the current reservation.  This is decided based
+ * on the reservation permissions by the cap_writes_check_move_frame function.
+ * If the frame doesn't need to be moved, then this reservation starts from the first unreserved
+ * frame of the segment.  When the segment is eventually loaded, the frames may need to be mapped
+ * from from other segment's reservations.
+ *
+ * @param total_regions total number of regions in array.
+ * @param regions array of regions sorted in ascending order.
+ *
+ * @return 0 on success.
+ */
+static int
+prepare_reservations(size_t total_regions, sel4utils_elf_region_t regions[total_regions]) {
+    uintptr_t prev_res_start = 0;
+    size_t prev_res_size = 0;
+    seL4_CapRights_t prev_rights = seL4_CapRights_new(0,0,0);
+    for (int i = 0; i < total_regions; i++) {
+        uintptr_t current_res_start = PAGE_ALIGN_4K((uintptr_t)regions[i].elf_vstart);
+        uintptr_t current_res_top = ROUND_UP((uintptr_t)regions[i].elf_vstart + regions[i].size, PAGE_SIZE_4K);
+        size_t current_res_size = current_res_top - current_res_start;
+        assert(current_res_size % PAGE_SIZE_4K == 0);
+        seL4_CapRights_t current_rights = regions[i].rights;
+
+        if ((prev_res_start + prev_res_size) > current_res_start) {
+            /* This segment shares a frame with the previous segment */
+            bool should_move;
+            int error = cap_writes_check_move_frame(prev_rights, current_rights, &should_move);
+            if (error) {
+                /* Comparator function failed. Return error. */
+                return -1;
+            }
+            if (should_move) {
+                /* Frame needs to be moved from the last reservation into this one */
+                ZF_LOGF_IF(i == 0, "Should not need to adjust first element in list");
+                ZF_LOGF_IF(regions[i-1].reservation_size < PAGE_SIZE_4K, "Invalid previous region");
+                regions[i-1].reservation_size -= PAGE_SIZE_4K;
+            } else {
+                /* Frame stays in previous reservation and we update our reservation start address and size */
+                current_res_start = ROUND_UP((prev_res_start + prev_res_size) + 1, PAGE_SIZE_4K);
+                current_res_size = current_res_top - current_res_start;
+                ZF_LOGF_IF(ROUND_UP(regions[i].size, PAGE_SIZE_4K) - current_res_size == PAGE_SIZE_4K,
+                    "Regions shouldn't overlap by more than a single 4k frame");
+            }
+        }
+        /* Record this reservation layout */
+        regions[i].reservation_size = current_res_size;
+        regions[i].reservation_vstart = (void *)current_res_start;
+        prev_res_size = current_res_size;
+        prev_res_start = current_res_start;
+        prev_rights = current_rights;
+    }
+    return 0;
+}
+
+/**
+ * Reads segment data out of elf file and creates region list.
+ *
+ * The region array must have the correct size as calculated by count_loadable_regions.
+ *
+ * @param elf_file pointer to start of elf_file
+ * @param total_regions total number of loadable segments.
+ * @param regions array of regions.
+ *
+ * @return 0 on success.
+ */
+static int
+read_regions(char* elf_file, size_t total_regions, sel4utils_elf_region_t regions[total_regions]) {
+    int num_headers = elf_getNumProgramHeaders(elf_file);
+    int region_id = 0;
+    for (int i = 0; i < num_headers; i++) {
+
+        /* Skip non-loadable segments (such as debugging data). */
+        if (is_loadable_section(elf_file, i)) {
+            sel4utils_elf_region_t *region = &regions[region_id];
+            /* Fetch information about this segment. */
+
+            region->cacheable = 1;
+            region->rights = rights_from_elf(elf_getProgramHeaderFlags(elf_file, i));
+            region->elf_vstart = (void*)elf_getProgramHeaderVaddr(elf_file, i);
+            region->size = elf_getProgramHeaderMemorySize(elf_file, i);
+            region->segment_index = i;
+            region_id++;
+        }
+    }
+    if (region_id != total_regions) {
+        ZF_LOGE("Did not correctly read all regions.");
+        return 1;
     }
 
+    return 0;
+}
+
+/**
+ * Compare function for ordering regions. Passed to sglib quick sort.
+ *
+ * Sort is based on base address.  This assumes segments do not overlap.
+ * There is likely a chance that quick sort won't terminate if segments overlap.
+ *
+ * @param a region a
+ * @param b region b
+ *
+ * @return 1 for a > b, -1 for b > a
+ */
+static int
+compare_regions(sel4utils_elf_region_t a, sel4utils_elf_region_t b) {
+    if (a.elf_vstart + a.size <= b.elf_vstart) {
+        return -1;
+    } else if (b.elf_vstart + b.size <= a.elf_vstart) {
+        return 1;
+    } else {
+        ZF_LOGF("Bad elf file: segments overlap");
+        return 0;
+    }
+}
+
+/**
+ * Parse an elf file and create reservations in a target vspace for all loadable segments.
+ *
+ * Reads segment layout data out of elf file and stores in elf_region array.
+ * Then sorts the array, then plans reservations based on segment layout.
+ * Finally creates reservations in vspace.
+ *
+ * @param loadee vspace to create reservations in.
+ * @param elf_file pointer to elf file.
+ * @param num_regions number of regions in array as calculated by count_loadable_regions.
+ * @param regions region array.
+ * @param mapanywhere throw away vspace positioning if set to 1.
+ *
+ * @return 0 on success.
+ */
+static int
+elf_reserve_regions_in_vspace(vspace_t *loadee, char* elf_file,
+    int num_regions, sel4utils_elf_region_t regions[num_regions], int mapanywhere) {
+    int error = read_regions(elf_file, num_regions, regions);
+    if (error) {
+        ZF_LOGE("Failed to read regions");
+        return error;
+    }
+
+    /* Sort region list */
+    SGLIB_ARRAY_SINGLE_QUICK_SORT(sel4utils_elf_region_t, regions, num_regions, compare_regions);
+
+    error = prepare_reservations(num_regions, regions);
+    if (error) {
+        ZF_LOGE("Failed to prepare reservations");
+        return error;
+    }
+    error = create_reservations(loadee, num_regions, regions, mapanywhere);
+    if (error) {
+        ZF_LOGE("Failed to create reservations");
+        return error;
+    }
     return 0;
 }
 
@@ -200,30 +472,17 @@ sel4utils_elf_reserve(vspace_t *loadee, const char *image_name, sel4utils_elf_re
         return NULL;
     }
 
-    int num_headers = elf_getNumProgramHeaders(elf_file);
-    int region = 0;
+    /* Count number of loadable segments */
+    int num_regions = count_loadable_regions(elf_file);
 
-    for (int i = 0; i < num_headers; i++) {
-        unsigned long flags, segment_size, vaddr;
-
-        /* Skip non-loadable segments (such as debugging data). */
-        if (elf_getProgramHeaderType(elf_file, i) == PT_LOAD) {
-            /* Fetch information about this segment. */
-            segment_size = elf_getProgramHeaderMemorySize(elf_file, i);
-            vaddr = elf_getProgramHeaderVaddr(elf_file, i);
-            flags = elf_getProgramHeaderFlags(elf_file, i);
-            if (make_region(loadee, flags, segment_size, vaddr, &regions[region], 0)) {
-                for (region--; region >= 0; region--) {
-                    vspace_free_reservation(loadee, regions[region].reservation);
-                    regions[region].reservation.res = NULL;
-                }
-                ZF_LOGE("Failed to create reservation");
-                return NULL;
-            }
-            region++;
-        }
+    /* Create reservations in vspace using internal functions */
+    int error = elf_reserve_regions_in_vspace(loadee, elf_file, num_regions, regions, 0);
+    if (error) {
+        ZF_LOGE("Failed to reserve regions");
+        return NULL;
     }
 
+    /* Return entry point */
     return entry_point(elf_file);
 }
 
@@ -237,51 +496,40 @@ sel4utils_elf_load_record_regions(vspace_t *loadee, vspace_t *loader, vka_t *loa
         return NULL;
     }
 
-    int num_headers = elf_getNumProgramHeaders(elf_file);
-    int error = seL4_NoError;
-    int region_count = 0;
+    /* Calculate number of loadable regions.  Use stack array if one wasn't passed in */
+    int num_regions = count_loadable_regions(elf_file);
+    bool clear_at_end = false;
+    sel4utils_elf_region_t stack_regions[num_regions];
+    if (regions == NULL) {
+        regions = stack_regions;
+        clear_at_end = true;
+    }
 
+    /* Create reservations */
+    int error = elf_reserve_regions_in_vspace(loadee, elf_file, num_regions, regions, mapanywhere);
+    if (error) {
+        ZF_LOGE("Failed to reserve regions");
+        return NULL;
+    }
 
-    for (int i = 0; i < num_headers; i++) {
-        char *source_addr;
-        unsigned long flags, file_size, segment_size, vaddr;
+    /* Load Map reservations and load in elf data */
+    error = load_segments(loadee, loader, loadee_vka, loader_vka, elf_file, num_regions, regions);
+    if (error) {
+        ZF_LOGE("Failed to load segments");
+        return NULL;
+    }
 
-        /* Skip non-loadable segments (such as debugging data). */
-        if (elf_getProgramHeaderType(elf_file, i) == PT_LOAD) {
-            /* Fetch information about this segment. */
-            source_addr = elf_file + elf_getProgramHeaderOffset(elf_file, i);
-            file_size = elf_getProgramHeaderFileSize(elf_file, i);
-            segment_size = elf_getProgramHeaderMemorySize(elf_file, i);
-            vaddr = elf_getProgramHeaderVaddr(elf_file, i);
-            flags = elf_getProgramHeaderFlags(elf_file, i);
-            /* make reservation */
-            sel4utils_elf_region_t region;
-            error = make_region(loadee, flags, segment_size, vaddr, &region, mapanywhere);
-            if (error) {
-                ZF_LOGE("Failed to reserve region");
-                break;
+    /* Clean up reservations if we allocated our own array */
+    if (clear_at_end) {
+        for (int i = 0; i < num_regions; i++) {
+            if (regions[i].reservation_size > 0) {
+                vspace_free_reservation(loadee, regions[i].reservation);
             }
-            unsigned long offset = vaddr - PAGE_ALIGN_4K(vaddr);
-            /* Copy it across to the vspace */
-            ZF_LOGI(" * Loading segment %08x-->%08x", (int)vaddr, (int)(vaddr + segment_size));
-            error = load_segment(loadee, loader, loadee_vka, loader_vka, source_addr,
-                                 segment_size, file_size, offset + (uint32_t)((seL4_Word)region.reservation_vstart), region.reservation);
-            if (error) {
-                ZF_LOGE("Failed to load segment");
-                break;
-            }
-            /* record the region if requested */
-            if (regions) {
-                regions[region_count] = region;
-            } else {
-                vspace_free_reservation(loadee, region.reservation);
-            }
-            /* increment the count of the number of loaded regions */
-            region_count++;
         }
     }
 
-    return error == seL4_NoError ? entry_point(elf_file) : NULL;
+    /* Return entry point */
+    return entry_point(elf_file);
 }
 
 uintptr_t sel4utils_elf_get_vsyscall(const char *image_name)

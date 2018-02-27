@@ -30,12 +30,19 @@
 typedef struct sel4utils_elf_region {
     seL4_CapRights_t rights;
     /* These two vstarts may differ if the elf was not mapped 1to1. Such an elf is not
-     * runnable, but allows it to be loaded into a vspace where it is not intended to be run */
+     * runnable, but allows it to be loaded into a vspace where it is not intended to be run.
+     * This is also as reported by the elf file. */
     void *elf_vstart;
+    /* Start of the reservation. This will be 4k aligned */
     void *reservation_vstart;
+    /* Size of the elf segment as reported by elf file */
     uint32_t size;
+    /* Size of the reservation.  This will be a multple of 4k */
+    size_t reservation_size;
     reservation_t reservation;
     int cacheable;
+    /* Index of this elf segment in the section header */
+    int segment_index;
 } sel4utils_elf_region_t;
 
 /**

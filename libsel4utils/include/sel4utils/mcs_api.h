@@ -104,8 +104,17 @@ static inline seL4_Error api_tcb_configure(seL4_CPtr tcb, seL4_CPtr ep, UNUSED s
                                            seL4_Word ipc_buffer_addr, seL4_CPtr ipc_buffer_cap)
 {
 #ifdef CONFIG_KERNEL_RT
-    return seL4_TCB_Configure(tcb, ep, timeout_ep, sc, cspace, cdata, vspace, vdata,
-                              ipc_buffer_addr, ipc_buffer_cap);
+    seL4_Error error = seL4_TCB_SetSpace(tcb, ep, cspace, cdata, vspace, vdata);
+    if (!error) {
+        error = seL4_TCB_SetIPCBuffer(tcb, ipc_buffer_addr, ipc_buffer_cap);
+    }
+    if (!error) {
+        error = seL4_TCB_SetTimeoutEndpoint(tcb, timeout_ep);
+    }
+    if (!error) {
+        error = seL4_SchedContext_Bind(sc, tcb);
+    }
+    return error;
 #else
     return seL4_TCB_Configure(tcb, ep, cspace, cdata, vspace, vdata,
                               ipc_buffer_addr, ipc_buffer_cap);

@@ -123,15 +123,11 @@ static inline seL4_Error api_tcb_set_sched_params(seL4_CPtr tcb, seL4_CPtr auth,
 
 }
 
-static inline seL4_Error api_tcb_set_space(seL4_CPtr tcb, seL4_CPtr ep, UNUSED seL4_CPtr timeout_ep,
+static inline seL4_Error api_tcb_set_space(seL4_CPtr tcb, seL4_CPtr ep,
                                            seL4_CPtr cspace,
                                            seL4_Word cdata, seL4_CPtr vspace, seL4_Word vdata)
 {
-#ifdef CONFIG_KERNEL_RT
-    return seL4_TCB_SetSpace(tcb, ep, timeout_ep, cspace, cdata, vspace, vdata);
-#else
     return seL4_TCB_SetSpace(tcb, ep, cspace, cdata, vspace, vdata);
-#endif
 }
 
 static inline seL4_Error api_sc_bind(UNUSED seL4_CPtr sc, UNUSED seL4_CPtr tcb)

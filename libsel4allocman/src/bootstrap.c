@@ -462,7 +462,6 @@ static int bootstrap_new_1level_cspace(bootstrap_info_t *bs, int size) {
     }
     /* now we can call set space */
     error = api_tcb_set_space(bs->tcb.capPtr, 0,
-                seL4_CapNull,
                 node.capPtr,
                 api_make_guard_skip_word(seL4_WordBits - size),
                 bs->pd.capPtr, seL4_NilData);
@@ -597,7 +596,6 @@ static int bootstrap_new_2level_cspace(bootstrap_info_t *bs, size_t l1size, size
     }
     /* now we can call set space */
     error = api_tcb_set_space(bs->tcb.capPtr, 0,
-                seL4_CapNull,
                 l1node.capPtr,
                 api_make_guard_skip_word(seL4_WordBits - l1size - l2size),
                 bs->pd.capPtr, seL4_NilData);

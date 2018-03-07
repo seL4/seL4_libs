@@ -111,7 +111,7 @@ static inline seL4_Error api_tcb_configure(seL4_CPtr tcb, seL4_CPtr ep, UNUSED s
     if (!error) {
         error = seL4_TCB_SetTimeoutEndpoint(tcb, timeout_ep);
     }
-    if (!error) {
+    if (!error && sc != seL4_CapNull) {
         error = seL4_SchedContext_Bind(sc, tcb);
     }
     return error;

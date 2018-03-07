@@ -122,7 +122,7 @@ static inline void apic_set_reg(vmm_lapic_t *apic, int reg_off, uint32_t val)
     *((uint32_t *) (apic->regs + reg_off)) = val;
 }
 
-inline uint32_t vmm_apic_get_reg(vmm_lapic_t *apic, int reg_off)
+static inline uint32_t vmm_apic_get_reg(vmm_lapic_t *apic, int reg_off)
 {
     return *((uint32_t *) (apic->regs + reg_off));
 }
@@ -150,12 +150,12 @@ static inline void apic_clear_vector(int vec, void *bitmap)
     ((uint32_t *)bitmap)[vec >> 5] &= ~(1UL << (vec & 31));
 }
 
-inline int vmm_apic_sw_enabled(vmm_lapic_t *apic)
+static inline int vmm_apic_sw_enabled(vmm_lapic_t *apic)
 {
     return vmm_apic_get_reg(apic, APIC_SPIV) & APIC_SPIV_APIC_ENABLED;
 }
 
-inline int vmm_apic_hw_enabled(vmm_lapic_t *apic)
+static inline int vmm_apic_hw_enabled(vmm_lapic_t *apic)
 {
     return apic->apic_base & MSR_IA32_APICBASE_ENABLE;
 }

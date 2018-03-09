@@ -698,7 +698,7 @@ void
 sel4utils_destroy_process(sel4utils_process_t *process, vka_t *vka)
 {
     /* delete all of the caps in the cspace */
-    for (int i = 1; i < process->cspace_next_free; i++) {
+    for (int i = 1; i < BIT(CONFIG_SEL4UTILS_CSPACE_SIZE_BITS);i++){
         cspacepath_t path;
         path.root = process->cspace.cptr;
         path.capPtr = i;

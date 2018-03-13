@@ -372,7 +372,8 @@ read_regions(char* elf_file, size_t total_regions, sel4utils_elf_region_t region
 
             region->cacheable = 1;
             region->rights = rights_from_elf(elf_getProgramHeaderFlags(elf_file, i));
-            region->elf_vstart = (void*)elf_getProgramHeaderVaddr(elf_file, i);
+            // elf_getProgramHeaderMemorySize should just return `uintptr_t`
+            region->elf_vstart = (void*)(uintptr_t)elf_getProgramHeaderVaddr(elf_file, i);
             region->size = elf_getProgramHeaderMemorySize(elf_file, i);
             region->segment_index = i;
             region_id++;

@@ -254,7 +254,7 @@ sel4platsupport_unmap_vaddr(void * cookie, void *vaddr, UNUSED size_t size)
 int
 sel4platsupport_new_io_mapper(vspace_t vspace, vka_t vka, ps_io_mapper_t *io_mapper)
 {
-    sel4platsupport_io_mapper_cookie_t *cookie = malloc(sizeof(sel4platsupport_io_mapper_cookie_t));
+    sel4platsupport_io_mapper_cookie_t *cookie = calloc(1, sizeof(sel4platsupport_io_mapper_cookie_t));
     if (!cookie) {
         ZF_LOGE("Failed to allocate %zu bytes", sizeof(sel4platsupport_io_mapper_cookie_t));
         return -1;

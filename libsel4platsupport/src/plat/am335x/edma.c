@@ -41,6 +41,7 @@
 */
 
 /* Driver APIs */
+#include <utils/attribute.h>
 #include <sel4platsupport/plat/edma.h>
 
 #include <sel4platsupport/plat/hw/hw_types.h>
@@ -805,7 +806,7 @@ void EDMA3GetPaRAM(unsigned int baseAdd,
  * \return  None
  */
 void EDMA3QdmaGetPaRAM(unsigned int baseAdd,
-                       unsigned int chNum,
+                       UNUSED unsigned int chNum,
                        unsigned int paRAMId,
                        EDMA3CCPaRAMEntry* currPaRAM)
 {
@@ -882,7 +883,7 @@ void EDMA3SetPaRAM(unsigned int baseAdd,
  * \return  None
  */
 void EDMA3QdmaSetPaRAM(unsigned int baseAdd,
-                       unsigned int chNum,
+                       UNUSED unsigned int chNum,
                        unsigned int paRAMId,
                        EDMA3CCPaRAMEntry* newPaRAM)
 {
@@ -1110,7 +1111,7 @@ unsigned int EDMA3RequestChannel(unsigned int baseAdd,
  */
 unsigned int EDMA3FreeChannel(unsigned int baseAdd, unsigned int chType,
                               unsigned int chNum, unsigned int trigMode,
-                              unsigned int tccNum, unsigned int evtQNum)
+                              unsigned int tccNum, UNUSED unsigned int evtQNum)
 {
     unsigned int retVal = FALSE;
     if (chNum < SOC_EDMA3_NUM_DMACH) {
@@ -1358,7 +1359,7 @@ void EDMA3ClearErrorBits(unsigned int baseAdd,
  *            and only two event Queues
  */
 void EDMA3Deinit(unsigned int baseAdd,
-                 unsigned int queNum)
+                 UNUSED unsigned int queNum)
 {
     unsigned int count = 0;
 

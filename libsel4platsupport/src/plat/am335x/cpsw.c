@@ -52,6 +52,8 @@
 *
 */
 
+#include <utils/arith.h> /* BIT() */
+#include <utils/attribute.h> /* UNUSED */
 #include <sel4platsupport/plat/hw/hw_types.h>
 #include <sel4platsupport/plat/cpsw.h>
 
@@ -584,7 +586,7 @@ void CPSWSoftwareIdleEnable(unsigned int baseAddr)
  * \return  None
  *
  **/
-void CPSWSoftwareIdleDisable(unsigned int baseAddr, unsigned int portNum)
+void CPSWSoftwareIdleDisable(unsigned int baseAddr, unsigned int UNUSED portNum)
 {
     HWREG(baseAddr + CPSW_SS_SOFT_IDLE) &= ~CPSW_SS_SOFT_IDLE_SOFT_IDLE;
 }

@@ -49,7 +49,7 @@ riscv_mode_kobject_get_type(kobject_t type, seL4_Word objectSize)
         case seL4_HugePageBits:
             return seL4_RISCV_Giga_Page;
 #endif
-#if CONFIG_PT_LEVEL > 3
+#if CONFIG_PT_LEVELS > 3
         case seL4_TeraPageBits:
             return seL4_RISCV_Tera_Page;
 #endif

@@ -21,10 +21,10 @@
 static const UNUSED size_t sel4_page_sizes[] = {
     seL4_PageBits,
     seL4_LargePageBits,
-#if CONFIG_PT_LEVEL > 2
+#if CONFIG_PT_LEVELS > 2
     seL4_HugePageBits,
 #endif
-#if CONFIG_PT_LEVEL > 3
+#if CONFIG_PT_LEVELS > 3
     seL4_TeraPageBits,
 #endif
 };

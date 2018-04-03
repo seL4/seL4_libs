@@ -57,7 +57,7 @@ sel4utils_map_page(vka_t *vka, seL4_CPtr vspace_root, seL4_CPtr frame, void *vad
                 }
             }
         } else {
-            error = sel4utils_create_object_at_level(vka, failed_bits, objects, num_objects, (seL4_Word) vaddr, vspace_root);
+            error = sel4utils_create_object_at_level(vka, failed_bits, objects, num_objects, vaddr, vspace_root);
             if (error) {
                 /* log message printed out by sel4utils_create_object_at_level */
                 return error;

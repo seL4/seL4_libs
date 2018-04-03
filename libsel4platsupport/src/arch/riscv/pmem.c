@@ -14,11 +14,11 @@
 #include <sel4platsupport/pmem.h>
 #include <utils/util.h>
 
-int sel4platsupport_get_num_pmem_regions(simple_t *simple) {
+int sel4platsupport_get_num_pmem_regions(UNUSED simple_t *simple) {
     return 0;
 }
 
-int sel4platsupport_get_pmem_region_list(simple_t *simple, size_t max_length, pmem_region_t *region_list) {
+int sel4platsupport_get_pmem_region_list(UNUSED simple_t *simple, UNUSED size_t max_length, UNUSED pmem_region_t *region_list) {
     ZF_LOGW("Not implemented");
     return -1;
 }

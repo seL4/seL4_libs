@@ -17,7 +17,7 @@
 #include <utils/util.h>
 #include <vka/sel4_arch/object.h>
 
-static inline int vka_alloc_io_page_table(vka_t *vka, vka_object_t *result)
+static inline int vka_alloc_io_page_table(UNUSED vka_t *vka, UNUSED vka_object_t *result)
 {
     return 0; /* Not supported */
 }

@@ -29,7 +29,7 @@ typedef int kobject_t;
  * create an object of the given size.
  */
 static inline seL4_Word
-riscv_mode_kobject_get_size(kobject_t type, seL4_Word objectSize)
+riscv_mode_kobject_get_size(kobject_t type, UNUSED seL4_Word objectSize)
 {
     switch (type) {
     default:

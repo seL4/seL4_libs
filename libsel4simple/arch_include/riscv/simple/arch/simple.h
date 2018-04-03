@@ -37,7 +37,7 @@ typedef struct arch_simple {
 } arch_simple_t;
 
 static inline seL4_CPtr 
-arch_simple_get_IOPort_cap(arch_simple_t *arch_simple, uint16_t start_port, uint16_t end_port)
+arch_simple_get_IOPort_cap(UNUSED arch_simple_t *arch_simple, UNUSED uint16_t start_port, UNUSED uint16_t end_port)
 {
     ZF_LOGE("%s not implemented", __FUNCTION__);
     return seL4_CapNull;

@@ -14,7 +14,8 @@
 #include <sel4platsupport/device.h>
 
 int
-sel4platsupport_arch_init_default_serial_caps(vka_t *vka, UNUSED vspace_t *vspace, simple_t *simple, serial_objects_t *serial_objects)
+sel4platsupport_arch_init_default_serial_caps(UNUSED vka_t *vka, UNUSED vspace_t *vspace, 
+											  UNUSED simple_t *simple, UNUSED serial_objects_t *serial_objects)
 {
     /* No serial driver */
     return 0;

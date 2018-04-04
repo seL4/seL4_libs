@@ -17,6 +17,8 @@
 #include <autoconf.h>
 #include <utils/util.h>
 
+#define seL4_PageDirBits seL4_PageTableBits
+
 enum _riscv_kobject_type {
     KOBJECT_PAGE_DIRECTORY,
     KOBJECT_PAGE_TABLE,

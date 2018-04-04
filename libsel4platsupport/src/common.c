@@ -313,7 +313,7 @@ WEAK
 __arch_putchar(int c)
 {
     if (setup_status != SETUP_COMPLETE) {
-        //__serial_setup();
+        __serial_setup();
     }
     __plat_putchar(c);
 }
@@ -333,7 +333,7 @@ int
 __arch_getchar(void)
 {
     if (setup_status != SETUP_COMPLETE) {
-        //__serial_setup();
+        __serial_setup();
     }
     return __plat_getchar();
 }

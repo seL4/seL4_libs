@@ -64,8 +64,7 @@ static vka_t _vka_mem;
 static seL4_CPtr device_cap = 0;
 extern char __executable_start[];
 
-
-#if !(defined(CONFIG_LIB_SEL4_PLAT_SUPPORT_USE_SEL4_DEBUG_PUTCHAR) && defined(CONFIG_PRINTING))
+#if !(defined(CONFIG_LIB_SEL4_PLAT_SUPPORT_USE_SEL4_DEBUG_PUTCHAR) && defined(CONFIG_DEBUG_BUILD))
 static void* __map_device_page(void* cookie, uintptr_t paddr, size_t size,
                                int cached, ps_mem_flags_t flags);
 
@@ -218,7 +217,7 @@ platsupport_serial_setup_bootinfo_failsafe(void)
     }
     memset(&_simple_mem, 0, sizeof(simple_t));
     memset(&_vka_mem, 0, sizeof(vka_t));
-#if defined(CONFIG_PRINTING)
+#if defined(CONFIG_LIB_SEL4_PLAT_SUPPORT_USE_SEL4_DEBUG_PUTCHAR) && defined(CONFIG_DEBUG_BUILD)
     /* only support putchar on a debug kernel */
     setup_status = SETUP_COMPLETE;
 #else
@@ -250,7 +249,7 @@ platsupport_serial_setup_simple(
         assert(!"You cannot recover");
         return -1;
     }
-#if defined(CONFIG_PRINTING)
+#if defined(CONFIG_LIB_SEL4_PLAT_SUPPORT_USE_SEL4_DEBUG_PUTCHAR) && defined(CONFIG_DEBUG_BUILD)
     /* only support putchar on a debug kernel */
     setup_status = SETUP_COMPLETE;
 #else

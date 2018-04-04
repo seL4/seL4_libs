@@ -51,7 +51,7 @@ __plat_serial_init(ps_io_ops_t* io_ops)
     struct ps_chardevice temp_device;
     if (ps_cdev_init(PS_SERIAL_DEFAULT, io_ops, &temp_device)) {
         /* Apply the changes */
-#if defined(CONFIG_PRINTING)
+#if defined(CONFIG_LIB_SEL4_PLAT_SUPPORT_USE_SEL4_DEBUG_PUTCHAR)
         temp_device.write = &debug_write;
 #endif
         console_device = temp_device;

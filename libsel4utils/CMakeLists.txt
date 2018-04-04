@@ -34,7 +34,7 @@ config_option(LibSel4UtilsProfile SEL4UTILS_PROFILE "Profiling tools \
 
 add_config_library(sel4utils "${configure_string}")
 
-file(GLOB deps src/*.c src/vspace/*.c src/irq_server/*.c src/serial_server/*.c src/time_server/*.c src/sel4_arch/${KernelSel4Arch}/*.c)
+file(GLOB deps src/*.c src/vspace/*.c src/irq_server/*.c src/serial_server/*.c src/time_server/*.c src/sel4_arch/${KernelSel4Arch}/*.c src/arch/${KernelArch}/*.c)
 
 list(SORT deps)
 

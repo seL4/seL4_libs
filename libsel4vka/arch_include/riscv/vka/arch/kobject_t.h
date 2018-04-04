@@ -16,14 +16,14 @@
 #include <assert.h>
 #include <autoconf.h>
 #include <utils/util.h>
-#include <vka/sel4_arch/kobject_t.h>
 
 enum _riscv_kobject_type {
-    KOBJECT_IO_PAGETABLE = KOBJECT_MODE_NUM_TYPES,
     KOBJECT_PAGE_DIRECTORY,
     KOBJECT_PAGE_TABLE,
+    KOBJECT_FRAME,
     KOBJECT_ARCH_NUM_TYPES,
 };
+typedef int kobject_t;
 
 /*
  * Get the size (in bits) of the untyped memory required to
@@ -42,7 +42,8 @@ arch_kobject_get_size(kobject_t type, seL4_Word objectSize)
         /* If frame size was unknown fall through to default case as it
          * might be a mode specific frame size */
     default:
-        return riscv_mode_kobject_get_size(type, objectSize);
+        ZF_LOGE("Uknown object type");
+        return 0;
     }
 }
 
@@ -60,11 +61,21 @@ arch_kobject_get_type(int type, seL4_Word objectSize)
             return seL4_RISCV_4K_Page;
         case seL4_LargePageBits:
             return seL4_RISCV_Mega_Page;
+#if CONFIG_PT_LEVELS > 2
+        case seL4_HugePageBits:
+            return seL4_RISCV_Giga_Page;
+#endif
+#if CONFIG_PT_LEVELS > 3
+        case seL4_TeraPageBits:
+            return seL4_RISCV_Tera_Page;
+#endif
         default:
-            return riscv_mode_kobject_get_type(type, objectSize);
+            ZF_LOGE("Unknown frame size %zu", (size_t) objectSize);
+            return -1;
         }
     default:
-        return riscv_mode_kobject_get_type(type, objectSize);
+          ZF_LOGE("Unknown object type %d", type);
+          return -1;
     }
 }
 

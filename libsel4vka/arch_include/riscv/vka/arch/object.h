@@ -15,14 +15,17 @@
 #include <vka/vka.h>
 #include <vka/kobject_t.h>
 #include <utils/util.h>
-#include <vka/sel4_arch/object.h>
 
-static inline int vka_alloc_io_page_table(UNUSED vka_t *vka, UNUSED vka_object_t *result)
+static inline int vka_alloc_pd(vka_t *vka, vka_object_t *result)
 {
-    return 0; /* Not supported */
+    return vka_alloc_object(vka, kobject_get_type(KOBJECT_PAGE_TABLE, 0), seL4_PageTableBits, result);
 }
 
-LEAKY(io_page_table)
+static inline int vka_alloc_vspace_root(vka_t *vka, vka_object_t *result)
+{
+    return vka_alloc_pd(vka, result);
+}
+
 
 static inline unsigned long
 vka_arch_get_object_size(seL4_Word objectType)
@@ -44,7 +47,8 @@ vka_arch_get_object_size(seL4_Word objectType)
         return seL4_PageTableBits;
 
     default:
-        return vka_riscv_mode_get_object_size(objectType);
+         ZF_LOGE("Unknown object type %ld", (long)objectType);
+         return -1;
     }
 }
 

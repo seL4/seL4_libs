@@ -17,12 +17,16 @@
 #include <utils/util.h>
 
 static UNUSED const char *register_names[] = {
-    /* FIXME: Add the full set of registers */
+    "pc",
     "ra",
     "sp",
+    "gp",
+    "tp",
     "t0",
     "t1",
     "t2",
+    "s0",
+    "s1",
     "a0",
     "a1",
     "a2",
@@ -30,12 +34,6 @@ static UNUSED const char *register_names[] = {
     "a4",
     "a5",
     "a6",
-    "a7",
-    "t3",
-    "t4",
-    "t5",
-    "t6",
-
 };
 
 #endif /* __DEBUG_ARCH_REGISTERS_H */

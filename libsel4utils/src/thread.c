@@ -227,8 +227,7 @@ sel4utils_print_fault_message(seL4_MessageInfo_t tag, const char *thread_name)
                COLOR_ERROR,
                thread_name,
                sel4utils_is_read_fault() ? "read" : "write",
-               "fault",
-               //seL4_Fault_VMFault_get_PrefetchFault(fault) ? "prefetch fault" : "fault",
+               seL4_Fault_VMFault_get_PrefetchFault(fault) ? "prefetch fault" : "fault",
                (void*)seL4_Fault_VMFault_get_IP(fault),
                (void*)seL4_Fault_VMFault_get_Addr(fault),
                COLOR_NORMAL);

@@ -19,7 +19,7 @@
 #include <string.h>
 
 #include <sel4/sel4.h>
-//#include <sel4debug/debug.h>
+#include <sel4debug/debug.h>
 #include <simple-default/simple-default.h>
 
 #include <vspace/page.h>
@@ -177,7 +177,7 @@ void simple_default_print(void *data) {
         ZF_LOGE("Data is null!");
     }
 
-    //debug_print_bootinfo(data);
+    debug_print_bootinfo(data);
 }
 
 seL4_CPtr simple_default_sched_control(void *data, int core)

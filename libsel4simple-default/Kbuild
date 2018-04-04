@@ -11,4 +11,4 @@
 #
 
 libs-$(CONFIG_LIB_SEL4_SIMPLE_DEFAULT) += libsel4simple-default
-libsel4simple-default: libsel4 common $(libc) libsel4simple libsel4vspace libutils
+libsel4simple-default: libsel4 common $(libc) libsel4simple libsel4vspace libsel4debug libutils

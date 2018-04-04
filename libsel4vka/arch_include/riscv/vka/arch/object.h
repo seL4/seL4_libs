@@ -16,14 +16,9 @@
 #include <vka/kobject_t.h>
 #include <utils/util.h>
 
-static inline int vka_alloc_pd(vka_t *vka, vka_object_t *result)
-{
-    return vka_alloc_object(vka, kobject_get_type(KOBJECT_PAGE_TABLE, 0), seL4_PageTableBits, result);
-}
-
 static inline int vka_alloc_vspace_root(vka_t *vka, vka_object_t *result)
 {
-    return vka_alloc_pd(vka, result);
+    return vka_alloc_object(vka, kobject_get_type(KOBJECT_PAGE_TABLE, 0), seL4_PageTableBits, result);
 }
 
 

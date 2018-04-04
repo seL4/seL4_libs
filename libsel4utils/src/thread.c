@@ -230,6 +230,7 @@ sel4utils_print_fault_message(seL4_MessageInfo_t tag, const char *thread_name)
                seL4_Fault_VMFault_get_PrefetchFault(fault) ? "prefetch fault" : "fault",
                (void*)seL4_Fault_VMFault_get_IP(fault),
                (void*)seL4_Fault_VMFault_get_Addr(fault),
+               (void *)seL4_Fault_VMFault_get_FSR(fault),
                COLOR_NORMAL);
         break;
 

@@ -56,11 +56,7 @@ static simple_t _simple_mem;
 static vka_t _vka_mem;
 
 /* Hacky constants / data structures for a failsafe mapping */
-#ifdef ARCH_RISCV
-#define DITE_HEADER_START ((seL4_Word) 0x1000 - 0x1000)
-#else
 #define DITE_HEADER_START ((seL4_Word)__executable_start - 0x1000)
-#endif
 static seL4_CPtr device_cap = 0;
 extern char __executable_start[];
 

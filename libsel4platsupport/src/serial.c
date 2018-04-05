@@ -88,7 +88,7 @@ sel4platsupport_init_default_serial_caps(vka_t *vka, vspace_t *vspace, simple_t 
     /* Allocate slot for the PS default serial's IRQ cap. */
     error = vka_cspace_alloc_path(vka, &serial_objects->serial_irq_path);
     if (error) {
-        ZF_LOGF("Failed to allocate serial IRQ slot.");
+        ZF_LOGE("Failed to allocate serial IRQ slot.");
         return error;
     }
 
@@ -99,7 +99,7 @@ sel4platsupport_init_default_serial_caps(vka_t *vka, vspace_t *vspace, simple_t 
      */
     error = sel4platsupport_arch_init_default_serial_caps(vka, vspace, simple, serial_objects);
     if (error) {
-        ZF_LOGF("Arch-specific serial cap init failed.");
+        ZF_LOGE("Arch-specific serial cap init failed.");
         return error;
     }
 

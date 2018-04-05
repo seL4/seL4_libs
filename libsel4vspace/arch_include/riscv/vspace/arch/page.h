@@ -9,8 +9,7 @@
  *
  * @TAG(DATA61_BSD)
  */
-#ifndef _VSPACE_ARCH_PAGE_H
-#define _VSPACE_ARCH_PAGE_H
+#pragma once
 
 #include <autoconf.h>
 #include <stddef.h>
@@ -46,4 +45,3 @@ static const UNUSED size_t sel4_page_sizes[] = {
 /* Remap does not exist on all kernels */
 #define seL4_ARCH_Page_Remap           seL4_RISCV_Page_Remap
 
-#endif /* _VSPACE_ARCH_PAGE_H */

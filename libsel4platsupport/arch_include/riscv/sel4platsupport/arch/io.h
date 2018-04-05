@@ -9,10 +9,8 @@
  *
  * @TAG(DATA61_BSD)
  */
-#ifndef _RISCV_PLATSUPPORT_IO_H
-#define _RISCV_PLATSUPPORT_IO_H
+#pragma once
 
 /* nothing - this is here so we don't have to wrap #ifdef ARCH/RISCV around arch/io.h includes */
 
-#endif /* _RISCV_PLATSUPPORT_IO_H */
 

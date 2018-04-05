@@ -9,8 +9,7 @@
  *
  * @TAG(DATA61_BSD)
  */
-#ifndef _INTERFACE_ARCH_SIMPLE_H_
-#define _INTERFACE_ARCH_SIMPLE_H_
+#pragma once
 
 #include <autoconf.h>
 
@@ -42,4 +41,3 @@ arch_simple_get_IOPort_cap(UNUSED arch_simple_t *arch_simple, UNUSED uint16_t st
     ZF_LOGE("%s not implemented", __FUNCTION__);
     return seL4_CapNull;
 }
-#endif /* _INTERFACE_ARCH_SIMPLE_H_ */

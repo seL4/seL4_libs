@@ -9,8 +9,7 @@
  *
  * @TAG(DATA61_BSD)
  */
-#ifndef __ALLOCMAN_SEL4_ARCH_MAPPING__
-#define __ALLOCMAN_SEL4_ARCH_MAPPING__
+#pragma once
 
 #include <allocman/allocman.h>
 
@@ -21,4 +20,3 @@ static inline seL4_Error allocman_sel4_arch_create_object_at_level(allocman_t *a
     return seL4_InvalidArgument;
 }
 
-#endif

@@ -9,10 +9,8 @@
  *
  * @TAG(DATA61_BSD)
  */
-#ifndef _SEL4PLATSUPPORT_PLAT_TIMER_H
-#define _SEL4PLATSUPPORT_PLAT_TIMER_H
+#pragma once
 
 /* No timer device at user level currently for riscv */
 #define DEFAULT_TIMER_INTERRUPT 0
 
-#endif /* _SEL4PLATSUPPORT_PLAT_TIMER_H */

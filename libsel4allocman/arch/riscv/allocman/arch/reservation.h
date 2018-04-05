@@ -10,12 +10,10 @@
  * @TAG(DATA61_BSD)
  */
 
-#ifndef __ALLOCMAN_SEL4_ARCH_RESERVATION__
-#define __ALLOCMAN_SEL4_ARCH_RESERVATION__
+#pragma once
 
 #include <allocman/allocman.h>
 
 static inline void allocman_sel4_arch_configure_reservations(allocman_t *alloc) {
 }
 
-#endif

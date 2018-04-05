@@ -11,7 +11,6 @@
  */
 
 #pragma once
-//#include <platsupport/plat/timer.h>
 
 #define DEFAULT_SERIAL_PADDR NULL 
 #define DEFAULT_SERIAL_INTERRUPT 0

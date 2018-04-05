@@ -11,18 +11,3 @@
  */
 #pragma once
 
-#include <sel4platsupport/timer_types.h>
-#include <sel4platsupport/plat/timer.h>
-
-#include <autoconf.h>
-#include <platsupport/timer.h>
-#include <platsupport/plat/timer.h>
-#include <vspace/vspace.h>
-#include <simple/simple.h>
-#include <vka/vka.h>
-
-typedef struct arch_timer_objects {
-    plat_timer_objects_t plat_timer_objects;
-} arch_timer_objects_t;
-
-seL4_timer_t *sel4platsupport_get_generic_timer(void);

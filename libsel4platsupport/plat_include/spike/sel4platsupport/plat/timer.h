@@ -12,10 +12,7 @@
 #ifndef _SEL4PLATSUPPORT_PLAT_TIMER_H
 #define _SEL4PLATSUPPORT_PLAT_TIMER_H
 
-// FIXME
+/* No timer device at user level currently for riscv */
 #define DEFAULT_TIMER_INTERRUPT 0
-
-typedef struct plat_timer_objects {
-} plat_timer_objects_t;
 
 #endif /* _SEL4PLATSUPPORT_PLAT_TIMER_H */

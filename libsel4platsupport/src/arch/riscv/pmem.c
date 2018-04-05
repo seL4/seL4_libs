@@ -19,6 +19,6 @@ int sel4platsupport_get_num_pmem_regions(UNUSED simple_t *simple) {
 }
 
 int sel4platsupport_get_pmem_region_list(UNUSED simple_t *simple, UNUSED size_t max_length, UNUSED pmem_region_t *region_list) {
-    ZF_LOGW("Not implemented");
+    ZF_LOGE("Not implemented");
     return -1;
 }

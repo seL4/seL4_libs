@@ -27,5 +27,5 @@ sel4platsupport_get_generic_timer(void)
 uintptr_t
 sel4platsupport_get_default_timer_paddr(UNUSED vka_t *vka, UNUSED vspace_t *vspace)
 {
-    return NULL;
+    return 0;
 }

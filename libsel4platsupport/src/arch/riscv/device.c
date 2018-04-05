@@ -16,6 +16,6 @@
 int sel4platsupport_arch_copy_irq_cap(UNUSED arch_simple_t *arch_simple, UNUSED ps_irq_t *irq,
         UNUSED cspacepath_t *dest)
 {
-    ZF_LOGE("unknown irq type");
+    ZF_LOGE("Not implemented");
     return -1;
 }

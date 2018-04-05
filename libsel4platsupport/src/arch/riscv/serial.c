@@ -18,5 +18,6 @@ sel4platsupport_arch_init_default_serial_caps(UNUSED vka_t *vka, UNUSED vspace_t
 											  UNUSED simple_t *simple, UNUSED serial_objects_t *serial_objects)
 {
     /* No serial driver */
-    return 0;
+    ZF_LOGE("Not implemented");
+    return -1;
 }

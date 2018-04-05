@@ -38,7 +38,8 @@ add_config_library(sel4platsupport "${configure_string}")
 
 file(GLOB deps src/*.c src/cspace/*.c src/arch/${KernelArch}/*.c
     src/plat/${KernelPlatform}/*.c src/mach/${KernelArmMach}/*.c
-    src/sel4_arch/${KernelSel4Arch}/*.S)
+    src/sel4_arch/${KernelSel4Arch}/*.S
+    src/arch/${KernelArch}/*.S)
 
 list(SORT deps)
 

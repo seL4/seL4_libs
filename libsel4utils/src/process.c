@@ -697,22 +697,19 @@ error:
 void
 sel4utils_destroy_process(sel4utils_process_t *process, vka_t *vka)
 {
-    /* delete all of the caps in the cspace */
-    for (int i = 1; i < BIT(CONFIG_SEL4UTILS_CSPACE_SIZE_BITS);i++){
+    /* destroy the cnode */
+    if (process->own_cspace) {
         cspacepath_t path;
-        path.root = process->cspace.cptr;
-        path.capPtr = i;
-        path.capDepth = process->cspace_size;
-        vka_cnode_delete(&path);
+        vka_cspace_make_path(vka, process->cspace.cptr, &path);
+        /* need to revoke the cnode to remove any self references that would keep the object
+         * alive when we try to delete it */
+        vka_cnode_revoke(&path);
+        vka_free_object(vka, &process->cspace);
     }
+
 
     /* destroy the thread */
     sel4utils_clean_up_thread(vka, &process->vspace, &process->thread);
-
-    /* destroy the cnode */
-    if (process->own_cspace) {
-        vka_free_object(vka, &process->cspace);
-    }
 
     /* tear down the vspace */
     if (process->own_vspace) {

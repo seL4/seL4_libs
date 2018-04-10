@@ -35,7 +35,7 @@
 #include <vspace/vspace.h>
 #include <vka/vka.h>
 #include <sel4utils/util.h>
-#include <sel4utils/sel4_arch/vspace.h>
+#include <sel4utils/arch/vspace.h>
 
 /* These definitions are only here so that you can take the size of them.
  * TOUCHING THESE DATA STRUCTURES IN ANY WAY WILL BREAK THE WORLD

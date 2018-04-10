@@ -23,8 +23,8 @@ seL4_BootInfo *platsupport_get_bootinfo(void)
         ZF_LOGE("Attempted %s in an environment without bootinfo.", __FUNCTION__);
         return NULL;
     }
-    void *bi = (void *)strtol(bi_string, NULL, 0);
-    if (bi == 0) {
+    void *bi;
+    if (sscanf(bi_string, "%p", &bi) != 1) {
         ZF_LOGE("bootinfo environment value '%s' was not valid.", bi_string);
         return NULL;
     }

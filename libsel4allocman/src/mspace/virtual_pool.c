@@ -17,7 +17,7 @@
 #include <sel4/sel4.h>
 #include <sel4utils/mapping.h>
 #include <vka/kobject_t.h>
-#include <allocman/sel4_arch/mapping.h>
+#include <allocman/arch/mapping.h>
 #include <string.h>
 
 /* This allocator deliberately does not use the vspace library to prevent

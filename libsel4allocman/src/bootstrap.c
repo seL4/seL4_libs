@@ -19,7 +19,7 @@
 #include <allocman/mspace/dual_pool.h>
 #include <allocman/utspace/split.h>
 #include <allocman/bootstrap.h>
-#include <allocman/sel4_arch/reservation.h>
+#include <allocman/arch/reservation.h>
 #include <stdio.h>
 #include <vka/capops.h>
 #include <vka/object.h>

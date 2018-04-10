@@ -21,7 +21,8 @@ CFILES += $(sort $(patsubst $(SOURCE_DIR)/%,%,$(wildcard $(SOURCE_DIR)/src/mspac
 
 # Header files/directories this library provides
 HDRFILES := $(sort $(wildcard $(SOURCE_DIR)/include/*)) \
-    $(sort $(wildcard ${SOURCE_DIR}/sel4_arch/${SEL4_ARCH}/*))
+	$(sort $(wildcard ${SOURCE_DIR}/sel4_arch/${SEL4_ARCH}/*)) \
+	$(sort $(wildcard ${SOURCE_DIR}/arch/${ARCH}/*))
 
 CFLAGS += -std=gnu99
 

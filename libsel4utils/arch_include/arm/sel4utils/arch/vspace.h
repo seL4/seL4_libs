@@ -12,3 +12,4 @@
 #pragma once
 
 #include <sel4utils/sel4_arch/util.h>
+#include <sel4utils/sel4_arch/vspace.h>

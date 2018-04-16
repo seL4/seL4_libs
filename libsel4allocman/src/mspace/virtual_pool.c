@@ -33,7 +33,7 @@ static int _add_page(allocman_t *alloc, seL4_CPtr pd, void *vaddr)
         ZF_LOGV("Failed to allocate slot");
         return error;
     }
-    frame_cookie = allocman_utspace_alloc(alloc, 12, seL4_ARCH_4KPage, &frame_path, true, &error);
+    frame_cookie = allocman_utspace_alloc(alloc, seL4_PageBits, seL4_ARCH_4KPage, &frame_path, true, &error);
     if (error) {
         allocman_cspace_free(alloc, &frame_path);
         ZF_LOGV("Failed to allocate frame");
@@ -73,7 +73,7 @@ static int _add_page(allocman_t *alloc, seL4_CPtr pd, void *vaddr)
     }
     if (error != seL4_NoError) {
         allocman_cspace_free(alloc, &frame_path);
-        allocman_utspace_free(alloc, frame_cookie, 12);
+        allocman_utspace_free(alloc, frame_cookie, seL4_PageBits);
         return error;
     }
     /* zero the memory in case we were allocated from a device range */

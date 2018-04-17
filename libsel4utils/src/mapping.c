@@ -18,6 +18,7 @@
 #include <vka/capops.h>
 #include <sel4utils/mapping.h>
 #include <sel4utils/util.h>
+#include <vspace/mapping.h>
 
 int
 sel4utils_map_page(vka_t *vka, seL4_CPtr vspace_root, seL4_CPtr frame, void *vaddr,
@@ -35,31 +36,27 @@ sel4utils_map_page(vka_t *vka, seL4_CPtr vspace_root, seL4_CPtr frame, void *vad
     *num_objects = 0;
     int error = seL4_ARCH_Page_Map(frame, vspace_root, (seL4_Word) vaddr, rights, attr);
     while (error == seL4_FailedLookup) {
-        seL4_Word failed_bits = seL4_MappingFailedLookupLevel();
-        /* handle the common case that occurs on all architectures of
-         * a page table being missing */
-        if (failed_bits == SEL4_MAPPING_LOOKUP_NO_PT) {
-            error = vka_alloc_page_table(vka, &objects[*num_objects]);
-            if (error) {
-                ZF_LOGE("Page table allocation failed");
-                return error;
-            }
-            error = seL4_ARCH_PageTable_Map(objects[*num_objects].cptr, vspace_root, (seL4_Word)vaddr, seL4_ARCH_Default_VMAttributes);
-            if (error == seL4_DeleteFirst) {
-                /* this is the case where the allocation of the page table needed to map in
-                 * a page table for the meta data, so delete this one and continue */
-                vka_free_object(vka, &objects[*num_objects]);
-            } else {
-                (*num_objects)++;
-                if (error) {
-                    ZF_LOGE("Failed to map page table %d", error);
-                    return error;
-                }
-            }
+        vspace_map_obj_t obj = {0};
+        error = vspace_get_map_obj(seL4_MappingFailedLookupLevel(), &obj);
+        /* we should not get an incorrect values for seL4_MappingFailedLookupLevel */
+        assert(error == 0);
+
+        error = vka_alloc_object(vka, obj.type, obj.size_bits, &objects[*num_objects]);
+        if (error) {
+            ZF_LOGE("Mapping structure allocation failed");
+            return error;
+        }
+
+        error = vspace_map_obj(&obj, objects[*num_objects].cptr, vspace_root,
+                               (seL4_Word)vaddr, seL4_ARCH_Default_VMAttributes);
+        if (error == seL4_DeleteFirst) {
+            /* this is the case where the allocation of the page table needed to map in
+             * a page table for the meta data, so delete this one and continue */
+            vka_free_object(vka, &objects[*num_objects]);
         } else {
-            error = sel4utils_create_object_at_level(vka, failed_bits, objects, num_objects, vaddr, vspace_root);
+            (*num_objects)++;
             if (error) {
-                /* log message printed out by sel4utils_create_object_at_level */
+                ZF_LOGE("Failed to map page table %d", error);
                 return error;
             }
         }

@@ -17,10 +17,10 @@
 #include <sel4/sel4.h>
 #include <sel4utils/mapping.h>
 #include <vka/kobject_t.h>
-#include <allocman/arch/mapping.h>
+#include <vspace/mapping.h>
 #include <string.h>
 
-/* This allocator deliberately does not use the vspace library to prevent
+/* This allocator deliberately does not use the vspace library to manage mappings to prevent
  * circular dependencies between the vspace library and the allocator */
 
 static int _add_page(allocman_t *alloc, seL4_CPtr pd, void *vaddr)
@@ -48,25 +48,19 @@ static int _add_page(allocman_t *alloc, seL4_CPtr pd, void *vaddr)
             break;
         }
         seL4_Word failed_bits = seL4_MappingFailedLookupLevel();
-        /* handle the common case that occurs on all architectures of
-         * a page table being missing */
-        if (failed_bits == SEL4_MAPPING_LOOKUP_NO_PT) {
-            seL4_Word cookie;
-            cookie = allocman_utspace_alloc(alloc, seL4_PageTableBits, kobject_get_type(KOBJECT_PAGE_TABLE, 0), &path, false, &error);
-            if (error) {
-                allocman_cspace_free(alloc, &path);
-                ZF_LOGV("Failed to allocate page table");
-                break;
-            }
-            error = seL4_ARCH_PageTable_Map(path.capPtr, pd, (seL4_Word) vaddr,
-                        seL4_ARCH_Default_VMAttributes);
-            if (error != seL4_NoError) {
-                allocman_utspace_free(alloc, cookie, seL4_PageTableBits);
-            }
-        } else {
-            error = allocman_sel4_arch_create_object_at_level(alloc, failed_bits, &path, vaddr, pd);
+        vspace_map_obj_t obj;
+        error = vspace_get_map_obj(failed_bits, &obj);
+        assert(error == 0);
+
+        seL4_Word cookie = allocman_utspace_alloc(alloc, obj.size_bits, obj.type, &path, false, &error);
+        if (error) {
+            allocman_cspace_free(alloc, &path);
+            ZF_LOGV("Failed to allocate paging structure");
+            break;
         }
+        error = vspace_map_obj(&obj, path.capPtr, pd, (seL4_Word) vaddr, seL4_ARCH_Default_VMAttributes);
         if (error != seL4_NoError) {
+            allocman_utspace_free(alloc, cookie, seL4_PageTableBits);
             allocman_cspace_free(alloc, &path);
             break;
         }

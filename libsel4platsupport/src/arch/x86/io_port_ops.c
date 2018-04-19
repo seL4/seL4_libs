@@ -78,7 +78,7 @@ sel4platsupport_io_port_out(void *cookie, uint32_t port, int io_size, uint32_t v
 }
 
 int
-sel4platsupport_get_io_port_ops(ps_io_port_ops_t *ops, simple_t *simple)
+sel4platsupport_get_io_port_ops(ps_io_port_ops_t *ops, simple_t *simple, vka_t *vka)
 {
     assert(ops != NULL);
     assert(simple != NULL);
@@ -95,5 +95,5 @@ int sel4platsupport_new_arch_ops(ps_io_ops_t *ops, simple_t *simple, vka_t *vka)
         return EINVAL;
     }
 
-    return sel4platsupport_get_io_port_ops(&ops->io_port_ops, simple);
+    return sel4platsupport_get_io_port_ops(&ops->io_port_ops, simple, vka);
 }

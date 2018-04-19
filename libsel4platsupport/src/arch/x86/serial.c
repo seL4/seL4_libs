@@ -52,10 +52,13 @@ sel4platsupport_arch_init_default_serial_caps(vka_t *vka, UNUSED vspace_t *vspac
         serial_objects->serial_irq_path = tmp;
     }
 
-    serial_objects->arch_serial_objects.serial_io_port_cap = simple_get_IOPort_cap(simple,
-                                                     SERIAL_CONSOLE_COM1_PORT,
-                                                     SERIAL_CONSOLE_COM1_PORT_END);
-    if (serial_objects->arch_serial_objects.serial_io_port_cap == 0) {
+    cspacepath_t path;
+    vka_cspace_make_path(vka, serial_objects->arch_serial_objects.serial_io_port_cap, &path);
+    error = simple_get_IOPort_cap(simple,
+                                  SERIAL_CONSOLE_COM1_PORT,
+                                  SERIAL_CONSOLE_COM1_PORT_END,
+                                  path.root, path.capPtr, path.capDepth);
+    if (error) {
         ZF_LOGE("Failed to get COM1 port cap.");
         if(PS_SERIAL_DEFAULT == PS_SERIAL0) {
             ZF_LOGW("COM1 is the default serial.");

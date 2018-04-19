@@ -26,8 +26,11 @@
  * @param data cookie for the underlying implementation
  * @param start port number that a cap is needed to
  * @param end port number that a cap is needed to
+ * @param root The CNode in which to put this cap
+ * @param dest The index within the CNode to put the cap
+ * @param depth of index
  */
-typedef seL4_CPtr (*arch_simple_get_IOPort_cap_fn)(void *data, uint16_t start_port, uint16_t end_port);
+typedef seL4_Error (*arch_simple_get_IOPort_cap_fn)(void *data, uint16_t start_port, uint16_t end_port, seL4_Word root, seL4_Word dest, seL4_Word depth);
 
 /**
  * Request a cap to a specific MSI IRQ number on the system
@@ -86,20 +89,20 @@ typedef struct arch_simple {
     arch_simple_get_ioapic_fn ioapic;
 } arch_simple_t;
 
-static inline seL4_CPtr
-arch_simple_get_IOPort_cap(arch_simple_t *arch_simple, uint16_t start_port, uint16_t end_port)
+static inline seL4_Error
+arch_simple_get_IOPort_cap(arch_simple_t *arch_simple, uint16_t start_port, uint16_t end_port, seL4_Word root, seL4_Word dest, seL4_Word depth)
 {
     if (!arch_simple) {
         ZF_LOGE("Arch-simple is NULL");
-        return seL4_CapNull;
+        return seL4_InvalidArgument;
     }
 
     if (!arch_simple->IOPort_cap) {
         ZF_LOGE("%s not implemented", __FUNCTION__);
-        return seL4_CapNull;
+        return seL4_InvalidArgument;
     }
 
-    return arch_simple->IOPort_cap(arch_simple->data, start_port, end_port);
+    return arch_simple->IOPort_cap(arch_simple->data, start_port, end_port, root, dest, depth);
 }
 
 static inline seL4_Error

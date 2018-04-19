@@ -72,9 +72,9 @@ simple_default_get_msi(void *data, seL4_CNode root, seL4_Word index, uint8_t dep
                                   pci_func, handle, vector);
 }
 
-seL4_CPtr
-simple_default_get_IOPort_cap(void *data, uint16_t start_port, uint16_t end_port) {
-    return seL4_CapIOPort;
+seL4_Error
+simple_default_get_IOPort_cap(void *data, uint16_t start_port, uint16_t end_port, seL4_Word root, seL4_Word dest, seL4_Word depth) {
+    return seL4_CNode_Copy(root, dest, depth, seL4_CapInitThreadCNode, seL4_CapIOPort, CONFIG_WORD_SIZE, seL4_AllRights);
 }
 
 void

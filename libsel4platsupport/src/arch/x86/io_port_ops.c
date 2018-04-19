@@ -17,64 +17,98 @@
 #include <assert.h>
 #include <stdint.h>
 #include <utils/util.h>
+#include <vka/capops.h>
+
+typedef struct io_cookie {
+    simple_t *simple;
+    vka_t *vka;
+} io_cookie_t;
 
 static int
 sel4platsupport_io_port_in(void *cookie, uint32_t port, int io_size, uint32_t *result)
 {
-    simple_t *simple = (simple_t*)cookie;
+    io_cookie_t *io_cookie = cookie;
     uint32_t last_port = port + io_size - 1;
-    seL4_X86_IOPort io_port_cap = simple_get_IOPort_cap(simple, port, last_port);
-    if (!io_port_cap) {
+    cspacepath_t path;
+    int error;
+    error = vka_cspace_alloc_path(io_cookie->vka, &path);
+    if (error) {
+        ZF_LOGE("Failed to allocate slot");
+        return error;
+    }
+    error = simple_get_IOPort_cap(io_cookie->simple, port, last_port, path.root, path.capPtr, path.capDepth);
+    if (error) {
         ZF_LOGE("Failed to get capability for IOPort range 0x%x-0x%x", port, last_port);
         return -1;
     }
 
     switch (io_size) {
     case 1: {
-        seL4_X86_IOPort_In8_t x = seL4_X86_IOPort_In8(io_port_cap, port);
+        seL4_X86_IOPort_In8_t x = seL4_X86_IOPort_In8(path.capPtr, port);
         *result = x.result;
-        return x.error;
+        error = x.error;
+        break;
     }
     case 2: {
-        seL4_X86_IOPort_In16_t x = seL4_X86_IOPort_In16(io_port_cap, port);
+        seL4_X86_IOPort_In16_t x = seL4_X86_IOPort_In16(path.capPtr, port);
         *result = x.result;
-        return x.error;
+        error = x.error;
+        break;
     }
     case 4: {
-        seL4_X86_IOPort_In32_t x = seL4_X86_IOPort_In32(io_port_cap, port);
+        seL4_X86_IOPort_In32_t x = seL4_X86_IOPort_In32(path.capPtr, port);
         *result = x.result;
-        return x.error;
+        error = x.error;
+        break;
     }
     default:
         ZF_LOGE("Invalid io_size %d, expected 1, 2 or 4", io_size);
-        return -1;
+        error = -1;
+        break;
     }
 
+    vka_cnode_delete(&path);
+    vka_cspace_free_path(io_cookie->vka, path);
+    return error;
 }
 
 static int
 sel4platsupport_io_port_out(void *cookie, uint32_t port, int io_size, uint32_t val)
 {
-    simple_t *simple = (simple_t*)cookie;
+    io_cookie_t *io_cookie = cookie;
     uint32_t last_port = port + io_size - 1;
-    seL4_X86_IOPort io_port_cap = simple_get_IOPort_cap(simple, port, last_port);
-    if (!io_port_cap) {
+    cspacepath_t path;
+    int error;
+    error = vka_cspace_alloc_path(io_cookie->vka, &path);
+    if (error) {
+        ZF_LOGE("Failed to allocate slot");
+        return error;
+    }
+    error = simple_get_IOPort_cap(io_cookie->simple, port, last_port, path.root, path.capPtr, path.capDepth);
+    if (error) {
         ZF_LOGE("Failed to get capability for IOPort range 0x%x-0x%x", port, last_port);
         return -1;
     }
 
+    int result;
     switch (io_size) {
     case 1:
-        return seL4_X86_IOPort_Out8(io_port_cap, port, val);
+        result = seL4_X86_IOPort_Out8(path.capPtr, port, val);
+        break;
     case 2:
-        return seL4_X86_IOPort_Out16(io_port_cap, port, val);
+        result = seL4_X86_IOPort_Out16(path.capPtr, port, val);
+        break;
     case 4:
-        return seL4_X86_IOPort_Out32(io_port_cap, port, val);
+        result = seL4_X86_IOPort_Out32(path.capPtr, port, val);
+        break;
     default:
         ZF_LOGE("Invalid io_size %d, expected 1, 2 or 4", io_size);
-        return -1;
+        result = -1;
+        break;
     }
-
+    vka_cnode_delete(&path);
+    vka_cspace_free_path(io_cookie->vka, path);
+    return result;
 }
 
 int
@@ -82,9 +116,16 @@ sel4platsupport_get_io_port_ops(ps_io_port_ops_t *ops, simple_t *simple, vka_t *
 {
     assert(ops != NULL);
     assert(simple != NULL);
+    assert(vka != NULL);
+    io_cookie_t *cookie = malloc(sizeof(*cookie));
+    if (!cookie) {
+        return -1;
+    }
+    cookie->simple = simple;
+    cookie->vka = vka;
     ops->io_port_in_fn = sel4platsupport_io_port_in;
     ops->io_port_out_fn = sel4platsupport_io_port_out;
-    ops->cookie = (void *) simple;
+    ops->cookie = (void *) cookie;
 
     return 0;
 }

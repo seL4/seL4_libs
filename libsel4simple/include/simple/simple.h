@@ -325,14 +325,14 @@ simple_ASIDPool_assign(simple_t *simple, seL4_CPtr vspace)
 }
 
 static inline
-seL4_CPtr simple_get_IOPort_cap(simple_t *simple, uint16_t start_port, uint16_t end_port)
+seL4_Error simple_get_IOPort_cap(simple_t *simple, uint16_t start_port, uint16_t end_port, seL4_Word root, seL4_Word dest, seL4_Word depth)
 {
     if (!simple) {
         ZF_LOGE("Simple is NULL");
-        return seL4_CapNull;
+        return seL4_InvalidArgument;
     }
 
-    return arch_simple_get_IOPort_cap(&simple->arch_simple, start_port, end_port);
+    return arch_simple_get_IOPort_cap(&simple->arch_simple, start_port, end_port, root, dest, depth);
 }
 
 static inline int

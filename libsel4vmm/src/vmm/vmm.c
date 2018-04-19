@@ -249,7 +249,7 @@ int vmm_finalize(vmm_t *vmm) {
         vmm_vcpu_t *vcpu = &vmm->vcpus[i];
 
         vmm_init_guest_thread_state(vcpu);
-        err = vmm_io_port_init_guest(&vmm->io_port, &vmm->host_simple, vcpu->guest_vcpu);
+        err = vmm_io_port_init_guest(&vmm->io_port, &vmm->host_simple, vcpu->guest_vcpu, &vmm->vka);
         if (err) {
             return err;
         }

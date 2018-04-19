@@ -50,5 +50,5 @@ int vmm_io_port_add_passthrough(vmm_io_port_list_t *io_list, uint16_t start, uin
 int vmm_io_port_add_handler(vmm_io_port_list_t *io_list, uint16_t start, uint16_t end, void *cookie, ioport_in_fn port_in, ioport_out_fn port_out, const char *desc);
 
 /* Add io ports to guest vcpu */
-int vmm_io_port_init_guest(vmm_io_port_list_t *io_list, simple_t *simple, seL4_CPtr vcpu);
+int vmm_io_port_init_guest(vmm_io_port_list_t *io_list, simple_t *simple, seL4_CPtr vcpu, vka_t *vka);
 

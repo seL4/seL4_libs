@@ -59,6 +59,7 @@ int sel4platsupport_new_io_ops(vspace_t vspace, vka_t vka, ps_io_ops_t *io_ops);
  * io ops (memory allocation, mapping).
  *
  * @param simple a simple interface which must remain valid after this call.
+ * @param vka a vka interface which must remain valid after this call.
  * @return 0 on success.
  */
-int sel4platsupport_new_arch_ops(ps_io_ops_t *ops, simple_t *simple);
+int sel4platsupport_new_arch_ops(ps_io_ops_t *ops, simple_t *simple, vka_t *vka);

@@ -16,7 +16,7 @@
 #include <sel4platsupport/arch/io.h>
 #include <utils/util.h>
 
-int sel4platsupport_new_arch_ops(UNUSED ps_io_ops_t *ops, UNUSED simple_t *simple)
+int sel4platsupport_new_arch_ops(UNUSED ps_io_ops_t *ops, UNUSED simple_t *simple, UNUSED vka_t *vka)
 {
     return 0;
 }

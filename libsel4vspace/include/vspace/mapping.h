@@ -15,9 +15,21 @@
 #include <sel4/sel4.h>
 #include <sel4/sel4_arch/mapping.h>
 #include <utils/util.h>
+#include <vspace/arch/page.h>
 
 typedef seL4_Error (*vspace_map_fn_t)(seL4_CPtr cap, seL4_CPtr vspace_root, seL4_Word vaddr,
                                     seL4_Word attr);
+typedef seL4_Error (*vspace_map_page_fn_t)(seL4_CPtr cap, seL4_CPtr vspace_root, seL4_Word vaddr,
+                                    seL4_CapRights_t rights, seL4_Word attr);
+
+static inline seL4_Error vspace_iospace_map_page(seL4_CPtr cap, seL4_CPtr root, seL4_Word vaddr,
+                                    seL4_CapRights_t rights, UNUSED seL4_Word attr) {
+#if defined(CONFIG_IOMMU) || defined(CONFIG_ARM_SMMU)
+    return seL4_ARCH_Page_MapIO(cap, root, rights, vaddr);
+#else
+    return -1;
+#endif
+}
 
 /* Map object: defines a size, type and function for mapping an architecture specific
  * page table */

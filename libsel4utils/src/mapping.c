@@ -24,11 +24,9 @@ int
 sel4utils_map_page(vka_t *vka, seL4_CPtr vspace_root, seL4_CPtr frame, void *vaddr,
                    seL4_CapRights_t rights, int cacheable, vka_object_t *objects, int *num_objects)
 {
-    assert(vka != NULL);
-    assert(vspace_root != 0);
-    assert(frame != 0);
-    assert(vaddr != 0);
-    assert(num_objects);
+    if (!vka || !vaddr || !objects || !num_objects || !root) {
+        return EINVAL;
+    }
 
     seL4_ARCH_VMAttributes attr = cacheable ? seL4_ARCH_Default_VMAttributes :
                                   seL4_ARCH_Uncached_VMAttributes;

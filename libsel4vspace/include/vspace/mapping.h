@@ -42,6 +42,8 @@ typedef struct {
     vspace_map_fn_t map_fn;
 } vspace_map_obj_t;
 
+typedef int (*vspace_get_map_obj_fn)(seL4_Word failed_bits, vspace_map_obj_t *obj);
+
 /*
  * Populate a map object for a specific number of failed bits.
  *
@@ -51,6 +53,10 @@ typedef struct {
  * @return 0 on success, EINVAL if failed_bits is invalid.
  */
 int vspace_get_map_obj(seL4_Word failed_bits, vspace_map_obj_t *obj);
+/* As per vspace_get_map_obj but returns operations and sizes for an iospace (IOMMU). */
+int vspace_get_iospace_map_obj(UNUSED seL4_Word failed_bits, vspace_map_obj_t *obj);
+/* As per vspace_get_map_obj but returns operations and sizes for virtual page tables */
+int vspace_get_ept_map_obj(seL4_Word failed_bits, vspace_map_obj_t *obj);
 
 static inline seL4_Error vspace_map_obj(vspace_map_obj_t *obj, seL4_CPtr cap,
                                         seL4_CPtr vspace, seL4_Word vaddr, seL4_Word attr)

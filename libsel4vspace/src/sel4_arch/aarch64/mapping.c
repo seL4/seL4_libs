@@ -12,7 +12,7 @@
 
 #include <vspace/mapping.h>
 
-int vspace_get_map_obj(int failed_bits, vspace_map_obj_t *obj) {
+int vspace_get_map_obj(seL4_Word failed_bits, vspace_map_obj_t *obj) {
     if (unlikely(obj == NULL)) {
         return EINVAL;
     }

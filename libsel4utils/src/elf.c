@@ -36,7 +36,7 @@ rights_from_elf(unsigned long permissions)
     bool canRead = permissions & PF_R || permissions & PF_X;
     bool canWrite = permissions & PF_W;
 
-    return seL4_CapRights_new(false, canRead, canWrite);
+    return seL4_CapRights_new(false, false, canRead, canWrite);
 }
 
 static int
@@ -309,7 +309,7 @@ static int
 prepare_reservations(size_t total_regions, sel4utils_elf_region_t regions[total_regions]) {
     uintptr_t prev_res_start = 0;
     size_t prev_res_size = 0;
-    seL4_CapRights_t prev_rights = seL4_CapRights_new(0,0,0);
+    seL4_CapRights_t prev_rights = seL4_NoRights;
     for (int i = 0; i < total_regions; i++) {
         uintptr_t current_res_start = PAGE_ALIGN_4K((uintptr_t)regions[i].elf_vstart);
         uintptr_t current_res_top = ROUND_UP((uintptr_t)regions[i].elf_vstart + regions[i].size, PAGE_SIZE_4K);

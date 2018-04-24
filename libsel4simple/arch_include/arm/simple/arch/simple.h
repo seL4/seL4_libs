@@ -46,6 +46,6 @@ static inline seL4_Error
 arch_simple_get_IOPort_cap(UNUSED arch_simple_t *simple, UNUSED uint16_t start_port,
                            UNUSED uint16_t end_port, UNUSED seL4_Word root, UNUSED seL4_Word dest, UNUSED seL4_Word depth) {
     ZF_LOGF("Calling get_IOPort_cap on arm!");
-    return -1;
+    return seL4_IllegalOperation;
 }
 

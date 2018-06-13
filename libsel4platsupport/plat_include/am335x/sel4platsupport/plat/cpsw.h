@@ -61,6 +61,9 @@ extern "C" {
 #define CPSW_SLIVER_NON_GIG_FULL_DUPLEX        CPSW_SL_MACCONTROL_FULLDUPLEX
 #define CPSW_SLIVER_NON_GIG_HALF_DUPLEX        (0x00u)
 #define CPSW_SLIVER_GIG_FULL_DUPLEX            CPSW_SL_MACCONTROL_GIG
+#define CPSW_SLIVER_INBAND                     CPSW_SL_MACCONTROL_EXT_EN
+#define PHY_FULL_DUPLEX                        (0x0100)
+
 
     /*
     ** Macros which can be used as 'statFlag' to the API CPSWSlMACStatusGet

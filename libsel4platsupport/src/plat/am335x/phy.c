@@ -342,4 +342,41 @@ unsigned int PhyLinkStatusGet(unsigned int mdioBaseAddr,
     return FALSE;
 }
 
+
+/* The next two functions were copied from 'bb-sel4' project at:
+ *    https://github.com/juli1/bb-sel4
+ * In particular, they were taken from:
+ *    https://github.com/juli1/bb-sel4/blob/701e87f4d4a403d3b0c02326d42e8580a7ff4b7f/bb-eth/components/ConsumerThreadImpl/src/phy.c
+ */
+unsigned int PhyReset(unsigned int mdioBaseAddr, unsigned int phyAddr)
+{
+    unsigned short data;
+
+    data = PHY_SOFTRESET;
+
+    /* Reset the phy */
+    MDIOPhyRegWrite(mdioBaseAddr, phyAddr, PHY_BCR, data);
+
+    /* wait till the reset bit is auto cleared */
+    while(data & PHY_SOFTRESET)
+    {
+        /* Read the reset */
+        if(MDIOPhyRegRead(mdioBaseAddr, phyAddr, PHY_BCR, &data) != TRUE)
+        {
+            return FALSE;
+        }
+    }
+
+    return TRUE;
+}
+
+unsigned int PhyConfigure(unsigned int mdioBaseAddr, unsigned int phyAddr,
+                              unsigned short speed, unsigned short duplexMode)
+{
+    /* Set the configurations */
+    MDIOPhyRegWrite(mdioBaseAddr, phyAddr, PHY_BCR, (speed | duplexMode));
+
+        return TRUE;
+}
+
 /**************************** End Of File ***********************************/

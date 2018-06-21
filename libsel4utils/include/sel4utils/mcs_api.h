@@ -122,7 +122,7 @@ static inline seL4_Error api_tcb_configure(seL4_CPtr tcb, seL4_CPtr ep, UNUSED s
 }
 
 static inline seL4_Error api_tcb_set_sched_params(seL4_CPtr tcb, seL4_CPtr auth, seL4_Word prio,
-                                                  seL4_Word mcp, seL4_CPtr sc, seL4_CPtr ep)
+                                                  seL4_Word mcp, UNUSED seL4_CPtr sc, UNUSED seL4_CPtr ep)
 {
 #ifdef CONFIG_KERNEL_RT
     return seL4_TCB_SetSchedParams(tcb, auth, mcp, prio, sc, ep);

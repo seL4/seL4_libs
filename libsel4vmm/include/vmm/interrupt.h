@@ -22,6 +22,9 @@ int vmm_pending_interrupt_handler(vmm_vcpu_t *vcpu);
  * interrupts */
 void wait_for_guest_ready(vmm_vcpu_t *vcpu);
 
+/* inject an exception */
+void vmm_inject_exception(vmm_vcpu_t *vcpu, int exception, int has_error, uint32_t error_code);
+
 /* Start an AP vcpu after a sipi with the requested vector */
 void vmm_start_ap_vcpu(vmm_vcpu_t *vcpu, unsigned int sipi_vector);
 

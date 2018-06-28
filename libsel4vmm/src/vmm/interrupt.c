@@ -36,6 +36,19 @@ static void inject_irq(vmm_vcpu_t *vcpu, int irq) {
     vmm_guest_state_set_control_entry(&vcpu->guest_state, BIT(31) | irq);
 }
 
+void vmm_inject_exception(vmm_vcpu_t *vcpu, int exception, int has_error, uint32_t error_code) {
+    assert(exception < 16);
+    // ensure we are not already injecting an interrupt or exception
+    uint32_t int_control = vmm_guest_state_get_control_entry(&vcpu->guest_state);
+    if ( (int_control & BIT(31)) != 0) {
+        ZF_LOGF("Cannot inject exception");
+    }
+    if (has_error) {
+        vmm_guest_state_set_entry_exception_error_code(&vcpu->guest_state, error_code);
+    }
+    vmm_guest_state_set_control_entry(&vcpu->guest_state, BIT(31) | exception | 3 << 8 | (has_error ? BIT(11) : 0));
+}
+
 void wait_for_guest_ready(vmm_vcpu_t *vcpu) {
     /* Request that the guest exit at the earliest point that we can inject an interrupt. */
     uint32_t state = vmm_guest_state_get_control_ppc(&vcpu->guest_state);

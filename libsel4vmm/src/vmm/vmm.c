@@ -69,6 +69,7 @@ void vmm_sync_guest_state(vmm_vcpu_t *vcpu) {
     vmm_guest_state_sync_gdt_base(&vcpu->guest_state, vcpu->guest_vcpu);
     vmm_guest_state_sync_gdt_limit(&vcpu->guest_state, vcpu->guest_vcpu);
     vmm_guest_state_sync_cs_selector(&vcpu->guest_state, vcpu->guest_vcpu);
+    vmm_guest_state_sync_entry_exception_error_code(&vcpu->guest_state, vcpu->guest_vcpu);
 }
 
 /* Handle VM exit in VMM module. */

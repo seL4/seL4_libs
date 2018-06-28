@@ -79,6 +79,7 @@ typedef struct guest_machine_state {
     MACHINE_STATE(unsigned int, gdt_base);
     MACHINE_STATE(unsigned int, gdt_limit);
     MACHINE_STATE(unsigned int, cs_selector);
+    MACHINE_STATE(unsigned int, entry_exception_error_code);
     /* This is state that we set on VMentry and get back on
      * a vmexit, therefore it is always valid and correct */
     unsigned int eip;
@@ -125,7 +126,8 @@ static inline bool vmm_guest_state_no_modified(guest_state_t *gs) {
         IS_MACHINE_STATE_MODIFIED(gs->machine.idt_limit) ||
         IS_MACHINE_STATE_MODIFIED(gs->machine.gdt_base) ||
         IS_MACHINE_STATE_MODIFIED(gs->machine.gdt_limit) ||
-        IS_MACHINE_STATE_MODIFIED(gs->machine.cs_selector)
+        IS_MACHINE_STATE_MODIFIED(gs->machine.cs_selector) ||
+        IS_MACHINE_STATE_MODIFIED(gs->machine.entry_exception_error_code)
     );
 }
 
@@ -141,6 +143,7 @@ static inline void vmm_guest_state_invalidate_all(guest_state_t *gs) {
     MACHINE_STATE_INVAL(gs->machine.gdt_base);
     MACHINE_STATE_INVAL(gs->machine.gdt_limit);
     MACHINE_STATE_INVAL(gs->machine.cs_selector);
+    MACHINE_STATE_INVAL(gs->machine.entry_exception_error_code);
 }
 
 /* get */
@@ -291,6 +294,11 @@ static inline void vmm_guest_state_set_cs_selector(guest_state_t *gs, unsigned i
     gs->machine.cs_selector = val;
 }
 
+static inline void vmm_guest_state_set_entry_exception_error_code(guest_state_t *gs, unsigned int val) {
+    MACHINE_STATE_DIRTY(gs->machine.entry_exception_error_code);
+    gs->machine.entry_exception_error_code = val;
+}
+
 /* sync */
 static inline void vmm_guest_state_sync_cr0(guest_state_t *gs, seL4_CPtr vcpu) {
     if(IS_MACHINE_STATE_MODIFIED(gs->machine.cr0)) {
@@ -345,6 +353,13 @@ static inline void vmm_guest_state_sync_cs_selector(guest_state_t *gs, seL4_CPtr
     if(IS_MACHINE_STATE_MODIFIED(gs->machine.cs_selector)) {
         vmm_vmcs_write(vcpu, VMX_GUEST_CS_SELECTOR, gs->machine.cs_selector);
         MACHINE_STATE_SYNC(gs->machine.cs_selector);
+    }
+}
+
+static inline void vmm_guest_state_sync_entry_exception_error_code(guest_state_t *gs, seL4_CPtr vcpu) {
+    if (IS_MACHINE_STATE_MODIFIED(gs->machine.entry_exception_error_code)) {
+        vmm_vmcs_write(vcpu, VMX_CONTROL_ENTRY_EXCEPTION_ERROR_CODE, gs->machine.entry_exception_error_code);
+        MACHINE_STATE_SYNC(gs->machine.entry_exception_error_code);
     }
 }
 

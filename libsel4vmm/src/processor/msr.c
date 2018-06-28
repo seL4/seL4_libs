@@ -69,8 +69,9 @@ int vmm_rdmsr_handler(vmm_vcpu_t *vcpu) {
 
         default:
             DPRINTF(1, "rdmsr WARNING unsupported msr_no 0x%x\n", msr_no);
-	    data = 0; /* should raise exception */
-            break;
+            // generate a GP fault
+            vmm_inject_exception(vcpu, 13, 1, 0);
+            return 0;
 
    }
 
@@ -113,8 +114,9 @@ int vmm_wrmsr_handler(vmm_vcpu_t *vcpu) {
 
         default:
             DPRINTF(1, "wrmsr WARNING unsupported msr_no 0x%x\n", msr_no);
-            ret = -1;
-            break;
+            // generate a GP fault
+            vmm_inject_exception(vcpu, 13, 1, 0);
+            return 0;
     }
 
     if (!ret)

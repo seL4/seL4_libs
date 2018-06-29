@@ -47,7 +47,7 @@ static inline int sync_sem_bare_wait(seL4_CPtr ep, volatile int *value) {
     return 0;
 }
 
-static inline int sync_sem_bare_trywait(seL4_CPtr ep, volatile int *value) {
+static inline int sync_sem_bare_trywait(UNUSED seL4_CPtr ep, volatile int *value) {
     int val = *value;
     while (val > 0) {
         if (__atomic_compare_exchange_n(value, &val, val - 1, 1, __ATOMIC_ACQUIRE, __ATOMIC_RELAXED)) {

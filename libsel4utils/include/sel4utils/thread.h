@@ -53,6 +53,8 @@ typedef struct sel4utils_checkpoint {
     void *stack;
     seL4_UserContext regs;
     sel4utils_thread_t *thread;
+    /* stack pointer this checkpoint preserves */
+    uintptr_t sp;
 } sel4utils_checkpoint_t;
 
 typedef void (*sel4utils_thread_entry_fn)(void *arg0, void *arg1, void *ipc_buf);
@@ -147,7 +149,11 @@ void sel4utils_clean_up_thread(vka_t *vka, vspace_t *alloc, sel4utils_thread_t *
  * should not mutate the heap or other state beyond the checkpoint, unless extra functionality
  * is included to roll these back.
  *
- * This should not be called on a currently running thread.
+ * This should not be called on a currently running thread, and is designed to be called on
+ * threads which are known to be blocked on an seL4_Recv, for checkpointing passive threads on
+ * the mcs kernel (threads without scheduling contexts). The checkpoint is set up that such a
+ * thread can be restarted successfully at the instruction which enters the kernel, with
+ * register state set up specifically for that.
  *
  * @param thread     the thread to checkpoint
  * @param checkpoint pointer to uninitialised checkpoint struct

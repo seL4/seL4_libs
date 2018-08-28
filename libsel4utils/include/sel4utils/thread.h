@@ -49,6 +49,7 @@ typedef struct sel4utils_thread {
 } sel4utils_thread_t;
 
 typedef struct sel4utils_checkpoint {
+    /* checkpointed stack */
     void *stack;
     seL4_UserContext regs;
     sel4utils_thread_t *thread;

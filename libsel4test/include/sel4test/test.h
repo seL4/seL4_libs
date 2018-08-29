@@ -251,9 +251,9 @@ static inline test_result_t _test_abort(const char *condition, const char *file,
  * which output the values and variable names to aid debugging */
 #define test_eq(a, b)  test_op(a, b, ==)
 #define test_neq(a, b) test_op(a, b, !=)
-#define test_ge(a, b)  test_op(a, b, >)
+#define test_gt(a, b)  test_op(a, b, >)
 #define test_geq(a, b) test_op(a, b, >=)
-#define test_le(a, b)  test_op(a, b, <)
+#define test_lt(a, b)  test_op(a, b, <)
 #define test_leq(a, b) test_op(a, b, <=)
 
 #define __TEST_MAX_STRING 50

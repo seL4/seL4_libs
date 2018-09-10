@@ -23,7 +23,7 @@
 #include <vka/object.h>
 
 #ifndef CONFIG_KERNEL_RT
-inline static int
+static inline int
 vka_cnode_saveCaller(const cspacepath_t* src)
 {
     return seL4_CNode_SaveCaller(
@@ -34,7 +34,7 @@ vka_cnode_saveCaller(const cspacepath_t* src)
 }
 #endif
 
-inline static int
+static inline int
 vka_cnode_copy(const cspacepath_t* dest, const cspacepath_t* src, seL4_CapRights_t rights)
 {
     return seL4_CNode_Copy(
@@ -48,7 +48,7 @@ vka_cnode_copy(const cspacepath_t* dest, const cspacepath_t* src, seL4_CapRights
            );
 }
 
-inline static int
+static inline int
 vka_cnode_delete(const cspacepath_t* src)
 {
     return seL4_CNode_Delete(
@@ -58,7 +58,7 @@ vka_cnode_delete(const cspacepath_t* src)
            );
 }
 
-inline static int
+static inline int
 vka_cnode_mint(const cspacepath_t* dest, const cspacepath_t* src,
                seL4_CapRights_t rights, seL4_Word badge)
 {
@@ -74,7 +74,7 @@ vka_cnode_mint(const cspacepath_t* dest, const cspacepath_t* src,
            );
 }
 
-inline static int
+static inline int
 vka_cnode_move(const cspacepath_t* dest, const cspacepath_t* src)
 {
     return seL4_CNode_Move(
@@ -87,7 +87,7 @@ vka_cnode_move(const cspacepath_t* dest, const cspacepath_t* src)
            );
 }
 
-inline static int
+static inline int
 vka_cnode_mutate(const cspacepath_t* dest, const cspacepath_t* src,
                  seL4_Word badge)
 {
@@ -102,7 +102,7 @@ vka_cnode_mutate(const cspacepath_t* dest, const cspacepath_t* src,
            );
 }
 
-inline static int
+static inline int
 vka_cnode_cancelBadgedSends(const cspacepath_t* src)
 {
     return seL4_CNode_CancelBadgedSends(
@@ -112,7 +112,7 @@ vka_cnode_cancelBadgedSends(const cspacepath_t* src)
            );
 }
 
-inline static int
+static inline int
 vka_cnode_revoke(const cspacepath_t* src)
 {
     return seL4_CNode_Revoke(
@@ -122,7 +122,7 @@ vka_cnode_revoke(const cspacepath_t* src)
            );
 }
 
-inline static int
+static inline int
 vka_cnode_rotate(const cspacepath_t *dest, seL4_Word dest_badge, const cspacepath_t *pivot,
                  seL4_Word pivot_badge, const cspacepath_t *src)
 {
@@ -138,7 +138,7 @@ vka_cnode_rotate(const cspacepath_t *dest, seL4_Word dest_badge, const cspacepat
  *
  * size_bits is only relevant for dynamically sized objects - untypeds + captables
  */
-inline static int
+static inline int
 vka_untyped_retype(vka_object_t *untyped, int type, int size_bits, int num_objects, const cspacepath_t *dest)
 {
     size_bits = vka_get_object_size(type, size_bits);

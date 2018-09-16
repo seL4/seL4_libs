@@ -105,11 +105,9 @@ void sel4test_reset(void)
 {
     current_test_result = SUCCESS;
 
-    if (config_set(CONFIG_ENABLE_BENCHMARKS)) {
 #ifdef CONFIG_ENABLE_BENCHMARKS
-        seL4_BenchmarkResetLog();
+    seL4_BenchmarkResetLog();
 #endif /* CONFIG_ENABLE_BENCHMARKS */
-    }
 }
 
 test_result_t sel4test_get_result(void)

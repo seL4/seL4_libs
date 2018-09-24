@@ -11,8 +11,7 @@
  */
 
 #include <sel4debug/debug.h>
-#include <sel4/types.h>
-#include <sel4/arch/functions.h>
+#include <sel4/sel4.h>
 #include <stdarg.h>
 #include <stdio.h>
 

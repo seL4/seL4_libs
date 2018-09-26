@@ -35,7 +35,7 @@
  * This is rather terrible, but is the simplest option without a
  * huge amount of infrastructure.
  */
-char morecore_area[CONFIG_LIB_SEL4_MUSLC_SYS_MORECORE_BYTES];
+char __attribute__((aligned(PAGE_SIZE_4K))) morecore_area[CONFIG_LIB_SEL4_MUSLC_SYS_MORECORE_BYTES];
 
 size_t morecore_size = CONFIG_LIB_SEL4_MUSLC_SYS_MORECORE_BYTES;
 /* Pointer to free space in the morecore area. */

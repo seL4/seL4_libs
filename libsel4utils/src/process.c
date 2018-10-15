@@ -184,7 +184,8 @@ sel4utils_stack_write(vspace_t *current_vspace, vspace_t *target_vspace,
     uintptr_t current_dest = new_stack_pointer;
     while (remaining > 0) {
         /* How many can we write on the current page ? */
-        size_t towrite = MIN(ROUND_UP(current_dest, PAGE_SIZE_4K) - current_dest, remaining);
+        size_t towrite = MIN(PAGE_SIZE_4K - (current_dest % PAGE_SIZE_4K), remaining);
+        assert(towrite != 0);
         /* Get the cap */
         seL4_CPtr frame = vspace_get_cap(target_vspace, (void*)PAGE_ALIGN_4K(current_dest));
         if (!frame) {

@@ -27,9 +27,5 @@ __attribute__((no_instrument_function));
 
 void debug_cap_identify(seL4_CPtr cap);
 
-#ifdef CONFIG_USER_DEBUG_BUILD
 void debug_print_bootinfo(seL4_BootInfo *info);
-#else
-#define debug_print_bootinfo(x)
-#endif /* CONFIG_USER_DEBUG_BUILD */
 

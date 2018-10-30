@@ -50,11 +50,11 @@
 *
 */
 
-#include <sel4platsupport/plat/hw/soc_AM335x.h>
-#include <sel4platsupport/plat/hw/hw_control_AM335x.h>
-#include <sel4platsupport/plat/hw/hw_types.h>
-#include <sel4platsupport/plat/beaglebone.h>
-#include <sel4platsupport/plat/hw/hw_cm_per.h>
+#include <ethdrivers/plat/hw/soc_AM335x.h>
+#include <ethdrivers/plat/hw/hw_control_AM335x.h>
+#include <ethdrivers/plat/hw/hw_types.h>
+#include <ethdrivers/plat/beaglebone.h>
+#include <ethdrivers/plat/hw/hw_cm_per.h>
 
 /******************************************************************************
 **                       INTERNAL MACRO DEFINITIONS

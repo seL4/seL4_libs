@@ -54,8 +54,8 @@
 
 #include <utils/arith.h> /* BIT() */
 #include <utils/attribute.h> /* UNUSED */
-#include <sel4platsupport/plat/hw/hw_types.h>
-#include <sel4platsupport/plat/cpsw.h>
+#include <ethdrivers/plat/hw/hw_types.h>
+#include <ethdrivers/plat/cpsw.h>
 
 /*******************************************************************************
 *                       INTERNAL MACRO DEFINITIONS

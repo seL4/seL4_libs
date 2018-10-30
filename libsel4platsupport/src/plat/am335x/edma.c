@@ -42,9 +42,9 @@
 
 /* Driver APIs */
 #include <utils/attribute.h>
-#include <sel4platsupport/plat/edma.h>
+#include <ethdrivers/plat/edma.h>
 
-#include <sel4platsupport/plat/hw/hw_types.h>
+#include <ethdrivers/plat/hw/hw_types.h>
 
 /****************************************************************************/
 /*                         GLOBAL VARIABLES                                 */

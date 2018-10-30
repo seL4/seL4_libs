@@ -50,10 +50,10 @@
 *
 */
 
-#include <sel4platsupport/plat/hw/hw_control_AM335x.h>
-#include <sel4platsupport/plat/hw/soc_AM335x.h>
-#include <sel4platsupport/plat/hw/hw_cm_per.h>
-#include <sel4platsupport/plat/hw/hw_types.h>
+#include <ethdrivers/plat/hw/hw_control_AM335x.h>
+#include <ethdrivers/plat/hw/soc_AM335x.h>
+#include <ethdrivers/plat/hw/hw_cm_per.h>
+#include <ethdrivers/plat/hw/hw_types.h>
 
 /**
  *  \brief    This function maps the crossbar events.

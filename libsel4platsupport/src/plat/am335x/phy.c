@@ -52,9 +52,9 @@
 *
 */
 
-#include <sel4platsupport/plat/hw/hw_types.h>
-#include <sel4platsupport/plat/mdio.h>
-#include <sel4platsupport/plat/phy.h>
+#include <ethdrivers/plat/hw/hw_types.h>
+#include <ethdrivers/plat/mdio.h>
+#include <ethdrivers/plat/phy.h>
 
 #define PHY_ADV_VAL_MASK                 (0xff10)
 

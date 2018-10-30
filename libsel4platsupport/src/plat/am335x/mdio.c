@@ -53,11 +53,11 @@
 */
 
 /* HW Macros and Peripheral Defines */
-#include <sel4platsupport/plat/hw/hw_types.h>
-#include <sel4platsupport/plat/hw/hw_mdio.h>
+#include <ethdrivers/plat/hw/hw_types.h>
+#include <ethdrivers/plat/hw/hw_mdio.h>
 
 /* Driver APIs */
-#include <sel4platsupport/plat/mdio.h>
+#include <ethdrivers/plat/mdio.h>
 
 /*******************************************************************************
 *                       INTERNAL MACRO DEFINITIONS

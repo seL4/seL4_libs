@@ -185,11 +185,12 @@ vka_alloc_async_endpoint(vka_t *vka, vka_object_t *result)
     return vka_alloc_notification(vka, result);
 }
 
-static inline int vka_alloc_reply(UNUSED vka_t *vka, UNUSED vka_object_t *result)
+static inline int vka_alloc_reply(UNUSED vka_t *vka, vka_object_t *result)
 {
 #ifdef CONFIG_KERNEL_RT
     return vka_alloc_object(vka, seL4_ReplyObject, seL4_ReplyBits, result);
 #else
+    *result = (vka_object_t) {};
     ZF_LOGW("Allocating reply on non RT kernel");
     return ENOSYS;
 #endif

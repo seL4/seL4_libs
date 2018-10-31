@@ -12,7 +12,7 @@
 
 #pragma once
 
-#include <sel4platsupport/plat/serial.h>
+#include <platsupport/plat/serial.h>
 #include <sel4platsupport/arch/serial.h>
 
 #include <simple/simple.h>

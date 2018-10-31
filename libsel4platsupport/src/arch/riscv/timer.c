@@ -9,12 +9,8 @@
  *
  * @TAG(DATA61_BSD)
  */
-#include <autoconf.h>
 #include <vka/vka.h>
 #include <vspace/vspace.h>
-
-#include <sel4platsupport/timer.h>
-#include <sel4platsupport/plat/timer.h>
 
 #include <stdlib.h>
 

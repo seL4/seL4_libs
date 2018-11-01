@@ -12,6 +12,8 @@
 #include <vka/vka.h>
 #include <vspace/vspace.h>
 
+#include <sel4platsupport/timer.h>
+
 #include <stdlib.h>
 
 seL4_timer_t *

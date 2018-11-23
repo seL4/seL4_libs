@@ -93,7 +93,7 @@ static int get_nth_pmem(vka_t *vka, ltimer_t *ltimer, sel4ps_pmem_t *obj, int n)
 {
     int error = ltimer_get_nth_pmem(ltimer, n, &obj->region);
     if (!error && obj->region.length > PAGE_SIZE_4K) {
-        ZF_LOGW("Support for timers with anything but 4K pages unimplemented! length %llu",
+        ZF_LOGE("Support for timers with anything but 4K pages unimplemented! length %llu",
                 obj->region.length);
         return ENOSYS;
     }

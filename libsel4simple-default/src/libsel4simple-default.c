@@ -128,7 +128,7 @@ int simple_default_untyped_count(void *data) {
 }
 
 seL4_CPtr simple_default_nth_untyped(void *data, int n, size_t *size_bits, uintptr_t *paddr, bool *device) {
-    assert(data && size_bits && paddr);
+    assert(data);
 
     seL4_BootInfo *bi = data;
 

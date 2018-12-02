@@ -20,6 +20,14 @@
 #include <utils/util.h>
 #include <vka/cspacepath_t.h>
 
+/* Simple does not address initial null caps, including seL4_CapNull */
+#ifdef CONFIG_IOMMU
+#define SIMPLE_SKIPPED_INIT_CAPS 1
+#else
+/* seL4_CapIOSpace is null if IOMMU isn't supported */
+#define SIMPLE_SKIPPED_INIT_CAPS 2
+#endif
+
 /**
  * Request a cap to the IOPorts
  *

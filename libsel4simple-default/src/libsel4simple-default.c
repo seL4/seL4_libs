@@ -72,34 +72,37 @@ int simple_default_cap_count(void *data) {
            + (bi->userImageFrames.end - bi->userImageFrames.start)
            + (bi->userImagePaging.end - bi->userImagePaging.start)
            + (bi->untyped.end - bi->untyped.start)
-           + seL4_NumInitialCaps; //Include all the init caps
+           + SIMPLE_NUM_INIT_CAPS; //Include all the init caps
 }
 
 seL4_CPtr simple_default_nth_cap(void *data, int n) {
     assert(data);
 
     seL4_BootInfo * bi = data;
-    size_t shared_frame_range = bi->sharedFrames.end - bi->sharedFrames.start + seL4_NumInitialCaps;
+    size_t shared_frame_range = bi->sharedFrames.end - bi->sharedFrames.start + SIMPLE_NUM_INIT_CAPS;
     size_t user_img_frame_range = bi->userImageFrames.end - bi->userImageFrames.start + shared_frame_range;
     size_t user_img_paging_range = bi->userImagePaging.end - bi->userImagePaging.start + user_img_frame_range;
     size_t untyped_range = bi->untyped.end - bi->untyped.start + user_img_paging_range;
 
     seL4_CPtr true_return = seL4_CapNull;
 
-    if (n < seL4_CapInitThreadASIDPool) {
+    if (n < SIMPLE_NUM_INIT_CAPS) {
+        /* skip seL4_CapNull */
         true_return = (seL4_CPtr) n+1;
-    } else if (n < seL4_NumInitialCaps) {
-        true_return = (seL4_CPtr) n+1;
-#if defined(CONFIG_ARCH_ARM)
-        true_return++;
+#if !(defined(CONFIG_ARCH_IA32) || defined(CONFIG_ARCH_X86_64))
+        /* skip seL4_CapIOPortControl on non-x86 */
+        if (true_return >= seL4_CapIOPortControl) {
+            true_return++;
+        }
 #endif
 #ifndef CONFIG_IOMMU
-        if(true_return >= seL4_CapIOSpace) {
+        /* skip seL4_CapIOSpace if IOMMU isn't supported on x86 */
+        if (true_return >= seL4_CapIOSpace) {
             true_return++;
         }
 #endif
     } else if (n < shared_frame_range) {
-        return bi->sharedFrames.start + (n - seL4_NumInitialCaps);
+        return bi->sharedFrames.start + (n - SIMPLE_NUM_INIT_CAPS);
     } else if (n < user_img_frame_range) {
         return bi->userImageFrames.start + (n - shared_frame_range);
     } else if (n < user_img_paging_range) {

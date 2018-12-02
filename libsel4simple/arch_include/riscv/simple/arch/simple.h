@@ -19,6 +19,10 @@
 #include <utils/util.h>
 #include <vka/cspacepath_t.h>
 
+/* Simple does not address initial null caps, including seL4_CapNull.
+ * seL4_CapIOSpace, seL4_CapIOPortControl are null on architectures other than x86 */
+#define SIMPLE_SKIPPED_INIT_CAPS 3
+
 /**
  * Request a cap to a specific IRQ number on the system
  *

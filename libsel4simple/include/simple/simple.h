@@ -23,6 +23,9 @@
 #include <stdbool.h>
 #include <vka/cspacepath_t.h>
 
+/* Simple does not address initial null caps. */
+#define SIMPLE_NUM_INIT_CAPS (seL4_NumInitialCaps - SIMPLE_SKIPPED_INIT_CAPS)
+
 /**
  * Get the cap to the physical frame of memory and put it at specified location
  *
@@ -88,6 +91,11 @@ typedef int (*simple_get_cap_count_fn)(void *data);
 
 /**
  * Get the nth cap that this library can address
+ *
+ * Addressable capabilities are numbered from 0, starting with the initial thread's capabilities,
+ * through caps provided by bootinfo.
+ * Initial capabilities that are null are not addressable, including seL4_CapNull, and other
+ * capabilities depending on the architecture and configuration.
  *
  * @param data cookie for the underlying implementation
  *

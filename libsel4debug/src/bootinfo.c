@@ -30,7 +30,7 @@ debug_print_bootinfo(seL4_BootInfo *info)
     printf("userImagePaging: [%lu --> %lu)\n", (long)info->userImagePaging.start, (long)info->userImagePaging.end);
     printf("untypeds:        [%lu --> %lu)\n", (long)info->untyped.start, (long)info->untyped.end);
     printf("Initial thread domain: %u\n", (int)info->initThreadDomain);
-    printf("Initial thread cnode size: %u\n", info->initThreadCNodeSizeBits);
+    printf("Initial thread cnode size: %u\n", (int)info->initThreadCNodeSizeBits);
     printf("List of untypeds\n");
     printf("------------------\n");
     printf("Paddr    | Size   | Device\n");

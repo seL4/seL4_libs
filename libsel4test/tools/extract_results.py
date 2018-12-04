@@ -86,7 +86,7 @@ def main():
     # Dump input data *before* parsing in case we choke during parsing. This
     # means end users have a chance of determining what went wrong from the
     # original output.
-    if args.quiet:
+    if not args.quiet:
         print data
 
     # Parse the input as HTML even though BS supports XML. It seems the XML

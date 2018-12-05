@@ -51,7 +51,7 @@ struct irq_server_node {
 
 /* Executes the registered callback for incoming IRQS */
 static void
-irq_server_node_handle_irq(struct irq_server_node *n, uint32_t badge)
+irq_server_node_handle_irq(struct irq_server_node *n, seL4_Word badge)
 {
     struct irq_data* irqs;
     irqs = n->irqs;
@@ -61,7 +61,7 @@ irq_server_node_handle_irq(struct irq_server_node *n, uint32_t badge)
     while (badge) {
         int irq_idx;
         struct irq_data* irq;
-        irq_idx = CTZ(badge);
+        irq_idx = CTZL(badge);
         irq = &irqs[irq_idx];
         ZF_LOGD("Received IRQ %d, badge 0x%x, index %d\n", irq->irq, (unsigned)badge, irq_idx);
         irq->cb(irq);

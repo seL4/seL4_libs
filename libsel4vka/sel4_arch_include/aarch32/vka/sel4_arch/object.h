@@ -17,16 +17,6 @@
 #include <vka/kobject_t.h>
 #include <utils/util.h>
 
-/*resource allocation interfaces for virtual machine extensions on ARM */
-#ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
-static inline int vka_alloc_vcpu(vka_t *vka, vka_object_t *result)
-{
-    return vka_alloc_object(vka, seL4_ARM_VCPUObject, seL4_ARM_VCPUBits, result);
-}
-
-LEAKY(vcpu)
-#endif
-
 static inline int vka_alloc_vspace_root(vka_t *vka, vka_object_t *result)
 {
     return vka_alloc_page_directory(vka, result);
@@ -44,8 +34,6 @@ vka_arm_mode_get_object_size(seL4_Word objectType)
         return seL4_SectionBits;
     case seL4_ARM_SuperSectionObject:
         return seL4_SuperSectionBits;
-    case seL4_ARM_VCPUObject:
-        return seL4_ARM_VCPUBits;
     default:
         /* Unknown object type. */
         ZF_LOGE("Unknown object type");

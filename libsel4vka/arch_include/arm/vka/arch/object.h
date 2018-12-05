@@ -17,6 +17,16 @@
 #include <utils/util.h>
 #include <vka/sel4_arch/object.h>
 
+/*resource allocation interfaces for virtual machine extensions on ARM */
+#ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
+static inline int vka_alloc_vcpu(vka_t *vka, vka_object_t *result)
+{
+    return vka_alloc_object(vka, seL4_ARM_VCPUObject, seL4_ARM_VCPUBits, result);
+}
+
+LEAKY(vcpu)
+#endif
+
 #ifdef CONFIG_ARM_SMMU
 static inline int vka_alloc_io_page_table(vka_t *vka, vka_object_t *result)
 {
@@ -42,6 +52,8 @@ vka_arch_get_object_size(seL4_Word objectType)
         return seL4_PageTableBits;
     case seL4_ARM_PageDirectoryObject:
         return seL4_PageDirBits;
+    case seL4_ARM_VCPUObject:
+        return seL4_ARM_VCPUBits;
 #ifdef CONFIG_ARM_SMMU
     case seL4_ARM_IOPageTableObject:
         return seL4_IOPageTableBits;

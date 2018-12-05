@@ -13,13 +13,22 @@
 #pragma once
 
 #ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
-#define KERNEL_RESERVED_START 0x00000FFFFFFFF000
+
+#if defined(CONFIG_ARM_PA_SIZE_BITS_44)
+
+#define KERNEL_RESERVED_START   0x00000ffffffff000
+#define VSPACE_NUM_LEVELS       4
+
 #else
-#define KERNEL_RESERVED_START 0x00007ffffffff000
+#error Unspecified PA size bits
 #endif
 
-#define VSPACE_MAP_PAGING_OBJECTS 5
+#else
 
-#define VSPACE_LEVEL_BITS 9
+#define KERNEL_RESERVED_START 0x00007ffffffff000
 #define VSPACE_NUM_LEVELS 4
 
+#endif /* end of !CONFIG_ARM_HYPERVISOR_SUPPORT */
+
+#define VSPACE_MAP_PAGING_OBJECTS   5
+#define VSPACE_LEVEL_BITS 9

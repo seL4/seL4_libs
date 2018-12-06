@@ -46,7 +46,7 @@ config_choice(LibSel4DebugFunctionInstrumentation LIB_SEL4_DEBUG_FUNCTION_INSTRU
         enable this option if you want to retrieve programmatic backtraces."
     "none;LibSel4DebugFunctionInstrumentationNone;LIBSEL4DEBUG_FUNCTION_INSTRUMENTATION_NONE"
     "printf;LibSel4DebugFunctionInstrumentationPrintf;LIBSEL4DEBUG_FUNCTION_INSTRUMENTATION_TRACE"
-    "backtrace;LibSel4DebugFunctionInstrumentationBackgrace;LIBSEL4DEBUG_FUNCTION_INSTRUMENTATION_BACKTRACE"
+    "backtrace;LibSel4DebugFunctionInstrumentationBacktrace;LIBSEL4DEBUG_FUNCTION_INSTRUMENTATION_BACKTRACE"
 )
 
 add_config_library(sel4debug "${configure_string}")

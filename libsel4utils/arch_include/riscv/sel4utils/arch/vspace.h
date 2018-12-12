@@ -14,13 +14,10 @@
 #include <autoconf.h>
 
 #if CONFIG_PT_LEVELS == 2
-#define KERNEL_RESERVED_START 0x7ffff000
 #define VSPACE_LEVEL_BITS 10
 #elif CONFIG_PT_LEVELS == 3
-#define KERNEL_RESERVED_START 0x0000002ffffff000
 #define VSPACE_LEVEL_BITS 9
 #elif CONFIG_PT_LEVELS == 4
-#define KERNEL_RESERVED_START 0x00007ffffffff000
 #define VSPACE_LEVEL_BITS 9
 #else
 #error "Unsupported PT level"

@@ -16,7 +16,6 @@
 
 #if defined(CONFIG_ARM_PA_SIZE_BITS_44)
 
-#define KERNEL_RESERVED_START   0x00000ffffffff000
 #define VSPACE_NUM_LEVELS       4
 
 #else
@@ -25,7 +24,6 @@
 
 #else
 
-#define KERNEL_RESERVED_START 0x00007ffffffff000
 #define VSPACE_NUM_LEVELS 4
 
 #endif /* end of !CONFIG_ARM_HYPERVISOR_SUPPORT */

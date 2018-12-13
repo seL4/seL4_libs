@@ -44,7 +44,7 @@ x86_mode_kobject_get_size(kobject_t type, seL4_Word objectSize)
     case KOBJECT_PDPT:
         return seL4_PDPTBits;
     default:
-        ZF_LOGE("Uknown object type");
+        ZF_LOGE("Unknown object type");
         return 0;
     }
 }

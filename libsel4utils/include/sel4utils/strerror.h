@@ -16,4 +16,6 @@
 void __sel4_error(int, const char *, const char *, int, char *);
 
 const char *sel4_strerror(int errcode);
+const char *sel4_strfault(int errcode);
 extern char *sel4_errlist[];
+extern char *sel4_faultlist[];

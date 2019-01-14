@@ -16,6 +16,8 @@
 #include <sel4/sel4.h>
 #include <sel4utils/strerror.h>
 
+#define _PRIV_SEL4_FAULTLIST_UNKNOWN_IDX (seL4_Fault_UserException + 1)
+
 char *sel4_errlist[] = {
     [seL4_NoError] = "seL4_NoError",
     [seL4_InvalidArgument] = "seL4_InvalidArgument",
@@ -29,6 +31,17 @@ char *sel4_errlist[] = {
     [seL4_RevokeFirst] = "seL4_RevokeFirst",
     [seL4_NotEnoughMemory] = "seL4_NotEnoughMemory",
     NULL
+};
+
+char *sel4_faultlist[] = {
+    [seL4_Fault_NullFault] = "seL4_Fault_NullFault",
+    [seL4_Fault_CapFault] = "seL4_Fault_CapFault",
+    [seL4_Fault_UnknownSyscall] = "seL4_Fault_UnknownSyscall",
+    [seL4_Fault_UserException] = "seL4_Fault_UserException",
+    [_PRIV_SEL4_FAULTLIST_UNKNOWN_IDX] = "Unknown Fault",
+    [seL4_Fault_VMFault] = "seL4_Fault_VMFault",
+    [seL4_Fault_VGICMaintenance] = "seL4_Fault_VGICMaintenance",
+    [seL4_Fault_VCPUFault] = "seL4_Fault_VCPUFault"
 };
 
 const char *
@@ -46,4 +59,15 @@ __sel4_error(int sel4_error, const char *file,
             sel4_errlist[sel4_error],
             function, file, line, str);
     abort();
+}
+
+const char *
+sel4_strfault(int faultlabel)
+{
+    if (faultlabel > seL4_Fault_VCPUFault || faultlabel == _PRIV_SEL4_FAULTLIST_UNKNOWN_IDX
+	|| faultlabel < seL4_Fault_NullFault) {
+        return sel4_faultlist[_PRIV_SEL4_FAULTLIST_UNKNOWN_IDX];
+    }
+
+    return sel4_faultlist[faultlabel];
 }

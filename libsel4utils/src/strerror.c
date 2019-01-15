@@ -17,6 +17,11 @@
 #include <sel4utils/strerror.h>
 
 #define _PRIV_SEL4_FAULTLIST_UNKNOWN_IDX (seL4_Fault_UserException + 1)
+#ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
+#define _PRIV_SEL4_FAULTLIST_MAX_IDX     (seL4_Fault_VCPUFault)
+#else
+#define _PRIV_SEL4_FAULTLIST_MAX_IDX     (seL4_Fault_VMFault)
+#endif
 
 char *sel4_errlist[] = {
     [seL4_NoError] = "seL4_NoError",
@@ -40,8 +45,10 @@ char *sel4_faultlist[] = {
     [seL4_Fault_UserException] = "seL4_Fault_UserException",
     [_PRIV_SEL4_FAULTLIST_UNKNOWN_IDX] = "Unknown Fault",
     [seL4_Fault_VMFault] = "seL4_Fault_VMFault",
+#ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
     [seL4_Fault_VGICMaintenance] = "seL4_Fault_VGICMaintenance",
     [seL4_Fault_VCPUFault] = "seL4_Fault_VCPUFault"
+#endif
 };
 
 const char *
@@ -64,7 +71,7 @@ __sel4_error(int sel4_error, const char *file,
 const char *
 sel4_strfault(int faultlabel)
 {
-    if (faultlabel > seL4_Fault_VCPUFault || faultlabel == _PRIV_SEL4_FAULTLIST_UNKNOWN_IDX
+    if (faultlabel > _PRIV_SEL4_FAULTLIST_MAX_IDX || faultlabel == _PRIV_SEL4_FAULTLIST_UNKNOWN_IDX
 	|| faultlabel < seL4_Fault_NullFault) {
         return sel4_faultlist[_PRIV_SEL4_FAULTLIST_UNKNOWN_IDX];
     }

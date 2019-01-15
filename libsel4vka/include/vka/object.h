@@ -41,8 +41,14 @@ static inline int
 vka_alloc_object_at_maybe_dev(vka_t *vka, seL4_Word type, seL4_Word size_bits, uintptr_t paddr,
                     bool can_use_dev, vka_object_t *result)
 {
+    int error = -1;
+    if (!(type < seL4_ObjectTypeCount)) {
+        result->cptr = 0;
+        ZF_LOGE("Unknown object type: %lu", type);
+        goto error;
+    }
 
-    int error = vka_cspace_alloc(vka, &result->cptr);
+    error = vka_cspace_alloc(vka, &result->cptr);
     if (unlikely(error)) {
         result->cptr = 0;
         ZF_LOGE("Failed to allocate cslot: error %d\n", error);

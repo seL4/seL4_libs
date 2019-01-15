@@ -51,7 +51,7 @@ vka_alloc_object_at_maybe_dev(vka_t *vka, seL4_Word type, seL4_Word size_bits, u
     error = vka_cspace_alloc(vka, &result->cptr);
     if (unlikely(error)) {
         result->cptr = 0;
-        ZF_LOGE("Failed to allocate cslot: error %d\n", error);
+        ZF_LOGE("Failed to allocate cslot: error %d", error);
         goto error;
     }
 
@@ -61,14 +61,14 @@ vka_alloc_object_at_maybe_dev(vka_t *vka, seL4_Word type, seL4_Word size_bits, u
     if (paddr == VKA_NO_PADDR) {
         error = vka_utspace_alloc_maybe_device(vka, &path, type, size_bits, can_use_dev, &result->ut);
         if (unlikely(error)) {
-            ZF_LOGE("Failed to allocate object of size %lu, error %d\n",
+            ZF_LOGE("Failed to allocate object of size %lu, error %d",
                      BIT(size_bits), error);
             goto error;
         }
     } else {
         error = vka_utspace_alloc_at(vka, &path, type, size_bits, paddr, &result->ut);
         if (unlikely(error)) {
-            ZF_LOGE("Failed to allocate object of size %lu at paddr %p, error %d\n",
+            ZF_LOGE("Failed to allocate object of size %lu at paddr %p, error %d",
                     BIT(size_bits), (void*)paddr, error);
             goto error;
         }

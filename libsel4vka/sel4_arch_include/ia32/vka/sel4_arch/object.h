@@ -31,7 +31,7 @@ vka_x86_mode_get_object_size(seL4_Word objectType)
         return seL4_PDPTBits;
     default:
         /* Unknown object type. */
-        ZF_LOGF("Unknown object type %ld", (long)objectType);
+        ZF_LOGE("Unknown object type %ld", (long)objectType);
         return -1;
     }
 }

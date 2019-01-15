@@ -50,7 +50,7 @@ vka_arm_mode_get_object_size(seL4_Word objectType)
         return seL4_PUDBits;
     default:
         /* Unknown object type. */
-        ZF_LOGF("Unknown object type");
+        ZF_LOGE("Unknown object type");
         return -1;
     }
 }

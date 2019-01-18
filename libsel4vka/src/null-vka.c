@@ -54,15 +54,23 @@ static void utspace_free(void *data, seL4_Word type, seL4_Word size_bits,
 {
 }
 
+static uintptr_t utspace_paddr(void *data, seL4_Word target, seL4_Word type, seL4_Word size_bits)
+{
+    return VKA_NO_PADDR;
+}
+
 void vka_init_nullvka(vka_t *vka)
 {
     assert(vka != NULL);
-    vka->data = NULL; /* not required */
-    vka->cspace_alloc = cspace_alloc;
-    vka->cspace_make_path = cspace_make_path;
-    vka->utspace_alloc = utspace_alloc;
-    vka->utspace_alloc_maybe_device = utspace_alloc_maybe_device;
-    vka->utspace_alloc_at = utspace_alloc_at;
-    vka->cspace_free = cspace_free;
-    vka->utspace_free = utspace_free;
+    *vka = (vka_t) {
+        .data = NULL, /* not required */
+        .cspace_alloc = cspace_alloc,
+        .cspace_make_path = cspace_make_path,
+        .utspace_alloc = utspace_alloc,
+        .utspace_alloc_maybe_device = utspace_alloc_maybe_device,
+        .utspace_alloc_at = utspace_alloc_at,
+        .cspace_free = cspace_free,
+        .utspace_free = utspace_free,
+        .utspace_paddr = utspace_paddr
+    };
 }

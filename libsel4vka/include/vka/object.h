@@ -44,7 +44,7 @@ vka_alloc_object_at_maybe_dev(vka_t *vka, seL4_Word type, seL4_Word size_bits, u
     int error = -1;
     if (!(type < seL4_ObjectTypeCount)) {
         result->cptr = 0;
-        ZF_LOGE("Unknown object type: %lu", type);
+        ZF_LOGE("Unknown object type: %ld", (long) type);
         goto error;
     }
 

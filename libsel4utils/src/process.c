@@ -16,7 +16,8 @@
 #include <string.h>
 #include <stdio.h>
 #include <inttypes.h>
-#include <elf.h>
+#include <elf/elf.h>
+#include <cpio/cpio.h>
 #include <sel4/sel4.h>
 #include <vka/object.h>
 #include <vka/capops.h>
@@ -27,6 +28,9 @@
 #include <sel4utils/elf.h>
 #include <sel4utils/mapping.h>
 #include <sel4utils/helpers.h>
+
+/* This library works with our cpio set up in the build system */
+extern char _cpio_archive[];
 
 void
 sel4utils_allocated_object(void *cookie, vka_object_t object)
@@ -581,16 +585,21 @@ sel4utils_configure_process_custom(sel4utils_process_t *process, vka_t *vka,
 
     /* finally elf load */
     if (config.is_elf) {
+        unsigned long size;
+        char *file = cpio_get_file(_cpio_archive, config.image_name, &size);
+        elf_t elf;
+        elf_newFile(file, size, &elf);
+
         if (config.do_elf_load) {
-            process->entry_point = sel4utils_elf_load(&process->vspace, spawner_vspace, vka, vka, config.image_name);
+            process->entry_point = sel4utils_elf_load(&process->vspace, spawner_vspace, vka, vka, &elf);
         } else {
-            process->num_elf_regions = sel4utils_elf_num_regions(config.image_name);
+            process->num_elf_regions = sel4utils_elf_num_regions(&elf);
             process->elf_regions = calloc(process->num_elf_regions, sizeof(*process->elf_regions));
             if (!process->elf_regions) {
                 ZF_LOGE("Failed to allocate memory for elf region information");
                 goto error;
             }
-            process->entry_point = sel4utils_elf_reserve(&process->vspace, config.image_name, process->elf_regions);
+            process->entry_point = sel4utils_elf_reserve(&process->vspace, &elf, process->elf_regions);
         }
 
         if (process->entry_point == NULL) {
@@ -598,16 +607,16 @@ sel4utils_configure_process_custom(sel4utils_process_t *process, vka_t *vka,
             goto error;
         }
 
-        process->sysinfo = sel4utils_elf_get_vsyscall(config.image_name);
+        process->sysinfo = sel4utils_elf_get_vsyscall(&elf);
 
         /* Retrieve the ELF phdrs */
-        process->num_elf_phdrs = sel4utils_elf_num_phdrs(config.image_name);
+        process->num_elf_phdrs = sel4utils_elf_num_phdrs(&elf);
         process->elf_phdrs = calloc(process->num_elf_phdrs, sizeof(Elf_Phdr));
         if (!process->elf_phdrs) {
             ZF_LOGE("Failed to allocate memory for elf phdr information");
             goto error;
         }
-        sel4utils_elf_read_phdrs(config.image_name, process->num_elf_phdrs, process->elf_phdrs);
+        sel4utils_elf_read_phdrs(&elf, process->num_elf_phdrs, process->elf_phdrs);
     } else {
         process->entry_point = config.entry_point;
         process->sysinfo = config.sysinfo;

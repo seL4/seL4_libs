@@ -16,7 +16,7 @@
 #include <vka/vka.h>
 
 #include <vspace/vspace.h>
-#include <elf.h>
+#include <elf/elf.h>
 
 #if CONFIG_WORD_SIZE == 64
 #define Elf_Phdr Elf64_Phdr
@@ -69,7 +69,7 @@ typedef struct sel4utils_elf_region {
  */
 void *
 sel4utils_elf_load_record_regions(vspace_t *loadee, vspace_t *loader, vka_t *loadee_vka,
-                                  vka_t *loader_vka, const char *image_name, sel4utils_elf_region_t *regions, int mapanywhere);
+                                  vka_t *loader_vka, elf_t *elf, sel4utils_elf_region_t *regions, int mapanywhere);
 
 /**
  * Wrapper for sel4utils_elf_load_record_regions. Does not record/perform reservations and
@@ -85,7 +85,7 @@ sel4utils_elf_load_record_regions(vspace_t *loadee, vspace_t *loader, vka_t *loa
  */
 void *
 sel4utils_elf_load(vspace_t *loadee, vspace_t *loader, vka_t *loadee_vka,
-                   vka_t *loader_vka, const char *image_name);
+                   vka_t *loader_vka, elf_t *elf);
 
 /**
  * Parses an elf file but does not actually load it. Merely reserves the regions in the vspace
@@ -99,7 +99,7 @@ sel4utils_elf_load(vspace_t *loadee, vspace_t *loader, vka_t *loadee_vka,
  * @return The entry point of the elf, NULL on error
  */
 void *
-sel4utils_elf_reserve(vspace_t *loadee, const char *image_name, sel4utils_elf_region_t *regions);
+sel4utils_elf_reserve(vspace_t *loadee, elf_t *elf, sel4utils_elf_region_t *regions);
 
 /**
  * Parses an elf file and returns the number of loadable regions. The result of this
@@ -110,7 +110,7 @@ sel4utils_elf_reserve(vspace_t *loadee, const char *image_name, sel4utils_elf_re
  * @return Number of loadable regions in the elf
  */
 int
-sel4utils_elf_num_regions(const char *image_name);
+sel4utils_elf_num_regions(elf_t *elf);
 
 /**
  * Looks for the __vsyscall section in an elf file and returns the value. This
@@ -120,7 +120,7 @@ sel4utils_elf_num_regions(const char *image_name);
  *
  * @return Address of vsyscall function or 0 if not found
  */
-uintptr_t sel4utils_elf_get_vsyscall(const char *image_name);
+uintptr_t sel4utils_elf_get_vsyscall(elf_t *elf);
 
 /**
  * Finds the section_name section in an elf file and returns the address.
@@ -133,7 +133,7 @@ uintptr_t sel4utils_elf_get_vsyscall(const char *image_name);
  *
  * @return Address of section or 0 if not found
  */
-uintptr_t sel4utils_elf_get_section(const char *image_name, const char *section_name, uint64_t* section_size);
+uintptr_t sel4utils_elf_get_section(elf_t *elf, const char *section_name, uint64_t* section_size);
 
 /**
  * Parses an elf file and returns the number of phdrs. The result of this
@@ -142,7 +142,7 @@ uintptr_t sel4utils_elf_get_section(const char *image_name, const char *section_
  * @param image_name name of the image in the cpio archive to inspect
  * @return Number of phdrs in the elf
  */
-uint32_t sel4utils_elf_num_phdrs(const char *image_name);
+uint32_t sel4utils_elf_num_phdrs(elf_t *elf);
 
 /**
  * Parse an elf file and retrieve all the phdrs
@@ -153,5 +153,5 @@ uint32_t sel4utils_elf_num_phdrs(const char *image_name);
  *
  * @return Number of phdrs retrieved
  */
-void sel4utils_elf_read_phdrs(const char *image_name, uint32_t max_phdrs, Elf_Phdr *phdrs);
+void sel4utils_elf_read_phdrs(elf_t *elf, size_t max_phdrs, Elf_Phdr *phdrs);
 

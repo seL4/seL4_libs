@@ -14,15 +14,11 @@
 #include <string.h>
 #include <sel4/sel4.h>
 #include <elf/elf.h>
-#include <cpio/cpio.h>
 #include <vka/capops.h>
 #include <sel4utils/thread.h>
 #include <sel4utils/util.h>
 #include <sel4utils/mapping.h>
 #include <sel4utils/elf.h>
-
-/* This library works with our cpio set up in the build system */
-extern char _cpio_archive[];
 
 /*
  * Convert ELF permissions into seL4 permissions.
@@ -172,15 +168,18 @@ load_segment(vspace_t *loadee_vspace, vspace_t *loader_vspace,
  */
 static int
 load_segments(vspace_t *loadee_vspace, vspace_t *loader_vspace,
-             vka_t *loadee_vka, vka_t *loader_vka, char *elf_file,
+             vka_t *loadee_vka, vka_t *loader_vka, elf_t *elf_file,
              int num_regions, sel4utils_elf_region_t regions[num_regions]) {
     for (int i = 0; i < num_regions; i++) {
         int segment_index = regions[i].segment_index;
-        char *source_addr = elf_file + elf_getProgramHeaderOffset(elf_file, segment_index);
+        char *source_addr = elf_getProgramSegment(elf_file, segment_index);
+        if (source_addr == NULL) {
+            return 1;
+        }
         size_t file_size = elf_getProgramHeaderFileSize(elf_file, segment_index);
 
         int error = load_segment(loadee_vspace, loader_vspace, loadee_vka, loader_vka,
-            source_addr, file_size, num_regions, regions, i);
+                                 source_addr, file_size, num_regions, regions, i);
         if (error) {
             return error;
         }
@@ -188,12 +187,12 @@ load_segments(vspace_t *loadee_vspace, vspace_t *loader_vspace,
     return 0;
 }
 
-static bool is_loadable_section(char* elf_file, int index) {
+static bool is_loadable_section(elf_t *elf_file, int index) {
     return elf_getProgramHeaderType(elf_file, index) == PT_LOAD;
 }
 
 static int
-count_loadable_regions(char* elf_file) {
+count_loadable_regions(elf_t *elf_file) {
     int num_headers = elf_getNumProgramHeaders(elf_file);
     int loadable_headers = 0;
 
@@ -207,15 +206,8 @@ count_loadable_regions(char* elf_file) {
 }
 
 int
-sel4utils_elf_num_regions(const char *image_name)
+sel4utils_elf_num_regions(elf_t *elf_file)
 {
-    unsigned long elf_size;
-    assert(image_name);
-    char *elf_file = cpio_get_file(_cpio_archive, image_name, &elf_size);
-    if (elf_file == NULL) {
-        ZF_LOGE("ERROR: failed to load elf file %s", image_name);
-        return 0;
-    }
     return count_loadable_regions(elf_file);
 }
 
@@ -360,7 +352,7 @@ prepare_reservations(size_t total_regions, sel4utils_elf_region_t regions[total_
  * @return 0 on success.
  */
 static int
-read_regions(char* elf_file, size_t total_regions, sel4utils_elf_region_t regions[total_regions]) {
+read_regions(elf_t *elf_file, size_t total_regions, sel4utils_elf_region_t regions[total_regions]) {
     int num_headers = elf_getNumProgramHeaders(elf_file);
     int region_id = 0;
     for (int i = 0; i < num_headers; i++) {
@@ -373,7 +365,7 @@ read_regions(char* elf_file, size_t total_regions, sel4utils_elf_region_t region
             region->cacheable = 1;
             region->rights = rights_from_elf(elf_getProgramHeaderFlags(elf_file, i));
             // elf_getProgramHeaderMemorySize should just return `uintptr_t`
-            region->elf_vstart = (void*)(uintptr_t)elf_getProgramHeaderVaddr(elf_file, i);
+            region->elf_vstart = (void *) elf_getProgramHeaderVaddr(elf_file, i);
             region->size = elf_getProgramHeaderMemorySize(elf_file, i);
             region->segment_index = i;
             region_id++;
@@ -426,7 +418,7 @@ compare_regions(sel4utils_elf_region_t a, sel4utils_elf_region_t b) {
  * @return 0 on success.
  */
 static int
-elf_reserve_regions_in_vspace(vspace_t *loadee, char* elf_file,
+elf_reserve_regions_in_vspace(vspace_t *loadee, elf_t *elf_file,
     int num_regions, sel4utils_elf_region_t regions[num_regions], int mapanywhere) {
     int error = read_regions(elf_file, num_regions, regions);
     if (error) {
@@ -451,7 +443,7 @@ elf_reserve_regions_in_vspace(vspace_t *loadee, char* elf_file,
 }
 
 static void *
-entry_point(char *elf_file) {
+entry_point(elf_t *elf_file) {
     uint64_t entry_point = elf_getEntryPoint(elf_file);
     if ((uint32_t) (entry_point >> 32) != 0) {
         ZF_LOGE("ERROR: this code hasn't been tested for 64bit!");
@@ -464,15 +456,8 @@ entry_point(char *elf_file) {
 
 
 void *
-sel4utils_elf_reserve(vspace_t *loadee, const char *image_name, sel4utils_elf_region_t *regions)
+sel4utils_elf_reserve(vspace_t *loadee, elf_t *elf_file, sel4utils_elf_region_t *regions)
 {
-    unsigned long elf_size;
-    char *elf_file = cpio_get_file(_cpio_archive, image_name, &elf_size);
-    if (elf_file == NULL) {
-        ZF_LOGE("ERROR: failed to load elf file %s", image_name);
-        return NULL;
-    }
-
     /* Count number of loadable segments */
     int num_regions = count_loadable_regions(elf_file);
 
@@ -488,15 +473,8 @@ sel4utils_elf_reserve(vspace_t *loadee, const char *image_name, sel4utils_elf_re
 }
 
 void *
-sel4utils_elf_load_record_regions(vspace_t *loadee, vspace_t *loader, vka_t *loadee_vka, vka_t *loader_vka, const char *image_name, sel4utils_elf_region_t *regions, int mapanywhere)
+sel4utils_elf_load_record_regions(vspace_t *loadee, vspace_t *loader, vka_t *loadee_vka, vka_t *loader_vka, elf_t *elf_file, sel4utils_elf_region_t *regions, int mapanywhere)
 {
-    unsigned long elf_size;
-    char *elf_file = cpio_get_file(_cpio_archive, image_name, &elf_size);
-    if (elf_file == NULL) {
-        ZF_LOGE("ERROR: failed to load elf file %s", image_name);
-        return NULL;
-    }
-
     /* Calculate number of loadable regions.  Use stack array if one wasn't passed in */
     int num_regions = count_loadable_regions(elf_file);
     bool clear_at_end = false;
@@ -533,23 +511,17 @@ sel4utils_elf_load_record_regions(vspace_t *loadee, vspace_t *loader, vka_t *loa
     return entry_point(elf_file);
 }
 
-uintptr_t sel4utils_elf_get_vsyscall(const char *image_name)
+uintptr_t sel4utils_elf_get_vsyscall(elf_t *elf_file)
 {
-    uintptr_t* addr = (uintptr_t*)sel4utils_elf_get_section(image_name, "__vsyscall", NULL);
+    uintptr_t* addr = (uintptr_t*)sel4utils_elf_get_section(elf_file, "__vsyscall", NULL);
     /* Hope everything is good and just dereference it */
     return *addr;
 }
 
-uintptr_t sel4utils_elf_get_section(const char *image_name, const char *section_name, uint64_t* section_size)
+uintptr_t sel4utils_elf_get_section(elf_t *elf_file, const char *section_name, uint64_t* section_size)
 {
-    unsigned long elf_size;
-    char *elf_file = cpio_get_file(_cpio_archive, image_name, &elf_size);
-    if (elf_file == NULL) {
-        ZF_LOGE("ERROR: failed to lookup elf file %s", image_name);
-        return 0;
-    }
     /* See if we can find the section */
-    int section_id;
+    size_t section_id;
     void *addr = elf_getSectionNamed(elf_file, section_name, &section_id);
     if (addr) {
         if (section_size != NULL) {
@@ -562,38 +534,30 @@ uintptr_t sel4utils_elf_get_section(const char *image_name, const char *section_
 }
 
 void *
-sel4utils_elf_load(vspace_t *loadee, vspace_t *loader, vka_t *loadee_vka, vka_t *loader_vka, const char *image_name)
+sel4utils_elf_load(vspace_t *loadee, vspace_t *loader, vka_t *loadee_vka, vka_t *loader_vka, elf_t *elf_file)
 {
-    return sel4utils_elf_load_record_regions(loadee, loader, loadee_vka, loader_vka, image_name, NULL, 0);
+    return sel4utils_elf_load_record_regions(loadee, loader, loadee_vka, loader_vka, elf_file, NULL, 0);
 }
 
 uint32_t
-sel4utils_elf_num_phdrs(const char *image_name)
+sel4utils_elf_num_phdrs(elf_t *elf_file)
 {
-    unsigned long elf_size;
-    char *elf_file = cpio_get_file(_cpio_archive, image_name, &elf_size);
     return elf_getNumProgramHeaders(elf_file);
 }
 
 void
-sel4utils_elf_read_phdrs(const char *image_name, uint32_t max_phdrs, Elf_Phdr *phdrs)
+sel4utils_elf_read_phdrs(elf_t *elf_file, size_t max_phdrs, Elf_Phdr *phdrs)
 {
-    unsigned long elf_size;
-    char *elf_file = cpio_get_file(_cpio_archive, image_name, &elf_size);
-    uint32_t num_phdrs = elf_getNumProgramHeaders(elf_file);
-    for (uint32_t i = 0; i < num_phdrs && i < max_phdrs; i++) {
-        /* cannot take addresses directly from the final struct as the types might
-         * be different, so store into locals first */
-        uint64_t p_vaddr, p_paddr, p_filesz, p_offset, p_memsz;
-        elf_getProgramHeaderInfo(elf_file, i, &p_vaddr, &p_paddr, &p_filesz, &p_offset, &p_memsz);
+    size_t num_phdrs = elf_getNumProgramHeaders(elf_file);
+    for (size_t i = 0; i < num_phdrs && i < max_phdrs; i++) {
         phdrs[i] = (Elf_Phdr) {
             .p_type = elf_getProgramHeaderType(elf_file, i),
-            .p_offset = p_offset,
-            .p_vaddr = p_vaddr,
-            .p_paddr = p_paddr,
-            .p_filesz = p_filesz,
-            .p_memsz = p_memsz,
-            .p_flags = elf_getProgramHeaderFlags(elf_file,i),
+            .p_offset = elf_getProgramHeaderOffset(elf_file, i),
+            .p_vaddr = elf_getProgramHeaderVaddr(elf_file, i),
+            .p_paddr = elf_getProgramHeaderPaddr(elf_file, i),
+            .p_filesz = elf_getProgramHeaderFileSize(elf_file, i),
+            .p_memsz = elf_getProgramHeaderMemorySize(elf_file, i),
+            .p_flags = elf_getProgramHeaderFlags(elf_file, i),
             .p_align = elf_getProgramHeaderAlign(elf_file, i)
         };
     }

@@ -31,6 +31,7 @@
 
 /* This library works with our cpio set up in the build system */
 extern char _cpio_archive[];
+extern char _cpio_archive_end[];
 
 void
 sel4utils_allocated_object(void *cookie, vka_object_t object)
@@ -586,7 +587,8 @@ sel4utils_configure_process_custom(sel4utils_process_t *process, vka_t *vka,
     /* finally elf load */
     if (config.is_elf) {
         unsigned long size;
-        char *file = cpio_get_file(_cpio_archive, config.image_name, &size);
+        unsigned long cpio_len = _cpio_archive_end - _cpio_archive;
+        char *file = cpio_get_file(_cpio_archive, cpio_len, config.image_name, &size);
         elf_t elf;
         elf_newFile(file, size, &elf);
 

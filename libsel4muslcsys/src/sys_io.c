@@ -41,6 +41,7 @@
 #define FREE_FD_TABLE_SIZE(x) (sizeof(int) * ((x) - FIRST_USER_FD))
 
 static void *cpio_archive_symbol;
+static unsigned long cpio_archive_len;
 static muslcsys_cpio_get_file_fn_t cpio_get_file_impl;
 
 /* We need to wrap this in the config to prevent linker errors */
@@ -196,9 +197,9 @@ sys_open_impl(const char *pathname, int flags, mode_t mode)
     long unsigned int size;
     char *file = NULL;
     if (cpio_get_file_impl && cpio_archive_symbol) {
-        file = cpio_get_file_impl(cpio_archive_symbol, pathname, &size);
+        file = cpio_get_file_impl(cpio_archive_symbol, cpio_archive_len, pathname, &size);
         if (!file && strncmp(pathname, "./", 2) == 0) {
-            file = cpio_get_file_impl(cpio_archive_symbol, pathname + 2, &size);
+            file = cpio_get_file_impl(cpio_archive_symbol, cpio_archive_len, pathname + 2, &size);
         }
     }
     if (!file) {
@@ -539,7 +540,9 @@ long sys_access(va_list ap) {
     return -EACCES;
 }
 
-void muslcsys_install_cpio_interface(void *cpio_symbol, muslcsys_cpio_get_file_fn_t fn) {
+void muslcsys_install_cpio_interface(void *cpio_symbol, unsigned long cpio_len,
+        muslcsys_cpio_get_file_fn_t fn) {
     cpio_archive_symbol = cpio_symbol;
+    cpio_archive_len = cpio_len;
     cpio_get_file_impl = fn;
 }

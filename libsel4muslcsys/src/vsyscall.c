@@ -226,8 +226,10 @@ static void CONSTRUCTOR(CONSTRUCTOR_MIN_PRIORITY) init_syscall_table(void) {
 /* If we have a default CPIO file interface defined in the config then install it here */
 #ifdef CONFIG_LIB_SEL4_MUSLC_SYS_CPIO_FS
 extern char _cpio_archive[];
+extern char _cpio_archive_end[];
 static void CONSTRUCTOR(CONSTRUCTOR_MIN_PRIORITY) install_default_cpio(void) {
-    muslcsys_install_cpio_interface(_cpio_archive, cpio_get_file);
+    unsigned long cpio_len = _cpio_archive_end - _cpio_archive;
+    muslcsys_install_cpio_interface(_cpio_archive, cpio_len, cpio_get_file);
 }
 #endif
 

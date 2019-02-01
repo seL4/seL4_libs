@@ -525,6 +525,7 @@ static int vmm_load_guest_segment(vmm_t *vmm, seL4_Word source_offset,
 int vmm_load_guest_elf(vmm_t *vmm, const char *elfname, size_t alignment) {
     int ret;
     char elf_file[256];
+    elf_t elf;
 
     DPRINTF(4, "Loading guest elf %s\n", elfname);
     FILE *file = fopen(elfname, "r");
@@ -533,13 +534,13 @@ int vmm_load_guest_elf(vmm_t *vmm, const char *elfname, size_t alignment) {
         return -1;
     }
 
-    ret = vmm_read_elf_headers(elf_file, vmm, file, sizeof(elf_file));
+    ret = vmm_read_elf_headers(elf_file, vmm, file, sizeof(elf_file), &elf);
     if(ret < 0) {
         ZF_LOGE("Guest elf \"%s\" invalid.", elfname);
         return -1;
     }
 
-    unsigned int n_headers = elf_getNumProgramHeaders(elf_file);
+    unsigned int n_headers = elf_getNumProgramHeaders(&elf);
 
     /* Find the largest guest ram region and use that for loading */
     uintptr_t load_addr = guest_ram_largest_free_region_start(&vmm->guest_mem);
@@ -550,14 +551,14 @@ int vmm_load_guest_elf(vmm_t *vmm, const char *elfname, size_t alignment) {
     uintptr_t guest_kernel_addr = 0xFFFFFFFF;
     uintptr_t guest_kernel_vaddr = 0xFFFFFFFF;
     for (int i = 0; i < n_headers; i++) {
-        if (elf_getProgramHeaderType(elf_file, i) != PT_LOAD) {
+        if (elf_getProgramHeaderType(&elf, i) != PT_LOAD) {
             continue;
         }
-        uint32_t addr = elf_getProgramHeaderPaddr(elf_file, i);
+        uint32_t addr = elf_getProgramHeaderPaddr(&elf, i);
         if (addr < guest_kernel_addr) {
             guest_kernel_addr = addr;
         }
-        uint32_t vaddr = elf_getProgramHeaderVaddr(elf_file, i);
+        uint32_t vaddr = elf_getProgramHeaderVaddr(&elf, i);
         if (vaddr < guest_kernel_vaddr) {
             guest_kernel_vaddr = vaddr;
         }
@@ -577,16 +578,16 @@ int vmm_load_guest_elf(vmm_t *vmm, const char *elfname, size_t alignment) {
         unsigned int file_size, segment_size;
 
         /* Skip unloadable program headers. */
-        if (elf_getProgramHeaderType(elf_file, i) != PT_LOAD) {
+        if (elf_getProgramHeaderType(&elf, i) != PT_LOAD) {
             continue;
         }
 
         /* Fetch information about this segment. */
-        source_offset = elf_getProgramHeaderOffset(elf_file, i);
-        file_size = elf_getProgramHeaderFileSize(elf_file, i);
-        segment_size = elf_getProgramHeaderMemorySize(elf_file, i);
+        source_offset = elf_getProgramHeaderOffset(&elf, i);
+        file_size = elf_getProgramHeaderFileSize(&elf, i);
+        segment_size = elf_getProgramHeaderMemorySize(&elf, i);
 
-        dest_addr = (seL4_Word) elf_getProgramHeaderPaddr(elf_file, i);
+        dest_addr = elf_getProgramHeaderPaddr(&elf, i);
         dest_addr += guest_relocation_offset;
 
         if (!segment_size) {
@@ -605,7 +606,7 @@ int vmm_load_guest_elf(vmm_t *vmm, const char *elfname, size_t alignment) {
     }
 
     /* Record the entry point. */
-    vmm->guest_image.entry = elf_getEntryPoint(elf_file);
+    vmm->guest_image.entry = elf_getEntryPoint(&elf);
     vmm->guest_image.entry += guest_relocation_offset;
 
     /* Remember where we started loading the kernel to fix up relocations in future */

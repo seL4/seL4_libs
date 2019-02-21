@@ -17,8 +17,12 @@
 #include <stdio.h>
 #include <utils/zf_log.h>
 
-void
-sel4debug_dump_registers(seL4_CPtr tcb)
+void sel4debug_dump_registers(seL4_CPtr tcb)
+{
+    sel4debug_dump_registers_prefix(tcb, "");
+}
+
+void sel4debug_dump_registers_prefix(seL4_CPtr tcb, char *prefix)
 {
     seL4_UserContext context;
     int error;
@@ -30,8 +34,8 @@ sel4debug_dump_registers(seL4_CPtr tcb)
         return;
     }
 
-    printf("Register dump:\n");
+    printf("%sRegister dump:\n", prefix);
     for (int i = 0; i < num_regs; i++) {
-        printf("%s\t:0x%lx\n", register_names[i], (long) ((seL4_Word * )&context)[i]);
+        printf("%s%s\t:0x%lx\n", prefix, register_names[i], (long) ((seL4_Word * )&context)[i]);
     }
 }

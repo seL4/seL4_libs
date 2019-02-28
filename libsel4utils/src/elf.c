@@ -514,8 +514,11 @@ sel4utils_elf_load_record_regions(vspace_t *loadee, vspace_t *loader, vka_t *loa
 uintptr_t sel4utils_elf_get_vsyscall(elf_t *elf_file)
 {
     uintptr_t* addr = (uintptr_t*)sel4utils_elf_get_section(elf_file, "__vsyscall", NULL);
-    /* Hope everything is good and just dereference it */
-    return *addr;
+    if (addr) {
+        return *addr;
+    } else {
+        return 0;
+    }
 }
 
 uintptr_t sel4utils_elf_get_section(elf_t *elf_file, const char *section_name, uint64_t* section_size)

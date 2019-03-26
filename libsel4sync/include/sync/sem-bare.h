@@ -25,7 +25,8 @@
 #include <stddef.h>
 #include <platsupport/sync/atomic.h>
 
-static inline int sync_sem_bare_wait(seL4_CPtr ep, volatile int *value) {
+static inline int sync_sem_bare_wait(seL4_CPtr ep, volatile int *value)
+{
 #ifdef CONFIG_DEBUG_BUILD
     /* Check the cap actually is an EP. */
     assert(seL4_DebugCapIdentify(ep) == 4);
@@ -38,7 +39,16 @@ static inline int sync_sem_bare_wait(seL4_CPtr ep, volatile int *value) {
         return -1;
     }
     if (oldval <= 0) {
-        seL4_Wait(ep, NULL);
+#ifdef CONFIG_ARCH_IA32
+#ifdef CONFIG_KERNEL_RT
+        seL4_RecvWithMRs(ep, NULL, NULL);
+#else
+        seL4_RecvWithMRs(ep, NULL, NULL, NULL);
+#endif /* CONFIG_KERNEL_RT */
+#else // all other platforms have 4 mrs
+
+        seL4_RecvWithMRs(ep, NULL, NULL, NULL, NULL, NULL);
+#endif
         /* Even though we performed an acquire barrier during the atomic
          * decrement we did not actually have the lock yet, so we have
          * to do another one now */
@@ -47,7 +57,8 @@ static inline int sync_sem_bare_wait(seL4_CPtr ep, volatile int *value) {
     return 0;
 }
 
-static inline int sync_sem_bare_trywait(UNUSED seL4_CPtr ep, volatile int *value) {
+static inline int sync_sem_bare_trywait(UNUSED seL4_CPtr ep, volatile int *value)
+{
     int val = *value;
     while (val > 0) {
         if (__atomic_compare_exchange_n(value, &val, val - 1, 1, __ATOMIC_ACQUIRE, __ATOMIC_RELAXED)) {
@@ -61,7 +72,8 @@ static inline int sync_sem_bare_trywait(UNUSED seL4_CPtr ep, volatile int *value
     return -1;
 }
 
-static inline int sync_sem_bare_post(seL4_CPtr ep, volatile int *value) {
+static inline int sync_sem_bare_post(seL4_CPtr ep, volatile int *value)
+{
 #ifdef CONFIG_DEBUG_BUILD
     /* Check the cap actually is an EP. */
     assert(seL4_DebugCapIdentify(ep) == 4);

@@ -14,21 +14,16 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <utils/util.h>
+#include <sel4runtime.h>
 
 seL4_BootInfo *platsupport_get_bootinfo(void)
 {
     /* bootinfo was set as an environment variable in _sel4_start */
-    char *bi_string = getenv("bootinfo");
-    if (!bi_string) {
+    seL4_BootInfo *bootinfo = sel4runtime_bootinfo();
+    if (!bootinfo) {
         ZF_LOGE("Attempted %s in an environment without bootinfo.", __FUNCTION__);
         return NULL;
     }
-    void *bi;
-    if (sscanf(bi_string, "%p", &bi) != 1) {
-        ZF_LOGE("bootinfo environment value '%s' was not valid.", bi_string);
-        return NULL;
-    }
-    seL4_BootInfo *bootinfo = (seL4_BootInfo*)bi;
     /* Save the address of the IPC buffer for seL4_GetIPCBuffer on IA32. */
     seL4_SetUserData((seL4_Word)bootinfo->ipcBuffer);
     return bootinfo;

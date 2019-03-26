@@ -75,6 +75,7 @@ target_link_libraries(
     Configuration
     muslc
     sel4
+    sel4runtime
     sel4simple
     utils
     sel4vspace

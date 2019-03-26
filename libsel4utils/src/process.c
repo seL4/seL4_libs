@@ -22,6 +22,7 @@
 #include <vka/object.h>
 #include <vka/capops.h>
 #include <stdarg.h>
+#include <sel4runtime/auxv.h>
 #include <sel4utils/vspace.h>
 #include <sel4utils/process.h>
 #include <sel4utils/util.h>
@@ -33,8 +34,7 @@
 extern char _cpio_archive[];
 extern char _cpio_archive_end[];
 
-void
-sel4utils_allocated_object(void *cookie, vka_object_t object)
+void sel4utils_allocated_object(void *cookie, vka_object_t object)
 {
     static bool recurse = false;
 
@@ -55,8 +55,7 @@ sel4utils_allocated_object(void *cookie, vka_object_t object)
     recurse = false;
 }
 
-static void
-clear_objects(sel4utils_process_t *process, vka_t *vka)
+static void clear_objects(sel4utils_process_t *process, vka_t *vka)
 {
     assert(process != NULL);
     assert(vka != NULL);
@@ -71,8 +70,7 @@ clear_objects(sel4utils_process_t *process, vka_t *vka)
     }
 }
 
-static int
-next_free_slot(sel4utils_process_t *process, cspacepath_t *dest)
+static int next_free_slot(sel4utils_process_t *process, cspacepath_t *dest)
 {
     if (process->cspace_next_free >= (BIT(process->cspace_size))) {
         ZF_LOGE("Can't allocate slot, cspace is full.\n");
@@ -86,15 +84,13 @@ next_free_slot(sel4utils_process_t *process, cspacepath_t *dest)
     return 0;
 }
 
-static void
-allocate_next_slot(sel4utils_process_t *process)
+static void allocate_next_slot(sel4utils_process_t *process)
 {
     assert(process->cspace_next_free < (BIT(process->cspace_size)));
     process->cspace_next_free++;
 }
 
-void
-sel4utils_create_word_args(char strings[][WORD_STRING_SIZE], char *argv[], int argc, ...)
+void sel4utils_create_word_args(char strings[][WORD_STRING_SIZE], char *argv[], int argc, ...)
 {
     va_list args;
     va_start(args, argc);
@@ -109,8 +105,8 @@ sel4utils_create_word_args(char strings[][WORD_STRING_SIZE], char *argv[], int a
     va_end(args);
 }
 
-seL4_CPtr
-sel4utils_mint_cap_to_process(sel4utils_process_t *process, cspacepath_t src, seL4_CapRights_t rights, seL4_Word data)
+seL4_CPtr sel4utils_mint_cap_to_process(sel4utils_process_t *process, cspacepath_t src, seL4_CapRights_t rights,
+                                        seL4_Word data)
 {
     cspacepath_t dest = { 0 };
     if (next_free_slot(process, &dest) == -1) {
@@ -128,8 +124,7 @@ sel4utils_mint_cap_to_process(sel4utils_process_t *process, cspacepath_t src, se
     return dest.capPtr;
 }
 
-seL4_CPtr
-sel4utils_copy_path_to_process(sel4utils_process_t *process, cspacepath_t src)
+seL4_CPtr sel4utils_copy_path_to_process(sel4utils_process_t *process, cspacepath_t src)
 {
     cspacepath_t dest = { 0 };
     if (next_free_slot(process, &dest) == -1) {
@@ -148,16 +143,14 @@ sel4utils_copy_path_to_process(sel4utils_process_t *process, cspacepath_t src)
 }
 
 /* copy a cap to a process, returning the cptr in the process' cspace */
-seL4_CPtr
-sel4utils_copy_cap_to_process(sel4utils_process_t *process, vka_t *vka, seL4_CPtr cap)
+seL4_CPtr sel4utils_copy_cap_to_process(sel4utils_process_t *process, vka_t *vka, seL4_CPtr cap)
 {
     cspacepath_t path;
     vka_cspace_make_path(vka, cap, &path);
     return sel4utils_copy_path_to_process(process, path);
 }
 
-seL4_CPtr
-sel4utils_move_cap_to_process(sel4utils_process_t *process, cspacepath_t src, vka_t *from_vka)
+seL4_CPtr sel4utils_move_cap_to_process(sel4utils_process_t *process, cspacepath_t src, vka_t *from_vka)
 {
     cspacepath_t dest = { 0 };
     if (next_free_slot(process, &dest) == -1) {
@@ -179,9 +172,8 @@ sel4utils_move_cap_to_process(sel4utils_process_t *process, cspacepath_t src, vk
     allocate_next_slot(process);
     return dest.capPtr;
 }
-int
-sel4utils_stack_write(vspace_t *current_vspace, vspace_t *target_vspace,
-                      vka_t *vka, void *buf, size_t len, uintptr_t *initial_stack_pointer)
+int sel4utils_stack_write(vspace_t *current_vspace, vspace_t *target_vspace,
+                          vka_t *vka, void *buf, size_t len, uintptr_t *initial_stack_pointer)
 {
     size_t remaining = len;
     size_t written = 0;
@@ -192,7 +184,7 @@ sel4utils_stack_write(vspace_t *current_vspace, vspace_t *target_vspace,
         size_t towrite = MIN(PAGE_SIZE_4K - (current_dest % PAGE_SIZE_4K), remaining);
         assert(towrite != 0);
         /* Get the cap */
-        seL4_CPtr frame = vspace_get_cap(target_vspace, (void*)PAGE_ALIGN_4K(current_dest));
+        seL4_CPtr frame = vspace_get_cap(target_vspace, (void *)PAGE_ALIGN_4K(current_dest));
         if (!frame) {
             return -1;
         }
@@ -213,19 +205,18 @@ sel4utils_stack_write(vspace_t *current_vspace, vspace_t *target_vspace,
     return 0;
 }
 
-static int
-sel4utils_stack_write_constant(vspace_t *current_vspace, vspace_t *target_vspace,
-                               vka_t *vka, long value, uintptr_t *initial_stack_pointer)
+static int sel4utils_stack_write_constant(vspace_t *current_vspace, vspace_t *target_vspace,
+                                          vka_t *vka, long value, uintptr_t *initial_stack_pointer)
 {
     return sel4utils_stack_write(current_vspace, target_vspace, vka, &value, sizeof(value), initial_stack_pointer);
 }
 
-static int
-sel4utils_stack_copy_args(vspace_t *current_vspace, vspace_t *target_vspace,
-                          vka_t *vka, int argc, char *argv[], uintptr_t *dest_argv, uintptr_t *initial_stack_pointer)
+static int sel4utils_stack_copy_args(vspace_t *current_vspace, vspace_t *target_vspace,
+                                     vka_t *vka, int argc, char *argv[], uintptr_t *dest_argv, uintptr_t *initial_stack_pointer)
 {
     for (int i = 0; i < argc; i++) {
-        int error = sel4utils_stack_write(current_vspace, target_vspace, vka, argv[i], strlen(argv[i]) + 1, initial_stack_pointer);
+        int error = sel4utils_stack_write(current_vspace, target_vspace, vka, argv[i], strlen(argv[i]) + 1,
+                                          initial_stack_pointer);
         if (error) {
             return error;
         }
@@ -235,9 +226,8 @@ sel4utils_stack_copy_args(vspace_t *current_vspace, vspace_t *target_vspace,
     return 0;
 }
 
-int
-sel4utils_spawn_process(sel4utils_process_t *process, vka_t *vka, vspace_t *vspace, int argc,
-                        char *argv[], int resume)
+int sel4utils_spawn_process(sel4utils_process_t *process, vka_t *vka, vspace_t *vspace, int argc,
+                            char *argv[], int resume)
 {
     uintptr_t initial_stack_pointer = (uintptr_t)process->thread.stack_top - sizeof(seL4_Word);
     uintptr_t new_process_argv = 0;
@@ -265,11 +255,11 @@ sel4utils_spawn_process(sel4utils_process_t *process, vka_t *vka, vspace_t *vspa
     seL4_UserContext context = {0};
     size_t context_size = sizeof(seL4_UserContext) / sizeof(seL4_Word);
 
-    error = sel4utils_arch_init_context_with_args(process->entry_point, (void *) (uintptr_t)argc,
-                                        (void *) new_process_argv,
-                                        (void *) process->thread.ipc_buffer_addr, false,
-                                        (void *) initial_stack_pointer,
-                                        &context, vka, vspace, &process->vspace);
+    error = sel4utils_arch_init_context_with_args(process->entry_point, (void *)(uintptr_t)argc,
+                                                  (void *) new_process_argv,
+                                                  (void *) process->thread.ipc_buffer_addr, false,
+                                                  (void *) initial_stack_pointer,
+                                                  &context, vka, vspace, &process->vspace);
     if (error) {
         return error;
     }
@@ -279,28 +269,13 @@ sel4utils_spawn_process(sel4utils_process_t *process, vka_t *vka, vspace_t *vspa
     return seL4_TCB_WriteRegisters(process->thread.tcb.cptr, resume, 0, context_size, &context);
 }
 
-int
-sel4utils_spawn_process_v(sel4utils_process_t *process, vka_t *vka, vspace_t *vspace, int argc,
-                          char *argv[], int resume)
+int sel4utils_spawn_process_v(sel4utils_process_t *process, vka_t *vka, vspace_t *vspace, int argc,
+                              char *argv[], int resume)
 {
     /* define an envp and auxp */
     int error;
-    int envc = 1;
-    AUTOFREE char *ipc_buf_env = NULL;
-    error = asprintf(&ipc_buf_env, "IPCBUFFER=0x%"PRIxPTR"", process->thread.ipc_buffer_addr);
-    if (error == -1) {
-        return -1;
-    }
-    AUTOFREE char *tcb_cptr_buf_env = NULL;
-    error = asprintf(&tcb_cptr_buf_env, "boot_tcb_cptr=0x%"PRIxPTR"", process->dest_tcb_cptr);
-    if (error == -1) {
-        return -1;
-    }
-    char *envp[] = {ipc_buf_env, tcb_cptr_buf_env};
-
-    if (process->dest_tcb_cptr != 0) {
-        envc++;
-    }
+    int envc = 0;
+    char *envp[] = {};
 
     uintptr_t initial_stack_pointer = (uintptr_t) process->thread.stack_top - sizeof(seL4_Word);
 
@@ -314,8 +289,8 @@ sel4utils_spawn_process_v(sel4utils_process_t *process, vka_t *vka, vspace_t *vs
     at_phdr = initial_stack_pointer;
 
     /* initialize of aux vectors */
-    int auxc = 4;
-    Elf_auxv_t auxv[5];
+    int auxc = 6;
+    Elf_auxv_t auxv[7];
     auxv[0].a_type = AT_PAGESZ;
     auxv[0].a_un.a_val = process->pagesz;
     auxv[1].a_type = AT_PHDR;
@@ -324,9 +299,13 @@ sel4utils_spawn_process_v(sel4utils_process_t *process, vka_t *vka, vspace_t *vs
     auxv[2].a_un.a_val = process->num_elf_phdrs;
     auxv[3].a_type = AT_PHENT;
     auxv[3].a_un.a_val = sizeof(Elf_Phdr);
-    if(process->sysinfo) {
-        auxv[4].a_type = AT_SYSINFO;
-        auxv[4].a_un.a_val = process->sysinfo;
+    auxv[4].a_type = AT_SEL4_IPC_BUFFER_PTR;
+    auxv[4].a_un.a_val = (uintptr_t) process->thread.ipc_buffer_addr;
+    auxv[5].a_type = AT_SEL4_TCB;
+    auxv[5].a_un.a_val = process->dest_tcb_cptr;
+    if (process->sysinfo) {
+        auxv[6].a_type = AT_SYSINFO;
+        auxv[6].a_un.a_val = process->sysinfo;
         auxc++;
     }
 
@@ -351,9 +330,9 @@ sel4utils_spawn_process_v(sel4utils_process_t *process, vka_t *vka, vspace_t *vs
     /* we need to make sure the stack is aligned to a double word boundary after we push on everything else
      * below this point. First, work out how much we are going to push */
     size_t to_push = 5 * sizeof(seL4_Word) + /* constants */
-                    sizeof(auxv[0]) * auxc + /* aux */
-                    sizeof(dest_argv) + /* args */
-                    sizeof(dest_envp); /* env */
+                     sizeof(auxv[0]) * auxc + /* aux */
+                     sizeof(dest_argv) + /* args */
+                     sizeof(dest_envp); /* env */
     uintptr_t hypothetical_stack_pointer = initial_stack_pointer - to_push;
     uintptr_t rounded_stack_pointer = ALIGN_DOWN(hypothetical_stack_pointer, STACK_CALL_ALIGNMENT);
     ptrdiff_t stack_rounding = hypothetical_stack_pointer - rounded_stack_pointer;
@@ -411,19 +390,17 @@ sel4utils_spawn_process_v(sel4utils_process_t *process, vka_t *vka, vspace_t *vs
 
     /* Write the registers */
     return seL4_TCB_WriteRegisters(process->thread.tcb.cptr, resume, 0, sizeof(context) / sizeof(seL4_Word),
-                                  &context);
+                                   &context);
 }
 
-int
-sel4utils_configure_process(sel4utils_process_t *process, vka_t *vka,
-                            vspace_t *vspace, const char *image_name)
+int sel4utils_configure_process(sel4utils_process_t *process, vka_t *vka,
+                                vspace_t *vspace, const char *image_name)
 {
     sel4utils_process_config_t config = process_config_default(image_name, seL4_CapInitThreadASIDPool);
     return sel4utils_configure_process_custom(process, vka, vspace, config);
 }
 
-static int
-create_reservations(vspace_t *vspace, int num, sel4utils_elf_region_t regions[])
+static int create_reservations(vspace_t *vspace, int num, sel4utils_elf_region_t regions[])
 {
     for (int i = 0; i < num; i++) {
         sel4utils_elf_region_t *region = &regions[i];
@@ -441,8 +418,7 @@ create_reservations(vspace_t *vspace, int num, sel4utils_elf_region_t regions[])
     return 0;
 }
 
-static seL4_CPtr
-get_asid_pool(seL4_CPtr asid_pool)
+static seL4_CPtr get_asid_pool(seL4_CPtr asid_pool)
 {
     if (asid_pool == 0) {
         ZF_LOGW("This method will fail if run in a thread that is not in the root server cspace\n");
@@ -452,8 +428,7 @@ get_asid_pool(seL4_CPtr asid_pool)
     return asid_pool;
 }
 
-static seL4_CPtr
-assign_asid_pool(seL4_CPtr asid_pool, seL4_CPtr pd)
+static seL4_CPtr assign_asid_pool(seL4_CPtr asid_pool, seL4_CPtr pd)
 {
     int error = seL4_ARCH_ASIDPool_Assign(get_asid_pool(asid_pool), pd);
     if (error) {
@@ -463,9 +438,8 @@ assign_asid_pool(seL4_CPtr asid_pool, seL4_CPtr pd)
     return error;
 }
 
-static int
-create_cspace(vka_t *vka, int size_bits, sel4utils_process_t *process,
-              seL4_Word cspace_root_data, seL4_CPtr asid_pool)
+static int create_cspace(vka_t *vka, int size_bits, sel4utils_process_t *process,
+                         seL4_Word cspace_root_data, seL4_CPtr asid_pool)
 {
     /* create a cspace */
     int error = vka_alloc_cnode_object(vka, size_bits, &process->cspace);
@@ -510,8 +484,7 @@ create_cspace(vka_t *vka, int size_bits, sel4utils_process_t *process,
     return 0;
 }
 
-static int
-create_fault_endpoint(vka_t *vka, sel4utils_process_t *process)
+static int create_fault_endpoint(vka_t *vka, sel4utils_process_t *process)
 {
     /* create a fault endpoint and put it into the cspace */
     int error = vka_alloc_endpoint(vka, &process->fault_endpoint);
@@ -524,12 +497,11 @@ create_fault_endpoint(vka_t *vka, sel4utils_process_t *process)
     return 0;
 }
 
-int
-sel4utils_configure_process_custom(sel4utils_process_t *process, vka_t *vka,
-                                   vspace_t *spawner_vspace, sel4utils_process_config_t config)
+int sel4utils_configure_process_custom(sel4utils_process_t *process, vka_t *vka,
+                                       vspace_t *spawner_vspace, sel4utils_process_config_t config)
 {
     int error;
-    sel4utils_alloc_data_t * data = NULL;
+    sel4utils_alloc_data_t *data = NULL;
     memset(process, 0, sizeof(sel4utils_process_t));
     seL4_Word cspace_root_data = api_make_guard_skip_word(seL4_WordBits - config.one_level_cspace_size_bits);
 
@@ -544,7 +516,7 @@ sel4utils_configure_process_custom(sel4utils_process_t *process, vka_t *vka,
 
         /* assign an asid pool */
         if (!config_set(CONFIG_X86_64) &&
-              assign_asid_pool(config.asid_pool, process->pd.cptr) != seL4_NoError) {
+            assign_asid_pool(config.asid_pool, process->pd.cptr) != seL4_NoError) {
             goto error;
         }
     } else {
@@ -659,7 +631,7 @@ sel4utils_configure_process_custom(sel4utils_process_t *process, vka_t *vka,
     }
 
     if (config.create_cspace) {
-        if(config_set(CONFIG_KERNEL_RT)) {
+        if (config_set(CONFIG_KERNEL_RT)) {
             seL4_CPtr UNUSED slot = sel4utils_copy_cap_to_process(process, vka, process->thread.sched_context.cptr);
             assert(slot == SEL4UTILS_SCHED_CONTEXT_SLOT);
             slot = sel4utils_copy_cap_to_process(process, vka, process->thread.reply.cptr);
@@ -706,8 +678,7 @@ error:
     return -1;
 }
 
-void
-sel4utils_destroy_process(sel4utils_process_t *process, vka_t *vka)
+void sel4utils_destroy_process(sel4utils_process_t *process, vka_t *vka)
 {
     /* destroy the cnode */
     if (process->own_cspace) {
@@ -750,8 +721,7 @@ sel4utils_destroy_process(sel4utils_process_t *process, vka_t *vka)
     }
 }
 
-seL4_CPtr
-sel4utils_process_init_cap(void *data, seL4_CPtr cap)
+seL4_CPtr sel4utils_process_init_cap(void *data, seL4_CPtr cap)
 {
     switch (cap) {
     case seL4_CapInitThreadTCB:
@@ -772,26 +742,26 @@ sel4utils_process_init_cap(void *data, seL4_CPtr cap)
     }
 };
 
-int
-sel4utils_copy_timer_caps_to_process(timer_objects_t *to, timer_objects_t *from, vka_t *vka, sel4utils_process_t *process)
+int sel4utils_copy_timer_caps_to_process(timer_objects_t *to, timer_objects_t *from, vka_t *vka,
+                                         sel4utils_process_t *process)
 {
     if (to == NULL || from == NULL || vka == NULL || process == NULL) {
         ZF_LOGE("Invalid argument (is null): to: %p, from: %p, vka: %p, process: %p", to, from, vka, process);
         return EINVAL;
     }
     /* struct deep copy */
-     *to = *from;
+    *to = *from;
 
     /* copy irq caps */
     for (size_t i = 0; i < to->nirqs; i++) {
         to->irqs[i].handler_path.capPtr = sel4utils_copy_cap_to_process(process,
-                vka, from->irqs[i].handler_path.capPtr);
+                                                                        vka, from->irqs[i].handler_path.capPtr);
     }
 
     /* copy pmem ut frame caps */
     for (size_t i = 0; i < to->nobjs; i++) {
         to->objs[i].obj.cptr = sel4utils_copy_cap_to_process(process,
-                vka, from->objs[i].obj.cptr);
+                                                             vka, from->objs[i].obj.cptr);
     }
     return 0;
 }

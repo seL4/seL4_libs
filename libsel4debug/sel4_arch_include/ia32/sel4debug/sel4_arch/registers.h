@@ -27,10 +27,10 @@ static UNUSED const char *register_names[] = {
     "esi",
     "edi",
     "ebp",
-    "tls_base",
-    "fs",
-    "gs",
+    "fs_base",
+    "gs_base",
 };
+compile_time_assert(register_names_correct_size, sizeof(register_names) == sizeof(seL4_UserContext));
 
 /* assert that register_names correspond to seL4_UserContext */
 compile_time_assert(eip_correct_position, offsetof(seL4_UserContext, eip)           == 0);
@@ -43,7 +43,6 @@ compile_time_assert(edx_correct_position, offsetof(seL4_UserContext, edx)       
 compile_time_assert(esi_correct_position, offsetof(seL4_UserContext, esi)           == 7 * sizeof(seL4_Word));
 compile_time_assert(edi_correct_position, offsetof(seL4_UserContext, edi)           == 8 * sizeof(seL4_Word));
 compile_time_assert(ebp_correct_position, offsetof(seL4_UserContext, ebp)           == 9 * sizeof(seL4_Word));
-compile_time_assert(tls_base_correct_position, offsetof(seL4_UserContext, tls_base) == 10 * sizeof(seL4_Word));
-compile_time_assert(fs_correct_position, offsetof(seL4_UserContext, fs)             == 11 * sizeof(seL4_Word));
-compile_time_assert(gs_correct_position, offsetof(seL4_UserContext, gs)             == 12 * sizeof(seL4_Word));
+compile_time_assert(fs_base_correct_position, offsetof(seL4_UserContext, fs_base)        == 10 * sizeof(seL4_Word));
+compile_time_assert(gs_base_correct_position, offsetof(seL4_UserContext, gs_base)        == 11 * sizeof(seL4_Word));
 

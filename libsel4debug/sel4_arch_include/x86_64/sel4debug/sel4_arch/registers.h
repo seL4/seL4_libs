@@ -35,8 +35,10 @@ static UNUSED const char *register_names[] = {
     "r13",
     "r14",
     "r15",
-    "tls_base",
+    "fs_base",
+    "gs_base",
 };
+compile_time_assert(register_names_correct_size, sizeof(register_names) == sizeof(seL4_UserContext));
 
 /* assert that register_names correspond to seL4_UserContext */
 compile_time_assert(eip_correct_position, offsetof(seL4_UserContext, rip)           == 0);
@@ -57,4 +59,5 @@ compile_time_assert(ebp_correct_position, offsetof(seL4_UserContext, r12)       
 compile_time_assert(ebp_correct_position, offsetof(seL4_UserContext, r13)           == 15 * sizeof(seL4_Word));
 compile_time_assert(ebp_correct_position, offsetof(seL4_UserContext, r14)           == 16 * sizeof(seL4_Word));
 compile_time_assert(ebp_correct_position, offsetof(seL4_UserContext, r15)           == 17 * sizeof(seL4_Word));
-compile_time_assert(tls_base_correct_position, offsetof(seL4_UserContext, tls_base) == 18 * sizeof(seL4_Word));
+compile_time_assert(fs_base_correct_position, offsetof(seL4_UserContext, fs_base)   == 18 * sizeof(seL4_Word));
+compile_time_assert(gs_base_correct_position, offsetof(seL4_UserContext, gs_base)   == 19 * sizeof(seL4_Word));

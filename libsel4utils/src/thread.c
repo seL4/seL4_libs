@@ -21,6 +21,7 @@
 #include <vka/vka.h>
 #include <vka/object.h>
 #include <vspace/vspace.h>
+#include <sel4runtime.h>
 #include <sel4utils/api.h>
 #include <sel4utils/mapping.h>
 #include <sel4utils/thread.h>
@@ -29,8 +30,7 @@
 #include <sel4utils/helpers.h>
 #include <utils/stack.h>
 
-static int
-write_ipc_buffer_user_data(vka_t *vka, vspace_t *vspace, seL4_CPtr ipc_buf, uintptr_t buf_loc)
+static int write_ipc_buffer_user_data(vka_t *vka, vspace_t *vspace, seL4_CPtr ipc_buf, uintptr_t buf_loc)
 {
     void *mapping = sel4utils_dup_and_map(vka, vspace, ipc_buf, seL4_PageBits);
     if (!mapping) {
@@ -53,9 +53,8 @@ int sel4utils_configure_thread(vka_t *vka, vspace_t *parent, vspace_t *alloc, se
     return sel4utils_configure_thread_config(vka, parent, alloc, config, res);
 }
 
-int
-sel4utils_configure_thread_config(vka_t *vka, vspace_t *parent, vspace_t *alloc,
-                                  sel4utils_thread_config_t config, sel4utils_thread_t *res)
+int sel4utils_configure_thread_config(vka_t *vka, vspace_t *parent, vspace_t *alloc,
+                                      sel4utils_thread_config_t config, sel4utils_thread_t *res)
 {
     memset(res, 0, sizeof(sel4utils_thread_t));
 
@@ -147,7 +146,7 @@ sel4utils_configure_thread_config(vka_t *vka, vspace_t *parent, vspace_t *alloc,
 
     if (config.sched_params.priority) {
         error = seL4_TCB_SetPriority(res->tcb.cptr, config.sched_params.auth,
-                                    config.sched_params.priority);
+                                     config.sched_params.priority);
         if (error) {
             ZF_LOGE("Failed to set priority, %d", error);
             sel4utils_clean_up_thread(vka, alloc, res);
@@ -176,33 +175,29 @@ sel4utils_configure_thread_config(vka_t *vka, vspace_t *parent, vspace_t *alloc,
     return 0;
 }
 
-/* prototype some functions that are hidden internal in muslc */
-size_t libc_get_tls_size();
-void *__copy_tls(unsigned char *);
-uintptr_t libc_tp_adj(uintptr_t);
-
-int
-sel4utils_start_thread(sel4utils_thread_t *thread, sel4utils_thread_entry_fn entry_point,
-                       void *arg0, void *arg1, int resume)
+int sel4utils_start_thread(sel4utils_thread_t *thread, sel4utils_thread_entry_fn entry_point,
+                           void *arg0, void *arg1, int resume)
 {
     seL4_UserContext context = {0};
     size_t context_size = sizeof(seL4_UserContext) / sizeof(seL4_Word);
 
-    size_t tls_size = libc_get_tls_size();
+    size_t tls_size = sel4runtime_get_tls_size();
     /* make sure we're not going to use too much of the stack */
     if (tls_size > thread->stack_size * PAGE_SIZE_4K / 8) {
         ZF_LOGE("TLS would use more than 1/8th of the application stack %zu/%zu", tls_size, thread->stack_size);
         return -1;
     }
     uintptr_t tls_base = (uintptr_t)thread->initial_stack_pointer - tls_size;
-    void *tp = __copy_tls((unsigned char*)tls_base);
+    uintptr_t tp = (uintptr_t)sel4runtime_write_tls_image((void *)tls_base);
+    seL4_IPCBuffer *ipc_buffer_addr = (void *)thread->ipc_buffer_addr;
+    sel4runtime_set_tls_variable(tp, __sel4_ipc_buffer, ipc_buffer_addr);
 
     uintptr_t aligned_stack_pointer = ALIGN_DOWN(tls_base, STACK_CALL_ALIGNMENT);
 
     int error = sel4utils_arch_init_local_context(entry_point, arg0, arg1,
-                                              (void *) thread->ipc_buffer_addr,
-                                              (void *) aligned_stack_pointer,
-                                              &context);
+                                                  (void *) thread->ipc_buffer_addr,
+                                                  (void *) aligned_stack_pointer,
+                                                  &context);
     if (error) {
         return error;
     }
@@ -212,10 +207,7 @@ sel4utils_start_thread(sel4utils_thread_t *thread, sel4utils_thread_entry_fn ent
         return error;
     }
 
-    /* Store the 'self' pointer in the TP region. This is needed by some architectures to
-     * do address calculations */
-    *(void**)tp = tp;
-    error = seL4_TCB_SetTLSBase(thread->tcb.cptr, (seL4_Word)libc_tp_adj((uintptr_t)tp));
+    error = seL4_TCB_SetTLSBase(thread->tcb.cptr, tp);
     if (error) {
         return error;
     }
@@ -226,8 +218,7 @@ sel4utils_start_thread(sel4utils_thread_t *thread, sel4utils_thread_entry_fn ent
     return 0;
 }
 
-void
-sel4utils_clean_up_thread(vka_t *vka, vspace_t *alloc, sel4utils_thread_t *thread)
+void sel4utils_clean_up_thread(vka_t *vka, vspace_t *alloc, sel4utils_thread_t *thread)
 {
     if (thread->tcb.cptr != 0) {
         vka_free_object(vka, &thread->tcb);
@@ -252,8 +243,7 @@ sel4utils_clean_up_thread(vka_t *vka, vspace_t *alloc, sel4utils_thread_t *threa
     memset(thread, 0, sizeof(sel4utils_thread_t));
 }
 
-void
-sel4utils_print_fault_message(seL4_MessageInfo_t tag, const char *thread_name)
+void sel4utils_print_fault_message(seL4_MessageInfo_t tag, const char *thread_name)
 {
     seL4_Fault_t fault = seL4_getFault(tag);
 
@@ -265,8 +255,8 @@ sel4utils_print_fault_message(seL4_MessageInfo_t tag, const char *thread_name)
                thread_name,
                sel4utils_is_read_fault() ? "read" : "write",
                seL4_Fault_VMFault_get_PrefetchFault(fault) ? "prefetch fault" : "fault",
-               (void*)seL4_Fault_VMFault_get_IP(fault),
-               (void*)seL4_Fault_VMFault_get_Addr(fault),
+               (void *)seL4_Fault_VMFault_get_IP(fault),
+               (void *)seL4_Fault_VMFault_get_Addr(fault),
                (void *)seL4_Fault_VMFault_get_FSR(fault),
                COLOR_NORMAL);
         break;
@@ -288,17 +278,17 @@ sel4utils_print_fault_message(seL4_MessageInfo_t tag, const char *thread_name)
         printf("%sInvalid instruction from [%s] at PC: %p%s\n",
                COLOR_ERROR,
                thread_name,
-               (void*)seL4_Fault_UserException_get_FaultIP(fault),
+               (void *)seL4_Fault_UserException_get_FaultIP(fault),
                COLOR_NORMAL);
         break;
 
     case seL4_Fault_CapFault:
         printf("%sCap fault from [%s] in phase %s\nPC = %p\nCPtr = %p%s\n",
-                COLOR_ERROR, thread_name,
-                seL4_Fault_CapFault_get_InRecvPhase(fault) ? "receive" : "send",
-                (void*) seL4_Fault_CapFault_get_IP(fault),
-                (void *) seL4_Fault_CapFault_get_Addr(fault),
-                COLOR_NORMAL);
+               COLOR_ERROR, thread_name,
+               seL4_Fault_CapFault_get_InRecvPhase(fault) ? "receive" : "send",
+               (void *) seL4_Fault_CapFault_get_IP(fault),
+               (void *) seL4_Fault_CapFault_get_Addr(fault),
+               COLOR_NORMAL);
         break;
 #ifdef CONFIG_KERNEL_RT
     case seL4_Fault_Timeout:

@@ -13,9 +13,13 @@
 #include <sel4platsupport/device.h>
 #include <utils/util.h>
 
-int sel4platsupport_arch_copy_irq_cap(UNUSED arch_simple_t *arch_simple, UNUSED ps_irq_t *irq,
-        UNUSED cspacepath_t *dest)
+int sel4platsupport_arch_copy_irq_cap(arch_simple_t *arch_simple, ps_irq_t *irq, cspacepath_t *dest)
 {
-    ZF_LOGE("unknown irq type");
-    return -1;
+    switch (irq->type) {
+    case PS_TRIGGER:
+        return arch_simple_get_IRQ_trigger(arch_simple, irq->trigger.number, irq->trigger.trigger, *dest);
+    default:
+        ZF_LOGE("unknown irq type");
+        return -1;
+    }
 }

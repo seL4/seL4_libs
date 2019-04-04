@@ -26,6 +26,12 @@ seL4_Error simple_default_get_irq(void *data, int irq, seL4_CNode root, seL4_Wor
     return seL4_IRQControl_Get(seL4_CapIRQControl, irq, root, index, depth);
 }
 
+seL4_Error simple_default_get_irq_trigger(void *data, int irq, int trigger, seL4_CNode root,
+                                          seL4_Word index, uint8_t depth)
+{
+    return seL4_IRQControl_GetTrigger(seL4_CapIRQControl, irq, trigger, root, index, depth);
+}
+
 #ifdef CONFIG_ARM_SMMU
 seL4_Error simple_default_get_iospace_cap_count(void *data, int *count)
 {
@@ -86,6 +92,7 @@ simple_default_init_arch_simple(arch_simple_t *simple, void *data)
 {
     simple->data = data;
     simple->irq = simple_default_get_irq;
+    simple->irq_trigger = simple_default_get_irq_trigger;
 #ifdef CONFIG_ARM_SMMU
     simple->iospace_cap_count = simple_default_get_iospace_cap_count;
     simple->iospace_get_nth_cap = simple_default_get_iospace_nth_cap;

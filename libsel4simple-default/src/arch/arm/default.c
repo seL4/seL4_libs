@@ -22,7 +22,8 @@
 
 #include <vspace/page.h>
 
-seL4_Error simple_default_get_irq(void *data, int irq, seL4_CNode root, seL4_Word index, uint8_t depth) {
+seL4_Error simple_default_get_irq(void *data, int irq, seL4_CNode root, seL4_Word index, uint8_t depth)
+{
     return seL4_IRQControl_Get(seL4_CapIRQControl, irq, root, index, depth);
 }
 
@@ -87,8 +88,7 @@ seL4_CPtr simple_default_get_iospace_nth_cap(void *data, int n)
 
 #endif
 
-void
-simple_default_init_arch_simple(arch_simple_t *simple, void *data)
+void simple_default_init_arch_simple(arch_simple_t *simple, void *data)
 {
     simple->data = data;
     simple->irq = simple_default_get_irq;

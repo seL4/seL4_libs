@@ -32,12 +32,13 @@
  * @param the index within the CNode to put cap
  * @param Depth of index
  */
-typedef seL4_Error (*simple_get_IRQ_handler_fn)(void *data, int irq, seL4_CNode cnode, seL4_Word index, uint8_t depth);
-typedef seL4_Error (*simple_get_IRQ_trigger_fn)(void *data, int irq, int trigger, seL4_CNode root,
-                                                seL4_Word index, uint8_t depth);
+typedef seL4_Error(*simple_get_IRQ_handler_fn)(void *data, int irq, seL4_CNode cnode,
+                                               seL4_Word index, uint8_t depth);
+typedef seL4_Error(*simple_get_IRQ_trigger_fn)(void *data, int irq, int trigger, seL4_CNode root,
+                                               seL4_Word index, uint8_t depth);
 
-typedef seL4_Error (*simple_get_iospace_cap_count_fn)(void *data, int *count);
-typedef seL4_CPtr  (*simple_get_nth_iospace_cap_fn)(void *data, int n);
+typedef seL4_Error(*simple_get_iospace_cap_count_fn)(void *data, int *count);
+typedef seL4_CPtr(*simple_get_nth_iospace_cap_fn)(void *data, int n);
 
 typedef struct arch_simple {
     simple_get_IRQ_handler_fn irq;
@@ -49,9 +50,10 @@ typedef struct arch_simple {
     void *data;
 } arch_simple_t;
 
-static inline seL4_Error
-arch_simple_get_IOPort_cap(UNUSED arch_simple_t *simple, UNUSED uint16_t start_port,
-                           UNUSED uint16_t end_port, UNUSED seL4_Word root, UNUSED seL4_Word dest, UNUSED seL4_Word depth) {
+static inline seL4_Error arch_simple_get_IOPort_cap(UNUSED arch_simple_t *simple, UNUSED uint16_t start_port,
+                                                    UNUSED uint16_t end_port, UNUSED seL4_Word root,
+                                                    UNUSED seL4_Word dest, UNUSED seL4_Word depth)
+{
     ZF_LOGF("Calling get_IOPort_cap on arm!");
     return seL4_IllegalOperation;
 }

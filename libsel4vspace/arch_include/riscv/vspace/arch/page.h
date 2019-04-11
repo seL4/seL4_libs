@@ -30,6 +30,8 @@ static const UNUSED size_t sel4_page_sizes[] = {
 
 #define seL4_ARCH_Page_Map             seL4_RISCV_Page_Map
 #define seL4_ARCH_Page_Unmap           seL4_RISCV_Page_Unmap
+#define seL4_ARCH_Page_GetAddress      seL4_RISCV_Page_GetAddress
+#define seL4_ARCH_Page_GetAddress_t    seL4_RISCV_Page_GetAddress_t
 #define seL4_ARCH_PageTable_Map        seL4_RISCV_PageTable_Map
 #define seL4_ARCH_PageTable_Unmap      seL4_RISCV_PageTable_Unmap
 #define seL4_ARCH_ASIDPool_Assign      seL4_RISCV_ASIDPool_Assign

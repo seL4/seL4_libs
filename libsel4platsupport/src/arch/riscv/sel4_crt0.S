@@ -89,7 +89,6 @@ _sel4_start:
     /* null terminate auxv */
     SW   x0, (8*REGSIZE)(sp)
     SW   x0, (9*REGSIZE)(sp)
-    SW   x0, (10*REGSIZE)(sp)
 
     /* Now go to actual _start */
     j       _start

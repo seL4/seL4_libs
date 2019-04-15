@@ -36,7 +36,7 @@ config_option(
 config_option(LibSel4TestPrintXML PRINT_XML "Print XML output. This will \
     buffer the test output and print in <stdout> blocks so that bamboo \
     can parse the test logs properly. Turn this off for debugging your test suite" DEFAULT OFF)
-
+mark_as_advanced(LibSel4TestPrinterRegex LibSel4TestPrinterHaltOnTestFailure LibSel4TestPrintXML)
 add_config_library(sel4test "${configure_string}")
 
 file(GLOB deps src/*.c)

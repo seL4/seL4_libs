@@ -23,7 +23,7 @@ config_option(
     DEFAULT
     ON
 )
-
+mark_as_advanced(LibSel4SerialServerColoredOutput)
 add_config_library(sel4serialserver "${configure_string}")
 
 file(GLOB deps src/*.c)

@@ -53,7 +53,12 @@ config_option(
     DEFAULT
     OFF
 )
-
+mark_as_advanced(
+    LibSel4MuslcSysMorecoreBytes
+    LibSel4MuslcSysDebugHalt
+    LibSel4MuslcSysCPIOFS
+    LibSel4MuslcSysArchPutcharWeak
+)
 add_config_library(sel4muslcsys "${configure_string}")
 
 file(GLOB deps src/*.c)

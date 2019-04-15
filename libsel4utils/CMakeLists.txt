@@ -35,7 +35,7 @@ config_string(
 config_option(LibSel4UtilsProfile SEL4UTILS_PROFILE "Profiling tools \
     Enables the functionality of a set of profiling tools. When disabled these profiling tools \
     will compile down to nothing." DEFAULT OFF)
-
+mark_as_advanced(LibSel4UtilsStackSize LibSel4UtilsCSpaceSizeBits LibSel4UtilsProfile)
 add_config_library(sel4utils "${configure_string}")
 
 file(

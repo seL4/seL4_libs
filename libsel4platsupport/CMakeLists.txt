@@ -45,7 +45,7 @@ config_option(
     DEFAULT
     ON
 )
-
+mark_as_advanced(LibSel4PlatSupportUseDebugPutChar LibSel4PlatSupportStart LibSel4SupportSel4Start)
 add_config_library(sel4platsupport "${configure_string}")
 
 file(

@@ -59,7 +59,14 @@ config_string(
 
 config_option(LibSel4VMMIgnoreEPTViolation VMM_IGNORE_EPT_VIOLATION "Ignore EPT Violations
     If set then EPT faults will be ignored and the guest will be resumed" DEFAULT OFF)
-
+mark_as_advanced(
+    LibSel4VMMVESAFrameBuffer
+    LibSel4VMMDebug
+    LibSel4VMMDebugLevel
+    LibSel4VMMVMXTimerDebug
+    LibSel4VMMVMXTimerTimeout
+    LibSel4VMMIgnoreEPTViolation
+)
 add_config_library(sel4vmm "${configure_string}")
 
 add_compile_options(-std=gnu99)

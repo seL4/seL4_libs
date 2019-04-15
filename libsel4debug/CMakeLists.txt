@@ -53,7 +53,7 @@ config_choice(
     "printf;LibSel4DebugFunctionInstrumentationPrintf;LIBSEL4DEBUG_FUNCTION_INSTRUMENTATION_TRACE"
     "backtrace;LibSel4DebugFunctionInstrumentationBacktrace;LIBSEL4DEBUG_FUNCTION_INSTRUMENTATION_BACKTRACE"
 )
-
+mark_as_advanced(LibSel4DebugAllocBufferEntries LibSel4DebugFunctionInstrumentation)
 add_config_library(sel4debug "${configure_string}")
 
 file(

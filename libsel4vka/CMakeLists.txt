@@ -48,7 +48,7 @@ config_string(
     0
     UNQUOTE
 )
-
+mark_as_advanced(LibVKAAllowMemoryLeaks LibVKADebugLiveSlotsSZ LibVKADebugLiveObjsSZ)
 add_config_library(sel4vka "${configure_string}")
 
 file(GLOB deps src/*.c)

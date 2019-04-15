@@ -14,7 +14,13 @@ cmake_minimum_required(VERSION 3.7.2)
 
 project(libsel4vspace C)
 
-file(GLOB deps src/*.c src/arch/${KernelArch}/*.c src/sel4_arch/${KernelSel4Arch}/*.c)
+file(
+    GLOB
+        deps
+        src/*.c
+        src/arch/${KernelArch}/*.c
+        src/sel4_arch/${KernelSel4Arch}/*.c
+)
 
 list(SORT deps)
 

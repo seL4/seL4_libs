@@ -16,63 +16,75 @@ project(libsel4vmm C)
 
 set(configure_string "")
 
-config_option(LibSel4VMMVESAFrameBuffer VMM_VESA_FRAMEBUFFER
-    "Expose VESA Frame Buffer
+config_option(LibSel4VMMVESAFrameBuffer VMM_VESA_FRAMEBUFFER "Expose VESA Frame Buffer
     Support for mapping the VESA frame buffer frames into the guest OS.
     This option is useful for working around non-working video drivers otherwise,
-    due to missing features or such."
-    DEFAULT ON
-)
+    due to missing features or such." DEFAULT ON)
 
-config_option(LibSel4VMMDebug LIB_VMM_DEBUG
-    "Enable VMM debug output"
-    DEFAULT ON
-)
+config_option(LibSel4VMMDebug LIB_VMM_DEBUG "Enable VMM debug output" DEFAULT ON)
 
-config_string(LibSel4VMMDebugLevel LIB_VMM_DEBUG_LEVEL
-    "VMM Debug Output
+config_string(LibSel4VMMDebugLevel LIB_VMM_DEBUG_LEVEL "VMM Debug Output
     Debug verbosity level.
     5 levels for debug messages:
        0: Always printout
        1: Main entry point in a module
        2: 2nd level entry point in a module
        3: Main entry point of a function
-       4: Details inside a function"
-    DEFAULT 3
-    UNQUOTE
-)
+       4: Details inside a function" DEFAULT 3 UNQUOTE)
 
-config_option(LibSel4VMMVMXTimerDebug LIB_VMM_VMX_TIMER_DEBUG
+config_option(
+    LibSel4VMMVMXTimerDebug
+    LIB_VMM_VMX_TIMER_DEBUG
     "Use VMX Pre-Emption timer for debugging
     Will cause a regular vmexit to happen based on VMX pre-emption
     timer. At each exit the guest state will be printed out. This
     can be used to aid debugging when running a guest causes nothing
     to appear to happen"
-    DEFAULT OFF
+    DEFAULT
+    OFF
 )
 
-config_string(LibSel4VMMVMXTimerTimeout LIB_VMM_VMX_TIMER_TIMEOUT
+config_string(
+    LibSel4VMMVMXTimerTimeout
+    LIB_VMM_VMX_TIMER_TIMEOUT
     "Cycles between VMX timer pre-emptions
     Cycles between timer exits. Time spent loading the VMCS context
     count, so setting this too low may result in the guest making
     no progress"
-    DEFAULT 4000
-    DEPENDS "LibSel4VMMVMXTimerDebug"
+    DEFAULT
+    4000
+    DEPENDS
+    "LibSel4VMMVMXTimerDebug"
 )
 
-config_option(LibSel4VMMIgnoreEPTViolation VMM_IGNORE_EPT_VIOLATION
-    "Ignore EPT Violations
-    If set then EPT faults will be ignored and the guest will be resumed"
-    DEFAULT OFF
-)
+config_option(LibSel4VMMIgnoreEPTViolation VMM_IGNORE_EPT_VIOLATION "Ignore EPT Violations
+    If set then EPT faults will be ignored and the guest will be resumed" DEFAULT OFF)
 
 add_config_library(sel4vmm "${configure_string}")
 
 add_compile_options(-std=gnu99)
 
-file(GLOB sources src/vmm/*.c src/platform/*.c src/driver/*.c src/manager/*.c src/processor/*.c)
+file(
+    GLOB
+        sources
+        src/vmm/*.c
+        src/platform/*.c
+        src/driver/*.c
+        src/manager/*.c
+        src/processor/*.c
+)
 
 add_library(sel4vmm STATIC EXCLUDE_FROM_ALL ${sources})
 
 target_include_directories(sel4vmm PUBLIC include)
-target_link_libraries(sel4vmm Configuration muslc sel4 sel4utils pci sel4allocman ethdrivers platsupport)
+target_link_libraries(
+    sel4vmm
+    Configuration
+    muslc
+    sel4
+    sel4utils
+    pci
+    sel4allocman
+    ethdrivers
+    platsupport
+)

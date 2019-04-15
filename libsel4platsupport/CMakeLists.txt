@@ -16,36 +16,68 @@ project(libsel4platsupport C ASM)
 
 set(configure_string "")
 
-config_option(LibSel4PlatSupportUseDebugPutChar LIB_SEL4_PLAT_SUPPORT_USE_SEL4_DEBUG_PUTCHAR
+config_option(
+    LibSel4PlatSupportUseDebugPutChar
+    LIB_SEL4_PLAT_SUPPORT_USE_SEL4_DEBUG_PUTCHAR
     "Redirect putchar() to seL4_DebugPutchar()"
-    DEFAULT ON
-    DEPENDS "KernelPrinting" DEFAULT_DISABLED OFF
+    DEFAULT
+    ON
+    DEPENDS
+    "KernelPrinting"
+    DEFAULT_DISABLED
+    OFF
 )
 
-config_option(LibSel4PlatSupportStart LIB_SEL4_PLAT_SUPPORT_START
+config_option(
+    LibSel4PlatSupportStart
+    LIB_SEL4_PLAT_SUPPORT_START
     "Supply _start entry point. Emit _start with a default definition that sets up a \
     stack and does what's required to enter main()."
-    DEFAULT OFF
+    DEFAULT
+    OFF
 )
 
-config_option(LibSel4SupportSel4Start LIB_SEL4_PLAT_SUPPORT_SEL4_START
+config_option(
+    LibSel4SupportSel4Start
+    LIB_SEL4_PLAT_SUPPORT_SEL4_START
     "Supply _sel4_start entry point. Emit a _sel4_start that sets up a stack and does \
     what's required to enter a regular _start routine"
-    DEFAULT ON
+    DEFAULT
+    ON
 )
 
 add_config_library(sel4platsupport "${configure_string}")
 
-file(GLOB deps src/*.c src/cspace/*.c src/arch/${KernelArch}/*.c
-    src/plat/${KernelPlatform}/*.c src/mach/${KernelArmMach}/*.c
-    src/sel4_arch/${KernelSel4Arch}/*.S
-    src/arch/${KernelArch}/*.S)
+file(
+    GLOB
+        deps
+        src/*.c
+        src/cspace/*.c
+        src/arch/${KernelArch}/*.c
+        src/plat/${KernelPlatform}/*.c
+        src/mach/${KernelArmMach}/*.c
+        src/sel4_arch/${KernelSel4Arch}/*.S
+        src/arch/${KernelArch}/*.S
+)
 
 list(SORT deps)
 
 add_library(sel4platsupport STATIC EXCLUDE_FROM_ALL ${deps})
-target_include_directories(sel4platsupport PUBLIC include "arch_include/${KernelArch}" plat_include/${KernelPlatform})
+target_include_directories(
+    sel4platsupport
+    PUBLIC include "arch_include/${KernelArch}" plat_include/${KernelPlatform}
+)
 if(NOT "${KernelArmMach}" STREQUAL "")
     target_include_directories(sel4platsupport PUBLIC include "mach_include/${KernelArmMach}")
 endif()
-target_link_libraries(sel4platsupport Configuration muslc sel4 sel4simple utils sel4vspace platsupport sel4simple-default)
+target_link_libraries(
+    sel4platsupport
+    Configuration
+    muslc
+    sel4
+    sel4simple
+    utils
+    sel4vspace
+    platsupport
+    sel4simple-default
+)

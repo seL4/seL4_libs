@@ -16,7 +16,14 @@ project(libsel4allocman C)
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=gnu99")
 
-file(GLOB deps src/*.c src/cspace/*.c src/utspace/*.c src/mspace/*.c)
+file(
+    GLOB
+        deps
+        src/*.c
+        src/cspace/*.c
+        src/utspace/*.c
+        src/mspace/*.c
+)
 
 list(SORT deps)
 

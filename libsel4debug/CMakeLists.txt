@@ -16,17 +16,22 @@ project(libsel4debug C ASM)
 
 set(configure_string "")
 
-config_string(LibSel4DebugAllocBufferEntries LIBSEL4DEBUG_ALLOC_BUFFER_ENTRIES
+config_string(
+    LibSel4DebugAllocBufferEntries
+    LIBSEL4DEBUG_ALLOC_BUFFER_ENTRIES
     "Pointer tracking buffer entries \
     Size of buffer to use for tracking memory allocations within \
     instrumentation. This setting has no effect if you are not using the \
     allocation instrumentation. Setting this value to 0 disables pointer \
     tracking."
-    DEFAULT 0
+    DEFAULT
+    0
     UNQUOTE
 )
 
-config_choice(LibSel4DebugFunctionInstrumentation LIB_SEL4_DEBUG_FUNCTION_INSTRUMENTAITON
+config_choice(
+    LibSel4DebugFunctionInstrumentation
+    LIB_SEL4_DEBUG_FUNCTION_INSTRUMENTAITON
     "Function instrumentation to apply to function calls. This setting will only have \
     an effect when your CFLAGS include -finstrument-functions, in which \
     case __cyg_profile_func_enter will be called on every function entry \
@@ -51,10 +56,20 @@ config_choice(LibSel4DebugFunctionInstrumentation LIB_SEL4_DEBUG_FUNCTION_INSTRU
 
 add_config_library(sel4debug "${configure_string}")
 
-file(GLOB deps src/*.c src/sel4_arch/${KernelSel4Arch}/*.c src/plat/${KernelPlatform}/*.c src/sel4_arch/${KernelSel4Arch}/*.S)
+file(
+    GLOB
+        deps
+        src/*.c
+        src/sel4_arch/${KernelSel4Arch}/*.c
+        src/plat/${KernelPlatform}/*.c
+        src/sel4_arch/${KernelSel4Arch}/*.S
+)
 
 list(SORT deps)
 
 add_library(sel4debug STATIC EXCLUDE_FROM_ALL ${deps})
-target_include_directories(sel4debug PUBLIC include "arch_include/${KernelArch}" sel4_arch_include/${KernelSel4Arch})
+target_include_directories(
+    sel4debug
+    PUBLIC include "arch_include/${KernelArch}" sel4_arch_include/${KernelSel4Arch}
+)
 target_link_libraries(sel4debug Configuration muslc sel4 utils)

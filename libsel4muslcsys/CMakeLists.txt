@@ -20,32 +20,38 @@ config_string(LibSel4MuslcSysMorecoreBytes LIB_SEL4_MUSLC_SYS_MORECORE_BYTES "Ma
     This value sets the number of bytes reserved for the region malloc \
     allocates from. Note that you won't actually be able to allocate this \
     entire amount because there is some bookkeeping overhead. This area is \
-    allocated statically."
-    DEFAULT 1048576
-    UNQUOTE
-)
+    allocated statically." DEFAULT 1048576 UNQUOTE)
 
-config_option(LibSel4MuslcSysDebugHalt LIB_SEL4_MUSLC_SYS_DEBUG_HALT
+config_option(
+    LibSel4MuslcSysDebugHalt
+    LIB_SEL4_MUSLC_SYS_DEBUG_HALT
     "Perform seL4_DebugHalt on _exit and _abort \
     Controls whether or not a DebugHalt should be called to implement Exit \
     style syscalls. This is useful if you have a single app and thread, but \
     should be turned off if using multiple threads that may wish to exit \
     independently of the whole system"
-    DEFAULT ON
+    DEFAULT
+    ON
 )
 
-config_option(LibSel4MuslcSysCPIOFS LIB_SEL4_MUSLC_SYS_CPIO_FS
+config_option(
+    LibSel4MuslcSysCPIOFS
+    LIB_SEL4_MUSLC_SYS_CPIO_FS
     "Implementation of a simple file system usi g CPIO archives \
     If this is enabled open and read syscalls will attempt to use the cpio archive \
     _cpio_archive. This implements a basic read only POSIX interface to that file system"
-    DEFAULT OFF
+    DEFAULT
+    OFF
 )
 
-config_option(LibSel4MuslcSysArchPutcharWeak LIB_SEL4_MUSLC_SYS_ARCH_PUTCHAR_WEAK
+config_option(
+    LibSel4MuslcSysArchPutcharWeak
+    LIB_SEL4_MUSLC_SYS_ARCH_PUTCHAR_WEAK
     "Make __arch_putchar a weak symbol \
     This allows you to override __arch_putchar in another library or your \
     application."
-    DEFAULT OFF
+    DEFAULT
+    OFF
 )
 
 add_config_library(sel4muslcsys "${configure_string}")

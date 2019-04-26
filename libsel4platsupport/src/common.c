@@ -222,7 +222,7 @@ platsupport_serial_setup_bootinfo_failsafe(void)
     simple = &_simple_mem;
     vka = &_vka_mem;
     simple_make_vka(simple, vka);
-#ifndef CONFIG_ARCH_ARM
+#ifdef CONFIG_ARCH_X86
     sel4platsupport_get_io_port_ops(&io_ops.io_port_ops, simple, vka);
 #endif
     err = platsupport_serial_setup_io_ops(&io_ops);
@@ -254,7 +254,7 @@ platsupport_serial_setup_simple(
     vspace = _vspace;
     simple = _simple;
     vka = _vka;
-#ifndef CONFIG_ARCH_ARM
+#ifdef CONFIG_ARCH_X86
     sel4platsupport_get_io_port_ops(&io_ops.io_port_ops, simple, vka);
 #endif
     err = platsupport_serial_setup_io_ops(&io_ops);

@@ -61,7 +61,7 @@ static seL4_CPtr device_cap = 0;
 extern char __executable_start[];
 
 #if !(defined(CONFIG_LIB_SEL4_PLAT_SUPPORT_USE_SEL4_DEBUG_PUTCHAR) && defined(CONFIG_DEBUG_BUILD))
-static void* __map_device_page(void* cookie, uintptr_t paddr, size_t size,
+static void *__map_device_page(void *cookie, uintptr_t paddr, size_t size,
                                int cached, ps_mem_flags_t flags);
 
 static ps_io_ops_t io_ops = {
@@ -75,8 +75,7 @@ static ps_io_ops_t io_ops = {
 
 /* completely hacky way of getting a virtual address. This is used a last ditch attempt to
  * get serial device going so we can print out an error */
-static seL4_Word
-platsupport_alloc_device_vaddr(seL4_Word bits)
+static seL4_Word platsupport_alloc_device_vaddr(seL4_Word bits)
 {
     seL4_Word va;
 
@@ -88,9 +87,8 @@ platsupport_alloc_device_vaddr(seL4_Word bits)
     return va;
 }
 
-static void*
-__map_device_page_failsafe(void* cookie UNUSED, uintptr_t paddr, size_t size,
-                           int cached UNUSED, ps_mem_flags_t flags UNUSED)
+static void *__map_device_page_failsafe(void *cookie UNUSED, uintptr_t paddr, size_t size,
+                                        int cached UNUSED, ps_mem_flags_t flags UNUSED)
 {
     int bits = CTZ(size);
     int error;
@@ -124,12 +122,11 @@ error:
 
     assert(!error);
 
-    return (void*)vaddr;
+    return (void *)vaddr;
 }
 
-static void*
-__map_device_page_regular(void* cookie UNUSED, uintptr_t paddr, size_t size,
-                          int cached UNUSED, ps_mem_flags_t flags UNUSED)
+static void *__map_device_page_regular(void *cookie UNUSED, uintptr_t paddr, size_t size,
+                                       int cached UNUSED, ps_mem_flags_t flags UNUSED)
 {
     int bits = CTZ(size);
     void *vaddr;
@@ -148,12 +145,11 @@ __map_device_page_regular(void* cookie UNUSED, uintptr_t paddr, size_t size,
     }
     device_cap = dest.cptr;
 
-    return (void*)vaddr;
+    return (void *)vaddr;
 }
 
-void*
-__map_device_page(void* cookie, uintptr_t paddr, size_t size,
-                  int cached, ps_mem_flags_t flags)
+void *__map_device_page(void *cookie, uintptr_t paddr, size_t size,
+                        int cached, ps_mem_flags_t flags)
 {
     if (setup_status == START_REGULAR_SETUP && vspace) {
         return __map_device_page_regular(cookie, paddr, size, cached, flags);
@@ -168,8 +164,7 @@ __map_device_page(void* cookie, uintptr_t paddr, size_t size,
  * This function is designed to be called when creating a new cspace/vspace,
  * and the serial port needs to be hooked in there too.
  */
-void
-platsupport_undo_serial_setup(void)
+void platsupport_undo_serial_setup(void)
 {
     /* Re-initialise some structures. */
     setup_status = NOT_INITIALIZED;
@@ -185,13 +180,11 @@ platsupport_undo_serial_setup(void)
 }
 
 /* Initialise serial input interrupt. */
-void
-platsupport_serial_input_init_IRQ(void)
+void platsupport_serial_input_init_IRQ(void)
 {
 }
 
-int
-platsupport_serial_setup_io_ops(ps_io_ops_t* io_ops)
+int platsupport_serial_setup_io_ops(ps_io_ops_t *io_ops)
 {
     int err = 0;
     if (setup_status == SETUP_COMPLETE) {
@@ -204,8 +197,7 @@ platsupport_serial_setup_io_ops(ps_io_ops_t* io_ops)
     return err;
 }
 
-int
-platsupport_serial_setup_bootinfo_failsafe(void)
+int platsupport_serial_setup_bootinfo_failsafe(void)
 {
     int err = 0;
     if (setup_status == SETUP_COMPLETE) {
@@ -230,8 +222,7 @@ platsupport_serial_setup_bootinfo_failsafe(void)
     return err;
 }
 
-int
-platsupport_serial_setup_simple(
+int platsupport_serial_setup_simple(
     vspace_t *_vspace __attribute__((unused)),
     simple_t *_simple __attribute__((unused)),
     vka_t *_vka __attribute__((unused)))
@@ -318,15 +309,15 @@ size_t NO_INLINE
 #ifdef CONFIG_LIB_SEL4_MUSLC_SYS_ARCH_PUTCHAR_WEAK
 WEAK
 #endif
-__arch_write(char *data, size_t count) {
+__arch_write(char *data, size_t count)
+{
     for (size_t i = 0; i < count; i++) {
         __arch_putchar(data[i]);
     }
     return count;
 }
 
-int
-__arch_getchar(void)
+int __arch_getchar(void)
 {
     if (setup_status != SETUP_COMPLETE) {
         __serial_setup();

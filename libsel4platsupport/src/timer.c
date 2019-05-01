@@ -278,6 +278,11 @@ seL4_CPtr sel4platsupport_timer_objs_get_irq_cap(timer_objects_t *to, int id, ir
                     return to->irqs[i].handler_path.capPtr;
                 }
                 break;
+            case PS_TRIGGER:
+                if (to->irqs[i].irq.trigger.number == id) {
+                    return to->irqs[i].handler_path.capPtr;
+                }
+                break;
             case PS_NONE:
                 ZF_LOGE("Invalid irq type");
             }

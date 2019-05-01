@@ -67,16 +67,14 @@ void sel4platsupport_handle_timer_irq(seL4_timer_t *timer, seL4_Word badge)
     }
 }
 
-static int setup_irq(vka_t *vka, sel4ps_irq_t *irq, seL4_Word badge,
-        seL4_CPtr ntfn)
+static int setup_irq(vka_t *vka, sel4ps_irq_t *irq, seL4_Word badge, seL4_CPtr ntfn)
 {
     int error = vka_cspace_alloc_path(vka, &irq->badged_ntfn_path);
     cspacepath_t path;
     vka_cspace_make_path(vka, ntfn, &path);
     if (!error) {
         /* badge it */
-        error = vka_cnode_mint(&irq->badged_ntfn_path, &path,
-                seL4_AllRights, badge);
+        error = vka_cnode_mint(&irq->badged_ntfn_path, &path, seL4_AllRights, badge);
     }
     if (!error) {
         /* set notification *before* acking any pending IRQ to ensure there is no race where
@@ -121,14 +119,16 @@ static inline size_t get_nirqs(ltimer_t *ltimer)
     return nirqs;
 }
 
-static int init_timer_internal(vka_t *vka, simple_t *simple, seL4_CPtr ntfn, seL4_timer_t *timer, size_t nirqs)
+static int init_timer_internal(vka_t *vka, simple_t *simple, seL4_CPtr ntfn,
+                               seL4_timer_t *timer, size_t nirqs)
 {
 
     /* set up the irq caps the timer needs */
     timer->to.nirqs = 0;
     for (size_t i = 0; i < nirqs; i++) {
         assert(timer->to.irqs[i].irq.type != PS_NONE);
-        int error = sel4platsupport_copy_irq_cap(vka, simple, &timer->to.irqs[i].irq, &timer->to.irqs[i].handler_path);
+        int error = sel4platsupport_copy_irq_cap(vka, simple, &timer->to.irqs[i].irq,
+                                                 &timer->to.irqs[i].handler_path);
         if (!error) {
             error = setup_irq(vka, &timer->to.irqs[i], BIT(seL4_BadgeBits - i - 1), ntfn);
         }
@@ -144,8 +144,8 @@ static int init_timer_internal(vka_t *vka, simple_t *simple, seL4_CPtr ntfn, seL
     return 0;
 }
 
-int sel4platsupport_init_default_timer_ops(vka_t *vka, UNUSED vspace_t *vspace, simple_t *simple, ps_io_ops_t ops,
-                  seL4_CPtr ntfn, seL4_timer_t *timer)
+int sel4platsupport_init_default_timer_ops(vka_t *vka, UNUSED vspace_t *vspace, simple_t *simple,
+                                           ps_io_ops_t ops, seL4_CPtr ntfn, seL4_timer_t *timer)
 {
     int error;
     if (timer == NULL) {
@@ -172,7 +172,7 @@ int sel4platsupport_init_default_timer_ops(vka_t *vka, UNUSED vspace_t *vspace, 
 }
 
 int sel4platsupport_init_default_timer(vka_t *vka, vspace_t *vspace, simple_t *simple,
-                  seL4_CPtr ntfn, seL4_timer_t *timer)
+                                       seL4_CPtr ntfn, seL4_timer_t *timer)
 {
     int error;
 
@@ -189,7 +189,7 @@ int sel4platsupport_init_default_timer(vka_t *vka, vspace_t *vspace, simple_t *s
 }
 
 int sel4platsupport_init_timer_irqs(vka_t *vka, simple_t *simple,
-                  seL4_CPtr ntfn, seL4_timer_t *timer, timer_objects_t *to)
+                                    seL4_CPtr ntfn, seL4_timer_t *timer, timer_objects_t *to)
 {
     if (timer == NULL) {
         return EINVAL;
@@ -201,7 +201,8 @@ int sel4platsupport_init_timer_irqs(vka_t *vka, simple_t *simple,
 }
 
 
-int sel4platsupport_init_default_timer_caps(vka_t *vka, vspace_t *vspace, simple_t *simple, timer_objects_t *timer_objects)
+int sel4platsupport_init_default_timer_caps(vka_t *vka, vspace_t *vspace, simple_t *simple,
+                                            timer_objects_t *timer_objects)
 {
     /* initialise io ops */
     ps_io_ops_t ops;
@@ -227,7 +228,7 @@ int sel4platsupport_init_default_timer_caps(vka_t *vka, vspace_t *vspace, simple
         assert(timer_objects->irqs[i].irq.type != PS_NONE);
         if (!error) {
             error =  sel4platsupport_copy_irq_cap(vka, simple, &timer_objects->irqs[i].irq,
-                                          &timer_objects->irqs[i].handler_path);
+                                                  &timer_objects->irqs[i].handler_path);
         }
         if (error) {
             ZF_LOGE("Failed to get irq cap %zu", i);
@@ -259,7 +260,8 @@ int sel4platsupport_init_default_timer_caps(vka_t *vka, vspace_t *vspace, simple
     return error;
 }
 
-seL4_CPtr sel4platsupport_timer_objs_get_irq_cap(timer_objects_t *to, int id, irq_type_t type) {
+seL4_CPtr sel4platsupport_timer_objs_get_irq_cap(timer_objects_t *to, int id, irq_type_t type)
+{
     for (size_t i = 0; i < to->nirqs; i++) {
         if (to->irqs[i].irq.type == type) {
             switch (type) {

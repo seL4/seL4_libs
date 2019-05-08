@@ -26,6 +26,10 @@
 //utility macros
 #define MODIFY_PMCR(op, val) sel4bench_private_write_pmcr(sel4bench_private_read_pmcr() op (val))
 
+#define SEL4BENCH_RESET_CCNT do {\
+    MODIFY_PMCR(| , SEL4BENCH_ARMV7A_PMCR_RESET_CCNT);\
+} while(0)
+
 /* Silence warnings about including the following functions when seL4_DebugRun
  * is not enabled when we are not calling them. If we actually call these
  * functions without seL4_DebugRun enabled, we'll get a link failure, so this

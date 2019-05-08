@@ -22,6 +22,10 @@
 
 #define SEL4BENCH_READ_CCNT(var) PMU_READ(PMCCNTR, var);
 
+#define SEL4BENCH_RESET_CCNT do {\
+    MODIFY_PMCR(| , SEL4BENCH_ARMV8A_PMCR_RESET_CCNT);\
+} while(0)
+
 /* Silence warnings about including the following functions when seL4_DebugRun
  * is not enabled when we are not calling them. If we actually call these
  * functions without seL4_DebugRun enabled, we'll get a link failure, so this

@@ -166,7 +166,7 @@ static UNUSED void sel4bench_start_counters(counter_bitfield_t counters);
 static UNUSED void sel4bench_stop_counters(counter_bitfield_t counters);
 
 /**
- * Reset all performance counters to zero.
+ * Reset all performance counters to zero (not including the cycle counter).
  *
  */
 static UNUSED void sel4bench_reset_counters(void);

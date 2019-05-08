@@ -35,7 +35,7 @@
  * functions without seL4_DebugRun enabled, we'll get a link failure, so this
  * should be OK.
  */
-void seL4_DebugRun(void (* userfn) (void *), void* userarg);
+void seL4_DebugRun(void (* userfn)(void *), void *userarg);
 
 static FASTFN void sel4bench_init()
 {
@@ -51,10 +51,10 @@ static FASTFN void sel4bench_init()
     MODIFY_PMCR(&, ~SEL4BENCH_ARMV7A_PMCR_DIV64);
 
     //Reset all counters
-    MODIFY_PMCR( | , SEL4BENCH_ARMV7A_PMCR_RESET_ALL | SEL4BENCH_ARMV7A_PMCR_RESET_CCNT);
+    MODIFY_PMCR( |, SEL4BENCH_ARMV7A_PMCR_RESET_ALL | SEL4BENCH_ARMV7A_PMCR_RESET_CCNT);
 
     //Enable counters globally.
-    MODIFY_PMCR( | , SEL4BENCH_ARMV7A_PMCR_ENABLE);
+    MODIFY_PMCR( |, SEL4BENCH_ARMV7A_PMCR_ENABLE);
 
 #ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
     // Select instruction count incl. PL2 by default */
@@ -125,13 +125,14 @@ static FASTFN ccnt_t sel4bench_get_counter(counter_t counter)
  * line in size) however, the pointer dereference is overwhelmingly likely to
  * produce a dcache miss, which will occur with the counters off
  */
-static CACHESENSFN ccnt_t sel4bench_get_counters(counter_bitfield_t mask, ccnt_t* values)
+static CACHESENSFN ccnt_t sel4bench_get_counters(counter_bitfield_t mask, ccnt_t *values)
 {
     //we don't really have time for a NULL or bounds check here
 
     uint32_t enable_word = sel4bench_private_read_cntens(); //store current running state
 
-    sel4bench_private_write_cntenc(enable_word); //stop running counters (we do this instead of stopping the ones we're interested in because it saves an instruction)
+    sel4bench_private_write_cntenc(
+        enable_word); //stop running counters (we do this instead of stopping the ones we're interested in because it saves an instruction)
 
     unsigned int counter = 0;
     for (; mask != 0; mask >>= 1, counter++) { //for each counter...
@@ -176,5 +177,5 @@ static FASTFN void sel4bench_stop_counters(counter_bitfield_t mask)
 static FASTFN void sel4bench_reset_counters(void)
 {
     //Reset all counters except the CCNT
-    MODIFY_PMCR( | , SEL4BENCH_ARMV7A_PMCR_RESET_ALL);
+    MODIFY_PMCR( |, SEL4BENCH_ARMV7A_PMCR_RESET_ALL | SEL4BENCH_ARMV7A_PMCR_RESET_CCNT);
 }

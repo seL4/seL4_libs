@@ -60,7 +60,7 @@ static UNUSED event_id_t GENERIC_EVENTS[] = {
     SEL4BENCH_EVENT_MEMORY_ACCESS,
 };
 
-static UNUSED char * GENERIC_EVENT_NAMES[] = {
+static UNUSED char *GENERIC_EVENT_NAMES[] = {
     "L1 i-cache misses",
     "L1 d-cache misses",
     "L1 i-tlb misses",
@@ -113,7 +113,7 @@ static UNUSED seL4_Word sel4bench_get_num_counters();
  * @return An ASCII string prepresentation of the counters description, or NULL
  *         if the counter does not exist.
  */
-const char* sel4bench_get_counter_description(counter_t counter);
+const char *sel4bench_get_counter_description(counter_t counter);
 
 /**
  * Query the value of a counter.
@@ -134,7 +134,7 @@ static UNUSED ccnt_t sel4bench_get_counter(counter_t counter);
  * @return The current cycle count, as sel4bench_get_cycle_count()
  */
 static UNUSED ccnt_t sel4bench_get_counters(counter_bitfield_t counters,
-                                            ccnt_t* values);
+                                            ccnt_t *values);
 
 /**
  * Assign a counter to track a specific event. Events are processor-specific,
@@ -174,8 +174,7 @@ static UNUSED void sel4bench_reset_counters(void);
 /*
  * @return the number benchmark loops required to read a number of events
  */
-static inline int
-sel4bench_get_num_counter_chunks(seL4_Word n_counters, seL4_Word n_events)
+static inline int sel4bench_get_num_counter_chunks(seL4_Word n_counters, seL4_Word n_events)
 {
     return DIV_ROUND_UP(n_events, n_counters);
 }
@@ -189,9 +188,9 @@ sel4bench_get_num_counter_chunks(seL4_Word n_counters, seL4_Word n_events)
  *                         expensive operations multiple times.
  * @return a mask    used to manipulate the counters enabled.
  */
-static inline counter_bitfield_t
-sel4bench_enable_counters(seL4_Word n_events, event_id_t events[n_events], seL4_Word chunk,
-                          seL4_Word n_counters)
+static inline counter_bitfield_t sel4bench_enable_counters(seL4_Word n_events, event_id_t events[n_events],
+                                                           seL4_Word chunk,
+                                                           seL4_Word n_counters)
 {
     assert(chunk < sel4bench_get_num_counter_chunks(n_counters, n_events));
     /* This value is passed in as it can be expensive to call, but
@@ -223,24 +222,23 @@ sel4bench_enable_counters(seL4_Word n_events, event_id_t events[n_events], seL4_
  * @param results    array of counter results. Must match the size of n_events as passed to
  *                   sel4bench_enable_counters.
  */
-static inline void
-sel4bench_read_and_stop_counters(counter_bitfield_t mask, seL4_Word chunk, seL4_Word n_counters,
-                                 ccnt_t results[])
+static inline void sel4bench_read_and_stop_counters(counter_bitfield_t mask, seL4_Word chunk, seL4_Word n_counters,
+                                                    ccnt_t results[])
 {
-   sel4bench_get_counters(mask, &results[chunk * n_counters]);
-   sel4bench_stop_counters(mask);
+    sel4bench_get_counters(mask, &results[chunk * n_counters]);
+    sel4bench_stop_counters(mask);
 }
 
 /* shortcut for calling sel4bench_enable_counters on the GENERIC_EVENTS supplied by all platforms in
  * libsel4bench */
-static inline counter_bitfield_t
-sel4bench_enable_generic_counters(seL4_Word chunk, seL4_Word n_counters) {
+static inline counter_bitfield_t sel4bench_enable_generic_counters(seL4_Word chunk, seL4_Word n_counters)
+{
     return sel4bench_enable_counters(SEL4BENCH_NUM_GENERIC_EVENTS, GENERIC_EVENTS, chunk, n_counters);
 }
 
 /* shortcut for calling sel4bench_enable_counters on the GENERIC_EVENTS supplied by all platforms in
  * libsel4bench */
-static inline int
-sel4bench_get_num_generic_counter_chunks(seL4_Word n_counters) {
+static inline int sel4bench_get_num_generic_counter_chunks(seL4_Word n_counters)
+{
     return sel4bench_get_num_counter_chunks(n_counters, SEL4BENCH_NUM_GENERIC_EVENTS);
 }

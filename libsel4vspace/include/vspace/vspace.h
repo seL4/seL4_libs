@@ -146,6 +146,39 @@ void * vspace_new_pages_with_config(vspace_t *vspace, vspace_new_pages_config_t 
  */
 void *vspace_new_sized_stack(vspace_t *vspace, size_t n_pages);
 
+/**
+ * Callback invoked when accessing a page through vspace_access_page_with_callback
+ *
+ * @param access_addr address being accessed in source vspace.
+ * @param vaddr the virtual address of the mapped page in the destination vspace.
+ * @param pointer to cookie/data the caller wants passed onto the callback
+ *
+ * @return integer result defined by the callback implementation
+ */
+typedef int (*vspace_access_callback_fn)(void *access_addr, void *vaddr, void *cookie);
+
+/**
+ * Access a page from one vspace in another.
+ *
+ * Duplicate a page mapping out of the 'from' vspace into the 'to' vspace for subsequent access
+ * by a caller defined callback function. The page will be unmapped after the callback function
+ * has been executed. Pages are expected to already be mapped in the 'from' vspace, or an error
+ * will be returned.
+ *
+ * @param from          vspace to access page from
+ * @param to            vspace to map page into
+ * @param access_addr   address to access
+ * @param size_bits     size of page in bits
+ * @param rights        rights to map page into the 'to' vspace with.
+ * @param cacheable     cacheable attribute to map page into the vspace with
+ * @param callback      callback function to pass mapped vaddr onto
+ * @param cookie        pointer to cookie/data the caller wants passed onto the callback
+ *
+ * @return -1 on error, otherwise the integer result of the callback function
+ */
+int vspace_access_page_with_callback(vspace_t *from, vspace_t *to, void *access_addr, size_t size_bits,
+        seL4_CapRights_t rights, int cacheable, vspace_access_callback_fn callback, void *cookie);
+
 static inline void *
 vspace_new_stack(vspace_t *vspace)
 {

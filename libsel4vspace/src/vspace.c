@@ -103,6 +103,26 @@ vspace_share_mem(vspace_t *from, vspace_t *to, void *start, int num_pages, size_
     return result;
 }
 
+int
+vspace_access_page_with_callback(vspace_t *from, vspace_t *to, void *access_addr, size_t size_bits,
+        seL4_CapRights_t rights, int cacheable, vspace_access_callback_fn callback, void *cookie)
+{
+    void *to_vaddr;
+    to_vaddr = vspace_share_mem(from, to, access_addr, 1, size_bits, rights, cacheable);
+    if (to_vaddr == NULL) {
+        ZF_LOGE("Failed to access page");
+        return -1;
+    }
+
+    /* Invoke callback with mapped address */
+    int res = callback(access_addr, to_vaddr, cookie);
+
+    /* Remove mappings from destination vspace */
+    vspace_unmap_pages(to, to_vaddr, 1, size_bits, (vka_t *) VSPACE_FREE);
+
+    return res;
+}
+
 void *
 vspace_new_pages_with_config(vspace_t *vspace, vspace_new_pages_config_t *config, seL4_CapRights_t rights)
 {

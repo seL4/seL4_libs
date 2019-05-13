@@ -817,7 +817,7 @@ vspace_share_mem_at_vaddr(vspace_t *from, vspace_t *to, void *start, int num_pag
         return -1;
     }
 
-    if (start == NULL || vaddr == NULL) {
+    if (vaddr == NULL) {
         ZF_LOGE("Cannot share memory at NULL");
         return -1;
     }

@@ -47,7 +47,9 @@ typedef struct vspace_new_pages_config {
  * @param  config      config struct to save configuration into
  * @return             0 on success.
  */
-static inline int default_vspace_new_pages_config(size_t num_pages, size_t size_bits, vspace_new_pages_config_t *config) {
+static inline int default_vspace_new_pages_config(size_t num_pages, size_t size_bits,
+                                                  vspace_new_pages_config_t *config)
+{
     if (num_pages == 0) {
         ZF_LOGW("attempt to create 0 pages");
         return -1;
@@ -66,7 +68,8 @@ static inline int default_vspace_new_pages_config(size_t num_pages, size_t size_
  * @param  config config struct to save configuration into
  * @return        0 on success.
  */
-static inline int vspace_new_pages_config_set_vaddr(void *vaddr, vspace_new_pages_config_t *config) {
+static inline int vspace_new_pages_config_set_vaddr(void *vaddr, vspace_new_pages_config_t *config)
+{
     config->vaddr = vaddr;
     return 0;
 }
@@ -77,7 +80,8 @@ static inline int vspace_new_pages_config_set_vaddr(void *vaddr, vspace_new_page
  * @param  config config struct to save configuration into
  * @return        0 on success.
  */
-static inline int vspace_new_pages_config_use_device_ut(bool can_use_dev, vspace_new_pages_config_t *config) {
+static inline int vspace_new_pages_config_use_device_ut(bool can_use_dev, vspace_new_pages_config_t *config)
+{
     config->can_use_dev = can_use_dev;
     return 0;
 }
@@ -131,7 +135,7 @@ void *vspace_share_mem(vspace_t *from, vspace_t *to, void *start, int num_pages,
  * @return        vaddr at the start of the contiguous region
  *         NULL on failure.
  */
-void * vspace_new_pages_with_config(vspace_t *vspace, vspace_new_pages_config_t *config, seL4_CapRights_t rights);
+void *vspace_new_pages_with_config(vspace_t *vspace, vspace_new_pages_config_t *config, seL4_CapRights_t rights);
 
 /**
  * Create a stack. The determines stack size.
@@ -177,10 +181,9 @@ typedef int (*vspace_access_callback_fn)(void *access_addr, void *vaddr, void *c
  * @return -1 on error, otherwise the integer result of the callback function
  */
 int vspace_access_page_with_callback(vspace_t *from, vspace_t *to, void *access_addr, size_t size_bits,
-        seL4_CapRights_t rights, int cacheable, vspace_access_callback_fn callback, void *cookie);
+                                     seL4_CapRights_t rights, int cacheable, vspace_access_callback_fn callback, void *cookie);
 
-static inline void *
-vspace_new_stack(vspace_t *vspace)
+static inline void *vspace_new_stack(vspace_t *vspace)
 {
     return vspace_new_sized_stack(vspace, BYTES_TO_4K_PAGES(CONFIG_SEL4UTILS_STACK_SIZE));
 }
@@ -195,8 +198,7 @@ vspace_new_stack(vspace_t *vspace)
  */
 void vspace_free_sized_stack(vspace_t *vspace, void *stack_top, size_t n_pages);
 
-static inline void
-vspace_free_stack(vspace_t *vspace, void *stack_top)
+static inline void vspace_free_stack(vspace_t *vspace, void *stack_top)
 {
     vspace_free_sized_stack(vspace, stack_top, BYTES_TO_4K_PAGES(CONFIG_SEL4UTILS_STACK_SIZE));
 }
@@ -381,7 +383,7 @@ typedef void (*vspace_free_reservation_by_vaddr_fn)(vspace_t *vspace, void *vadd
  *
  * @return the cap mapped to this virtual address, 0 otherwise.
  */
-typedef seL4_CPtr (*vspace_get_cap_fn)(vspace_t *vspace, void *vaddr);
+typedef seL4_CPtr(*vspace_get_cap_fn)(vspace_t *vspace, void *vaddr);
 
 /**
  * Get the vka allocation cookie for an the frame mapped at a virtual address.
@@ -408,7 +410,7 @@ typedef void (*vspace_allocated_object_fn)(void *allocated_object_cookie, vka_ob
 
 /* @return the page directory for this vspace
  */
-typedef seL4_CPtr (*vspace_get_root_fn)(vspace_t *vspace);
+typedef seL4_CPtr(*vspace_get_root_fn)(vspace_t *vspace);
 
 /**
  * Share memory from one vspace to another at a specific address. Pages are expected
@@ -424,7 +426,8 @@ typedef seL4_CPtr (*vspace_get_root_fn)(vspace_t *vspace);
  *
  * @return 0 on success
  */
-typedef int (*vspace_share_mem_at_vaddr_fn)(vspace_t *from, vspace_t *to, void *start, int num_pages, size_t size_bits, void *vaddr, reservation_t res);
+typedef int (*vspace_share_mem_at_vaddr_fn)(vspace_t *from, vspace_t *to, void *start, int num_pages, size_t size_bits,
+                                            void *vaddr, reservation_t res);
 
 /* Portable virtual memory allocation interface */
 struct vspace {
@@ -469,9 +472,8 @@ struct vspace {
  * @return vaddr at the start of the contiguous region
  *         NULL on failure.
  */
-static inline void *
-vspace_new_pages(vspace_t *vspace, seL4_CapRights_t rights,
-                 size_t num_pages, size_t size_bits)
+static inline void *vspace_new_pages(vspace_t *vspace, seL4_CapRights_t rights,
+                                     size_t num_pages, size_t size_bits)
 {
     if (vspace == NULL) {
         ZF_LOGE("vspace is NULL.");
@@ -508,10 +510,9 @@ vspace_new_pages(vspace_t *vspace, seL4_CapRights_t rights,
  * @return vaddr at the start of the device mapping
  *         NULL on failure.
  */
-static inline void *
-vspace_map_pages(vspace_t *vspace, seL4_CPtr caps[], uintptr_t cookies[],
-                 seL4_CapRights_t rights, size_t num_pages, size_t size_bits,
-                 int cacheable)
+static inline void *vspace_map_pages(vspace_t *vspace, seL4_CPtr caps[], uintptr_t cookies[],
+                                     seL4_CapRights_t rights, size_t num_pages, size_t size_bits,
+                                     int cacheable)
 {
     if (vspace == NULL) {
         ZF_LOGE("vspace is NULL.");
@@ -534,8 +535,9 @@ vspace_map_pages(vspace_t *vspace, seL4_CPtr caps[], uintptr_t cookies[],
                              num_pages, size_bits, cacheable);
 }
 
-static inline int
-vspace_new_pages_at_vaddr_with_config(vspace_t *vspace, vspace_new_pages_config_t *config, reservation_t res) {
+static inline int vspace_new_pages_at_vaddr_with_config(vspace_t *vspace, vspace_new_pages_config_t *config,
+                                                        reservation_t res)
+{
     if (vspace == NULL) {
         ZF_LOGE("vspace is NULL");
         return -1;
@@ -543,12 +545,12 @@ vspace_new_pages_at_vaddr_with_config(vspace_t *vspace, vspace_new_pages_config_
     if (res.res == NULL) {
         ZF_LOGE("reservation is required");
     }
-    return vspace->new_pages_at_vaddr(vspace, config->vaddr, config->num_pages, config->size_bits, res, config->can_use_dev);
+    return vspace->new_pages_at_vaddr(vspace, config->vaddr, config->num_pages, config->size_bits, res,
+                                      config->can_use_dev);
 }
 
-static inline int
-vspace_new_pages_at_vaddr(vspace_t *vspace, void *vaddr, size_t num_pages, size_t size_bits,
-                          reservation_t reservation)
+static inline int vspace_new_pages_at_vaddr(vspace_t *vspace, void *vaddr, size_t num_pages, size_t size_bits,
+                                            reservation_t reservation)
 {
     if (vspace == NULL) {
         ZF_LOGE("vspace is NULL");
@@ -571,9 +573,8 @@ vspace_new_pages_at_vaddr(vspace_t *vspace, void *vaddr, size_t num_pages, size_
     return vspace_new_pages_at_vaddr_with_config(vspace, &config, reservation);
 }
 
-static inline int
-vspace_map_pages_at_vaddr(vspace_t *vspace, seL4_CPtr caps[], uintptr_t cookies[], void *vaddr,
-                          size_t num_pages, size_t size_bits, reservation_t reservation)
+static inline int vspace_map_pages_at_vaddr(vspace_t *vspace, seL4_CPtr caps[], uintptr_t cookies[], void *vaddr,
+                                            size_t num_pages, size_t size_bits, reservation_t reservation)
 {
     if (vspace == NULL) {
         ZF_LOGE("vspace is NULL");
@@ -597,8 +598,7 @@ vspace_map_pages_at_vaddr(vspace_t *vspace, seL4_CPtr caps[], uintptr_t cookies[
     return vspace->map_pages_at_vaddr(vspace, caps, cookies, vaddr, num_pages, size_bits, reservation);
 }
 
-static inline void
-vspace_unmap_pages(vspace_t *vspace, void *vaddr, size_t num_pages, size_t size_bits, vka_t *vka)
+static inline void vspace_unmap_pages(vspace_t *vspace, void *vaddr, size_t num_pages, size_t size_bits, vka_t *vka)
 {
 
     if (vspace == NULL) {
@@ -624,8 +624,7 @@ vspace_unmap_pages(vspace_t *vspace, void *vaddr, size_t num_pages, size_t size_
     vspace->unmap_pages(vspace, vaddr, num_pages, size_bits, vka);
 }
 
-static inline void
-vspace_tear_down(vspace_t *vspace, vka_t *vka)
+static inline void vspace_tear_down(vspace_t *vspace, vka_t *vka)
 {
     if (vspace == NULL) {
         ZF_LOGE("vspace is NULL");
@@ -639,9 +638,8 @@ vspace_tear_down(vspace_t *vspace, vka_t *vka)
     vspace->tear_down(vspace, vka);
 }
 
-static inline reservation_t
-vspace_reserve_range_aligned(vspace_t *vspace, size_t bytes, size_t size_bits,
-                             seL4_CapRights_t rights, int cacheable, void **vaddr)
+static inline reservation_t vspace_reserve_range_aligned(vspace_t *vspace, size_t bytes, size_t size_bits,
+                                                         seL4_CapRights_t rights, int cacheable, void **vaddr)
 {
     reservation_t error = { .res = 0 };
 
@@ -668,9 +666,8 @@ vspace_reserve_range_aligned(vspace_t *vspace, size_t bytes, size_t size_bits,
     return vspace->reserve_range_aligned(vspace, bytes, size_bits, rights, cacheable, vaddr);
 }
 
-static inline reservation_t
-vspace_reserve_range_at(vspace_t *vspace, void *vaddr,
-                        size_t bytes, seL4_CapRights_t rights, int cacheable)
+static inline reservation_t vspace_reserve_range_at(vspace_t *vspace, void *vaddr,
+                                                    size_t bytes, seL4_CapRights_t rights, int cacheable)
 {
     reservation_t error = { .res = 0 };
 
@@ -692,8 +689,7 @@ vspace_reserve_range_at(vspace_t *vspace, void *vaddr,
     return vspace->reserve_range_at(vspace, vaddr, bytes, rights, cacheable);
 }
 
-static inline void
-vspace_free_reservation(vspace_t *vspace, reservation_t reservation)
+static inline void vspace_free_reservation(vspace_t *vspace, reservation_t reservation)
 {
     if (vspace == NULL) {
         ZF_LOGE("vspace is NULL");
@@ -708,8 +704,7 @@ vspace_free_reservation(vspace_t *vspace, reservation_t reservation)
     vspace->free_reservation(vspace, reservation);
 }
 
-static inline void
-vspace_free_reservation_by_vaddr(vspace_t *vspace, void *vaddr)
+static inline void vspace_free_reservation_by_vaddr(vspace_t *vspace, void *vaddr)
 {
     if (vspace == NULL) {
         ZF_LOGE("vspace is NULL");
@@ -724,8 +719,7 @@ vspace_free_reservation_by_vaddr(vspace_t *vspace, void *vaddr)
     vspace->free_reservation_by_vaddr(vspace, vaddr);
 }
 
-static inline seL4_CPtr
-vspace_get_cap(vspace_t *vspace, void *vaddr)
+static inline seL4_CPtr vspace_get_cap(vspace_t *vspace, void *vaddr)
 {
 
     if (vspace == NULL) {
@@ -745,8 +739,7 @@ vspace_get_cap(vspace_t *vspace, void *vaddr)
     return vspace->get_cap(vspace, vaddr);
 }
 
-static inline uintptr_t
-vspace_get_cookie(vspace_t *vspace, void *vaddr)
+static inline uintptr_t vspace_get_cookie(vspace_t *vspace, void *vaddr)
 {
     if (vspace == NULL) {
         ZF_LOGE("vspace is NULL");
@@ -768,8 +761,7 @@ vspace_get_cookie(vspace_t *vspace, void *vaddr)
 
 /* Helper functions */
 
-static inline void
-vspace_maybe_call_allocated_object(vspace_t *vspace, vka_object_t object)
+static inline void vspace_maybe_call_allocated_object(vspace_t *vspace, vka_object_t object)
 {
     if (vspace == NULL) {
         ZF_LOGF("vspace is NULL");
@@ -780,8 +772,7 @@ vspace_maybe_call_allocated_object(vspace_t *vspace, vka_object_t object)
     }
 }
 
-static inline seL4_CPtr
-vspace_get_root(vspace_t *vspace)
+static inline seL4_CPtr vspace_get_root(vspace_t *vspace)
 {
     if (vspace == NULL) {
         ZF_LOGE("vspace is NULL");
@@ -794,9 +785,8 @@ vspace_get_root(vspace_t *vspace)
     return vspace->get_root(vspace);
 }
 
-static inline int
-vspace_share_mem_at_vaddr(vspace_t *from, vspace_t *to, void *start, int num_pages,
-                          size_t size_bits, void *vaddr, reservation_t res)
+static inline int vspace_share_mem_at_vaddr(vspace_t *from, vspace_t *to, void *start, int num_pages,
+                                            size_t size_bits, void *vaddr, reservation_t res)
 {
 
     if (num_pages == 0) {

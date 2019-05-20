@@ -12,6 +12,7 @@
 
 /* see sel4utils/vspace.h for details */
 #include <autoconf.h>
+#include <sel4utils/gen_config.h>
 
 #include <inttypes.h>
 #include <stdbool.h>

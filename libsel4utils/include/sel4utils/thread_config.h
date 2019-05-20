@@ -18,6 +18,7 @@
  */
 
 #include <autoconf.h>
+#include <sel4utils/gen_config.h>
 #include <sel4/types.h>
 #include <simple/simple.h>
 #include <sel4utils/api.h>

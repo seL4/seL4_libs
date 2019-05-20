@@ -11,6 +11,7 @@
  */
 #pragma once
 #include <autoconf.h>
+#include <sel4utils/gen_config.h>
 #ifdef CONFIG_BENCHMARK_TRACK_KERNEL_ENTRIES
 
 #include <stdio.h>

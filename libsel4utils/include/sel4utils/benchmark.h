@@ -12,6 +12,7 @@
 
 #pragma once
 #include <autoconf.h>
+#include <sel4utils/gen_config.h>
 #ifdef CONFIG_BENCHMARK_TRACEPOINTS
 #include <inttypes.h>
 #include <stdio.h>

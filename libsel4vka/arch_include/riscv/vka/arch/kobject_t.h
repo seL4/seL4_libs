@@ -14,6 +14,7 @@
 #include <sel4/types.h>
 #include <assert.h>
 #include <autoconf.h>
+#include <sel4vka/gen_config.h>
 #include <utils/util.h>
 
 #define seL4_PageDirBits seL4_PageTableBits

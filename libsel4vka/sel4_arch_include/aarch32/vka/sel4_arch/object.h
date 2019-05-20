@@ -13,6 +13,7 @@
 #pragma once
 
 #include <autoconf.h>
+#include <sel4vka/gen_config.h>
 #include <vka/vka.h>
 #include <vka/kobject_t.h>
 #include <utils/util.h>

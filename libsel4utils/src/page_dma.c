@@ -11,6 +11,7 @@
  */
 
 #include <autoconf.h>
+#include <sel4utils/gen_config.h>
 
 #include <sel4utils/page_dma.h>
 #include <vspace/vspace.h>

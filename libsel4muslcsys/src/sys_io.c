@@ -11,6 +11,7 @@
  */
 
 #include <autoconf.h>
+#include <sel4muslcsys/gen_config.h>
 #include <assert.h>
 #include <errno.h>
 #include <fcntl.h>

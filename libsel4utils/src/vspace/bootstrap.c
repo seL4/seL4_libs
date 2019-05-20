@@ -11,6 +11,7 @@
  */
 
 #include <autoconf.h>
+#include <sel4utils/gen_config.h>
 
 #include <stdlib.h>
 #include <string.h>

@@ -12,6 +12,7 @@
 #pragma once
 
 #include <autoconf.h>
+#include <sel4utils/gen_config.h>
 
 #if CONFIG_PT_LEVELS == 2
 #define VSPACE_LEVEL_BITS 10

@@ -14,6 +14,7 @@
  * manipulation */
 
 #include <autoconf.h>
+#include <sel4vmm/gen_config.h>
 
 #include <stdio.h>
 #include <stdlib.h>

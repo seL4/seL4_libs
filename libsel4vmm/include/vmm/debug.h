@@ -13,6 +13,7 @@
 #pragma once
 
 #include <autoconf.h>
+#include <sel4vmm/gen_config.h>
 #include "vmm/vmm.h"
 
 #ifndef COLOUR

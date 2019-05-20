@@ -13,6 +13,7 @@
 #pragma once
 
 #include <autoconf.h>
+#include <sel4muslcsys/gen_config.h>
 #include <stdarg.h>
 #include <stdint.h>
 #include <stdbool.h>

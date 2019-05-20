@@ -11,6 +11,7 @@
 */
 
 #include <autoconf.h>
+#include <sel4platsupport/gen_config.h>
 #include <vka/object.h>
 #include <vka/vka.h>
 #include <vka/capops.h>

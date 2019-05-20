@@ -12,6 +12,7 @@
 
 #include <assert.h>
 #include <autoconf.h>
+#include <sel4vka/gen_config.h>
 #include <sel4/sel4.h>
 #include <stddef.h>
 #include <stdint.h>

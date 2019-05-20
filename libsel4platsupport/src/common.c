@@ -18,6 +18,8 @@
  */
 
 #include <autoconf.h>
+#include <sel4platsupport/gen_config.h>
+#include <sel4muslcsys/gen_config.h>
 #include <assert.h>
 #include <sel4/sel4.h>
 #include <sel4/bootinfo.h>

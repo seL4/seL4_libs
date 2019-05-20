@@ -11,6 +11,7 @@
  */
 
 #include <autoconf.h>
+#include <sel4debug/gen_config.h>
 #include <sel4debug/debug.h>
 #include <sel4/sel4.h>
 #include <stdio.h>

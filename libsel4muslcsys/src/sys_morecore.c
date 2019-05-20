@@ -14,6 +14,7 @@
 #define _GNU_SOURCE
 
 #include <autoconf.h>
+#include <sel4muslcsys/gen_config.h>
 #include <stdio.h>
 #include <stdint.h>
 #include <stdarg.h>

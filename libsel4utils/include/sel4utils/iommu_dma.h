@@ -13,6 +13,7 @@
 #pragma once
 
 #include <autoconf.h>
+#include <sel4utils/gen_config.h>
 
 #if defined(CONFIG_IOMMU)
 

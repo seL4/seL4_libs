@@ -14,6 +14,7 @@
 
 /* This file provides convenient wrappers around seL4 IPC buffer manipulation */
 #include <autoconf.h>
+#include <sel4vka/gen_config.h>
 #include <vka/cspacepath_t.h>
 #include <vka/object.h>
 

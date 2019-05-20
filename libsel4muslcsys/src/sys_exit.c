@@ -11,6 +11,7 @@
  */
 
 #include <autoconf.h>
+#include <sel4muslcsys/gen_config.h>
 #include <stdio.h>
 #include <sel4/sel4.h>
 #include <stdlib.h>

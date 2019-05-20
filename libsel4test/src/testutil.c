@@ -11,6 +11,7 @@
  */
 
 #include <autoconf.h>
+#include <sel4test/gen_config.h>
 
 #include <stdbool.h>
 #include <stdio.h>

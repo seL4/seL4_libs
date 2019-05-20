@@ -11,6 +11,7 @@
  */
 
 #include <autoconf.h>
+#include <sel4utils/gen_config.h>
 
 #include <inttypes.h>
 #include <sel4/sel4.h>

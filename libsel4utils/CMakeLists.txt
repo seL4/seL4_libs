@@ -55,11 +55,13 @@ list(SORT deps)
 add_library(sel4utils STATIC EXCLUDE_FROM_ALL ${deps})
 target_include_directories(
     sel4utils
-    PUBLIC include "sel4_arch_include/${KernelSel4Arch}" "arch_include/${KernelArch}"
+    PUBLIC
+        include
+        "sel4_arch_include/${KernelSel4Arch}"
+        "arch_include/${KernelArch}"
 )
 target_link_libraries(
     sel4utils
-    Configuration
     muslc
     sel4
     sel4runtime
@@ -68,4 +70,5 @@ target_link_libraries(
     sel4platsupport
     elf
     cpio
+    sel4utils_Config
 )

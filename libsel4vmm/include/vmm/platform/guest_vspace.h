@@ -13,6 +13,7 @@
 #pragma once
 
 #include <autoconf.h>
+#include <sel4vmm/gen_config.h>
 #include <sel4/sel4.h>
 #include <vspace/vspace.h>
 #include <vka/vka.h>

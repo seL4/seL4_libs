@@ -14,6 +14,7 @@
  * booting and management. */
 
 #include <autoconf.h>
+#include <sel4vmm/gen_config.h>
 
 #include <stdio.h>
 #include <string.h>

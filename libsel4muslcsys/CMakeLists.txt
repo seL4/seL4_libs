@@ -73,5 +73,9 @@ set(HighestSyscall 400)
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -D_XOPEN_SOURCE=700 -DMUSLC_HIGHEST_SYSCALL=${HighestSyscall}")
 
 add_library(sel4muslcsys STATIC EXCLUDE_FROM_ALL ${deps})
-target_include_directories(sel4muslcsys PUBLIC include)
-target_link_libraries(sel4muslcsys Configuration muslc sel4 cpio utils sel4utils)
+target_include_directories(
+    sel4muslcsys
+    PUBLIC
+        include
+)
+target_link_libraries(sel4muslcsys muslc sel4 cpio utils sel4utils sel4muslcsys_Config)

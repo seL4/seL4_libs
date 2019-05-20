@@ -13,6 +13,7 @@
 #pragma once
 
 #include <autoconf.h>
+#include <sel4utils/gen_config.h>
 
 #define VSPACE_MAP_PAGING_OBJECTS 5
 

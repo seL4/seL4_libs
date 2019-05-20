@@ -12,6 +12,7 @@
 #pragma once
 
 #include <autoconf.h>
+#include <sel4utils/gen_config.h>
 #include <assert.h>
 #include <stdint.h>
 

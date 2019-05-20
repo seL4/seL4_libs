@@ -13,6 +13,7 @@
 #include "plat_internal.h"
 #include <sel4/sel4.h>
 #include <platsupport/chardev.h>
+#include <sel4platsupport/gen_config.h>
 #include <stddef.h>
 #include <vka/object.h>
 

@@ -10,6 +10,7 @@
  * @TAG(DATA61_BSD)
  */
 #include <autoconf.h>
+#include <sel4platsupport/gen_config.h>
 #include <sel4platsupport/device.h>
 #include <sel4platsupport/platsupport.h>
 #include <utils/util.h>

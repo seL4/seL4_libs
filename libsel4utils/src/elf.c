@@ -10,6 +10,7 @@
  * @TAG(DATA61_BSD)
  */
 #include <autoconf.h>
+#include <sel4utils/gen_config.h>
 
 #include <string.h>
 #include <sel4/sel4.h>

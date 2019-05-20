@@ -46,6 +46,7 @@
 
 #include <assert.h>
 #include <autoconf.h>
+#include <sel4debug/gen_config.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h> /* for size_t */

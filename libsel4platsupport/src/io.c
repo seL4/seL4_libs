@@ -11,6 +11,7 @@
  */
 
 #include <autoconf.h>
+#include <sel4platsupport/gen_config.h>
 
 #include <sel4platsupport/io.h>
 #ifdef CONFIG_ARCH_ARM

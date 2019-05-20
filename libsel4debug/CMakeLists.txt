@@ -70,6 +70,9 @@ list(SORT deps)
 add_library(sel4debug STATIC EXCLUDE_FROM_ALL ${deps})
 target_include_directories(
     sel4debug
-    PUBLIC include "arch_include/${KernelArch}" sel4_arch_include/${KernelSel4Arch}
+    PUBLIC
+        include
+        "arch_include/${KernelArch}"
+        sel4_arch_include/${KernelSel4Arch}
 )
-target_link_libraries(sel4debug Configuration muslc sel4 utils)
+target_link_libraries(sel4debug muslc sel4 utils sel4debug_Config)

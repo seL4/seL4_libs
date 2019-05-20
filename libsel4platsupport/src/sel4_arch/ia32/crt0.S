@@ -21,6 +21,7 @@
 
 #define __ASM__
 #include <autoconf.h>
+#include <sel4platsupport/gen_config.h>
 
 #ifdef CONFIG_LIB_SEL4_PLAT_SUPPORT_START
 

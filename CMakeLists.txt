@@ -12,6 +12,7 @@
 
 cmake_minimum_required(VERSION 3.7.2)
 
+link_libraries(kernel_autoconf)
 add_subdirectory(libsel4allocman)
 add_subdirectory(libsel4vka)
 add_subdirectory(libsel4utils)

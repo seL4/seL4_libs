@@ -24,6 +24,7 @@
 #include <sel4platsupport/timer.h>
 #include <sync/mutex.h>
 #include <sel4utils/elf.h>
+#include <sel4rpc/client.h>
 
 #include <inttypes.h>
 #include <stdbool.h>
@@ -50,6 +51,8 @@ struct env {
     simple_t simple;
     /* notification for timer */
     vka_object_t timer_notification;
+    /* RPC client for serial server resource allocation */
+    sel4rpc_client_t rpc_client;
 
     /* caps for the current process */
     seL4_CPtr cspace_root;

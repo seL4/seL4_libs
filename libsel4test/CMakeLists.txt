@@ -54,6 +54,7 @@ target_link_libraries(
     sel4vka
     sel4vspace
     sel4platsupport
+    sel4rpc
     sel4sync
     sel4simple
     sel4utils

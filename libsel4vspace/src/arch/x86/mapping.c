@@ -48,7 +48,7 @@ int vspace_get_ept_map_obj(seL4_Word failed_bits, vspace_map_obj_t *obj)
         obj->map_fn = seL4_X86_EPTPD_Map;
         return 0;
     case SEL4_MAPPING_LOOKUP_NO_PDPT:
-        obj->size_bits = seL4_EPTPDPTBits,
+        obj->size_bits = seL4_EPTPDPTBits;
         obj->type = seL4_X86_EPTPDPTObject;
         obj->map_fn = seL4_X86_EPTPDPT_Map;
         return 0;

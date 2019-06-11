@@ -21,8 +21,8 @@
 #include <vspace/mapping.h>
 
 static int map_page(vka_t *vka, vspace_map_page_fn_t map_page_fn, vspace_get_map_obj_fn map_obj_fn,
-        seL4_CPtr root, seL4_CPtr frame, void *vaddr, seL4_CapRights_t rights,
-        int cacheable, vka_object_t *objects, int *num_objects)
+                    seL4_CPtr root, seL4_CPtr frame, void *vaddr, seL4_CapRights_t rights,
+                    int cacheable, vka_object_t *objects, int *num_objects)
 {
     if (!vka || !vaddr || !objects || !num_objects || !root) {
         return EINVAL;
@@ -73,10 +73,9 @@ int sel4utils_map_page(vka_t *vka, seL4_CPtr vspace_root, seL4_CPtr frame, void 
                     cacheable, objects, num_objects);
 }
 
-int
-sel4utils_map_iospace_page(vka_t *vka, seL4_CPtr iospace, seL4_CPtr frame, seL4_Word vaddr,
-                           seL4_CapRights_t rights, int cacheable, seL4_Word size_bits,
-                           vka_object_t *pts, int *num_pts)
+int sel4utils_map_iospace_page(vka_t *vka, seL4_CPtr iospace, seL4_CPtr frame, seL4_Word vaddr,
+                               seL4_CapRights_t rights, int cacheable, seL4_Word size_bits,
+                               vka_object_t *pts, int *num_pts)
 {
     return map_page(vka, vspace_iospace_map_page, vspace_get_iospace_map_obj, iospace, frame, (void *) vaddr, rights,
                     cacheable, pts, num_pts);
@@ -85,14 +84,14 @@ sel4utils_map_iospace_page(vka_t *vka, seL4_CPtr iospace, seL4_CPtr frame, seL4_
 #ifdef CONFIG_VTX
 
 /*map a frame into guest os's physical address space*/
-int
-sel4utils_map_ept_page(vka_t *vka, seL4_CPtr pd, seL4_CPtr frame, seL4_Word vaddr,
-                       seL4_CapRights_t rights, int cacheable, seL4_Word size_bits,
-                       vka_object_t *pagetable, vka_object_t *pagedir, vka_object_t *pdpt)
+int sel4utils_map_ept_page(vka_t *vka, seL4_CPtr pd, seL4_CPtr frame, seL4_Word vaddr,
+                           seL4_CapRights_t rights, int cacheable, seL4_Word size_bits,
+                           vka_object_t *pagetable, vka_object_t *pagedir, vka_object_t *pdpt)
 {
     vka_object_t objects[3];
     int num_objects;
-    int error = map_page(vka, seL4_X86_Page_MapEPT, vspace_get_ept_map_obj, pd, frame vaddr, rights, cacheable, &objects, &num_objects);
+    int error = map_page(vka, seL4_X86_Page_MapEPT, vspace_get_ept_map_obj, pd, frame vaddr, rights, cacheable, &objects,
+                         &num_objects);
     *pagetable = objects[0];
     *pagedir = objects[1];
     *pdpt = objects[2];
@@ -102,8 +101,7 @@ sel4utils_map_ept_page(vka_t *vka, seL4_CPtr pd, seL4_CPtr frame, seL4_Word vadd
 #endif /* CONFIG_VTX */
 
 /* Some more generic routines for helping with mapping */
-void *
-sel4utils_dup_and_map(vka_t *vka, vspace_t *vspace, seL4_CPtr page, size_t size_bits)
+void *sel4utils_dup_and_map(vka_t *vka, vspace_t *vspace, seL4_CPtr page, size_t size_bits)
 {
     cspacepath_t page_path;
     cspacepath_t copy_path;
@@ -128,8 +126,7 @@ sel4utils_dup_and_map(vka_t *vka, vspace_t *vspace, seL4_CPtr page, size_t size_
     return mapping;
 }
 
-void
-sel4utils_unmap_dup(vka_t *vka, vspace_t *vspace, void *mapping, size_t size_bits)
+void sel4utils_unmap_dup(vka_t *vka, vspace_t *vspace, void *mapping, size_t size_bits)
 {
     /* Grab a copy of the cap */
     seL4_CPtr copy = vspace_get_cap(vspace, mapping);

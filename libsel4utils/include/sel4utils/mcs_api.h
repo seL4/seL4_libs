@@ -66,7 +66,7 @@ static inline void api_reply(UNUSED seL4_CPtr reply, seL4_MessageInfo_t msg)
 }
 
 static inline seL4_MessageInfo_t api_reply_recv(seL4_CPtr ep, seL4_MessageInfo_t msg, seL4_Word *badge,
-        UNUSED seL4_CPtr reply)
+                                                UNUSED seL4_CPtr reply)
 {
 #ifdef CONFIG_KERNEL_RT
     return seL4_ReplyRecv(ep, msg, badge, reply);
@@ -142,7 +142,7 @@ static inline seL4_Error api_tcb_set_space(seL4_CPtr tcb, seL4_CPtr ep,
 static inline seL4_Error api_sc_bind(UNUSED seL4_CPtr sc, UNUSED seL4_CPtr tcb)
 {
     if (!config_set(CONFIG_KERNEL_RT)) {
-        return (seL4_Error) -ENOSYS;
+        return (seL4_Error) - ENOSYS;
     }
 #ifdef CONFIG_KERNEL_RT
     return seL4_SchedContext_Bind(sc, tcb);
@@ -152,7 +152,7 @@ static inline seL4_Error api_sc_bind(UNUSED seL4_CPtr sc, UNUSED seL4_CPtr tcb)
 static inline seL4_Error api_sc_unbind_object(UNUSED seL4_CPtr sc, UNUSED seL4_CPtr tcb)
 {
     if (!config_set(CONFIG_KERNEL_RT)) {
-        return (seL4_Error) -ENOSYS;
+        return (seL4_Error) - ENOSYS;
     }
 #ifdef CONFIG_KERNEL_RT
     return seL4_SchedContext_UnbindObject(sc, tcb);
@@ -162,7 +162,7 @@ static inline seL4_Error api_sc_unbind_object(UNUSED seL4_CPtr sc, UNUSED seL4_C
 static inline seL4_Error api_sc_unbind(UNUSED seL4_CPtr sc)
 {
     if (!config_set(CONFIG_KERNEL_RT)) {
-        return (seL4_Error) -ENOSYS;
+        return (seL4_Error) - ENOSYS;
     }
 #ifdef CONFIG_KERNEL_RT
     return seL4_SchedContext_Unbind(sc);
@@ -174,7 +174,7 @@ static inline seL4_Error api_sched_ctrl_configure(UNUSED seL4_CPtr sched_ctrl, U
                                                   UNUSED seL4_Word refills, UNUSED seL4_Word badge)
 {
     if (!config_set(CONFIG_KERNEL_RT)) {
-        return (seL4_Error) -ENOSYS;
+        return (seL4_Error) - ENOSYS;
     }
 #ifdef CONFIG_KERNEL_RT
     return seL4_SchedControl_Configure(sched_ctrl, sc, budget, period, refills, badge);

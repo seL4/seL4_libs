@@ -140,6 +140,9 @@ static int _refill_pool(allocman_t *alloc, utspace_split_t *split, struct utspac
     } else {
         /* see if the pool has the paddr we want */
         for (node = heads[size_bits]; node; node = node->next) {
+            if (node->paddr == ALLOCMAN_NO_PADDR) {
+                continue;
+            }
             if (node->paddr <= paddr && paddr < node->paddr + BIT(size_bits)) {
                 return 0;
             }
@@ -161,8 +164,8 @@ static int _refill_pool(allocman_t *alloc, utspace_split_t *split, struct utspac
         /* use the first node for lack of a better one */
         node = heads[size_bits + 1];
     } else {
-        for (node = heads[size_bits + 1]; node && !(node->paddr <= paddr
-                                                    && paddr < node->paddr + BIT(size_bits + 1)); node = node->next);
+        for (node = heads[size_bits + 1]; node && (node->paddr == ALLOCMAN_NO_PADDR || !(node->paddr <= paddr
+                                                                                         && paddr < node->paddr + BIT(size_bits + 1))); node = node->next);
         /* _refill_pool should not have returned if this wasn't possible */
         assert(node);
     }
@@ -226,6 +229,10 @@ static struct utspace_split_node **find_head_for_paddr(struct utspace_split_node
     for (i = 0; i < CONFIG_WORD_SIZE; i++) {
         struct utspace_split_node *node;
         for (node = head[i]; node; node = node->next) {
+            if (node->paddr == ALLOCMAN_NO_PADDR) {
+                /* skip nodes with no physical address */
+                continue;
+            }
             if (node->paddr <= paddr && paddr + BIT(size_bits) <= node->paddr + BIT(i)) {
                 return head;
             }
@@ -274,7 +281,7 @@ seL4_Word _utspace_split_alloc(allocman_t *alloc, void *_split, size_t size_bits
         /* search for the node we want to use. We have the advantage of knowing that
          * due to objects being size aligned that the base paddr of the untyped will
          * be exactly the paddr we want */
-        for (node = head[size_bits]; node && node->paddr != paddr; node = node->next);
+        for (node = head[size_bits]; node && (node->paddr == ALLOCMAN_NO_PADDR || node->paddr != paddr); node = node->next);
         /* _refill_pool should not have returned if this wasn't possible */
         assert(node);
     } else {

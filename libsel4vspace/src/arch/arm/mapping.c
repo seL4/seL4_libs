@@ -22,7 +22,7 @@ static seL4_Error vspace_map_io(seL4_CPtr cap, seL4_CPtr iospace_root, seL4_Word
 
 int vspace_get_iospace_map_obj(UNUSED seL4_Word failed_bits, vspace_map_obj_t *obj)
 {
-    if (unlikely(obj == NULL) || !config_set(CONFIG_IOMMU)) {
+    if (unlikely(obj == NULL) || !config_set(CONFIG_ARM_SMMU)) {
         return EINVAL;
     }
 #ifdef CONFIG_ARM_SMMU

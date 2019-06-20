@@ -24,7 +24,12 @@ static int map_page(vka_t *vka, vspace_map_page_fn_t map_page_fn, vspace_get_map
                     seL4_CPtr root, seL4_CPtr frame, void *vaddr, seL4_CapRights_t rights,
                     int cacheable, vka_object_t *objects, int *num_objects)
 {
-    if (!vka || !objects || !num_objects || !root) {
+    int n;
+    if (!num_objects) {
+        num_objects = &n;
+    }
+
+    if (!vka || !root) {
         return EINVAL;
     }
 
@@ -39,18 +44,22 @@ static int map_page(vka_t *vka, vspace_map_page_fn_t map_page_fn, vspace_get_map
         /* we should not get an incorrect values for seL4_MappingFailedLookupLevel */
         assert(error == 0);
 
-        error = vka_alloc_object(vka, obj.type, obj.size_bits, &objects[*num_objects]);
+        vka_object_t object;
+        error = vka_alloc_object(vka, obj.type, obj.size_bits, &object);
+        if (objects) {
+            objects[*num_objects] = object;
+        }
         if (error) {
             ZF_LOGE("Mapping structure allocation failed");
             return error;
         }
 
-        error = vspace_map_obj(&obj, objects[*num_objects].cptr, root,
+        error = vspace_map_obj(&obj, object.cptr, root,
                                (seL4_Word)vaddr, seL4_ARCH_Default_VMAttributes);
         if (error == seL4_DeleteFirst) {
             /* this is the case where the allocation of the page table needed to map in
              * a page table for the meta data, so delete this one and continue */
-            vka_free_object(vka, &objects[*num_objects]);
+            vka_free_object(vka, &object);
         } else {
             (*num_objects)++;
             if (error) {

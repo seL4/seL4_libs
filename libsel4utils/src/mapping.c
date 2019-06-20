@@ -24,7 +24,7 @@ static int map_page(vka_t *vka, vspace_map_page_fn_t map_page_fn, vspace_get_map
                     seL4_CPtr root, seL4_CPtr frame, void *vaddr, seL4_CapRights_t rights,
                     int cacheable, vka_object_t *objects, int *num_objects)
 {
-    if (!vka || !vaddr || !objects || !num_objects || !root) {
+    if (!vka || !objects || !num_objects || !root) {
         return EINVAL;
     }
 

@@ -100,7 +100,8 @@ int sel4utils_map_ept_page(vka_t *vka, seL4_CPtr pd, seL4_CPtr frame, seL4_Word 
 {
     vka_object_t objects[3];
     int num_objects;
-    int error = map_page(vka, seL4_X86_Page_MapEPT, vspace_get_ept_map_obj, pd, frame, (void *) vaddr, rights, cacheable, objects,
+    int error = map_page(vka, seL4_X86_Page_MapEPT, vspace_get_ept_map_obj, pd, frame, (void *) vaddr, rights, cacheable,
+                         objects,
                          &num_objects);
     *pagetable = objects[0];
     *pagedir = objects[1];

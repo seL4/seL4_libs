@@ -12,6 +12,7 @@
 
 #include <autoconf.h>
 #include <vspace/mapping.h>
+#include <sel4/arch/mapping.h>
 
 static seL4_Error vspace_map_io(seL4_CPtr cap, seL4_CPtr iospace_root, seL4_Word vaddr, UNUSED seL4_Word attr)
 {
@@ -37,17 +38,17 @@ int vspace_get_ept_map_obj(seL4_Word failed_bits, vspace_map_obj_t *obj)
 {
     switch (failed_bits) {
 #ifdef CONFIG_VTX
-    case SEL4_MAPPING_LOOKUP_NO_PT:
+    case SEL4_MAPPING_LOOKUP_NO_EPTPT:
         obj->size_bits = seL4_X86_EPTPTBits;
         obj->type = seL4_X86_EPTPTObject;
         obj->map_fn = seL4_X86_EPTPT_Map;
         return 0;
-    case SEL4_MAPPING_LOOKUP_NO_PD:
+    case SEL4_MAPPING_LOOKUP_NO_EPTPD:
         obj->size_bits = seL4_X86_EPTPDBits;
         obj->type = seL4_X86_EPTPDObject;
         obj->map_fn = seL4_X86_EPTPD_Map;
         return 0;
-    case SEL4_MAPPING_LOOKUP_NO_PDPT:
+    case SEL4_MAPPING_LOOKUP_NO_EPTPDPT:
         obj->size_bits = seL4_X86_EPTPDPTBits;
         obj->type = seL4_X86_EPTPDPTObject;
         obj->map_fn = seL4_X86_EPTPDPT_Map;

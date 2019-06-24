@@ -21,7 +21,7 @@
 static inline size_t _round_up(size_t v, size_t bits)
 {
     size_t mask = MASK(bits);
-    if ( (v & mask) != 0) {
+    if ((v & mask) != 0) {
         v = (v & ~mask) + BIT(bits);
     }
     return v;
@@ -33,8 +33,10 @@ void utspace_twinkle_create(utspace_twinkle_t *twinkle)
     twinkle->uts = NULL;
 }
 
-int _utspace_twinkle_add_uts(allocman_t *alloc, void *_twinkle, size_t num, const cspacepath_t *uts, size_t *size_bits, uintptr_t *paddr, int utType) {
-    utspace_twinkle_t *twinkle = (utspace_twinkle_t*) _twinkle;
+int _utspace_twinkle_add_uts(allocman_t *alloc, void *_twinkle, size_t num, const cspacepath_t *uts, size_t *size_bits,
+                             uintptr_t *paddr, int utType)
+{
+    utspace_twinkle_t *twinkle = (utspace_twinkle_t *) _twinkle;
     struct utspace_twinkle_ut *new_uts;
     int error;
     size_t i;
@@ -50,16 +52,19 @@ int _utspace_twinkle_add_uts(allocman_t *alloc, void *_twinkle, size_t num, cons
         memcpy(new_uts, twinkle->uts, sizeof(struct utspace_twinkle_ut) * twinkle->num_uts);
         allocman_mspace_free(alloc, twinkle->uts, sizeof(struct utspace_twinkle_ut) * twinkle->num_uts);
     }
-    for (i = 0; i < num; i++,twinkle->num_uts++) {
-        new_uts[twinkle->num_uts] = (struct utspace_twinkle_ut) {uts[i], 0, size_bits[i]};
+    for (i = 0; i < num; i++, twinkle->num_uts++) {
+        new_uts[twinkle->num_uts] = (struct utspace_twinkle_ut) {
+            uts[i], 0, size_bits[i]
+        };
     }
     twinkle->uts = new_uts;
     return 0;
 }
 
-seL4_Word _utspace_twinkle_alloc(allocman_t *alloc, void *_twinkle, size_t size_bits, seL4_Word type, const cspacepath_t *slot, uintptr_t paddr, bool canBeDev, int *error)
+seL4_Word _utspace_twinkle_alloc(allocman_t *alloc, void *_twinkle, size_t size_bits, seL4_Word type,
+                                 const cspacepath_t *slot, uintptr_t paddr, bool canBeDev, int *error)
 {
-    utspace_twinkle_t *twinkle = (utspace_twinkle_t*)_twinkle;
+    utspace_twinkle_t *twinkle = (utspace_twinkle_t *)_twinkle;
     size_t sel4_size_bits;
     int sel4_error;
     size_t i, j;
@@ -86,15 +91,16 @@ seL4_Word _utspace_twinkle_alloc(allocman_t *alloc, void *_twinkle, size_t size_
     /* Check all untypeds of this size, and pick the one that will waste the least space */
     for (j = i; j < twinkle->num_uts && twinkle->uts[i].size_bits == twinkle->uts[j].size_bits; j++) {
         if ((_round_up(twinkle->uts[j].offset, size_bits) + BIT(size_bits) <= BIT(twinkle->uts[j].size_bits)) &&
-                (_round_up(twinkle->uts[j].offset, size_bits) - twinkle->uts[j].offset <
-                 _round_up(twinkle->uts[i].offset, size_bits) - twinkle->uts[i].offset)) {
+            (_round_up(twinkle->uts[j].offset, size_bits) - twinkle->uts[j].offset <
+             _round_up(twinkle->uts[i].offset, size_bits) - twinkle->uts[i].offset)) {
             i = j;
         }
     }
     /* if using inc retype then our offset calculation is effectively emulating the kernels calculations. This
      * means we track the free space of the untyped correctly, and since we are not going to try and free then
      * allocate again, this allocator can be used with either allocation scheme */
-    sel4_error = seL4_Untyped_Retype(twinkle->uts[i].path.capPtr, type, sel4_size_bits, slot->root, slot->dest, slot->destDepth, slot->offset, 1);
+    sel4_error = seL4_Untyped_Retype(twinkle->uts[i].path.capPtr, type, sel4_size_bits, slot->root, slot->dest,
+                                     slot->destDepth, slot->offset, 1);
     if (sel4_error != seL4_NoError) {
         /* Well this shouldn't happen */
         SET_ERROR(error, 1);

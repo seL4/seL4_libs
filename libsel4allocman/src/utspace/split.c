@@ -19,7 +19,8 @@
 #include <vka/capops.h>
 #include <string.h>
 
-static void _remove_node(struct utspace_split_node **head, struct utspace_split_node *node) {
+static void _remove_node(struct utspace_split_node **head, struct utspace_split_node *node)
+{
     if (node->prev) {
         node->prev->next = node->next;
     } else {
@@ -32,7 +33,8 @@ static void _remove_node(struct utspace_split_node **head, struct utspace_split_
     node->head = head;
 }
 
-static void _insert_node(struct utspace_split_node **head, struct utspace_split_node *node) {
+static void _insert_node(struct utspace_split_node **head, struct utspace_split_node *node)
+{
     node->next = *head;
     node->prev = NULL;
     if (*head) {
@@ -43,10 +45,11 @@ static void _insert_node(struct utspace_split_node **head, struct utspace_split_
     node->head = NULL;
 }
 
-static struct utspace_split_node *_new_node(allocman_t *alloc) {
+static struct utspace_split_node *_new_node(allocman_t *alloc)
+{
     int error;
     struct utspace_split_node *node;
-    node = (struct utspace_split_node*) allocman_mspace_alloc(alloc, sizeof(*node), &error);
+    node = (struct utspace_split_node *) allocman_mspace_alloc(alloc, sizeof(*node), &error);
     if (error) {
         ZF_LOGV("Failed to allocate node of size %zu", sizeof(*node));
         return NULL;
@@ -60,16 +63,18 @@ static struct utspace_split_node *_new_node(allocman_t *alloc) {
     return node;
 }
 
-static void _delete_node(allocman_t *alloc, struct utspace_split_node *node) {
+static void _delete_node(allocman_t *alloc, struct utspace_split_node *node)
+{
     vka_cnode_delete(&node->ut);
     allocman_cspace_free(alloc, &node->ut);
     allocman_mspace_free(alloc, node, sizeof(*node));
 }
 
-static int _insert_new_node(allocman_t *alloc, struct utspace_split_node **head, cspacepath_t ut, uintptr_t paddr) {
+static int _insert_new_node(allocman_t *alloc, struct utspace_split_node **head, cspacepath_t ut, uintptr_t paddr)
+{
     int error;
     struct utspace_split_node *node;
-    node = (struct utspace_split_node*) allocman_mspace_alloc(alloc, sizeof(*node), &error);
+    node = (struct utspace_split_node *) allocman_mspace_alloc(alloc, sizeof(*node), &error);
     if (error) {
         ZF_LOGV("Failed to allocate node of size %zu", sizeof(*node));
         return 1;
@@ -92,23 +97,25 @@ void utspace_split_create(utspace_split_t *split)
     }
 }
 
-int _utspace_split_add_uts(allocman_t *alloc, void *_split, size_t num, const cspacepath_t *uts, size_t *size_bits, uintptr_t *paddr, int utType) {
-    utspace_split_t *split = (utspace_split_t*) _split;
+int _utspace_split_add_uts(allocman_t *alloc, void *_split, size_t num, const cspacepath_t *uts, size_t *size_bits,
+                           uintptr_t *paddr, int utType)
+{
+    utspace_split_t *split = (utspace_split_t *) _split;
     int error;
     size_t i;
     struct utspace_split_node **list;
     switch (utType) {
-        case ALLOCMAN_UT_KERNEL:
-            list = split->heads;
-            break;
-        case ALLOCMAN_UT_DEV:
-            list = split->dev_heads;
-            break;
-        case ALLOCMAN_UT_DEV_MEM:
-            list = split->dev_mem_heads;
-            break;
-        default:
-            return -1;
+    case ALLOCMAN_UT_KERNEL:
+        list = split->heads;
+        break;
+    case ALLOCMAN_UT_DEV:
+        list = split->dev_heads;
+        break;
+    case ALLOCMAN_UT_DEV_MEM:
+        list = split->dev_mem_heads;
+        break;
+    default:
+        return -1;
     }
     for (i = 0; i < num; i++) {
         error = _insert_new_node(alloc, &list[size_bits[i]], uts[i], paddr ? paddr[i] : ALLOCMAN_NO_PADDR);
@@ -119,7 +126,9 @@ int _utspace_split_add_uts(allocman_t *alloc, void *_split, size_t num, const cs
     return 0;
 }
 
-static int _refill_pool(allocman_t *alloc, utspace_split_t *split, struct utspace_split_node **heads, size_t size_bits, uintptr_t paddr) {
+static int _refill_pool(allocman_t *alloc, utspace_split_t *split, struct utspace_split_node **heads, size_t size_bits,
+                        uintptr_t paddr)
+{
     struct utspace_split_node *node;
     struct utspace_split_node *left, *right;
     int sel4_error;
@@ -152,7 +161,8 @@ static int _refill_pool(allocman_t *alloc, utspace_split_t *split, struct utspac
         /* use the first node for lack of a better one */
         node = heads[size_bits + 1];
     } else {
-        for (node = heads[size_bits + 1]; node && !(node->paddr <= paddr && paddr < node->paddr + BIT(size_bits + 1)); node = node->next);
+        for (node = heads[size_bits + 1]; node && !(node->paddr <= paddr
+                                                    && paddr < node->paddr + BIT(size_bits + 1)); node = node->next);
         /* _refill_pool should not have returned if this wasn't possible */
         assert(node);
     }
@@ -169,7 +179,8 @@ static int _refill_pool(allocman_t *alloc, utspace_split_t *split, struct utspac
         return 1;
     }
     /* perform the first retype */
-    sel4_error = seL4_Untyped_Retype(node->ut.capPtr, seL4_UntypedObject, size_bits, left->ut.root, left->ut.dest, left->ut.destDepth, left->ut.offset, 1);
+    sel4_error = seL4_Untyped_Retype(node->ut.capPtr, seL4_UntypedObject, size_bits, left->ut.root, left->ut.dest,
+                                     left->ut.destDepth, left->ut.offset, 1);
     if (sel4_error != seL4_NoError) {
         _delete_node(alloc, left);
         _delete_node(alloc, right);
@@ -178,7 +189,8 @@ static int _refill_pool(allocman_t *alloc, utspace_split_t *split, struct utspac
         return 1;
     }
     /* perform the second retype */
-    sel4_error = seL4_Untyped_Retype(node->ut.capPtr, seL4_UntypedObject, size_bits, right->ut.root, right->ut.dest, right->ut.destDepth, right->ut.offset, 1);
+    sel4_error = seL4_Untyped_Retype(node->ut.capPtr, seL4_UntypedObject, size_bits, right->ut.root, right->ut.dest,
+                                     right->ut.destDepth, right->ut.offset, 1);
     if (sel4_error != seL4_NoError) {
         vka_cnode_delete(&left->ut);
         _delete_node(alloc, left);
@@ -207,7 +219,9 @@ static int _refill_pool(allocman_t *alloc, utspace_split_t *split, struct utspac
     return 0;
 }
 
-static struct utspace_split_node **find_head_for_paddr(struct utspace_split_node **head, uintptr_t paddr, size_t size_bits) {
+static struct utspace_split_node **find_head_for_paddr(struct utspace_split_node **head, uintptr_t paddr,
+                                                       size_t size_bits)
+{
     int i;
     for (i = 0; i < CONFIG_WORD_SIZE; i++) {
         struct utspace_split_node *node;
@@ -216,12 +230,14 @@ static struct utspace_split_node **find_head_for_paddr(struct utspace_split_node
                 return head;
             }
         }
-    }return NULL;
+    }
+    return NULL;
 }
 
-seL4_Word _utspace_split_alloc(allocman_t *alloc, void *_split, size_t size_bits, seL4_Word type, const cspacepath_t *slot, uintptr_t paddr, bool canBeDev, int *error)
+seL4_Word _utspace_split_alloc(allocman_t *alloc, void *_split, size_t size_bits, seL4_Word type,
+                               const cspacepath_t *slot, uintptr_t paddr, bool canBeDev, int *error)
 {
-    utspace_split_t *split = (utspace_split_t*)_split;
+    utspace_split_t *split = (utspace_split_t *)_split;
     size_t sel4_size_bits;
     int sel4_error;
     struct utspace_split_node *node;
@@ -246,7 +262,7 @@ seL4_Word _utspace_split_alloc(allocman_t *alloc, void *_split, size_t size_bits
         }
         if (!head) {
             SET_ERROR(error, 1);
-            ZF_LOGE("Failed to find any untyped capable of creating an object at address %p", (void*)paddr);
+            ZF_LOGE("Failed to find any untyped capable of creating an object at address %p", (void *)paddr);
             return 0;
         }
         if (_refill_pool(alloc, split, head, size_bits, paddr)) {
@@ -286,7 +302,8 @@ seL4_Word _utspace_split_alloc(allocman_t *alloc, void *_split, size_t size_bits
         node = head[size_bits];
     }
     /* Perform the untyped retype */
-    sel4_error = seL4_Untyped_Retype(node->ut.capPtr, type, sel4_size_bits, slot->root, slot->dest, slot->destDepth, slot->offset, 1);
+    sel4_error = seL4_Untyped_Retype(node->ut.capPtr, type, sel4_size_bits, slot->root, slot->dest, slot->destDepth,
+                                     slot->offset, 1);
     if (sel4_error != seL4_NoError) {
         /* Well this shouldn't happen */
         ZF_LOGE("Failed to retype untyped, error %d\n", sel4_error);
@@ -302,8 +319,8 @@ seL4_Word _utspace_split_alloc(allocman_t *alloc, void *_split, size_t size_bits
 
 void _utspace_split_free(allocman_t *alloc, void *_split, seL4_Word cookie, size_t size_bits)
 {
-    utspace_split_t *split = (utspace_split_t*)_split;
-    struct utspace_split_node *node = (struct utspace_split_node*)cookie;
+    utspace_split_t *split = (utspace_split_t *)_split;
+    struct utspace_split_node *node = (struct utspace_split_node *)cookie;
     struct utspace_split_node *parent = node->parent;
     /* see if our sibling is also free */
     if (parent && !node->sibling->head) {
@@ -322,6 +339,6 @@ void _utspace_split_free(allocman_t *alloc, void *_split, seL4_Word cookie, size
 
 uintptr_t _utspace_split_paddr(void *_split, seL4_Word cookie, size_t size_bits)
 {
-    struct utspace_split_node *node = (struct utspace_split_node*)cookie;
+    struct utspace_split_node *node = (struct utspace_split_node *)cookie;
     return node->paddr;
 }

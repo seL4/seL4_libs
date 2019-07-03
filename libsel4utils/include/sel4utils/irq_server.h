@@ -56,6 +56,9 @@
 #include <vspace/vspace.h>
 #include <vka/vka.h>
 #include <simple/simple.h>
+#include <platsupport/io.h>
+#include <platsupport/irq.h>
+#include <sel4platsupport/irq.h>
 
 typedef int irq_t;
 

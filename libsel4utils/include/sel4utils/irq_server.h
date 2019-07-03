@@ -64,44 +64,6 @@ typedef struct irq_server irq_server_t;
 
 typedef int thread_id_t;
 
-/**
- * Allows a client to acknowledge an IRQ
- * @param[in] irq  The IRQ to acknowledge
- */
-void irq_data_ack_irq(struct irq_data* irq);
-
-/*********************************
- *** IRQ server node functions ***
- *********************************/
-
-/**
- * Create a new IRQ server node.
- * @param[in] notification        An notification object that can be used for binding IRQ notification
- * @param[in] badge_mask A mask for the available badge. Bits NOT set in the mask are
- *                       considered reserved and will not be used for IRQ identification.
- *                       This does, however, reduce the number of IRQs that this node can
- *                       manage. One may choose to reserve badge bits for the
- *                       identification of other notifications to the same endpoint.
- * @return               A handle to the created IRQ server node, or NULL on failure.
- */
-irq_server_node_t irq_server_node_new(seL4_CPtr notification, seL4_Word badge_mask);
-
-/**
- * Register an IRQ with a server node.
- * @param[in] n            The irq server node to register the IRQ with.
- * @param[in] irq          The IRQ number of the IRQ to be registered
- * @param[in] cb           A callback function to be called when the IRQ event occurs
- * @param[in] token        A token to be passed, unmodified, to te callback function
- * @param[in] vka          An allocator for for kernel objects
- * @param[in] cspace       The current capability space
- * @param[in] simple       A simple interface for creating the irq handler
- * @return                 A handle to the irq structure that was created.
- */
-struct irq_data* irq_server_node_register_irq(irq_server_node_t n, irq_t irq,
-                                              irq_handler_fn cb, void* token,
-                                              vka_t* vka, seL4_CPtr cspace,
-                                              simple_t* simple);
-
 /****************************
  *** IRQ server functions ***
  ****************************/

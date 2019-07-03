@@ -23,33 +23,46 @@
 
 #include <utils/util.h>
 
-#define NIRQS_PER_NODE        seL4_BadgeBits
+#define IRQ_SERVER_MESSAGE_LENGTH 2
 
-/*************************
- *** Generic functions ***
- *************************/
+typedef struct irq_server_node {
+    seL4_CPtr ntfn;
+    size_t max_irqs_bound;
+    size_t num_irqs_bound;
+} irq_server_node_t;
 
-void
-irq_data_ack_irq(struct irq_data* irq)
-{
-    if (irq == NULL || irq->cap == seL4_CapNull) {
-        ZF_LOGE("IRQ data invalid when acknowledging IRQ\n");
-    } else {
-        seL4_IRQHandler_Ack(irq->cap);
-    }
-}
+typedef struct irq_server_thread irq_server_thread_t;
 
-/***********************
- *** IRQ server node ***
- ***********************/
+/* This is also forwarded declared as we have a pointer to a struct of the same type */
+struct irq_server_thread {
+    thread_id_t thread_id;
+    irq_server_node_t *node;
+    seL4_CPtr delivery_ep;
+    seL4_Word label;
+    sel4utils_thread_t thread;
+    /* Linked list chain of threads */
+    irq_server_thread_t *next;
+};
 
-struct irq_server_node {
-/// Information about the IRQ that is assigned to each badge bit
-    struct irq_data irqs[NIRQS_PER_NODE];
-/// The notification object that IRQs arrive on
-    seL4_CPtr notification;
-/// A mask for the badge. All set bits within the badge are treated as reserved.
-    seL4_Word badge_mask;
+/* This is forward-declared in the header file, hence no typedef */
+struct irq_server {
+    seL4_CPtr delivery_ep;
+    seL4_Word label;
+    vka_object_t reply;
+    irq_server_thread_t *server_threads;
+    size_t num_irqs;
+    size_t max_irqs;
+
+    /* New thread parameters */
+    seL4_Word priority;
+    seL4_CPtr cspace;
+
+    /* Allocation interfaces */
+    vka_t *vka;
+    vspace_t *vspace;
+    simple_t *simple;
+    ps_irq_ops_t irq_ops;
+    ps_malloc_ops_t *malloc_ops;
 };
 
 /* Executes the registered callback for incoming IRQS */
@@ -165,25 +178,6 @@ irq_server_node_new(seL4_CPtr notification, seL4_Word badge_mask) {
     return n;
 }
 
-/*************************
- *** IRQ server thread ***
- *************************/
-
-struct irq_server_thread {
-/// IRQ data which this thread is responsible for
-    struct irq_server_node *node;
-/// A synchronous endpoint to deliver IRQ messages to.
-    seL4_CPtr delivery_sep;
-/// The label that should be assigned to outgoing synchronous messages.
-    seL4_Word label;
-/// Thread data
-    sel4utils_thread_t thread;
-/// notification object data
-    vka_object_t notification;
-/// Linked list chain
-    struct irq_server_thread* next;
-};
-
 /* IRQ handler thread. Wait on a notification object for IRQs. When one arrives, send a
  * synchronous message to the registered endpoint. If no synchronous endpoint was
  * registered, call the appropriate handler function directly (must be thread safe) */
@@ -268,18 +262,6 @@ irq_server_thread_new(vspace_t* vspace, vka_t* vka, seL4_CPtr cspace, seL4_Word 
  *** IRQ server ***
  ******************/
 
-struct irq_server {
-    seL4_CPtr delivery_ep;
-    vka_object_t reply;
-    seL4_Word label;
-    int max_irqs;
-    vspace_t* vspace;
-    seL4_CPtr cspace;
-    vka_t* vka;
-    seL4_Word thread_priority;
-    simple_t simple;
-    struct irq_server_thread* server_threads;
-};
 
 /* Handle an incoming IPC from a server node */
 void

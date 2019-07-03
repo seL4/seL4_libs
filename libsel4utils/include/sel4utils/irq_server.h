@@ -60,25 +60,9 @@
 #include <platsupport/irq.h>
 #include <sel4platsupport/irq.h>
 
-typedef int irq_t;
+typedef struct irq_server irq_server_t;
 
-struct irq_data;
-
-/**
- * @return non-zero if the IRQ should be ACKed
- */
-typedef void (*irq_handler_fn)(struct irq_data* irq);
-
-struct irq_data {
-/// irq number
-    irq_t irq;
-/// The capability for this irq number
-    seL4_CPtr cap;
-/// Client data: function to call when the IRQ arrives
-    irq_handler_fn cb;
-/// Client specific handle to pass to the callback function
-    void* token;
-};
+typedef int thread_id_t;
 
 /**
  * Allows a client to acknowledge an IRQ
@@ -89,8 +73,6 @@ void irq_data_ack_irq(struct irq_data* irq);
 /*********************************
  *** IRQ server node functions ***
  *********************************/
-
-typedef struct irq_server_node* irq_server_node_t;
 
 /**
  * Create a new IRQ server node.
@@ -123,8 +105,6 @@ struct irq_data* irq_server_node_register_irq(irq_server_node_t n, irq_t irq,
 /****************************
  *** IRQ server functions ***
  ****************************/
-
-typedef struct irq_server* irq_server_t;
 
 /**
  * Initialises an IRQ server.

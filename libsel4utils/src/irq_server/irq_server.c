@@ -12,11 +12,14 @@
 
 #include <sel4utils/irq_server.h>
 
+#include <errno.h>
 #include <simple/simple.h>
 #include <sel4utils/thread.h>
 #include <vka/capops.h>
 #include <stdlib.h>
 #include <string.h>
+#include <platsupport/irq.h>
+#include <sel4platsupport/irq.h>
 
 #include <utils/util.h>
 

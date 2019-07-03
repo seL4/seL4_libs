@@ -11,41 +11,34 @@
  */
 
 /**
- * The IRQ server helps to manage the IRQs in a system. There are 3 API levels
- * in the design
- *   1. [irq server node]   The IRQ server node is a set of IRQs and their
- *                          associated handlers. It is a passive system, hence,
- *                          the application is responsible for waiting on the
- *                          appropriate notification endpoint for events.
- *                          The AEP binding feature of the seL4 kernel may be used
- *                          here to listen to both synchronous IPC and IRQ
- *                          notification events.
- *   2. [irq server thread] An IRQ server node is a standalone thread which waits
+ * The IRQ server helps to manage the IRQs in a system. There are 2 API levels
+ * in the design:
+ *   1. [irq server thread] An IRQ server node is a standalone thread which waits
  *                          for the arrival of any IRQ that is being managed by a
  *                          particular irq server node. When an IRQ is received,
  *                          the irq server thread will either forward the irq
  *                          information to a registered synchronous endpoint, or
  *                          call the appropriate handler function directly.
- *   3. [irq server]        A dynamic collection of server threads. When
+ *   2. [irq server]        A dynamic collection of server threads. When
  *                          registering an IRQ call back function, the irq server
  *                          will attempt to deligate the IRQ to an irq server node
  *                          that has not yet reached capacity. If no node can accept
- *                          the IRQ, a new irq server thread will be created to
- *                          support the additional demand.
+ *                          the IRQ, it will alert the user that a new irq server
+ *                          thread needs to be created to support the additional demand.
  *
  * ++ Special notes ++
  *
  * Performance
- *   The application can achieve greater performance by configuring the irq server,
- *   or irq server threads, to call the IRQ handler functions directly. In this
- *   case, the application must take care to ensure that all concurrency issues are
- *   addressed.
+ *   The application can achieve greater performance by configuring the irq
+ *   server, or irq server threads, to call the IRQ handler functions directly.
+ *   This is done by not providing an endpoint in the creation of an irq server
+ *   interface. The application must take care to ensure that all concurrency
+ *   issues are addressed.
  *
  * Resource availability
  *   The irq server API family accept resource allocators as arguments to some
- *   function calls. In a dynamic system design, these resource allocators
- *   must be kept available indefinitely, or until the system reaches a known
- *   steady state.
+ *   function calls. These resource allocators
+ *   must be kept available indefinitely.
  */
 
 #pragma once

@@ -85,60 +85,6 @@ irq_server_node_handle_irq(struct irq_server_node *n, seL4_Word badge)
     }
 }
 
-/* Binds and IRQ to an endpoint */
-static seL4_CPtr
-irq_bind(irq_t irq, seL4_CPtr notification_cap, int idx, vka_t* vka, simple_t *simple)
-{
-    seL4_CPtr irq_cap, bnotification_cap;
-    cspacepath_t irq_path, notification_path, bnotification_path;
-    seL4_Word badge;
-    int err;
-
-    /* Create an IRQ cap */
-    err = vka_cspace_alloc(vka, &irq_cap);
-    if (err != 0) {
-        ZF_LOGE("Failed to allocate cslot for irq\n");
-        return seL4_CapNull;
-    }
-    vka_cspace_make_path(vka, irq_cap, &irq_path);
-    err = simple_get_IRQ_handler(simple, irq, irq_path);
-    if (err != seL4_NoError) {
-        ZF_LOGE("Failed to get cap to irq_number %d\n", irq);
-        vka_cspace_free(vka, irq_cap);
-        return seL4_CapNull;
-    }
-    /* Badge the provided endpoint. The bit position of the badge tells us the array
-     * index of the associated IRQ data. */
-    err = vka_cspace_alloc(vka, &bnotification_cap);
-    if (err != 0) {
-        ZF_LOGE("Failed to allocate cslot for irq\n");
-        vka_cspace_free(vka, irq_cap);
-        return seL4_CapNull;
-    }
-    vka_cspace_make_path(vka, notification_cap, &notification_path);
-    vka_cspace_make_path(vka, bnotification_cap, &bnotification_path);
-    badge = BIT(idx);
-    err = vka_cnode_mint(&bnotification_path, &notification_path, seL4_AllRights, badge);
-    if (err != seL4_NoError) {
-        ZF_LOGE("Failed to badge IRQ notification endpoint\n");
-        vka_cspace_free(vka, irq_cap);
-        vka_cspace_free(vka, bnotification_cap);
-        return seL4_CapNull;
-    }
-    /* bind the IRQ cap to our badged endpoint */
-    err = seL4_IRQHandler_SetNotification(irq_cap, bnotification_cap);
-    if (err != seL4_NoError) {
-        ZF_LOGE("Failed to bind IRQ handler to notification\n");
-        vka_cspace_free(vka, irq_cap);
-        vka_cspace_free(vka, bnotification_cap);
-        return seL4_CapNull;
-    }
-    /* Finally ACK any pending IRQ and enable the IRQ */
-    seL4_IRQHandler_Ack(irq_cap);
-
-    ZF_LOGD("Registered IRQ %d with badge 0x%lx\n", irq, BIT(idx));
-    return irq_cap;
-}
 
 /* Registers an IRQ callback and enabled the IRQ */
 struct irq_data*

@@ -64,75 +64,98 @@ typedef struct irq_server irq_server_t;
 
 typedef int thread_id_t;
 
-/****************************
- *** IRQ server functions ***
- ****************************/
-
 /**
- * Initialises an IRQ server.
- * The server will spawn threads to handle incoming IRQs. The function of the
- * threads is to IPC the provided synchronous endpoint with IRQ information. When the IPC
- * arrives, the application should call \ref{irq_server_handle_irq_ipc} while IPC
- * registers are still valid. \ref{irq_server_handle_irq_ipc} will decode the provided
- * information and redirect control to the appropriate IRQ handler.
- * @param[in] vspace       The current vspace
- * @param[in] vka          Allocator for creating kernel objects. If the server is
- *                         configured to support a dynamic number of irqs, this
- *                         resource allocator must remain available until the system
- *                         reaches a steady state.
- * @param[in] cspace       The cspace of the current thread
- * @param[in] priority     The priority of spawned threads.
- * @param[in] simple       A simple interface for creating IRQ caps
- * @param[in] sync_ep      The synchronous endpoint to send IRQ's to
- * @param[in] label        A label to use when sending a synchronous IPC
- * @param[in] nirqs        The maximum number of irqs to support.
- *                         -1 will set up a dynamic system, however, the
- *                         appropriate resource managers must remain valid for
- *                         the life of the server.
- * @param[out] irq_server  An IRQ server structure to initialise.
- * @return                 0 on success
+ * Initialises an IRQ server. The server will manage threads that are
+ * explicitly created by the user to handle incoming IRQs. The server
+ * delegates most of the IRQ cap creation and pairing to the IRQ interface in
+ * libsel4platsupport.
+ * @param[in] vspace            The current vspace
+ * @param[in] vka               Allocator for creating kernel objects
+ * @param[in] priority          The priority of spawned threads
+ * @param[in] simple            A simple interface for creating IRQ caps
+ * @param[in] cspace            The cspace of the current thread
+ * @param[in] delivery_ep       The endpoint to send alerts about IRQ's to
+ * @param[in] label             A label to use when sending to an IPC to an endpoint
+ * @param[in] nirqs             The maximum number of irqs to support
+ * @return                      A valid pointer to an irq_server_t instance, otherwise NULL
  */
-int irq_server_new(vspace_t* vspace, vka_t* vka, seL4_CPtr cspace, seL4_Word priority,
-                   simple_t *simple, seL4_CPtr sync_ep, seL4_Word label,
-                   int nirqs, irq_server_t* irq_server);
+irq_server_t *irq_server_new(vspace_t *vspace, vka_t *vka, seL4_Word priority,
+                             simple_t *simple, seL4_CPtr cspace, seL4_CPtr delivery_ep,
+                             seL4_Word label, size_t num_irqs, ps_malloc_ops_t *malloc_ops);
 
 /**
- * Enable an IRQ and register a callback function
- * @param[in] irq_server   The IRQ server which shall be responsible for the IRQ.
- * @param[in] irq          The IRQ number to register for
- * @param[in] cb           A callback function to call when the requested IRQ arrives.
- * @param[in] token        Client data which should be passed to the registered call
- *                         back function.
- * @return                 On success, returns a handle to the irq data. Otherwise,
- *                         returns NULL
+ * Creates a new thread to wait on IRQs.
+ * Upon receiving a signal that an IRQ has arrived, the thread will send an IPC message
+ * through to the endpoint that was registered with the IRQ server, if any. Otherwise,
+ * it will call 'irq_server_handle_irq_ipc' to handle the interrupt.
+ *
+ * The user can provide a notification for the thread to use, and can mark which bits
+ * of the badge that the thread can use for IRQs. If a null cap was provided,
+ * the IRQ server can create a notification cap on behalf of the user, the 'usable_mask'
+ * parameter will be ignored in this case.
+ *
+ * A ID will be assigned to this thread and
+ * returned to the user, but the user can provide a 'hint' to IRQ server. The server will
+ * attempt to assign an ID with the same value as the hint.
+ * @param[in] irq_server        A handle to the IRQ server
+ * @param[in] provided_ntfn     Notification cap to be provided to thread, can be
+ *                              'seL4_CapNull'
+ * @param[in] usable_mask       Mask of bits indicating which bits of the badge space
+ *                              the thread can use, will be ignore if 'provided_ntfn' is
+ *                              'null'
+ * @param[in] id_hint           'Hint' to be passed to the IRQ server when assigning an
+ *                              ID, >= 0 for a valid hint, -1 otherwise
  */
-struct irq_data* irq_server_register_irq(irq_server_t irq_server, irq_t irq,
-                                         irq_handler_fn cb, void* token);
+thread_id_t irq_server_thread_new(irq_server_t *irq_server, seL4_CPtr provided_ntfn,
+                                  seL4_Word usable_mask, thread_id_t id_hint);
 
 /**
- * Redirects control to the IRQ subsystem to process an arriving IRQ.
- * The server will read the appropriate message registers to retrieve the
- * information that it needs.
- * @param[in] irq_server   The IRQ server which is responsible for the received IRQ.
+ * Enable an IRQ and register a callback function. This functionality is
+ * delegated to the IRQ interface in libplatsupport.
+ * @param[in] irq_server        The IRQ server which shall be responsible for the IRQ
+ * @param[in] irq               Information about the IRQ that will be registered
+ * @param[in] callback          A callback function to call when the requested IRQ arrives
+ * @param[in] callback_data     Client data which should be passed to the registered call
+ *                              back function
+ * @return                      On success, returns an ID for the IRQ that was assigned by
+ *                              the IRQ interface in libsel4platsuport. Otherwise, returns
+ *                              an error code
  */
-void irq_server_handle_irq_ipc(irq_server_t irq_server);
+irq_id_t irq_server_register_irq(irq_server_t *irq_server, ps_irq_t irq,
+                                 irq_callback_fn_t callback, void *callback_data);
 
 /**
- * Waits on the IRQ delivery endpoint for the next IRQ.
- * If an IPC is received, but the label does not match that which was assigned
- * to the IRQ server, the message info and badge are returned to the caller,
- * much like seL4_Wait(...). If the label does match,
+ * Redirects control to the IRQ subsystem to process an arriving IRQ.  The
+ * server will read the appropriate message registers to retrieve the
+ * information that it needs. This should be called only when an IPC message
+ * with the designated label was received on an endpoint that was given to an
+ * IRQ server instance.
+ * @param[in] irq_server   The IRQ server which is responsible for the received IRQ
+ * @param[in] msginfo      An IPC message info header of an IPC message received on
+ *                         an endpoint registered with an IRQ server
+ */
+void irq_server_handle_irq_ipc(irq_server_t *irq_server, seL4_MessageInfo_t msginfo);
+
+/**
+ * Waits on the IRQ delivery endpoint for the next IRQ. If an IPC is received, but the
+ * label does not match that which was assigned to the IRQ server, the message info and
+ * badge are returned to the caller, much like seL4_Recv(...). If the label does match,
  * irq_server_handle_irq_ipc(...) will be called before returning.
+ *
+ * If an endpoint was not registered with the IRQ server that is passed in, this function
+ * is essentially a no-op.
  * @param[in]  irq_server  A handle to the IRQ server
- * @param[out] badge_ret   If badge_ret is not NULL, the received badge will be
+ * @param[out] ret_badge   If badge_ret is not NULL, the received badge will be
  *                         written to badge_ret.
  * @return                 The seL4_MessageInfo_t structure as provided by the
- *                         seL4 kernel in response to a seL4_Wait call. The
+ *                         seL4 kernel in response to a seL4_Recv call. The
  *                         caller may check that the label matches that which
  *                         was registered for the IRQ server in order to
  *                         determine if the received event was destined for the
  *                         IRQ server or if the thread was activated by some
  *                         other IPC event.
+ *                         On the error case where the IRQ server passed
+ *                         in does not have an endpoint passed in, an empty
+ *                         seL4_MessageInfo_t struct will be returned.
  */
-seL4_MessageInfo_t irq_server_wait_for_irq(irq_server_t irq_server, seL4_Word* badge_ret);
-
+seL4_MessageInfo_t irq_server_wait_for_irq(irq_server_t *irq_server, seL4_Word *ret_badge);

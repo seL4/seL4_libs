@@ -96,7 +96,7 @@ typedef struct test_type {
     void (*set_up)(uintptr_t e);
     void (*tear_down)(uintptr_t e);
     // Run the test. Different tests take different environments
-    test_result_t (*run_test)(struct testcase* test, uintptr_t e);
+    test_result_t (*run_test)(struct testcase *test, uintptr_t e);
 } ALIGN(32) test_type_t;
 
 /* Declare a test type.
@@ -158,11 +158,10 @@ extern struct test_type __stop__test_type[];
 extern struct testcase __start__test_case[];
 extern struct testcase __stop__test_case[];
 
-static inline int
-test_type_comparator(const void *a, const void *b)
+static inline int test_type_comparator(const void *a, const void *b)
 {
-    const struct test_type **ta = (const struct test_type**) a;
-    const struct test_type **tb = (const struct test_type**) b;
+    const struct test_type **ta = (const struct test_type **) a;
+    const struct test_type **tb = (const struct test_type **) b;
     if ((*ta)->id > (*tb)->id) {
         return 1;
     } else if ((*ta)->id < (*tb)->id) {
@@ -172,11 +171,10 @@ test_type_comparator(const void *a, const void *b)
     return 0;
 }
 
-static inline int
-test_comparator(const void *a, const void *b)
+static inline int test_comparator(const void *a, const void *b)
 {
-    const struct testcase **ta = (const struct testcase**)a;
-    const struct testcase **tb = (const struct testcase**)b;
+    const struct testcase **ta = (const struct testcase **)a;
+    const struct testcase **tb = (const struct testcase **)b;
     return strcmp((*ta)->name, (*tb)->name);
 }
 

@@ -87,6 +87,7 @@ void _sel4test_abort(const char *failure, const char *file, int line);
  */
 test_result_t sel4test_get_result(void);
 
-static inline bool sel4test_isTimerRPC(int output) {
+static inline bool sel4test_isTimerRPC(int output)
+{
     return (output > SEL4TEST_TIME_MIN && output < SEL4TEST_TIME_MAX);
 }

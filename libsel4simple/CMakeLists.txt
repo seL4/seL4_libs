@@ -14,10 +14,16 @@ cmake_minimum_required(VERSION 3.7.2)
 
 project(libsel4simple C)
 
+if(KernelArchRiscV)
+    set(kernel_arch arm)
+else()
+    set(kernel_arch ${KernelArch})
+endif()
+
 file(GLOB deps src/*.c)
 
 list(SORT deps)
 
 add_library(sel4simple STATIC EXCLUDE_FROM_ALL ${deps})
-target_include_directories(sel4simple PUBLIC include "arch_include/${KernelArch}")
+target_include_directories(sel4simple PUBLIC include "arch_include/${kernel_arch}")
 target_link_libraries(sel4simple Configuration muslc sel4 utils sel4vka)

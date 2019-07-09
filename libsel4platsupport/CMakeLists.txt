@@ -48,16 +48,22 @@ config_option(
 mark_as_advanced(LibSel4PlatSupportUseDebugPutChar LibSel4PlatSupportStart LibSel4SupportSel4Start)
 add_config_library(sel4platsupport "${configure_string}")
 
+if(KernelArchRiscV)
+    set(kernel_arch arm)
+else()
+    set(kernel_arch ${KernelArch})
+endif()
+
 file(
     GLOB
         deps
         src/*.c
         src/cspace/*.c
-        src/arch/${KernelArch}/*.c
+        src/arch/${kernel_arch}/*.c
         src/plat/${KernelPlatform}/*.c
         src/mach/${KernelArmMach}/*.c
         src/sel4_arch/${KernelSel4Arch}/*.S
-        src/arch/${KernelArch}/*.S
+        src/arch/${kernel_arch}/*.S
 )
 
 list(SORT deps)
@@ -65,7 +71,7 @@ list(SORT deps)
 add_library(sel4platsupport STATIC EXCLUDE_FROM_ALL ${deps})
 target_include_directories(
     sel4platsupport
-    PUBLIC include "arch_include/${KernelArch}" plat_include/${KernelPlatform}
+    PUBLIC include "arch_include/${kernel_arch}" plat_include/${KernelPlatform}
 )
 if(NOT "${KernelArmMach}" STREQUAL "")
     target_include_directories(sel4platsupport PUBLIC include "mach_include/${KernelArmMach}")

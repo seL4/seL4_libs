@@ -27,7 +27,7 @@ sel4platsupport_arch_init_default_serial_caps(vka_t *vka, UNUSED vspace_t *vspac
     error = sel4platsupport_copy_irq_cap(vka, simple, &irq,
                                            &serial_objects->serial_irq_path);
     if (error) {
-        ZF_LOGF("Failed to obtain PS default serial IRQ cap.");
+        ZF_LOGE("Failed to obtain PS default serial IRQ cap.");
         return error;
     }
 
@@ -41,7 +41,7 @@ sel4platsupport_arch_init_default_serial_caps(vka_t *vka, UNUSED vspace_t *vspac
     error = vka_alloc_frame_at(vka, seL4_PageBits, DEFAULT_SERIAL_PADDR,
                                &serial_objects->arch_serial_objects.serial_frame_obj);
     if (error) {
-        ZF_LOGF("Failed to obtain frame cap for default serial.");
+        ZF_LOGE("Failed to obtain frame cap for default serial.");
         return error;
     }
 

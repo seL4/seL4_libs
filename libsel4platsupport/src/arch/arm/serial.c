@@ -13,8 +13,8 @@
 #include <sel4platsupport/serial.h>
 #include <sel4platsupport/device.h>
 
-int
-sel4platsupport_arch_init_default_serial_caps(vka_t *vka, UNUSED vspace_t *vspace, simple_t *simple, serial_objects_t *serial_objects)
+int sel4platsupport_arch_init_default_serial_caps(vka_t *vka, UNUSED vspace_t *vspace, simple_t *simple,
+                                                  serial_objects_t *serial_objects)
 {
     int error;
 
@@ -25,7 +25,7 @@ sel4platsupport_arch_init_default_serial_caps(vka_t *vka, UNUSED vspace_t *vspac
 
     /* Obtain IRQ cap for PS default serial. */
     error = sel4platsupport_copy_irq_cap(vka, simple, &irq,
-                                           &serial_objects->serial_irq_path);
+                                         &serial_objects->serial_irq_path);
     if (error) {
         ZF_LOGE("Failed to obtain PS default serial IRQ cap.");
         return error;

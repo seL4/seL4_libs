@@ -26,9 +26,7 @@ config_option(
 mark_as_advanced(LibSel4SerialServerColoredOutput)
 add_config_library(sel4serialserver "${configure_string}")
 
-file(GLOB deps src/*.c)
-
-list(SORT deps)
+set(deps src/clientapi.c src/parentapi.c src/server.c)
 
 add_library(sel4serialserver STATIC EXCLUDE_FROM_ALL ${deps})
 target_include_directories(sel4serialserver PUBLIC include)
@@ -45,3 +43,6 @@ target_link_libraries(
     sel4vka
     sel4test
 )
+
+add_library(sel4serialserver_tests STATIC EXCLUDE_FROM_ALL src/test.c)
+target_link_libraries(sel4serialserver_tests sel4serialserver)

@@ -41,8 +41,7 @@ target_link_libraries(
     utils
     sel4utils
     sel4vka
-    sel4test
 )
 
 add_library(sel4serialserver_tests STATIC EXCLUDE_FROM_ALL src/test.c)
-target_link_libraries(sel4serialserver_tests sel4serialserver)
+target_link_libraries(sel4serialserver_tests sel4serialserver sel4test)

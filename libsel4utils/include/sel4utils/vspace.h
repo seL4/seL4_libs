@@ -192,9 +192,9 @@ int sel4utils_get_vspace_ept(vspace_t *loader, vspace_t *new_vspace, vka_t *vka,
  *
  * @param vspace                  uninitialised vspace struct to populate.
  * @param data                    uninitialised vspace data struct to populate.
+ * @param vspace_root             root object for the new vspace.
  * @param vka                     initialised vka that this virtual memory allocator will use to
  *                                allocate pages and pagetables. This allocator will never invoke free.
- * @param vspace_root             root object for the new vspace.
  * @param allocated_object_fn     function to call when objects are allocated. Can be null.
  * @param allocated_object_cookie cookie passed when the above function is called. Can be null.
  * @param existing_frames         a NULL terminated list of virtual addresses for 4K frames that are
@@ -216,10 +216,10 @@ int sel4utils_bootstrap_vspace(vspace_t *vspace, sel4utils_alloc_data_t *data,
  *
  * @param vspace                  uninitialised vspace struct to populate.
  * @param data                    uninitialised vspace data struct to populate.
+ * @param vspace_root             root object for the new vspace.
  * @param vka                     initialised vka that this virtual memory allocator will use to
  *                                allocate pages and pagetables. This allocator will never invoke free.
  * @param info                    seL4 boot info
- * @param vspace_root             root object for the new vspace.
  * @param allocated_object_fn     function to call when objects are allocated. Can be null.
  * @param allocated_object_cookie cookie passed when the above function is called. Can be null.
  *

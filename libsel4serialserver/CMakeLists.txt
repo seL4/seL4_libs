@@ -35,6 +35,7 @@ target_include_directories(sel4serialserver
 )
 target_link_libraries(
     sel4serialserver
+    PUBLIC
     muslc
     sel4
     sel4vspace
@@ -43,6 +44,7 @@ target_link_libraries(
     utils
     sel4utils
     sel4vka
+    PRIVATE
     sel4serialserver_Config
 )
 

@@ -90,6 +90,7 @@ target_include_directories(
 )
 target_link_libraries(
     sel4vmm
+    PUBLIC
     muslc
     sel4
     sel4utils
@@ -97,5 +98,6 @@ target_link_libraries(
     sel4allocman
     ethdrivers
     platsupport
+    PRIVATE
     sel4vmm_Config
 )

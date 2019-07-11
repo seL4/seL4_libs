@@ -63,4 +63,4 @@ target_include_directories(
         "sel4_arch_include/${KernelSel4Arch}"
         "arch_include/${KernelArch}"
 )
-target_link_libraries(sel4vka muslc sel4 utils sel4vka_Config)
+target_link_libraries(sel4vka PUBLIC muslc sel4 utils sel4vka_Config)

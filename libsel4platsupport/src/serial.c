@@ -14,7 +14,6 @@
 #include <sel4/sel4.h>
 #include <platsupport/chardev.h>
 #include <stddef.h>
-#include <sel4platsupport/serial.h>
 #include <vka/object.h>
 
 static ssize_t
@@ -78,30 +77,4 @@ __plat_getchar(void)
     } else {
         return EOF;
     }
-}
-
-int
-sel4platsupport_init_default_serial_caps(vka_t *vka, vspace_t *vspace, simple_t *simple, serial_objects_t *serial_objects)
-{
-    int error;
-
-    /* Allocate slot for the PS default serial's IRQ cap. */
-    error = vka_cspace_alloc_path(vka, &serial_objects->serial_irq_path);
-    if (error) {
-        ZF_LOGE("Failed to allocate serial IRQ slot.");
-        return error;
-    }
-
-    /* Call into the arch-specific code for the next step.
-     * x86 needs an I/O cap because the serial is accessed through port-I/O,
-     * while ARM needs a frame cap because it doesn't have port-I/O.
-     * Both architectures need different initialization code.
-     */
-    error = sel4platsupport_arch_init_default_serial_caps(vka, vspace, simple, serial_objects);
-    if (error) {
-        ZF_LOGE("Arch-specific serial cap init failed.");
-        return error;
-    }
-
-    return 0;
 }

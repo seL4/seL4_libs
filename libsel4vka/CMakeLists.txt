@@ -58,9 +58,14 @@ list(SORT deps)
 add_library(sel4vka STATIC EXCLUDE_FROM_ALL ${deps})
 target_include_directories(
     sel4vka
-    PUBLIC
-        include
-        "sel4_arch_include/${KernelSel4Arch}"
-        "arch_include/${KernelArch}"
+    PUBLIC include "sel4_arch_include/${KernelSel4Arch}" "arch_include/${KernelArch}"
 )
-target_link_libraries(sel4vka PUBLIC muslc sel4 utils sel4vka_Config)
+target_link_libraries(
+    sel4vka
+    PUBLIC
+        muslc
+        sel4
+        utils
+        sel4vka_Config
+        kernel_autoconf
+)

@@ -75,4 +75,4 @@ target_include_directories(
         "arch_include/${KernelArch}"
         sel4_arch_include/${KernelSel4Arch}
 )
-target_link_libraries(sel4debug PUBLIC muslc sel4 utils PRIVATE sel4debug_Config)
+target_link_libraries(sel4debug PUBLIC muslc sel4 utils PRIVATE sel4debug_Config kernel_autoconf)

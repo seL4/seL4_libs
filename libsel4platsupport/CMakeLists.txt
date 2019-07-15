@@ -79,15 +79,13 @@ endif()
 target_link_libraries(
     sel4platsupport
     PUBLIC
-    muslc
-    sel4
-    sel4runtime
-    sel4simple
-    utils
-    sel4vspace
-    platsupport
-    sel4simple-default
-    PRIVATE
-    sel4platsupport_Config
-    sel4muslcsys_Config
+        muslc
+        sel4
+        sel4runtime
+        sel4simple
+        utils
+        sel4vspace
+        platsupport
+        sel4simple-default
+    PRIVATE sel4platsupport_Config sel4muslcsys_Config kernel_autoconf
 )

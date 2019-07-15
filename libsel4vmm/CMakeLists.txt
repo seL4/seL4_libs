@@ -91,13 +91,13 @@ target_include_directories(
 target_link_libraries(
     sel4vmm
     PUBLIC
-    muslc
-    sel4
-    sel4utils
-    pci
-    sel4allocman
-    ethdrivers
-    platsupport
-    PRIVATE
-    sel4vmm_Config
+        muslc
+        sel4
+        sel4utils
+        pci
+        sel4allocman
+        ethdrivers
+        platsupport
+        sel4vmm_Config
+        kernel_autoconf
 )

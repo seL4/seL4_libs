@@ -20,4 +20,13 @@ list(SORT deps)
 
 add_library(sel4simple-default STATIC EXCLUDE_FROM_ALL ${deps})
 target_include_directories(sel4simple-default PUBLIC include)
-target_link_libraries(sel4simple-default PUBLIC muslc sel4 sel4simple sel4debug sel4vspace PRIVATE sel4debug_Config)
+target_link_libraries(
+    sel4simple-default
+    PUBLIC
+        muslc
+        sel4
+        sel4simple
+        sel4debug
+        sel4vspace
+    PRIVATE kernel_autoconf
+)

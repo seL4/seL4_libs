@@ -60,5 +60,6 @@ target_link_libraries(
     sel4sync
     sel4simple
     sel4utils
+    kernel_autoconf
     sel4test_Config
 )

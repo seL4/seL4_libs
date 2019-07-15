@@ -20,4 +20,4 @@ list(SORT deps)
 
 add_library(sel4sync STATIC EXCLUDE_FROM_ALL ${deps})
 target_include_directories(sel4sync PUBLIC include)
-target_link_libraries(sel4sync muslc sel4 sel4vka platsupport utils)
+target_link_libraries(sel4sync muslc sel4 sel4vka platsupport utils kernel_autoconf)

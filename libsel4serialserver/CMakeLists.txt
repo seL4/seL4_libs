@@ -36,16 +36,15 @@ target_include_directories(sel4serialserver
 target_link_libraries(
     sel4serialserver
     PUBLIC
-    muslc
-    sel4
-    sel4vspace
-    sel4simple
-    sel4platsupport
-    utils
-    sel4utils
-    sel4vka
-    PRIVATE
-    sel4serialserver_Config
+        muslc
+        sel4
+        sel4vspace
+        sel4simple
+        sel4platsupport
+        utils
+        sel4utils
+        sel4vka
+    PRIVATE kernel_autoconf sel4serialserver_Config
 )
 
 add_library(sel4serialserver_tests STATIC EXCLUDE_FROM_ALL src/test.c)

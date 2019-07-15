@@ -39,4 +39,4 @@ target_include_directories(
 if(KernelArmArmV STREQUAL "armv7ve")
     target_include_directories(sel4bench PUBLIC "arch_include/${KernelArch}/armv/armv7-a")
 endif()
-target_link_libraries(sel4bench muslc sel4 utils sel4benchsupport)
+target_link_libraries(sel4bench muslc sel4 utils sel4benchsupport kernel_autoconf)

@@ -26,4 +26,4 @@ list(SORT deps)
 
 add_library(sel4simple STATIC EXCLUDE_FROM_ALL ${deps})
 target_include_directories(sel4simple PUBLIC include "arch_include/${kernel_arch}")
-target_link_libraries(sel4simple muslc sel4 utils sel4vka)
+target_link_libraries(sel4simple muslc sel4 utils sel4vka kernel_autoconf)

@@ -39,7 +39,7 @@ typedef struct {
     /* These are not always non-empty if this particular IRQ ID is in use */
 
     /* Driver registers these */
-    irq_callback_t irq_callback_fn;
+    irq_callback_fn_t irq_callback_fn;
     void *callback_data;
 
     /* User registers these */
@@ -206,7 +206,8 @@ static int find_free_ntfn_badge_index(ntfn_entry_t *ntfn_entry)
     return CTZL(unallocated_bitfield);
 }
 
-static irq_id_t sel4platsupport_irq_register(void *cookie, ps_irq_t irq, irq_callback_t callback, void *callback_data)
+static irq_id_t sel4platsupport_irq_register(void *cookie, ps_irq_t irq, irq_callback_fn_t callback,
+                                             void *callback_data)
 {
     irq_cookie_t *irq_cookie = cookie;
 
@@ -683,7 +684,7 @@ int sel4platsupport_irq_unset_ntfn(ps_irq_ops_t *irq_ops, irq_id_t irq_id)
 static bool perform_callback(irq_cookie_t *irq_cookie, irq_id_t irq_id, unsigned long badge_bit)
 {
     irq_entry_t *irq_entry = &(irq_cookie->irq_table[irq_id]);
-    irq_callback_t callback = irq_entry->irq_callback_fn;
+    irq_callback_fn_t callback = irq_entry->irq_callback_fn;
 
     /* Check if callback was registered, if so, then run it */
     if (callback) {

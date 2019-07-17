@@ -31,7 +31,11 @@ LEAKY(page_upper_directory)
 
 static inline int vka_alloc_vspace_root(vka_t *vka, vka_object_t *result)
 {
-    return vka_alloc_page_global_directory(vka, result);
+    if (config_set(CONFIG_ARM_HYPERVISOR_SUPPORT) && config_set(CONFIG_ARM_PA_SIZE_BITS_40)) {
+        return vka_alloc_page_upper_directory(vka, result);
+    } else {
+        return vka_alloc_page_global_directory(vka, result);
+    }
 }
 
 /*

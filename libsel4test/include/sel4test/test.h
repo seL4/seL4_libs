@@ -46,8 +46,6 @@ struct env {
     vka_t vka;
     /* virtual memory management interface */
     vspace_t vspace;
-    /* initialised timer */
-    seL4_timer_t timer;
     /* abstract interface over application init */
     simple_t simple;
     /* notification for timer */

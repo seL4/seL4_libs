@@ -70,6 +70,7 @@ struct env {
 #endif
     seL4_Word cores;
     seL4_CPtr domain;
+    seL4_CPtr device_frame;
 
     int priority;
     int cspace_size_bits;

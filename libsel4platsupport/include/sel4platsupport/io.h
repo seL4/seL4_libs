@@ -42,6 +42,16 @@ int sel4platsupport_new_io_mapper(vspace_t vspace, vka_t vka, ps_io_mapper_t *io
 int sel4platsupport_new_malloc_ops(ps_malloc_ops_t *ops);
 
 /**
+ * Create a new FDT ops structure using a provided simple
+ *
+ * @param io_fdt Interface to fill in
+ * @param simple An initialised simple interface
+ *
+ * @return returns 0 on success
+ */
+int sel4platsupport_new_fdt_ops(ps_io_fdt_t *io_fdt, simple_t *simple, ps_malloc_ops_t *malloc_ops);
+
+/**
  * Creates a new implementation of the platsupport io_ops interface using a
  * provided vspace and vka
  *

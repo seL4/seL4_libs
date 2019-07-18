@@ -41,7 +41,7 @@ target_link_libraries(
         utils
         sel4utils
         sel4vka
-    PRIVATE kernel_autoconf sel4serialserver_Config
+    PRIVATE sel4_autoconf sel4serialserver_Config
 )
 
 add_library(sel4serialserver_tests STATIC EXCLUDE_FROM_ALL src/test.c)

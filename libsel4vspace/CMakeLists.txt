@@ -26,4 +26,4 @@ list(SORT deps)
 
 add_library(sel4vspace STATIC EXCLUDE_FROM_ALL ${deps})
 target_include_directories(sel4vspace PUBLIC include "arch_include/${KernelArch}")
-target_link_libraries(sel4vspace muslc sel4 sel4vka kernel_autoconf sel4utils_Config)
+target_link_libraries(sel4vspace muslc sel4 sel4vka sel4_autoconf sel4utils_Config)

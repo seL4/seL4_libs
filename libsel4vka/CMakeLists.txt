@@ -67,5 +67,5 @@ target_link_libraries(
         sel4
         utils
         sel4vka_Config
-        kernel_autoconf
+        sel4_autoconf
 )

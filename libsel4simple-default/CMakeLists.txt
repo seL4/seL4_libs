@@ -28,5 +28,5 @@ target_link_libraries(
         sel4simple
         sel4debug
         sel4vspace
-    PRIVATE kernel_autoconf
+    PRIVATE sel4_autoconf
 )

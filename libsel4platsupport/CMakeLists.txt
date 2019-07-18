@@ -87,5 +87,5 @@ target_link_libraries(
         sel4vspace
         platsupport
         sel4simple-default
-    PRIVATE sel4platsupport_Config sel4muslcsys_Config kernel_autoconf
+    PRIVATE sel4platsupport_Config sel4muslcsys_Config sel4_autoconf
 )

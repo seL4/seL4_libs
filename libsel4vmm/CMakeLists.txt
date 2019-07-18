@@ -95,5 +95,5 @@ target_link_libraries(
         ethdrivers
         platsupport
         sel4vmm_Config
-        kernel_autoconf
+        sel4_autoconf
 )

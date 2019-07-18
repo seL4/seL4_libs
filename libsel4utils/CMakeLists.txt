@@ -68,5 +68,5 @@ target_link_libraries(
     elf
     cpio
     sel4utils_Config
-    kernel_autoconf
+    sel4_autoconf
 )

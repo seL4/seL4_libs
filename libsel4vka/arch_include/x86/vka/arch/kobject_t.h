@@ -30,8 +30,7 @@ enum _x86_kobject_type {
  * Get the size (in bits) of the untyped memory required to
  * create an object of the given size.
  */
-static inline seL4_Word
-arch_kobject_get_size(kobject_t type, seL4_Word objectSize)
+static inline seL4_Word arch_kobject_get_size(kobject_t type, seL4_Word objectSize)
 {
     switch (type) {
     case KOBJECT_IO_PAGETABLE:
@@ -42,15 +41,14 @@ arch_kobject_get_size(kobject_t type, seL4_Word objectSize)
         case seL4_LargePageBits:
             return objectSize;
         }
-        /* If frame size was unknown fall through to default case as it
-         * might be a mode specific frame size */
+    /* If frame size was unknown fall through to default case as it
+     * might be a mode specific frame size */
     default:
         return x86_mode_kobject_get_size(type, objectSize);
     }
 }
 
-static inline seL4_Word
-arch_kobject_get_type(int type, seL4_Word objectSize)
+static inline seL4_Word arch_kobject_get_type(int type, seL4_Word objectSize)
 {
     switch (type) {
     case KOBJECT_PAGE_DIRECTORY:

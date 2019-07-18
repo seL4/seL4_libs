@@ -59,7 +59,7 @@ static inline int sel4utils_map_page_leaky(vka_t *vka, seL4_CPtr pd, seL4_CPtr f
  *
  * @return virtual address of mapping
  */
-void * sel4utils_dup_and_map(vka_t *vka, vspace_t *vspace, seL4_CPtr page, size_t size_bits);
+void *sel4utils_dup_and_map(vka_t *vka, vspace_t *vspace, seL4_CPtr page, size_t size_bits);
 
 /* Unmap a duplicated page cap and free any resources. Is the opposite
  * of sel4utils_dup_and_map
@@ -81,7 +81,8 @@ int sel4utils_map_iospace_page(vka_t *vka, seL4_CPtr iospace, seL4_CPtr frame, s
 
 #ifdef CONFIG_VTX
 int sel4utils_map_ept_page(vka_t *vka, seL4_CPtr pd, seL4_CPtr frame, seL4_Word vaddr,
-                           seL4_CapRights_t rights, int cacheable, seL4_Word size_bits, vka_object_t *pagetable, vka_object_t *pagedir, vka_object_t *pdpt);
+                           seL4_CapRights_t rights, int cacheable, seL4_Word size_bits, vka_object_t *pagetable, vka_object_t *pagedir,
+                           vka_object_t *pdpt);
 
 #endif /* CONFIG_VTX */
 

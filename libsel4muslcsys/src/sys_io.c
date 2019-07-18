@@ -59,8 +59,7 @@ static int free_fd_table_index;
 /* total number of fds */
 static int num_fds = 256;
 
-void
-add_free_fd(int fd)
+void add_free_fd(int fd)
 {
     get_fd_struct(fd)->filetype = FILE_TYPE_FREE;
     free_fd_table_index++;
@@ -68,8 +67,7 @@ add_free_fd(int fd)
     free_fd_table[free_fd_table_index] = fd;
 }
 
-int
-get_free_fd(void)
+int get_free_fd(void)
 {
     if (free_fd_table_index == -1) {
         return -EMFILE;
@@ -79,14 +77,12 @@ get_free_fd(void)
     return free_fd_table[free_fd_table_index + 1];
 }
 
-int
-valid_fd(int fd)
+int valid_fd(int fd)
 {
     return fd < num_fds && fd >= FIRST_USER_FD;
 }
 
-static int
-allocate_file_table(void)
+static int allocate_file_table(void)
 {
     fd_table = malloc(FD_TABLE_SIZE(num_fds));
     if (fd_table == NULL) {
@@ -109,8 +105,7 @@ allocate_file_table(void)
     return 0;
 }
 
-int
-grow_fds(int how_much)
+int grow_fds(int how_much)
 {
     int new_num_fds = num_fds + how_much;
 
@@ -157,8 +152,7 @@ grow_fds(int how_much)
     return 0;
 }
 
-int
-allocate_fd()
+int allocate_fd()
 {
     if (fd_table == NULL) {
         if (allocate_file_table() == -ENOMEM) {
@@ -169,22 +163,19 @@ allocate_fd()
     return get_free_fd();
 }
 
-muslcsys_fd_t *
-get_fd_struct(int fd)
+muslcsys_fd_t *get_fd_struct(int fd)
 {
     assert(fd < num_fds && fd >= FIRST_USER_FD);
     return &fd_table[fd - FIRST_USER_FD];
 }
 
-static size_t
-sys_platform_write(void *data, size_t count)
+static size_t sys_platform_write(void *data, size_t count)
 {
     char *realdata = data;
     return __arch_write(realdata, count);
 }
 
-static long
-sys_open_impl(const char *pathname, int flags, mode_t mode)
+static long sys_open_impl(const char *pathname, int flags, mode_t mode)
 {
     /* mask out flags we can support */
     flags &= ~O_LARGEFILE;
@@ -221,15 +212,14 @@ sys_open_impl(const char *pathname, int flags, mode_t mode)
         add_free_fd(fd);
         return -ENOMEM;
     }
-    cpio_file_data_t *fd_data = (cpio_file_data_t*)fds->data;
+    cpio_file_data_t *fd_data = (cpio_file_data_t *)fds->data;
     fd_data->start = file;
     fd_data->size = size;
     fd_data->current = 0;
     return fd;
 }
 
-long
-sys_open(va_list ap)
+long sys_open(va_list ap)
 {
     const char *pathname = va_arg(ap, const char *);
     int flags = va_arg(ap, int);
@@ -238,8 +228,7 @@ sys_open(va_list ap)
     return sys_open_impl(pathname, flags, mode);
 }
 
-long
-sys_openat(va_list ap)
+long sys_openat(va_list ap)
 {
     int dirfd = va_arg(ap, int);
     const char *pathname = va_arg(ap, const char *);
@@ -254,8 +243,7 @@ sys_openat(va_list ap)
     return sys_open_impl(pathname, flags, mode);
 }
 
-long
-sys_close(va_list ap)
+long sys_close(va_list ap)
 {
     int fd = va_arg(ap, int);
     if (fd < FIRST_USER_FD) {
@@ -281,7 +269,8 @@ sys_close(va_list ap)
 
 static write_buf_fn stdio_write = sys_platform_write;
 
-write_buf_fn sel4muslcsys_register_stdio_write_fn(write_buf_fn write_fn) {
+write_buf_fn sel4muslcsys_register_stdio_write_fn(write_buf_fn write_fn)
+{
     write_buf_fn old = stdio_write;
     stdio_write = write_fn;
     return old;
@@ -289,8 +278,7 @@ write_buf_fn sel4muslcsys_register_stdio_write_fn(write_buf_fn write_fn) {
 
 
 /* Writev syscall implementation for muslc. Only implemented for stdin and stdout. */
-long
-sys_writev(va_list ap)
+long sys_writev(va_list ap)
 {
     int fildes = va_arg(ap, int);
     struct iovec *iov = va_arg(ap, struct iovec *);
@@ -341,7 +329,7 @@ sys_writev(va_list ap)
 long sys_readv(va_list ap)
 {
     int fd = va_arg(ap, int);
-    struct iovec *iov = va_arg(ap, struct iovec*);
+    struct iovec *iov = va_arg(ap, struct iovec *);
     int iovcnt = va_arg(ap, int);
     int i;
     long read;
@@ -377,15 +365,14 @@ long sys_readv(va_list ap)
 long sys_read(va_list ap)
 {
     int fd = va_arg(ap, int);
-    void *buf = va_arg(ap, void*);
+    void *buf = va_arg(ap, void *);
     size_t count = va_arg(ap, size_t);
     /* construct an iovec and call readv */
     struct iovec iov = {.iov_base = buf, .iov_len = count };
     return readv(fd, &iov, 1);
 }
 
-long
-sys_ioctl(va_list ap)
+long sys_ioctl(va_list ap)
 {
     int fd = va_arg(ap, int);
     int request = va_arg(ap, int);
@@ -399,8 +386,7 @@ sys_ioctl(va_list ap)
     return 0;
 }
 
-long
-sys_prlimit64(va_list ap)
+long sys_prlimit64(va_list ap)
 {
     pid_t pid = va_arg(ap, pid_t);
     int resource = va_arg(ap, int);
@@ -433,14 +419,13 @@ sys_prlimit64(va_list ap)
     return result;
 }
 
-static int
-safe_addition(int a, int b) {
+static int safe_addition(int a, int b)
+{
     return !(a >= 0 && b > INT_MAX - a) &&
            !(a < 0 && b < INT_MAX - a);
 }
 
-long
-sys_lseek(va_list ap)
+long sys_lseek(va_list ap)
 {
     int fd = va_arg(ap, int);
     off_t offset = va_arg(ap, off_t);
@@ -466,29 +451,29 @@ sys_lseek(va_list ap)
 
     int new_offset = 0;
     switch (whence) {
-        case SEEK_SET:
-            new_offset = offset;
-            break;
-        case SEEK_CUR:
-            if (!safe_addition(cpio_fd->current, offset)) {
-                return -EOVERFLOW;
-            }
-            new_offset = cpio_fd->current + offset;
-            break;
-        case SEEK_END:
-            if (offset > 0) {
-                /* can't seek beyond the end of the cpio file */
-                return -EINVAL;
-            }
-            new_offset = cpio_fd->size + offset;
-            break;
-        default:
+    case SEEK_SET:
+        new_offset = offset;
+        break;
+    case SEEK_CUR:
+        if (!safe_addition(cpio_fd->current, offset)) {
+            return -EOVERFLOW;
+        }
+        new_offset = cpio_fd->current + offset;
+        break;
+    case SEEK_END:
+        if (offset > 0) {
+            /* can't seek beyond the end of the cpio file */
             return -EINVAL;
+        }
+        new_offset = cpio_fd->size + offset;
+        break;
+    default:
+        return -EINVAL;
     }
 
     if (new_offset < 0) {
         return -EINVAL;
-    /* can't seek past the end of the cpio file */
+        /* can't seek past the end of the cpio file */
     } else if (new_offset > cpio_fd->size) {
         return -EINVAL;
     }
@@ -505,7 +490,7 @@ long sys__llseek(va_list ap)
     int fd = va_arg(ap, int);
     uint32_t offset_high = va_arg(ap, uint32_t);
     uint32_t offset_low = va_arg(ap, uint32_t);
-    off_t *result = va_arg(ap, off_t*);
+    off_t *result = va_arg(ap, off_t *);
     int whence = va_arg(ap, int);
     /* need to directly call syscall to prevent circular call to this function. the llseek function
      * is used when off_t is a 64bit type (see the lseek definition in muslc), Underneath the
@@ -525,13 +510,14 @@ long sys__llseek(va_list ap)
     return 0;
 }
 
-long sys_access(va_list ap) {
+long sys_access(va_list ap)
+{
     const char *pathname = va_arg(ap, const char *);
     int mode = va_arg(ap, int);
     /* just try and open. currently we only support reading with the CPIO file system */
     if (mode == F_OK || mode == R_OK) {
         int fd = open(pathname, O_RDONLY, 0);
-        if(fd < 0) {
+        if (fd < 0) {
             return -EACCES;
         }
         close(fd);
@@ -542,7 +528,8 @@ long sys_access(va_list ap) {
 }
 
 void muslcsys_install_cpio_interface(void *cpio_symbol, unsigned long cpio_len,
-        muslcsys_cpio_get_file_fn_t fn) {
+                                     muslcsys_cpio_get_file_fn_t fn)
+{
     cpio_archive_symbol = cpio_symbol;
     cpio_archive_len = cpio_len;
     cpio_get_file_impl = fn;

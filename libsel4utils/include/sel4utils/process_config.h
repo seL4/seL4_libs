@@ -65,30 +65,28 @@ typedef struct {
     seL4_CPtr asid_pool;
 } sel4utils_process_config_t;
 
-static inline sel4utils_process_config_t
-process_config_asid_pool(sel4utils_process_config_t config, seL4_CPtr asid_pool)
+static inline sel4utils_process_config_t process_config_asid_pool(sel4utils_process_config_t config,
+                                                                  seL4_CPtr asid_pool)
 {
     config.asid_pool = asid_pool;
     return config;
 }
 
-static inline sel4utils_process_config_t
-process_config_auth(sel4utils_process_config_t config, seL4_CPtr auth)
+static inline sel4utils_process_config_t process_config_auth(sel4utils_process_config_t config, seL4_CPtr auth)
 {
     config.sched_params.auth = auth;
     return config;
 }
 
-static inline sel4utils_process_config_t
-process_config_new(simple_t *simple)
+static inline sel4utils_process_config_t process_config_new(simple_t *simple)
 {
     sel4utils_process_config_t config = {0};
     config = process_config_auth(config, simple_get_tcb(simple));
     return process_config_asid_pool(config, simple_get_init_cap(simple, seL4_CapInitThreadASIDPool));
 }
 
-static inline sel4utils_process_config_t
-process_config_elf(sel4utils_process_config_t config, const char *image_name, bool preload)
+static inline sel4utils_process_config_t process_config_elf(sel4utils_process_config_t config, const char *image_name,
+                                                            bool preload)
 {
     config.is_elf = true;
     config.image_name = image_name;
@@ -96,8 +94,8 @@ process_config_elf(sel4utils_process_config_t config, const char *image_name, bo
     return config;
 }
 
-static inline sel4utils_process_config_t
-process_config_noelf(sel4utils_process_config_t config, void *entry_point, uintptr_t sysinfo)
+static inline sel4utils_process_config_t process_config_noelf(sel4utils_process_config_t config, void *entry_point,
+                                                              uintptr_t sysinfo)
 {
     config.is_elf = false;
     config.entry_point = entry_point;
@@ -105,24 +103,22 @@ process_config_noelf(sel4utils_process_config_t config, void *entry_point, uintp
     return config;
 }
 
-static inline sel4utils_process_config_t
-process_config_cnode(sel4utils_process_config_t config, vka_object_t cnode)
+static inline sel4utils_process_config_t process_config_cnode(sel4utils_process_config_t config, vka_object_t cnode)
 {
     config.create_cspace = false;
     config.cnode = cnode;
     return config;
 }
 
-static inline sel4utils_process_config_t
-process_config_create_cnode(sel4utils_process_config_t config, int size_bits)
+static inline sel4utils_process_config_t process_config_create_cnode(sel4utils_process_config_t config, int size_bits)
 {
     config.create_cspace = true;
     config.one_level_cspace_size_bits = size_bits;
     return config;
 }
 
-static inline sel4utils_process_config_t
-process_config_vspace(sel4utils_process_config_t config, vspace_t *vspace, vka_object_t page_dir)
+static inline sel4utils_process_config_t process_config_vspace(sel4utils_process_config_t config, vspace_t *vspace,
+                                                               vka_object_t page_dir)
 {
     config.create_vspace = false;
     config.vspace = vspace;
@@ -130,9 +126,9 @@ process_config_vspace(sel4utils_process_config_t config, vspace_t *vspace, vka_o
     return config;
 }
 
-static inline sel4utils_process_config_t
-process_config_create_vspace(sel4utils_process_config_t config, sel4utils_elf_region_t *reservations,
-                             int num_reservations)
+static inline sel4utils_process_config_t process_config_create_vspace(sel4utils_process_config_t config,
+                                                                      sel4utils_elf_region_t *reservations,
+                                                                      int num_reservations)
 {
     config.create_vspace = true;
     config.reservations = reservations;
@@ -140,45 +136,41 @@ process_config_create_vspace(sel4utils_process_config_t config, sel4utils_elf_re
     return config;
 }
 
-static inline sel4utils_process_config_t
-process_config_priority(sel4utils_process_config_t config, uint8_t priority)
+static inline sel4utils_process_config_t process_config_priority(sel4utils_process_config_t config, uint8_t priority)
 {
     config.sched_params.priority = priority;
     return config;
 }
 
-static inline sel4utils_process_config_t
-process_config_mcp(sel4utils_process_config_t config, uint8_t mcp)
+static inline sel4utils_process_config_t process_config_mcp(sel4utils_process_config_t config, uint8_t mcp)
 {
     config.sched_params.mcp = mcp;
     return config;
 }
 
-static inline sel4utils_process_config_t
-process_config_create_fault_endpoint(sel4utils_process_config_t config)
+static inline sel4utils_process_config_t process_config_create_fault_endpoint(sel4utils_process_config_t config)
 {
     config.create_fault_endpoint = true;
     return config;
 }
 
-static inline sel4utils_process_config_t
-process_config_fault_endpoint(sel4utils_process_config_t config, vka_object_t fault_endpoint)
+static inline sel4utils_process_config_t process_config_fault_endpoint(sel4utils_process_config_t config,
+                                                                       vka_object_t fault_endpoint)
 {
     config.fault_endpoint = fault_endpoint;
     config.create_fault_endpoint = false;
     return config;
 }
 
-static inline sel4utils_process_config_t
-process_config_fault_cptr(sel4utils_process_config_t config, seL4_CPtr fault_cptr)
+static inline sel4utils_process_config_t process_config_fault_cptr(sel4utils_process_config_t config,
+                                                                   seL4_CPtr fault_cptr)
 {
     config.fault_endpoint.cptr = fault_cptr;
     config.create_fault_endpoint = false;
     return config;
 }
 
-static inline sel4utils_process_config_t
-process_config_default(const char *image_name, seL4_CPtr asid_pool)
+static inline sel4utils_process_config_t process_config_default(const char *image_name, seL4_CPtr asid_pool)
 {
     sel4utils_process_config_t config = {0};
     config = process_config_asid_pool(config, asid_pool);
@@ -188,8 +180,8 @@ process_config_default(const char *image_name, seL4_CPtr asid_pool)
     return process_config_create_fault_endpoint(config);
 }
 
-static inline sel4utils_process_config_t
-process_config_default_simple(simple_t *simple, const char *image_name, uint8_t prio)
+static inline sel4utils_process_config_t process_config_default_simple(simple_t *simple, const char *image_name,
+                                                                       uint8_t prio)
 {
     sel4utils_process_config_t config = process_config_new(simple);
     config = process_config_elf(config, image_name, true);

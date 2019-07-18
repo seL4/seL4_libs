@@ -34,7 +34,7 @@ typedef size_t (*write_buf_fn)(void *data, size_t count);
 /*
  * Register a function to be called when sys_writev is called on either
  * stdout or stderr.  This will return the existing function that is registered.
- * Calling this function with NULL is valid and will result in no function being 
+ * Calling this function with NULL is valid and will result in no function being
  * called, but writev still returning the number of characters written.  This is
  * similar to piping to /dev/null.
  */

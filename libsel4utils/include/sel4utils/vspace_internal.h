@@ -36,7 +36,8 @@
 void *create_level(vspace_t *vspace, size_t size);
 void *bootstrap_create_level(vspace_t *vspace, size_t size);
 
-static inline void *create_mid_level(vspace_t *vspace, uintptr_t init) {
+static inline void *create_mid_level(vspace_t *vspace, uintptr_t init)
+{
     vspace_mid_level_t *level = create_level(vspace, sizeof(vspace_mid_level_t));
     if (level) {
         for (int i = 0; i < VSPACE_LEVEL_SIZE; i++) {
@@ -46,7 +47,8 @@ static inline void *create_mid_level(vspace_t *vspace, uintptr_t init) {
     return level;
 }
 
-static inline void *create_bottom_level(vspace_t *vspace, uintptr_t init) {
+static inline void *create_bottom_level(vspace_t *vspace, uintptr_t init)
+{
     vspace_bottom_level_t *level = create_level(vspace, sizeof(vspace_bottom_level_t));
     if (level) {
         for (int i = 0; i < VSPACE_LEVEL_SIZE; i++) {
@@ -57,14 +59,13 @@ static inline void *create_bottom_level(vspace_t *vspace, uintptr_t init) {
     return level;
 }
 
-static inline sel4utils_alloc_data_t *
-get_alloc_data(vspace_t *vspace)
+static inline sel4utils_alloc_data_t *get_alloc_data(vspace_t *vspace)
 {
     return (sel4utils_alloc_data_t *) vspace->data;
 }
 
-static int
-reserve_entries_bottom(vspace_t *vspace, vspace_bottom_level_t *level, uintptr_t start, uintptr_t end, bool preserve_frames)
+static int reserve_entries_bottom(vspace_t *vspace, vspace_bottom_level_t *level, uintptr_t start, uintptr_t end,
+                                  bool preserve_frames)
 {
     while (start < end) {
         int index = INDEX_FOR_LEVEL(start, 0);
@@ -83,8 +84,8 @@ reserve_entries_bottom(vspace_t *vspace, vspace_bottom_level_t *level, uintptr_t
     return 0;
 }
 
-static int
-reserve_entries_mid(vspace_t *vspace, vspace_mid_level_t *level, int level_num, uintptr_t start, uintptr_t end, bool preserve_frames)
+static int reserve_entries_mid(vspace_t *vspace, vspace_mid_level_t *level, int level_num, uintptr_t start,
+                               uintptr_t end, bool preserve_frames)
 {
     /* walk entries at this level until we complete this range */
     while (start < end) {
@@ -126,9 +127,10 @@ reserve_entries_mid(vspace_t *vspace, vspace_mid_level_t *level, int level_num, 
         if (next_table != RESERVED) {
             int error;
             if (level_num == 1) {
-                error = reserve_entries_bottom(vspace, (vspace_bottom_level_t*)next_table, start, next_start, preserve_frames);
+                error = reserve_entries_bottom(vspace, (vspace_bottom_level_t *)next_table, start, next_start, preserve_frames);
             } else {
-                error = reserve_entries_mid(vspace, (vspace_mid_level_t*)next_table, level_num - 1, start, next_start, preserve_frames);
+                error = reserve_entries_mid(vspace, (vspace_mid_level_t *)next_table, level_num - 1, start, next_start,
+                                            preserve_frames);
             }
             if (error) {
                 return error;
@@ -139,8 +141,8 @@ reserve_entries_mid(vspace_t *vspace, vspace_mid_level_t *level, int level_num, 
     return 0;
 }
 
-static int
-clear_entries_bottom(vspace_t *vspace, vspace_bottom_level_t *level, uintptr_t start, uintptr_t end, bool only_reserved)
+static int clear_entries_bottom(vspace_t *vspace, vspace_bottom_level_t *level, uintptr_t start, uintptr_t end,
+                                bool only_reserved)
 {
     while (start < end) {
         int index = INDEX_FOR_LEVEL(start, 0);
@@ -155,8 +157,8 @@ clear_entries_bottom(vspace_t *vspace, vspace_bottom_level_t *level, uintptr_t s
     return 0;
 }
 
-static int
-clear_entries_mid(vspace_t *vspace, vspace_mid_level_t *level, int level_num, uintptr_t start, uintptr_t end, bool only_reserved)
+static int clear_entries_mid(vspace_t *vspace, vspace_mid_level_t *level, int level_num, uintptr_t start, uintptr_t end,
+                             bool only_reserved)
 {
     /* walk entries at this level until we complete this range */
     while (start < end) {
@@ -176,9 +178,9 @@ clear_entries_mid(vspace_t *vspace, vspace_mid_level_t *level, int level_num, ui
         if (next_table != EMPTY) {
             int error;
             if (level_num == 1) {
-                error = clear_entries_bottom(vspace, (vspace_bottom_level_t*)next_table, start, next_start, only_reserved);
+                error = clear_entries_bottom(vspace, (vspace_bottom_level_t *)next_table, start, next_start, only_reserved);
             } else {
-                error = clear_entries_mid(vspace, (vspace_mid_level_t*)next_table, level_num - 1, start, next_start, only_reserved);
+                error = clear_entries_mid(vspace, (vspace_mid_level_t *)next_table, level_num - 1, start, next_start, only_reserved);
             }
             if (error) {
                 return error;
@@ -189,8 +191,8 @@ clear_entries_mid(vspace_t *vspace, vspace_mid_level_t *level, int level_num, ui
     return 0;
 }
 
-static int
-update_entries_bottom(vspace_t *vspace, vspace_bottom_level_t *level, uintptr_t start, uintptr_t end, seL4_CPtr cap, uintptr_t cookie)
+static int update_entries_bottom(vspace_t *vspace, vspace_bottom_level_t *level, uintptr_t start, uintptr_t end,
+                                 seL4_CPtr cap, uintptr_t cookie)
 {
     while (start < end) {
         int index = INDEX_FOR_LEVEL(start, 0);
@@ -206,8 +208,8 @@ update_entries_bottom(vspace_t *vspace, vspace_bottom_level_t *level, uintptr_t 
     return 0;
 }
 
-static int
-update_entries_mid(vspace_t *vspace, vspace_mid_level_t *level, int level_num, uintptr_t start, uintptr_t end, seL4_CPtr cap, uintptr_t cookie)
+static int update_entries_mid(vspace_t *vspace, vspace_mid_level_t *level, int level_num, uintptr_t start,
+                              uintptr_t end, seL4_CPtr cap, uintptr_t cookie)
 {
     /* walk entries at this level until we complete this range */
     while (start < end) {
@@ -235,9 +237,9 @@ update_entries_mid(vspace_t *vspace, vspace_mid_level_t *level, int level_num, u
         }
         int error;
         if (level_num == 1) {
-            error = update_entries_bottom(vspace, (vspace_bottom_level_t*)next_table, start, next_start, cap, cookie);
+            error = update_entries_bottom(vspace, (vspace_bottom_level_t *)next_table, start, next_start, cap, cookie);
         } else {
-            error = update_entries_mid(vspace, (vspace_mid_level_t*)next_table, level_num - 1, start, next_start, cap, cookie);
+            error = update_entries_mid(vspace, (vspace_mid_level_t *)next_table, level_num - 1, start, next_start, cap, cookie);
         }
         if (error) {
             return error;
@@ -247,8 +249,8 @@ update_entries_mid(vspace_t *vspace, vspace_mid_level_t *level, int level_num, u
     return 0;
 }
 
-static bool
-is_reserved_or_empty_bottom(vspace_bottom_level_t *level, uintptr_t start, uintptr_t end, uintptr_t good, uintptr_t bad)
+static bool is_reserved_or_empty_bottom(vspace_bottom_level_t *level, uintptr_t start, uintptr_t end, uintptr_t good,
+                                        uintptr_t bad)
 {
     while (start < end) {
         int index = INDEX_FOR_LEVEL(start, 0);
@@ -261,8 +263,8 @@ is_reserved_or_empty_bottom(vspace_bottom_level_t *level, uintptr_t start, uintp
     return true;
 }
 
-static bool
-is_reserved_or_empty_mid(vspace_mid_level_t *level, int level_num, uintptr_t start, uintptr_t end, uintptr_t good, uintptr_t bad)
+static bool is_reserved_or_empty_mid(vspace_mid_level_t *level, int level_num, uintptr_t start, uintptr_t end,
+                                     uintptr_t good, uintptr_t bad)
 {
     /* walk entries at this level until we complete this range */
     while (start < end) {
@@ -281,9 +283,9 @@ is_reserved_or_empty_mid(vspace_mid_level_t *level, int level_num, uintptr_t sta
         if (next_table != good) {
             int succ;
             if (level_num == 1) {
-                succ = is_reserved_or_empty_bottom((vspace_bottom_level_t*)next_table, start, next_start, good, bad);
+                succ = is_reserved_or_empty_bottom((vspace_bottom_level_t *)next_table, start, next_start, good, bad);
             } else {
-                succ = is_reserved_or_empty_mid((vspace_mid_level_t*)next_table, level_num - 1, start, next_start, good, bad);
+                succ = is_reserved_or_empty_mid((vspace_mid_level_t *)next_table, level_num - 1, start, next_start, good, bad);
             }
             if (!succ) {
                 return false;
@@ -295,8 +297,7 @@ is_reserved_or_empty_mid(vspace_mid_level_t *level, int level_num, uintptr_t sta
 }
 
 /* update entry in page table and handle large pages */
-static inline int
-update_entries(vspace_t *vspace, uintptr_t vaddr, seL4_CPtr cap, size_t size_bits, uintptr_t cookie)
+static inline int update_entries(vspace_t *vspace, uintptr_t vaddr, seL4_CPtr cap, size_t size_bits, uintptr_t cookie)
 {
     uintptr_t start = vaddr;
     uintptr_t end = vaddr + BIT(size_bits);
@@ -304,23 +305,20 @@ update_entries(vspace_t *vspace, uintptr_t vaddr, seL4_CPtr cap, size_t size_bit
     return update_entries_mid(vspace, data->top_level, VSPACE_NUM_LEVELS - 1, start, end, cap, cookie);
 }
 
-static inline int
-reserve_entries_range(vspace_t *vspace, uintptr_t start, uintptr_t end, bool preserve_frames)
+static inline int reserve_entries_range(vspace_t *vspace, uintptr_t start, uintptr_t end, bool preserve_frames)
 {
     sel4utils_alloc_data_t *data = get_alloc_data(vspace);
     return reserve_entries_mid(vspace, data->top_level, VSPACE_NUM_LEVELS - 1, start, end, preserve_frames);
 }
 
-static inline int
-reserve_entries(vspace_t *vspace, uintptr_t vaddr, size_t size_bits)
+static inline int reserve_entries(vspace_t *vspace, uintptr_t vaddr, size_t size_bits)
 {
     uintptr_t start = vaddr;
     uintptr_t end = vaddr + BIT(size_bits);
     return reserve_entries_range(vspace, start, end, false);
 }
 
-static inline int
-clear_entries_range(vspace_t *vspace, uintptr_t start, uintptr_t end, bool only_reserved)
+static inline int clear_entries_range(vspace_t *vspace, uintptr_t start, uintptr_t end, bool only_reserved)
 {
     sel4utils_alloc_data_t *data = get_alloc_data(vspace);
     int error = clear_entries_mid(vspace, data->top_level, VSPACE_NUM_LEVELS - 1, start, end, only_reserved);
@@ -335,54 +333,48 @@ clear_entries_range(vspace_t *vspace, uintptr_t start, uintptr_t end, bool only_
     return 0;
 }
 
-static inline int
-clear_entries(vspace_t *vspace, uintptr_t vaddr, size_t size_bits)
+static inline int clear_entries(vspace_t *vspace, uintptr_t vaddr, size_t size_bits)
 {
     uintptr_t start = vaddr;
     uintptr_t end = vaddr + BIT(size_bits);
     return clear_entries_range(vspace, start, end, false);
 }
 
-static inline bool
-is_reserved_or_empty_range(vspace_mid_level_t *top_level, uintptr_t start, uintptr_t end, uintptr_t good, uintptr_t bad)
+static inline bool is_reserved_or_empty_range(vspace_mid_level_t *top_level, uintptr_t start, uintptr_t end,
+                                              uintptr_t good, uintptr_t bad)
 {
     return is_reserved_or_empty_mid(top_level, VSPACE_NUM_LEVELS - 1, start, end, good, bad);
 }
 
-static inline bool
-is_reserved_or_empty(vspace_mid_level_t *top_level, uintptr_t vaddr, size_t size_bits, uintptr_t good, uintptr_t bad)
+static inline bool is_reserved_or_empty(vspace_mid_level_t *top_level, uintptr_t vaddr, size_t size_bits,
+                                        uintptr_t good, uintptr_t bad)
 {
     uintptr_t start = vaddr;
     uintptr_t end = vaddr + BIT(size_bits);
     return is_reserved_or_empty_range(top_level, start, end, good, bad);
 }
 
-static inline bool
-is_available_range(vspace_mid_level_t *top_level, uintptr_t start, uintptr_t end)
+static inline bool is_available_range(vspace_mid_level_t *top_level, uintptr_t start, uintptr_t end)
 {
     return is_reserved_or_empty_range(top_level, start, end, EMPTY, RESERVED);
 }
 
-static inline bool
-is_available(vspace_mid_level_t *top_level, uintptr_t vaddr, size_t size_bits)
+static inline bool is_available(vspace_mid_level_t *top_level, uintptr_t vaddr, size_t size_bits)
 {
     return is_reserved_or_empty(top_level, vaddr, size_bits, EMPTY, RESERVED);
 }
 
-static inline bool
-is_reserved_range(vspace_mid_level_t *top_level, uintptr_t start, uintptr_t end)
+static inline bool is_reserved_range(vspace_mid_level_t *top_level, uintptr_t start, uintptr_t end)
 {
     return is_reserved_or_empty_range(top_level, start, end, RESERVED, EMPTY);
 }
 
-static inline bool
-is_reserved(vspace_mid_level_t *top_level, uintptr_t vaddr, size_t size_bits)
+static inline bool is_reserved(vspace_mid_level_t *top_level, uintptr_t vaddr, size_t size_bits)
 {
     return is_reserved_or_empty(top_level, vaddr, size_bits, RESERVED, EMPTY);
 }
 
-static inline seL4_CPtr
-get_cap(vspace_mid_level_t *top, uintptr_t vaddr)
+static inline seL4_CPtr get_cap(vspace_mid_level_t *top, uintptr_t vaddr)
 {
     vspace_mid_level_t *level = top;
     for (int i = VSPACE_NUM_LEVELS - 1; i > 1; i--) {
@@ -391,18 +383,17 @@ get_cap(vspace_mid_level_t *top, uintptr_t vaddr)
         if (next == EMPTY || next == RESERVED) {
             return 0;
         }
-        level = (vspace_mid_level_t*)next;
+        level = (vspace_mid_level_t *)next;
     }
     uintptr_t next = level->table[INDEX_FOR_LEVEL(vaddr, 1)];
     if (next == EMPTY || next == RESERVED) {
         return 0;
     }
-    vspace_bottom_level_t *bottom = (vspace_bottom_level_t*)next;
+    vspace_bottom_level_t *bottom = (vspace_bottom_level_t *)next;
     return bottom->cap[INDEX_FOR_LEVEL(vaddr, 0)];
 }
 
-static inline uintptr_t
-get_cookie(vspace_mid_level_t *top, uintptr_t vaddr)
+static inline uintptr_t get_cookie(vspace_mid_level_t *top, uintptr_t vaddr)
 {
     vspace_mid_level_t *level = top;
     for (int i = VSPACE_NUM_LEVELS - 1; i > 1; i--) {
@@ -411,23 +402,26 @@ get_cookie(vspace_mid_level_t *top, uintptr_t vaddr)
         if (next == EMPTY || next == RESERVED) {
             return 0;
         }
-        level = (vspace_mid_level_t*)next;
+        level = (vspace_mid_level_t *)next;
     }
     uintptr_t next = level->table[INDEX_FOR_LEVEL(vaddr, 1)];
     if (next == EMPTY || next == RESERVED) {
         return 0;
     }
-    vspace_bottom_level_t *bottom = (vspace_bottom_level_t*)next;
+    vspace_bottom_level_t *bottom = (vspace_bottom_level_t *)next;
     return bottom->cookie[INDEX_FOR_LEVEL(vaddr, 0)];
 }
 
 /* Internal interface functions */
-int sel4utils_map_page_pd(vspace_t *vspace, seL4_CPtr cap, void *vaddr, seL4_CapRights_t rights, int cacheable, size_t size_bits);
+int sel4utils_map_page_pd(vspace_t *vspace, seL4_CPtr cap, void *vaddr, seL4_CapRights_t rights, int cacheable,
+                          size_t size_bits);
 #ifdef CONFIG_VTX
-int sel4utils_map_page_ept(vspace_t *vspace, seL4_CPtr cap, void *vaddr, seL4_CapRights_t rights, int cacheable, size_t size_bits);
+int sel4utils_map_page_ept(vspace_t *vspace, seL4_CPtr cap, void *vaddr, seL4_CapRights_t rights, int cacheable,
+                           size_t size_bits);
 #endif /* CONFIG_VTX */
 #ifdef CONFIG_IOMMU
-int sel4utils_map_page_iommu(vspace_t *vspace, seL4_CPtr cap, void *vaddr, seL4_CapRights_t rights, int cacheable, size_t size_bits);
+int sel4utils_map_page_iommu(vspace_t *vspace, seL4_CPtr cap, void *vaddr, seL4_CapRights_t rights, int cacheable,
+                             size_t size_bits);
 #endif /* CONFIG_IOMMU */
 
 /* interface functions */

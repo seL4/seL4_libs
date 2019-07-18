@@ -25,9 +25,12 @@
 #include "vmm/debug.h"
 #include "vmm/platform/guest_memory.h"
 
-static void push_guest_ram_region(guest_memory_t *guest_memory, uintptr_t start, size_t size, int allocated) {
+static void push_guest_ram_region(guest_memory_t *guest_memory, uintptr_t start, size_t size, int allocated)
+{
     int last_region = guest_memory->num_ram_regions;
-    if (size == 0) return;
+    if (size == 0) {
+        return;
+    }
     guest_memory->ram_regions = realloc(guest_memory->ram_regions, sizeof(guest_ram_region_t) * (last_region + 1));
     assert(guest_memory->ram_regions);
 
@@ -37,26 +40,32 @@ static void push_guest_ram_region(guest_memory_t *guest_memory, uintptr_t start,
     guest_memory->num_ram_regions++;
 }
 
-static int ram_region_cmp(const void *a, const void *b) {
+static int ram_region_cmp(const void *a, const void *b)
+{
     const guest_ram_region_t *aa = a;
     const guest_ram_region_t *bb = b;
     return aa->start - bb->start;
 }
 
-static void sort_guest_ram_regions(guest_memory_t *guest_memory) {
+static void sort_guest_ram_regions(guest_memory_t *guest_memory)
+{
     qsort(guest_memory->ram_regions, guest_memory->num_ram_regions, sizeof(guest_ram_region_t), ram_region_cmp);
 }
 
-static void guest_ram_remove_region(guest_memory_t *guest_memory, int region) {
+static void guest_ram_remove_region(guest_memory_t *guest_memory, int region)
+{
     assert(region < guest_memory->num_ram_regions);
     guest_memory->num_ram_regions--;
-    memcpy(&guest_memory->ram_regions[region], &guest_memory->ram_regions[region + 1], sizeof(guest_ram_region_t) * (guest_memory->num_ram_regions - region));
+    memcpy(&guest_memory->ram_regions[region], &guest_memory->ram_regions[region + 1],
+           sizeof(guest_ram_region_t) * (guest_memory->num_ram_regions - region));
     /* realloc it smaller */
-    guest_memory->ram_regions = realloc(guest_memory->ram_regions, sizeof(guest_ram_region_t) * guest_memory->num_ram_regions);
+    guest_memory->ram_regions = realloc(guest_memory->ram_regions,
+                                        sizeof(guest_ram_region_t) * guest_memory->num_ram_regions);
     assert(guest_memory->ram_regions);
 }
 
-static void collapse_guest_ram_regions(guest_memory_t *guest_memory) {
+static void collapse_guest_ram_regions(guest_memory_t *guest_memory)
+{
     int i;
     for (i = 1; i < guest_memory->num_ram_regions;) {
         /* Only collapse regions with the same allocation flag that are contiguous */
@@ -73,7 +82,8 @@ static void collapse_guest_ram_regions(guest_memory_t *guest_memory) {
     }
 }
 
-static int expand_guest_ram_region(guest_memory_t *guest_memory, uintptr_t start, size_t bytes) {
+static int expand_guest_ram_region(guest_memory_t *guest_memory, uintptr_t start, size_t bytes)
+{
     /* blindly put a new region at the end */
     push_guest_ram_region(guest_memory, start, bytes, 0);
     /* sort the region we just added */
@@ -83,7 +93,8 @@ static int expand_guest_ram_region(guest_memory_t *guest_memory, uintptr_t start
     return 0;
 }
 
-uintptr_t guest_ram_largest_free_region_start(guest_memory_t *guest_memory) {
+uintptr_t guest_ram_largest_free_region_start(guest_memory_t *guest_memory)
+{
     int largest = -1;
     int i;
     /* find a first region */
@@ -102,7 +113,8 @@ uintptr_t guest_ram_largest_free_region_start(guest_memory_t *guest_memory) {
     return guest_memory->ram_regions[largest].start;
 }
 
-void print_guest_ram_regions(guest_memory_t *guest_memory) {
+void print_guest_ram_regions(guest_memory_t *guest_memory)
+{
     int i;
     for (i = 0; i < guest_memory->num_ram_regions; i++) {
         char size_char = 'B';
@@ -123,7 +135,8 @@ void print_guest_ram_regions(guest_memory_t *guest_memory) {
     }
 }
 
-void guest_ram_mark_allocated(guest_memory_t *guest_memory, uintptr_t start, size_t bytes) {
+void guest_ram_mark_allocated(guest_memory_t *guest_memory, uintptr_t start, size_t bytes)
+{
     /* Find the region */
     int i;
     int region = -1;
@@ -148,7 +161,8 @@ void guest_ram_mark_allocated(guest_memory_t *guest_memory, uintptr_t start, siz
     collapse_guest_ram_regions(guest_memory);
 }
 
-uintptr_t guest_ram_allocate(guest_memory_t *guest_memory, size_t bytes) {
+uintptr_t guest_ram_allocate(guest_memory_t *guest_memory, size_t bytes)
+{
     /* Do the obvious dumb search through the regions */
     for (int i = 0; i < guest_memory->num_ram_regions; i++) {
         if (!guest_memory->ram_regions[i].allocated && guest_memory->ram_regions[i].size >= bytes) {
@@ -161,7 +175,8 @@ uintptr_t guest_ram_allocate(guest_memory_t *guest_memory, size_t bytes) {
     return 0;
 }
 
-static int vmm_alloc_guest_ram_one_to_one(vmm_t *vmm, size_t bytes) {
+static int vmm_alloc_guest_ram_one_to_one(vmm_t *vmm, size_t bytes)
+{
     int ret;
     int i;
     int page_size = vmm->page_size;
@@ -187,13 +202,15 @@ static int vmm_alloc_guest_ram_one_to_one(vmm_t *vmm, size_t bytes) {
             ZF_LOGE("Allocated frame has no physical address");
             return -1;
         }
-        reservation_t reservation = vspace_reserve_range_at(&guest_memory->vspace, (void*)paddr, BIT(page_size), seL4_AllRights, 1);
+        reservation_t reservation = vspace_reserve_range_at(&guest_memory->vspace, (void *)paddr, BIT(page_size),
+                                                            seL4_AllRights, 1);
         if (!reservation.res) {
             ZF_LOGI("Failed to reserve address 0x%x in guest vspace. Skipping frame and leaking memory!", (unsigned int)paddr);
             continue;
         }
         /* Map in */
-        ret = vspace_map_pages_at_vaddr(&guest_memory->vspace, &objects[i].cptr, NULL, (void*)paddr, 1, page_size, reservation);
+        ret = vspace_map_pages_at_vaddr(&guest_memory->vspace, &objects[i].cptr, NULL, (void *)paddr, 1, page_size,
+                                        reservation);
         if (ret) {
             ZF_LOGE("Failed to map page %d/%d into guest vspace at 0x%x\n", i, num_pages, (unsigned int)paddr);
             return -1;
@@ -215,7 +232,8 @@ static int vmm_alloc_guest_ram_one_to_one(vmm_t *vmm, size_t bytes) {
     return 0;
 }
 
-int vmm_alloc_guest_device_at(vmm_t *vmm, uintptr_t start, size_t bytes) {
+int vmm_alloc_guest_device_at(vmm_t *vmm, uintptr_t start, size_t bytes)
+{
     int page_size = vmm->page_size;
     int num_pages = ROUND_UP(bytes, BIT(page_size)) >> page_size;
     int ret;
@@ -223,16 +241,21 @@ int vmm_alloc_guest_device_at(vmm_t *vmm, uintptr_t start, size_t bytes) {
     guest_memory_t *guest_memory = &vmm->guest_mem;
     uintptr_t page_start = ROUND_DOWN(start, BIT(page_size));
     printf("Add guest memory region 0x%x-0x%x\n", (unsigned int)start, (unsigned int)(start + bytes));
-    printf("Will be allocating region 0x%x-0x%x after page alignment\n", (unsigned int)page_start, (unsigned int)(page_start + num_pages * BIT(page_size)));
+    printf("Will be allocating region 0x%x-0x%x after page alignment\n", (unsigned int)page_start,
+           (unsigned int)(page_start + num_pages * BIT(page_size)));
     for (i = 0; i < num_pages; i++) {
-        reservation_t reservation = vspace_reserve_range_at(&guest_memory->vspace, (void*)(page_start + i * BIT(page_size)), 1, seL4_AllRights, 1);
+        reservation_t reservation = vspace_reserve_range_at(&guest_memory->vspace, (void *)(page_start + i * BIT(page_size)), 1,
+                                                            seL4_AllRights, 1);
         if (!reservation.res) {
-            ZF_LOGI("Failed to create reservation for guest memory page 0x%x size %d, assuming already allocated", (unsigned int)(page_start + i * BIT(page_size)), page_size);
+            ZF_LOGI("Failed to create reservation for guest memory page 0x%x size %d, assuming already allocated",
+                    (unsigned int)(page_start + i * BIT(page_size)), page_size);
             continue;
         }
-        ret = vspace_new_pages_at_vaddr(&guest_memory->vspace, (void*)(page_start + i * BIT(page_size)), 1, page_size, reservation);
+        ret = vspace_new_pages_at_vaddr(&guest_memory->vspace, (void *)(page_start + i * BIT(page_size)), 1, page_size,
+                                        reservation);
         if (ret) {
-            ZF_LOGE("Failed to create page 0x%x size %d in guest memory region", (unsigned int)(page_start + i * BIT(page_size)), page_size);
+            ZF_LOGE("Failed to create page 0x%x size %d in guest memory region", (unsigned int)(page_start + i * BIT(page_size)),
+                    page_size);
             return -1;
         }
         vspace_free_reservation(&guest_memory->vspace, reservation);
@@ -240,38 +263,46 @@ int vmm_alloc_guest_device_at(vmm_t *vmm, uintptr_t start, size_t bytes) {
     return 0;
 }
 
-static int vmm_map_guest_device_reservation(vmm_t *vmm, uintptr_t paddr, size_t bytes, reservation_t reservation, uintptr_t map_base) {
+static int vmm_map_guest_device_reservation(vmm_t *vmm, uintptr_t paddr, size_t bytes, reservation_t reservation,
+                                            uintptr_t map_base)
+{
     int page_size = vmm->page_size;
     int error;
     guest_memory_t *guest_memory = &vmm->guest_mem;
-    ZF_LOGI("Mapping passthrough device region 0x%x-0x%x to 0x%x", (unsigned int)paddr, (unsigned int)(paddr + bytes), (unsigned int)map_base);
+    ZF_LOGI("Mapping passthrough device region 0x%x-0x%x to 0x%x", (unsigned int)paddr, (unsigned int)(paddr + bytes),
+            (unsigned int)map_base);
     /* Go through and try and map all the frames */
     uintptr_t current_paddr;
     uintptr_t current_map;
-    for (current_paddr = paddr, current_map = map_base; current_paddr < paddr + bytes; current_paddr += BIT(page_size), current_map += BIT(page_size)) {
+    for (current_paddr = paddr, current_map = map_base; current_paddr < paddr + bytes;
+         current_paddr += BIT(page_size), current_map += BIT(page_size)) {
         cspacepath_t path;
         error = vka_cspace_alloc_path(&vmm->vka, &path);
         if (error) {
             ZF_LOGE("Failed to allocate cslot");
             return error;
         }
-        error = simple_get_frame_cap(&vmm->host_simple, (void*)current_paddr, page_size, &path);
+        error = simple_get_frame_cap(&vmm->host_simple, (void *)current_paddr, page_size, &path);
         uintptr_t cookie;
         bool allocated = false;
         if (error) {
             /* attempt to allocate */
             allocated = true;
-            error = vka_utspace_alloc_at(&vmm->vka, &path, kobject_get_type(KOBJECT_FRAME, page_size), page_size, current_paddr, &cookie);
+            error = vka_utspace_alloc_at(&vmm->vka, &path, kobject_get_type(KOBJECT_FRAME, page_size), page_size, current_paddr,
+                                         &cookie);
         }
         if (error) {
-            ZF_LOGE("Failed to find device frame 0x%x size 0x%x for region 0x%x 0x%x", (unsigned int)current_paddr, (unsigned int)BIT(page_size), (unsigned int)paddr, (unsigned int)bytes);
+            ZF_LOGE("Failed to find device frame 0x%x size 0x%x for region 0x%x 0x%x", (unsigned int)current_paddr,
+                    (unsigned int)BIT(page_size), (unsigned int)paddr, (unsigned int)bytes);
             vka_cnode_delete(&path);
             vka_cspace_free(&vmm->vka, path.capPtr);
             return error;
         }
-        error = vspace_map_pages_at_vaddr(&guest_memory->vspace, &path.capPtr, NULL, (void*)current_map, 1, page_size, reservation);
+        error = vspace_map_pages_at_vaddr(&guest_memory->vspace, &path.capPtr, NULL, (void *)current_map, 1, page_size,
+                                          reservation);
         if (error) {
-            ZF_LOGE("Failed to map device page 0x%x at 0x%x from region 0x%x 0x%x\n", (unsigned int)current_paddr, (unsigned int)current_map, (unsigned int)paddr, (unsigned int)bytes);
+            ZF_LOGE("Failed to map device page 0x%x at 0x%x from region 0x%x 0x%x\n", (unsigned int)current_paddr,
+                    (unsigned int)current_map, (unsigned int)paddr, (unsigned int)bytes);
             if (allocated) {
                 vka_utspace_free(&vmm->vka, kobject_get_type(KOBJECT_FRAME, page_size), page_size, cookie);
             }
@@ -283,14 +314,16 @@ static int vmm_map_guest_device_reservation(vmm_t *vmm, uintptr_t paddr, size_t 
     return 0;
 }
 
-uintptr_t vmm_map_guest_device(vmm_t *vmm, uintptr_t paddr, size_t bytes, size_t align) {
+uintptr_t vmm_map_guest_device(vmm_t *vmm, uintptr_t paddr, size_t bytes, size_t align)
+{
     int error;
     /* Reserve a region that is guaranteed to have an aligned region in it */
     guest_memory_t *guest_memory = &vmm->guest_mem;
     uintptr_t reservation_base;
-    reservation_t reservation = vspace_reserve_range(&guest_memory->vspace, bytes + align, seL4_AllRights, 1, (void**)&reservation_base);
+    reservation_t reservation = vspace_reserve_range(&guest_memory->vspace, bytes + align, seL4_AllRights, 1,
+                                                     (void **)&reservation_base);
     if (!reservation.res) {
-        ZF_LOGE("Failed to allocate reservation of size %zu when mapping memory from %p", bytes + align, (void*)paddr);
+        ZF_LOGE("Failed to allocate reservation of size %zu when mapping memory from %p", bytes + align, (void *)paddr);
         return 0;
     }
     /* Round up reservation so it is aligned. Hopefully it also ends up page aligned with the
@@ -304,13 +337,15 @@ uintptr_t vmm_map_guest_device(vmm_t *vmm, uintptr_t paddr, size_t bytes, size_t
     return map_base;
 }
 
-int vmm_map_guest_device_at(vmm_t *vmm, uintptr_t vaddr, uintptr_t paddr, size_t bytes) {
+int vmm_map_guest_device_at(vmm_t *vmm, uintptr_t vaddr, uintptr_t paddr, size_t bytes)
+{
     int error;
     /* Reserve a region that is guaranteed to have an aligned region in it */
     guest_memory_t *guest_memory = &vmm->guest_mem;
-    reservation_t reservation = vspace_reserve_range_at(&guest_memory->vspace, (void*)vaddr, bytes, seL4_AllRights, 1);
+    reservation_t reservation = vspace_reserve_range_at(&guest_memory->vspace, (void *)vaddr, bytes, seL4_AllRights, 1);
     if (!reservation.res) {
-        ZF_LOGE("Failed to allocate reservation of size %zu when mapping device from %p at %p", bytes, (void*)paddr, (void*)vaddr);
+        ZF_LOGE("Failed to allocate reservation of size %zu when mapping device from %p at %p", bytes, (void *)paddr,
+                (void *)vaddr);
         return -1;
     }
     error = vmm_map_guest_device_reservation(vmm, paddr, bytes, reservation, vaddr);
@@ -318,7 +353,8 @@ int vmm_map_guest_device_at(vmm_t *vmm, uintptr_t vaddr, uintptr_t paddr, size_t
     return error;
 }
 
-int vmm_alloc_guest_ram_at(vmm_t *vmm, uintptr_t start, size_t bytes) {
+int vmm_alloc_guest_ram_at(vmm_t *vmm, uintptr_t start, size_t bytes)
+{
     int ret;
     ret = vmm_alloc_guest_device_at(vmm, start, bytes);
     if (ret) {
@@ -333,7 +369,8 @@ int vmm_alloc_guest_ram_at(vmm_t *vmm, uintptr_t start, size_t bytes) {
     return 0;
 }
 
-int vmm_alloc_guest_ram(vmm_t *vmm, size_t bytes, int onetoone) {
+int vmm_alloc_guest_ram(vmm_t *vmm, size_t bytes, int onetoone)
+{
     if (onetoone) {
         return vmm_alloc_guest_ram_one_to_one(vmm, bytes);
     }
@@ -343,7 +380,8 @@ int vmm_alloc_guest_ram(vmm_t *vmm, size_t bytes, int onetoone) {
     uintptr_t base;
     int error;
     int num_pages = ROUND_UP(bytes, BIT(page_size)) >> page_size;
-    reservation_t reservation = vspace_reserve_range(&guest_memory->vspace, num_pages * BIT(page_size), seL4_AllRights, 1, (void**)&base);
+    reservation_t reservation = vspace_reserve_range(&guest_memory->vspace, num_pages * BIT(page_size), seL4_AllRights, 1,
+                                                     (void **)&base);
     if (!reservation.res) {
         ZF_LOGE("Failed to create reservation for %zu guest ram bytes", bytes);
         return -1;
@@ -357,12 +395,14 @@ int vmm_alloc_guest_ram(vmm_t *vmm, size_t bytes, int onetoone) {
             ZF_LOGE("Failed to allocate path");
             return -1;
         }
-        cookie = allocman_utspace_alloc(vmm->allocman, page_size, kobject_get_type(KOBJECT_FRAME, page_size), &path, true, &error);
+        cookie = allocman_utspace_alloc(vmm->allocman, page_size, kobject_get_type(KOBJECT_FRAME, page_size), &path, true,
+                                        &error);
         if (error) {
             ZF_LOGE("Failed to allocate page");
             return -1;
         }
-        error = vspace_map_pages_at_vaddr(&guest_memory->vspace, &path.capPtr, &cookie, (void*)(base + i * BIT(page_size)), 1, page_size, reservation);
+        error = vspace_map_pages_at_vaddr(&guest_memory->vspace, &path.capPtr, &cookie, (void *)(base + i * BIT(page_size)), 1,
+                                          page_size, reservation);
         if (error) {
             ZF_LOGE("Failed to map page");
             return -1;

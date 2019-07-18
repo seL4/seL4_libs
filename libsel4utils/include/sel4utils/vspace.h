@@ -56,7 +56,8 @@ typedef struct vspace_bottom_level {
     uintptr_t cookie[VSPACE_LEVEL_SIZE];
 } vspace_bottom_level_t;
 
-typedef int(*sel4utils_map_page_fn)(vspace_t *vspace, seL4_CPtr cap, void *vaddr, seL4_CapRights_t rights, int cacheable, size_t size_bits);
+typedef int(*sel4utils_map_page_fn)(vspace_t *vspace, seL4_CPtr cap, void *vaddr, seL4_CapRights_t rights,
+                                    int cacheable, size_t size_bits);
 
 struct sel4utils_res {
     uintptr_t start;
@@ -80,8 +81,7 @@ typedef struct sel4utils_alloc_data {
     sel4utils_res_t *reservation_head;
 } sel4utils_alloc_data_t;
 
-static inline sel4utils_res_t *
-reservation_to_res(reservation_t res)
+static inline sel4utils_res_t *reservation_to_res(reservation_t res)
 {
     return (sel4utils_res_t *) res.res;
 }
@@ -195,34 +195,32 @@ int sel4utils_bootstrap_vspace_with_bootinfo(vspace_t *vspace, sel4utils_alloc_d
 /* Wrapper function that configures a vspaceator such that all allocated objects are not
  * tracked.
  */
-static inline int
-sel4utils_get_vspace_leaky(vspace_t *loader, vspace_t *new_vspace, sel4utils_alloc_data_t *data,
-                           vka_t *vka, seL4_CPtr vspace_root)
+static inline int sel4utils_get_vspace_leaky(vspace_t *loader, vspace_t *new_vspace, sel4utils_alloc_data_t *data,
+                                             vka_t *vka, seL4_CPtr vspace_root)
 {
     return sel4utils_get_vspace(loader, new_vspace, data, vka, vspace_root,
                                 (vspace_allocated_object_fn) NULL, NULL);
 }
 
 #ifdef CONFIG_VTX
-static inline int
-sel4utils_get_vspace_ept_leaky(vspace_t *loader, vspace_t *new_vspace,
-                               vka_t *vka, seL4_CPtr vspace_root)
+static inline int sel4utils_get_vspace_ept_leaky(vspace_t *loader, vspace_t *new_vspace,
+                                                 vka_t *vka, seL4_CPtr vspace_root)
 {
     return sel4utils_get_vspace_ept(loader, new_vspace, vka, vspace_root,
                                     (vspace_allocated_object_fn) NULL, NULL);
 }
 #endif /* CONFIG_VTX */
 
-static inline int
-sel4utils_bootstrap_vspace_with_bootinfo_leaky(vspace_t *vspace, sel4utils_alloc_data_t *data, seL4_CPtr vspace_root,
-                                               vka_t *vka, seL4_BootInfo *info)
+static inline int sel4utils_bootstrap_vspace_with_bootinfo_leaky(vspace_t *vspace, sel4utils_alloc_data_t *data,
+                                                                 seL4_CPtr vspace_root,
+                                                                 vka_t *vka, seL4_BootInfo *info)
 {
     return sel4utils_bootstrap_vspace_with_bootinfo(vspace, data, vspace_root, vka, info, NULL, NULL);
 }
 
-static inline int
-sel4utils_bootstrap_vspace_leaky(vspace_t *vspace, sel4utils_alloc_data_t *data, seL4_CPtr vspace_root, vka_t *vka,
-                                 void *existing_frames[])
+static inline int sel4utils_bootstrap_vspace_leaky(vspace_t *vspace, sel4utils_alloc_data_t *data,
+                                                   seL4_CPtr vspace_root, vka_t *vka,
+                                                   void *existing_frames[])
 {
     return sel4utils_bootstrap_vspace(vspace, data, vspace_root, vka, NULL, NULL, existing_frames);
 }

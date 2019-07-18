@@ -27,8 +27,7 @@
  * @param permissions elf permissions
  * @return seL4 permissions
  */
-static inline seL4_CapRights_t
-rights_from_elf(unsigned long permissions)
+static inline seL4_CapRights_t rights_from_elf(unsigned long permissions)
 {
     bool canRead = permissions & PF_R || permissions & PF_X;
     bool canWrite = permissions & PF_W;
@@ -36,11 +35,10 @@ rights_from_elf(unsigned long permissions)
     return seL4_CapRights_new(false, false, canRead, canWrite);
 }
 
-static int
-load_segment(vspace_t *loadee_vspace, vspace_t *loader_vspace,
-             vka_t *loadee_vka, vka_t *loader_vka,
-             char *src, size_t file_size, int num_regions,
-             sel4utils_elf_region_t regions[num_regions], int region_index)
+static int load_segment(vspace_t *loadee_vspace, vspace_t *loader_vspace,
+                        vka_t *loadee_vka, vka_t *loader_vka,
+                        char *src, size_t file_size, int num_regions,
+                        sel4utils_elf_region_t regions[num_regions], int region_index)
 {
     int error = seL4_NoError;
     sel4utils_elf_region_t region = regions[region_index];
@@ -66,7 +64,7 @@ load_segment(vspace_t *loadee_vspace, vspace_t *loader_vspace,
     unsigned int pos = 0;
     while (pos < segment_size && error == seL4_NoError) {
         void *loader_vaddr = 0;
-        void *loadee_vaddr = (void *) ((seL4_Word)ROUND_DOWN(dst, PAGE_SIZE_4K));
+        void *loadee_vaddr = (void *)((seL4_Word)ROUND_DOWN(dst, PAGE_SIZE_4K));
 
         /* Find the reservation that this frame belongs to.
          * The reservation may belong to an adjacent region */
@@ -77,14 +75,14 @@ load_segment(vspace_t *loadee_vspace, vspace_t *loader_vspace,
                 ZF_LOGE("Invalid regions: bad elf file.");
                 return 1;
             }
-            reservation = regions[region_index-1].reservation;
+            reservation = regions[region_index - 1].reservation;
         } else if (loadee_vaddr + (MIN(segment_size - pos, PAGE_SIZE_4K)) >
-            (region.reservation_vstart + region.reservation_size)) {
+                   (region.reservation_vstart + region.reservation_size)) {
             if ((region_index + 1) >= num_regions) {
                 ZF_LOGE("Invalid regions: bad elf file.");
                 return 1;
             }
-            reservation = regions[region_index+1].reservation;
+            reservation = regions[region_index + 1].reservation;
         } else {
             reservation = region.reservation;
         }
@@ -124,7 +122,7 @@ load_segment(vspace_t *loadee_vspace, vspace_t *loader_vspace,
         /* finally copy the data */
         int nbytes = PAGE_SIZE_4K - (dst & PAGE_MASK_4K);
         if (pos < file_size) {
-            memcpy(loader_vaddr + (dst % PAGE_SIZE_4K), (void*)src, MIN(nbytes, file_size - pos));
+            memcpy(loader_vaddr + (dst % PAGE_SIZE_4K), (void *)src, MIN(nbytes, file_size - pos));
         }
         /* Note that we don't need to explicitly zero frames as seL4 gives us zero'd frames */
 
@@ -167,10 +165,10 @@ load_segment(vspace_t *loadee_vspace, vspace_t *loader_vspace,
  *
  * @return 0 on success.
  */
-static int
-load_segments(vspace_t *loadee_vspace, vspace_t *loader_vspace,
-             vka_t *loadee_vka, vka_t *loader_vka, elf_t *elf_file,
-             int num_regions, sel4utils_elf_region_t regions[num_regions]) {
+static int load_segments(vspace_t *loadee_vspace, vspace_t *loader_vspace,
+                         vka_t *loadee_vka, vka_t *loader_vka, elf_t *elf_file,
+                         int num_regions, sel4utils_elf_region_t regions[num_regions])
+{
     for (int i = 0; i < num_regions; i++) {
         int segment_index = regions[i].segment_index;
         char *source_addr = elf_getProgramSegment(elf_file, segment_index);
@@ -188,12 +186,13 @@ load_segments(vspace_t *loadee_vspace, vspace_t *loader_vspace,
     return 0;
 }
 
-static bool is_loadable_section(elf_t *elf_file, int index) {
+static bool is_loadable_section(elf_t *elf_file, int index)
+{
     return elf_getProgramHeaderType(elf_file, index) == PT_LOAD;
 }
 
-static int
-count_loadable_regions(elf_t *elf_file) {
+static int count_loadable_regions(elf_t *elf_file)
+{
     int num_headers = elf_getNumProgramHeaders(elf_file);
     int loadable_headers = 0;
 
@@ -206,8 +205,7 @@ count_loadable_regions(elf_t *elf_file) {
     return loadable_headers;
 }
 
-int
-sel4utils_elf_num_regions(elf_t *elf_file)
+int sel4utils_elf_num_regions(elf_t *elf_file)
 {
     return count_loadable_regions(elf_file);
 }
@@ -225,23 +223,24 @@ sel4utils_elf_num_regions(elf_t *elf_file)
  *
  * @return 0 on success.
  */
-static int
-create_reservations(vspace_t *loadee, size_t total_regions, sel4utils_elf_region_t regions[total_regions], int anywhere) {
+static int create_reservations(vspace_t *loadee, size_t total_regions, sel4utils_elf_region_t regions[total_regions],
+                               int anywhere)
+{
     for (int i = 0; i < total_regions; i++) {
         if (regions[i].reservation_size == 0) {
             ZF_LOGD("Empty reservation detected. This should indicate that this segments"
-                "data is entirely stored in other section reservations.");
+                    "data is entirely stored in other section reservations.");
             continue;
         }
         if (anywhere) {
             regions[i].reservation = vspace_reserve_range(loadee, regions[i].reservation_size,
-                regions[i].rights, regions[i].cacheable, (void**)&regions[i].reservation_vstart);
+                                                          regions[i].rights, regions[i].cacheable, (void **)&regions[i].reservation_vstart);
         } else {
             regions[i].reservation = vspace_reserve_range_at(loadee,
-                                                          regions[i].reservation_vstart,
-                                                          regions[i].reservation_size,
-                                                          regions[i].rights,
-                                                          regions[i].cacheable);
+                                                             regions[i].reservation_vstart,
+                                                             regions[i].reservation_size,
+                                                             regions[i].rights,
+                                                             regions[i].cacheable);
         }
         if (regions[i].reservation.res == NULL) {
             ZF_LOGE("Failed to make reservation: %p, %zd", regions[i].reservation_vstart, regions[i].reservation_size);
@@ -266,8 +265,8 @@ create_reservations(vspace_t *loadee, size_t total_regions, sel4utils_elf_region
  *
  * @return 0 on success.
  */
-static int
-cap_writes_check_move_frame(seL4_CapRights_t a, seL4_CapRights_t b, bool *result) {
+static int cap_writes_check_move_frame(seL4_CapRights_t a, seL4_CapRights_t b, bool *result)
+{
     if (!seL4_CapRights_get_capAllowRead(a) || !seL4_CapRights_get_capAllowRead(b)) {
         ZF_LOGE("Regions do not have read rights.");
         return -1;
@@ -298,8 +297,8 @@ cap_writes_check_move_frame(seL4_CapRights_t a, seL4_CapRights_t b, bool *result
  *
  * @return 0 on success.
  */
-static int
-prepare_reservations(size_t total_regions, sel4utils_elf_region_t regions[total_regions]) {
+static int prepare_reservations(size_t total_regions, sel4utils_elf_region_t regions[total_regions])
+{
     uintptr_t prev_res_start = 0;
     size_t prev_res_size = 0;
     seL4_CapRights_t prev_rights = seL4_NoRights;
@@ -321,14 +320,14 @@ prepare_reservations(size_t total_regions, sel4utils_elf_region_t regions[total_
             if (should_move) {
                 /* Frame needs to be moved from the last reservation into this one */
                 ZF_LOGF_IF(i == 0, "Should not need to adjust first element in list");
-                ZF_LOGF_IF(regions[i-1].reservation_size < PAGE_SIZE_4K, "Invalid previous region");
-                regions[i-1].reservation_size -= PAGE_SIZE_4K;
+                ZF_LOGF_IF(regions[i - 1].reservation_size < PAGE_SIZE_4K, "Invalid previous region");
+                regions[i - 1].reservation_size -= PAGE_SIZE_4K;
             } else {
                 /* Frame stays in previous reservation and we update our reservation start address and size */
                 current_res_start = ROUND_UP((prev_res_start + prev_res_size) + 1, PAGE_SIZE_4K);
                 current_res_size = current_res_top - current_res_start;
                 ZF_LOGF_IF(ROUND_UP(regions[i].size, PAGE_SIZE_4K) - current_res_size == PAGE_SIZE_4K,
-                    "Regions shouldn't overlap by more than a single 4k frame");
+                           "Regions shouldn't overlap by more than a single 4k frame");
             }
         }
         /* Record this reservation layout */
@@ -352,8 +351,8 @@ prepare_reservations(size_t total_regions, sel4utils_elf_region_t regions[total_
  *
  * @return 0 on success.
  */
-static int
-read_regions(elf_t *elf_file, size_t total_regions, sel4utils_elf_region_t regions[total_regions]) {
+static int read_regions(elf_t *elf_file, size_t total_regions, sel4utils_elf_region_t regions[total_regions])
+{
     int num_headers = elf_getNumProgramHeaders(elf_file);
     int region_id = 0;
     for (int i = 0; i < num_headers; i++) {
@@ -391,8 +390,8 @@ read_regions(elf_t *elf_file, size_t total_regions, sel4utils_elf_region_t regio
  *
  * @return 1 for a > b, -1 for b > a
  */
-static int
-compare_regions(sel4utils_elf_region_t a, sel4utils_elf_region_t b) {
+static int compare_regions(sel4utils_elf_region_t a, sel4utils_elf_region_t b)
+{
     if (a.elf_vstart + a.size <= b.elf_vstart) {
         return -1;
     } else if (b.elf_vstart + b.size <= a.elf_vstart) {
@@ -418,9 +417,9 @@ compare_regions(sel4utils_elf_region_t a, sel4utils_elf_region_t b) {
  *
  * @return 0 on success.
  */
-static int
-elf_reserve_regions_in_vspace(vspace_t *loadee, elf_t *elf_file,
-    int num_regions, sel4utils_elf_region_t regions[num_regions], int mapanywhere) {
+static int elf_reserve_regions_in_vspace(vspace_t *loadee, elf_t *elf_file,
+                                         int num_regions, sel4utils_elf_region_t regions[num_regions], int mapanywhere)
+{
     int error = read_regions(elf_file, num_regions, regions);
     if (error) {
         ZF_LOGE("Failed to read regions");
@@ -443,21 +442,20 @@ elf_reserve_regions_in_vspace(vspace_t *loadee, elf_t *elf_file,
     return 0;
 }
 
-static void *
-entry_point(elf_t *elf_file) {
+static void *entry_point(elf_t *elf_file)
+{
     uint64_t entry_point = elf_getEntryPoint(elf_file);
-    if ((uint32_t) (entry_point >> 32) != 0) {
+    if ((uint32_t)(entry_point >> 32) != 0) {
         ZF_LOGE("ERROR: this code hasn't been tested for 64bit!");
         return NULL;
     }
     assert(entry_point != 0);
-    return (void*)(seL4_Word)entry_point;
+    return (void *)(seL4_Word)entry_point;
 
 }
 
 
-void *
-sel4utils_elf_reserve(vspace_t *loadee, elf_t *elf_file, sel4utils_elf_region_t *regions)
+void *sel4utils_elf_reserve(vspace_t *loadee, elf_t *elf_file, sel4utils_elf_region_t *regions)
 {
     /* Count number of loadable segments */
     int num_regions = count_loadable_regions(elf_file);
@@ -473,8 +471,8 @@ sel4utils_elf_reserve(vspace_t *loadee, elf_t *elf_file, sel4utils_elf_region_t 
     return entry_point(elf_file);
 }
 
-void *
-sel4utils_elf_load_record_regions(vspace_t *loadee, vspace_t *loader, vka_t *loadee_vka, vka_t *loader_vka, elf_t *elf_file, sel4utils_elf_region_t *regions, int mapanywhere)
+void *sel4utils_elf_load_record_regions(vspace_t *loadee, vspace_t *loader, vka_t *loadee_vka, vka_t *loader_vka,
+                                        elf_t *elf_file, sel4utils_elf_region_t *regions, int mapanywhere)
 {
     /* Calculate number of loadable regions.  Use stack array if one wasn't passed in */
     int num_regions = count_loadable_regions(elf_file);
@@ -514,7 +512,7 @@ sel4utils_elf_load_record_regions(vspace_t *loadee, vspace_t *loader, vka_t *loa
 
 uintptr_t sel4utils_elf_get_vsyscall(elf_t *elf_file)
 {
-    uintptr_t* addr = (uintptr_t*)sel4utils_elf_get_section(elf_file, "__vsyscall", NULL);
+    uintptr_t *addr = (uintptr_t *)sel4utils_elf_get_section(elf_file, "__vsyscall", NULL);
     if (addr) {
         return *addr;
     } else {
@@ -522,7 +520,7 @@ uintptr_t sel4utils_elf_get_vsyscall(elf_t *elf_file)
     }
 }
 
-uintptr_t sel4utils_elf_get_section(elf_t *elf_file, const char *section_name, uint64_t* section_size)
+uintptr_t sel4utils_elf_get_section(elf_t *elf_file, const char *section_name, uint64_t *section_size)
 {
     /* See if we can find the section */
     size_t section_id;
@@ -537,20 +535,17 @@ uintptr_t sel4utils_elf_get_section(elf_t *elf_file, const char *section_name, u
     }
 }
 
-void *
-sel4utils_elf_load(vspace_t *loadee, vspace_t *loader, vka_t *loadee_vka, vka_t *loader_vka, elf_t *elf_file)
+void *sel4utils_elf_load(vspace_t *loadee, vspace_t *loader, vka_t *loadee_vka, vka_t *loader_vka, elf_t *elf_file)
 {
     return sel4utils_elf_load_record_regions(loadee, loader, loadee_vka, loader_vka, elf_file, NULL, 0);
 }
 
-uint32_t
-sel4utils_elf_num_phdrs(elf_t *elf_file)
+uint32_t sel4utils_elf_num_phdrs(elf_t *elf_file)
 {
     return elf_getNumProgramHeaders(elf_file);
 }
 
-void
-sel4utils_elf_read_phdrs(elf_t *elf_file, size_t max_phdrs, Elf_Phdr *phdrs)
+void sel4utils_elf_read_phdrs(elf_t *elf_file, size_t max_phdrs, Elf_Phdr *phdrs)
 {
     size_t num_phdrs = elf_getNumProgramHeaders(elf_file);
     for (size_t i = 0; i < num_phdrs && i < max_phdrs; i++) {

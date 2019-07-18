@@ -25,7 +25,7 @@
 
 /* Threads and processes use this struct as both need scheduling config parameters */
 typedef struct sched_params {
-     /* seL4 priority for the thread to be scheduled with. */
+    /* seL4 priority for the thread to be scheduled with. */
     uint8_t priority;
     /* seL4 maximum controlled priority for the thread. */
     uint8_t mcp;
@@ -49,7 +49,7 @@ typedef struct sched_params {
 typedef struct sel4utils_thread_config {
     /* fault_endpoint endpoint to set as the threads fault endpoint. Can be seL4_CapNull. */
     seL4_CPtr fault_endpoint;
-   /* root of the cspace to start the thread in */
+    /* root of the cspace to start the thread in */
     seL4_CNode cspace;
     /* data for cspace access */
     seL4_Word cspace_root_data;
@@ -67,9 +67,9 @@ typedef struct sel4utils_thread_config {
     seL4_CPtr reply;
 } sel4utils_thread_config_t;
 
-static inline sched_params_t
-sched_params_periodic(sched_params_t params, simple_t *simple, seL4_Word core, uint64_t period_us,
-                      uint64_t budget_us, seL4_Word extra_refills, seL4_Word badge)
+static inline sched_params_t sched_params_periodic(sched_params_t params, simple_t *simple, seL4_Word core,
+                                                   uint64_t period_us,
+                                                   uint64_t budget_us, seL4_Word extra_refills, seL4_Word badge)
 {
     if (!config_set(CONFIG_KERNEL_RT)) {
         ZF_LOGW("Setting sched params on non-RT kernel will have no effect");
@@ -83,14 +83,13 @@ sched_params_periodic(sched_params_t params, simple_t *simple, seL4_Word core, u
     return params;
 }
 
-static inline sched_params_t
-sched_params_round_robin(sched_params_t params, simple_t *simple, seL4_Word core, uint64_t timeslice_us)
+static inline sched_params_t sched_params_round_robin(sched_params_t params, simple_t *simple, seL4_Word core,
+                                                      uint64_t timeslice_us)
 {
     return sched_params_periodic(params, simple, core, timeslice_us, timeslice_us, 0, 0);
 }
 
-static inline sched_params_t
-sched_params_core(sched_params_t params, seL4_Word core)
+static inline sched_params_t sched_params_core(sched_params_t params, seL4_Word core)
 {
     if (!config_set(CONFIG_KERNEL_RT)) {
         ZF_LOGW("Setting core on RT kernel will have no effect - sched ctrl required");
@@ -99,46 +98,42 @@ sched_params_core(sched_params_t params, seL4_Word core)
     return params;
 }
 
-static inline sel4utils_thread_config_t
-thread_config_create_reply(sel4utils_thread_config_t config)
+static inline sel4utils_thread_config_t thread_config_create_reply(sel4utils_thread_config_t config)
 {
     config.create_reply = true;
     return config;
 }
 
-static inline sel4utils_thread_config_t
-thread_config_reply(sel4utils_thread_config_t config, seL4_CPtr reply)
+static inline sel4utils_thread_config_t thread_config_reply(sel4utils_thread_config_t config, seL4_CPtr reply)
 {
     config.create_reply = false;
     config.reply = reply;
     return config;
 }
 
-static inline sel4utils_thread_config_t
-thread_config_sched_context(sel4utils_thread_config_t config, seL4_CPtr sched_context)
+static inline sel4utils_thread_config_t thread_config_sched_context(sel4utils_thread_config_t config,
+                                                                    seL4_CPtr sched_context)
 {
     config.sched_params.create_sc = false;
     config.sched_params.sched_context = sched_context;
     return config;
 }
 
-static inline sel4utils_thread_config_t
-thread_config_cspace(sel4utils_thread_config_t config, seL4_CPtr cspace_root, seL4_Word cspace_root_data)
+static inline sel4utils_thread_config_t thread_config_cspace(sel4utils_thread_config_t config, seL4_CPtr cspace_root,
+                                                             seL4_Word cspace_root_data)
 {
     config.cspace = cspace_root;
     config.cspace_root_data = cspace_root_data;
     return config;
 }
 
-static inline sel4utils_thread_config_t
-thread_config_auth(sel4utils_thread_config_t config, seL4_CPtr tcb)
+static inline sel4utils_thread_config_t thread_config_auth(sel4utils_thread_config_t config, seL4_CPtr tcb)
 {
     config.sched_params.auth = tcb;
     return config;
 }
 
-static inline sel4utils_thread_config_t
-thread_config_new(simple_t *simple)
+static inline sel4utils_thread_config_t thread_config_new(simple_t *simple)
 {
     sel4utils_thread_config_t config = {0};
     seL4_Word data = api_make_guard_skip_word(seL4_WordBits - simple_get_cnode_size_bits(simple));
@@ -146,44 +141,40 @@ thread_config_new(simple_t *simple)
     return thread_config_cspace(config, simple_get_cnode(simple), data);
 }
 
-static inline sel4utils_thread_config_t
-thread_config_priority(sel4utils_thread_config_t config, uint8_t priority)
+static inline sel4utils_thread_config_t thread_config_priority(sel4utils_thread_config_t config, uint8_t priority)
 {
     config.sched_params.priority = priority;
     return config;
 }
 
-static inline sel4utils_thread_config_t
-thread_config_mcp(sel4utils_thread_config_t config, uint8_t mcp)
+static inline sel4utils_thread_config_t thread_config_mcp(sel4utils_thread_config_t config, uint8_t mcp)
 {
     config.sched_params.mcp = mcp;
     return config;
 }
 
-static inline sel4utils_thread_config_t
-thread_config_stack_size(sel4utils_thread_config_t config, seL4_Word size)
+static inline sel4utils_thread_config_t thread_config_stack_size(sel4utils_thread_config_t config, seL4_Word size)
 {
     config.stack_size = size;
     config.custom_stack_size = true;
     return config;
 }
 
-static inline sel4utils_thread_config_t
-thread_config_no_ipc_buffer(sel4utils_thread_config_t config)
+static inline sel4utils_thread_config_t thread_config_no_ipc_buffer(sel4utils_thread_config_t config)
 {
     config.no_ipc_buffer = true;
     return config;
 }
 
-static inline sel4utils_thread_config_t
-thread_config_fault_endpoint(sel4utils_thread_config_t config, seL4_CPtr fault_ep)
+static inline sel4utils_thread_config_t thread_config_fault_endpoint(sel4utils_thread_config_t config,
+                                                                     seL4_CPtr fault_ep)
 {
     config.fault_endpoint = fault_ep;
     return config;
 }
 
-static inline sel4utils_thread_config_t
-thread_config_default(simple_t *simple, seL4_CPtr cnode, seL4_Word data, seL4_CPtr fault_ep, uint8_t prio)
+static inline sel4utils_thread_config_t thread_config_default(simple_t *simple, seL4_CPtr cnode, seL4_Word data,
+                                                              seL4_CPtr fault_ep, uint8_t prio)
 {
     sel4utils_thread_config_t config = thread_config_new(simple);
     config = thread_config_cspace(config, cnode, data);

@@ -18,8 +18,7 @@
 #include <sel4/sel4.h>
 #include <utils/util.h>
 
-void
-debug_print_bootinfo(seL4_BootInfo *info)
+void debug_print_bootinfo(seL4_BootInfo *info)
 {
 
     printf("Node %lu of %lu\n", (long)info->nodeID, (long)info->numNodes);
@@ -41,7 +40,8 @@ debug_print_bootinfo(seL4_BootInfo *info)
         int index = info->untypedList[i].sizeBits;
         assert(index < ARRAY_SIZE(sizes));
         sizes[index]++;
-        printf("%p | %zu | %d\n", (void*)info->untypedList[i].paddr, (size_t)info->untypedList[i].sizeBits, (int)info->untypedList[i].isDevice);
+        printf("%p | %zu | %d\n", (void *)info->untypedList[i].paddr, (size_t)info->untypedList[i].sizeBits,
+               (int)info->untypedList[i].isDevice);
     }
 
     printf("Untyped summary\n");

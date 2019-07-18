@@ -47,8 +47,7 @@ uintptr_t morecore_top = (uintptr_t) &morecore_area[CONFIG_LIB_SEL4_MUSLC_SYS_MO
    returns 0 if failure, returns newbrk if success.
 */
 
-long
-sys_brk(va_list ap)
+long sys_brk(va_list ap)
 {
 
     uintptr_t ret;
@@ -68,8 +67,7 @@ sys_brk(va_list ap)
 
 /* Large mallocs will result in muslc calling mmap, so we do a minimal implementation
    here to support that. We make a bunch of assumptions in the process */
-long
-sys_mmap_impl(void *addr, size_t length, int prot, int flags, int fd, off_t offset)
+long sys_mmap_impl(void *addr, size_t length, int prot, int flags, int fd, off_t offset)
 {
     if (flags & MAP_ANONYMOUS) {
         /* Check that we don't try and allocate more than exists */
@@ -84,8 +82,7 @@ sys_mmap_impl(void *addr, size_t length, int prot, int flags, int fd, off_t offs
     return -ENOMEM;
 }
 
-long
-sys_mremap(va_list ap)
+long sys_mremap(va_list ap)
 {
     assert(!"not implemented");
     return -ENOMEM;
@@ -116,8 +113,7 @@ uintptr_t morecore_top = 0;
 
 static uintptr_t brk_start;
 
-static void
-init_morecore_region(void)
+static void init_morecore_region(void)
 {
     if (morecore_base == 0) {
         if (morecore_size == 0) {
@@ -128,8 +124,7 @@ init_morecore_region(void)
     }
 }
 
-static long
-sys_brk_static(va_list ap)
+static long sys_brk_static(va_list ap)
 {
     uintptr_t ret;
     uintptr_t newbrk = va_arg(ap, uintptr_t);
@@ -148,8 +143,7 @@ sys_brk_static(va_list ap)
     return ret;
 }
 
-static long
-sys_brk_dynamic(va_list ap)
+static long sys_brk_dynamic(va_list ap)
 {
 
     uintptr_t ret;
@@ -167,8 +161,8 @@ sys_brk_dynamic(va_list ap)
     } else {
         /* try and map pages until this point */
         while (brk_start < newbrk) {
-            int error = vspace_new_pages_at_vaddr(muslc_this_vspace, (void*) brk_start, 1,
-                        seL4_PageBits, muslc_brk_reservation);
+            int error = vspace_new_pages_at_vaddr(muslc_this_vspace, (void *) brk_start, 1,
+                                                  seL4_PageBits, muslc_brk_reservation);
             if (error) {
                 ZF_LOGE("Mapping new pages to extend brk region failed\n");
                 return 0;
@@ -180,8 +174,7 @@ sys_brk_dynamic(va_list ap)
     return ret;
 }
 
-long
-sys_brk(va_list ap)
+long sys_brk(va_list ap)
 {
     if (morecore_area != NULL) {
         return sys_brk_static(ap);
@@ -197,8 +190,7 @@ sys_brk(va_list ap)
 
 /* Large mallocs will result in muslc calling mmap, so we do a minimal implementation
    here to support that. We make a bunch of assumptions in the process */
-static long
-sys_mmap_impl_static(void *addr, size_t length, int prot, int flags, int fd, off_t offset)
+static long sys_mmap_impl_static(void *addr, size_t length, int prot, int flags, int fd, off_t offset)
 {
     if (flags & MAP_ANONYMOUS) {
         /* ensure the morecore region is initialized */
@@ -215,8 +207,7 @@ sys_mmap_impl_static(void *addr, size_t length, int prot, int flags, int fd, off
     return -ENOMEM;
 }
 
-static long
-sys_mmap_impl_dynamic(void *addr, size_t length, int prot, int flags, int fd, off_t offset)
+static long sys_mmap_impl_dynamic(void *addr, size_t length, int prot, int flags, int fd, off_t offset)
 {
     if (!muslc_this_vspace) {
         ZF_LOGE("Need to assign vspace for mmap to work!\n");
@@ -233,8 +224,7 @@ sys_mmap_impl_dynamic(void *addr, size_t length, int prot, int flags, int fd, of
     return -ENOMEM;
 }
 
-long
-sys_mmap_impl(void *addr, size_t length, int prot, int flags, int fd, off_t offset)
+long sys_mmap_impl(void *addr, size_t length, int prot, int flags, int fd, off_t offset)
 {
     if (morecore_area != NULL) {
         return sys_mmap_impl_static(addr, length, prot, flags, fd, offset);
@@ -247,11 +237,10 @@ sys_mmap_impl(void *addr, size_t length, int prot, int flags, int fd, off_t offs
     }
 }
 
-static long
-sys_mremap_dynamic(va_list ap)
+static long sys_mremap_dynamic(va_list ap)
 {
 
-    void *old_address = va_arg(ap, void*);
+    void *old_address = va_arg(ap, void *);
     size_t old_size = va_arg(ap, size_t);
     size_t new_size = va_arg(ap, size_t);
     int flags = va_arg(ap, int);
@@ -265,7 +254,7 @@ sys_mremap_dynamic(va_list ap)
     assert(new_size >= old_size);
 
     if (flags & MREMAP_FIXED) {
-        new_address_arg = va_arg(ap, void*);
+        new_address_arg = va_arg(ap, void *);
     }
 
     /* first find all the old caps */
@@ -284,7 +273,8 @@ sys_mremap_dynamic(va_list ap)
     int error;
     void *new_address;
     int new_pages = new_size >> seL4_PageBits;
-    reservation_t reservation = vspace_reserve_range(muslc_this_vspace, new_pages * PAGE_SIZE_4K, seL4_AllRights, 1, &new_address);
+    reservation_t reservation = vspace_reserve_range(muslc_this_vspace, new_pages * PAGE_SIZE_4K, seL4_AllRights, 1,
+                                                     &new_address);
     if (!reservation.res) {
         ZF_LOGE("Failed to make reservation for remap\n");
         goto restore;
@@ -297,7 +287,8 @@ sys_mremap_dynamic(va_list ap)
         goto restore;
     }
     /* create any new pages */
-    error = vspace_new_pages_at_vaddr(muslc_this_vspace, new_address + num_pages * PAGE_SIZE_4K, new_pages - num_pages, seL4_PageBits, reservation);
+    error = vspace_new_pages_at_vaddr(muslc_this_vspace, new_address + num_pages * PAGE_SIZE_4K, new_pages - num_pages,
+                                      seL4_PageBits, reservation);
     if (error) {
         ZF_LOGE("Creating new pages for remap region failed\n");
         vspace_unmap_pages(muslc_this_vspace, new_address, num_pages, seL4_PageBits, VSPACE_PRESERVE);
@@ -312,20 +303,18 @@ restore:
     reservation = vspace_reserve_range_at(muslc_this_vspace, old_address, num_pages * PAGE_SIZE_4K, seL4_AllRights, 1);
     assert(reservation.res);
     error = vspace_map_pages_at_vaddr(muslc_this_vspace, caps, cookies, old_address,
-            num_pages, seL4_PageBits, reservation);
+                                      num_pages, seL4_PageBits, reservation);
     assert(!error);
     return -ENOMEM;
 }
 
-static long
-sys_mremap_static(va_list ap)
+static long sys_mremap_static(va_list ap)
 {
     assert(!"not implemented");
     return -ENOMEM;
 }
 
-long
-sys_mremap(va_list ap)
+long sys_mremap(va_list ap)
 {
     if (morecore_area != NULL) {
         return sys_mremap_static(ap);
@@ -341,17 +330,15 @@ sys_mremap(va_list ap)
 #endif
 
 /* This is a "dummy" implementation of sys_madvise() to satisfy free() in muslc. */
-long
-sys_madvise(va_list ap)
+long sys_madvise(va_list ap)
 {
     ZF_LOGV("calling dummy version of sys_madvise()\n");
     return 0;
 }
 
-long
-sys_mmap(va_list ap)
+long sys_mmap(va_list ap)
 {
-    void *addr = va_arg(ap, void*);
+    void *addr = va_arg(ap, void *);
     size_t length = va_arg(ap, size_t);
     int prot = va_arg(ap, int);
     int flags = va_arg(ap, int);
@@ -360,10 +347,9 @@ sys_mmap(va_list ap)
     return sys_mmap_impl(addr, length, prot, flags, fd, offset);
 }
 
-long
-sys_mmap2(va_list ap)
+long sys_mmap2(va_list ap)
 {
-    void *addr = va_arg(ap, void*);
+    void *addr = va_arg(ap, void *);
     size_t length = va_arg(ap, size_t);
     int prot = va_arg(ap, int);
     int flags = va_arg(ap, int);

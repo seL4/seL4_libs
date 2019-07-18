@@ -31,8 +31,7 @@ typedef int kobject_t;
  * Get the size (in bits) of the untyped memory required to
  * create an object of the given size.
  */
-static inline seL4_Word
-arch_kobject_get_size(kobject_t type, seL4_Word objectSize)
+static inline seL4_Word arch_kobject_get_size(kobject_t type, seL4_Word objectSize)
 {
     switch (type) {
     case KOBJECT_FRAME:
@@ -41,8 +40,8 @@ arch_kobject_get_size(kobject_t type, seL4_Word objectSize)
         case seL4_LargePageBits:
             return objectSize;
         }
-        /* If frame size was unknown fall through to default case as it
-         * might be a mode specific frame size */
+    /* If frame size was unknown fall through to default case as it
+     * might be a mode specific frame size */
     default:
         ZF_LOGE("Unknown object type");
         return 0;
@@ -50,8 +49,7 @@ arch_kobject_get_size(kobject_t type, seL4_Word objectSize)
 }
 
 
-static inline seL4_Word
-arch_kobject_get_type(int type, seL4_Word objectSize)
+static inline seL4_Word arch_kobject_get_type(int type, seL4_Word objectSize)
 {
     switch (type) {
     case KOBJECT_PAGE_DIRECTORY:
@@ -76,8 +74,8 @@ arch_kobject_get_type(int type, seL4_Word objectSize)
             return -1;
         }
     default:
-          ZF_LOGE("Unknown object type %d", type);
-          return -1;
+        ZF_LOGE("Unknown object type %d", type);
+        return -1;
     }
 }
 

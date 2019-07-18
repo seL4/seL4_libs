@@ -39,8 +39,7 @@ static bool do_buffer_printf = false;
 static test_result_t current_test_result = SUCCESS;
 
 #undef printf
-void
-sel4test_printf(const char *string)
+void sel4test_printf(const char *string)
 {
     if (!do_buffer_printf) {
         printf("%s", string);

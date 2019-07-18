@@ -29,10 +29,7 @@ add_config_library(sel4serialserver "${configure_string}")
 set(deps src/clientapi.c src/parentapi.c src/server.c)
 
 add_library(sel4serialserver STATIC EXCLUDE_FROM_ALL ${deps})
-target_include_directories(sel4serialserver
-    PUBLIC
-        include
-)
+target_include_directories(sel4serialserver PUBLIC include)
 target_link_libraries(
     sel4serialserver
     PUBLIC

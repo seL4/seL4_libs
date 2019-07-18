@@ -27,8 +27,7 @@ static inline int vka_alloc_vspace_root(vka_t *vka, vka_object_t *result)
  * Get the size (in bits) of the untyped memory required to create an object of
  * the given size.
  */
-static inline unsigned long
-vka_arm_mode_get_object_size(seL4_Word objectType)
+static inline unsigned long vka_arm_mode_get_object_size(seL4_Word objectType)
 {
     switch (objectType) {
     case seL4_ARM_SectionObject:

@@ -222,14 +222,12 @@ void sel4utils_print_fault_message(seL4_MessageInfo_t tag, const char *name);
  */
 int sel4utils_set_sched_affinity(sel4utils_thread_t *thread, sched_params_t params);
 
-static inline seL4_TCB
-sel4utils_get_tcb(sel4utils_thread_t *thread)
+static inline seL4_TCB sel4utils_get_tcb(sel4utils_thread_t *thread)
 {
     return thread->tcb.cptr;
 }
 
-static inline int
-sel4utils_suspend_thread(sel4utils_thread_t *thread)
+static inline int sel4utils_suspend_thread(sel4utils_thread_t *thread)
 {
     return seL4_TCB_Suspend(thread->tcb.cptr);
 }

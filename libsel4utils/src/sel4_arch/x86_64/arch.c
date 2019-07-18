@@ -18,8 +18,7 @@
 #include <utils/stack.h>
 #include <stdbool.h>
 
-int
-sel4utils_arch_init_context(void *entry_point, void *stack_top, seL4_UserContext *context)
+int sel4utils_arch_init_context(void *entry_point, void *stack_top, seL4_UserContext *context)
 {
     context->rsp = (seL4_Word) stack_top;
     /* set edx to zero in case we are setting this when spawning a process as
@@ -29,11 +28,10 @@ sel4utils_arch_init_context(void *entry_point, void *stack_top, seL4_UserContext
     return 0;
 }
 
-int
-sel4utils_arch_init_context_with_args(sel4utils_thread_entry_fn entry_point,
-                                      void *arg0, void *arg1, void *arg2,
-                                      bool local_stack, void *stack_top, seL4_UserContext *context,
-                                      vka_t *vka, vspace_t *local_vspace, vspace_t *remote_vspace)
+int sel4utils_arch_init_context_with_args(sel4utils_thread_entry_fn entry_point,
+                                          void *arg0, void *arg1, void *arg2,
+                                          bool local_stack, void *stack_top, seL4_UserContext *context,
+                                          vka_t *vka, vspace_t *local_vspace, vspace_t *remote_vspace)
 {
 
     if (!IS_ALIGNED((uintptr_t)stack_top, STACK_CALL_ALIGNMENT_BITS)) {
@@ -45,7 +43,7 @@ sel4utils_arch_init_context_with_args(sel4utils_thread_entry_fn entry_point,
      * by entry_point, the stack pointer is aligned as if a return address had
      * been pushed onto the stack, which is what the compiler assumes */
     uintptr_t stack_top_after_call = (uintptr_t) stack_top - sizeof(uintptr_t);
-    sel4utils_arch_init_context(entry_point, (void*)stack_top_after_call, context);
+    sel4utils_arch_init_context(entry_point, (void *)stack_top_after_call, context);
     context->rdi = (seL4_Word) arg0;
     context->rsi = (seL4_Word) arg1;
     /* if we are setting args then we must not be spawning a process, therefore

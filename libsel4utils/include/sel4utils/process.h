@@ -246,7 +246,8 @@ seL4_CPtr sel4utils_move_cap_to_process(sel4utils_process_t *process, cspacepath
  *
  * @return 0 on failure, otherwise the slot in the cspace where the new cap is.
  */
-seL4_CPtr sel4utils_mint_cap_to_process(sel4utils_process_t *process, cspacepath_t src, seL4_CapRights_t rights, seL4_Word data);
+seL4_CPtr sel4utils_mint_cap_to_process(sel4utils_process_t *process, cspacepath_t src, seL4_CapRights_t rights,
+                                        seL4_Word data);
 
 /**
  * Destroy a process.
@@ -297,4 +298,5 @@ seL4_CPtr sel4utils_process_init_cap(void *data, seL4_CPtr cap);
  *
  * @return 0 on success.
  */
-int sel4utils_copy_timer_caps_to_process(timer_objects_t *to, timer_objects_t *from, vka_t *vka, sel4utils_process_t *process);
+int sel4utils_copy_timer_caps_to_process(timer_objects_t *to, timer_objects_t *from, vka_t *vka,
+                                         sel4utils_process_t *process);

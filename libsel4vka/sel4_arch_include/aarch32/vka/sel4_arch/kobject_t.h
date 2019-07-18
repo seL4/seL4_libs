@@ -29,11 +29,10 @@ typedef int kobject_t;
  * Get the size (in bits) of the untyped memory required to
  * create an object of the given size
  */
-static inline seL4_Word
-arm_mode_kobject_get_size(kobject_t type, seL4_Word objectSize)
+static inline seL4_Word arm_mode_kobject_get_size(kobject_t type, seL4_Word objectSize)
 {
     switch (type) {
-        /* ARM-specific frames. */
+    /* ARM-specific frames. */
     case KOBJECT_FRAME:
         switch (objectSize) {
         case seL4_SectionBits:
@@ -49,8 +48,7 @@ arm_mode_kobject_get_size(kobject_t type, seL4_Word objectSize)
     }
 }
 
-static inline seL4_Word
-arm_mode_kobject_get_type(kobject_t type, seL4_Word objectSize)
+static inline seL4_Word arm_mode_kobject_get_type(kobject_t type, seL4_Word objectSize)
 {
     switch (type) {
     case KOBJECT_FRAME:

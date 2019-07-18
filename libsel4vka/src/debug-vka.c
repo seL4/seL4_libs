@@ -115,7 +115,7 @@ static int cspace_alloc(void *data, seL4_CPtr *res)
 {
     assert(data != NULL);
 
-    state_t *s = (state_t*)data;
+    state_t *s = (state_t *)data;
     vka_t *v = s->underlying;
     int result = v->cspace_alloc(v->data, res);
     if (result == 0 && res != NULL) {
@@ -143,7 +143,7 @@ static void cspace_free(void *data, seL4_CPtr slot)
 {
     assert(data != NULL);
 
-    state_t *s = (state_t*)data;
+    state_t *s = (state_t *)data;
 
     if (slot != 0) {
         /* Let's assume malloc semantics, i.e. that it's always OK to free
@@ -163,7 +163,7 @@ static void cspace_make_path(void *data, seL4_CPtr slot, cspacepath_t *res)
 {
     assert(data != NULL);
 
-    state_t *s = (state_t*)data;
+    state_t *s = (state_t *)data;
     vka_t *v = s->underlying;
     v->cspace_make_path(v->data, slot, res);
 }
@@ -209,7 +209,7 @@ static int utspace_alloc(void *data, const cspacepath_t *dest, seL4_Word type,
 {
     assert(data != NULL);
 
-    state_t *s = (state_t*)data;
+    state_t *s = (state_t *)data;
 
     /* At this point I guess we could check that dest is a path that was
      * previously returned from cspace_make_path, but there seems to be nothing
@@ -226,11 +226,11 @@ static int utspace_alloc(void *data, const cspacepath_t *dest, seL4_Word type,
 }
 
 static int utspace_alloc_maybe_device(void *data, const cspacepath_t *dest, seL4_Word type,
-                         seL4_Word size_bits, bool can_use_dev, seL4_Word *res)
+                                      seL4_Word size_bits, bool can_use_dev, seL4_Word *res)
 {
     assert(data != NULL);
 
-    state_t *s = (state_t*)data;
+    state_t *s = (state_t *)data;
 
     vka_t *v = s->underlying;
     int result = v->utspace_alloc_maybe_device(v->data, dest, type, size_bits, can_use_dev, res);
@@ -245,7 +245,7 @@ static int utspace_alloc_at(void *data, const cspacepath_t *dest, seL4_Word type
 {
     assert(data != NULL);
 
-    state_t *s = (state_t*)data;
+    state_t *s = (state_t *)data;
 
     /* At this point I guess we could check that dest is a path that was
      * previously returned from cspace_make_path, but there seems to be nothing
@@ -271,11 +271,11 @@ static void untrack_obj(state_t *state, seL4_Word type, seL4_Word size_bits,
         if (state->live_objs[i].cookie == cookie) {
             if (state->live_objs[i].type != type) {
                 fatal("attempt to free object with type %d that was allocated "
-                    "with type %d", (int)type, (int)state->live_objs[i].type);
+                      "with type %d", (int)type, (int)state->live_objs[i].type);
             }
             if (state->live_objs[i].size_bits != size_bits) {
                 fatal("attempt to free object with size %d that was allocated "
-                    "with size %d", (int)size_bits, (int)state->live_objs[i].size_bits);
+                      "with size %d", (int)size_bits, (int)state->live_objs[i].size_bits);
             }
             state->live_objs[i].cookie = 0;
             return;
@@ -290,7 +290,7 @@ static void utspace_free(void *data, seL4_Word type, seL4_Word size_bits,
 {
     assert(data != NULL);
 
-    state_t *s = (state_t*)data;
+    state_t *s = (state_t *)data;
     vka_t *v = s->underlying;
     if (target != 0) {
         /* Again, assume malloc semantics that freeing NULL is fine. */
@@ -303,7 +303,7 @@ int vka_init_debugvka(vka_t *vka, vka_t *tracee)
 {
     assert(vka != NULL);
 
-    state_t *s = (state_t*)malloc(sizeof(state_t));
+    state_t *s = (state_t *)malloc(sizeof(state_t));
     if (s == NULL) {
         goto fail;
     }
@@ -313,7 +313,7 @@ int vka_init_debugvka(vka_t *vka, vka_t *tracee)
 
     s->live_slots_sz = live_slots_sz;
     if (live_slots_sz > 0) {
-        s->live_slots = (seL4_CPtr*)malloc(sizeof(seL4_CPtr) * live_slots_sz);
+        s->live_slots = (seL4_CPtr *)malloc(sizeof(seL4_CPtr) * live_slots_sz);
         if (s->live_slots == NULL) {
             goto fail;
         }
@@ -321,13 +321,13 @@ int vka_init_debugvka(vka_t *vka, vka_t *tracee)
 
     s->live_objs_sz = live_objs_sz;
     if (live_objs_sz > 0) {
-        s->live_objs = (struct obj*)malloc(sizeof(struct obj) * live_objs_sz);
+        s->live_objs = (struct obj *)malloc(sizeof(struct obj) * live_objs_sz);
         if (s->live_objs == NULL) {
             goto fail;
         }
     }
 
-    vka->data = (void*)s;
+    vka->data = (void *)s;
     vka->cspace_alloc = cspace_alloc;
     vka->cspace_make_path = cspace_make_path;
     vka->utspace_alloc = utspace_alloc;

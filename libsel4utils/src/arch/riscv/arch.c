@@ -15,8 +15,7 @@
 #include <sel4utils/thread.h>
 #include <stdbool.h>
 
-int
-sel4utils_arch_init_context(void *entry_point, void *stack_top, seL4_UserContext *context)
+int sel4utils_arch_init_context(void *entry_point, void *stack_top, seL4_UserContext *context)
 {
     context->pc = (seL4_Word) entry_point;
     context->sp = (seL4_Word) stack_top;
@@ -27,10 +26,9 @@ sel4utils_arch_init_context(void *entry_point, void *stack_top, seL4_UserContext
     return 0;
 }
 
-int
-sel4utils_arch_init_context_with_args(void *entry_point, void *arg0, void *arg1, void *arg2,
-                            bool local_stack, void *stack_top, seL4_UserContext *context,
-                            vka_t *vka, vspace_t *local_vspace, vspace_t *remote_vspace)
+int sel4utils_arch_init_context_with_args(void *entry_point, void *arg0, void *arg1, void *arg2,
+                                          bool local_stack, void *stack_top, seL4_UserContext *context,
+                                          vka_t *vka, vspace_t *local_vspace, vspace_t *remote_vspace)
 {
     extern char __global_pointer$[];
 

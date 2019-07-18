@@ -59,7 +59,8 @@ typedef void (*vka_cspace_free_fn)(void *data, seL4_CPtr slot);
  * @param res pointer to a location to store the cookie representing this allocation
  * @return 0 on success
  */
-typedef int (*vka_utspace_alloc_fn)(void *data, const cspacepath_t *dest, seL4_Word type, seL4_Word size_bits, seL4_Word *res);
+typedef int (*vka_utspace_alloc_fn)(void *data, const cspacepath_t *dest, seL4_Word type, seL4_Word size_bits,
+                                    seL4_Word *res);
 
 /**
  * Allocate a portion of an untyped into an object
@@ -72,7 +73,8 @@ typedef int (*vka_utspace_alloc_fn)(void *data, const cspacepath_t *dest, seL4_W
  * @param cookie pointer to a location to store the cookie representing this allocation
  * @return 0 on success
  */
-typedef int (*vka_utspace_alloc_at_fn)(void *data, const cspacepath_t *dest, seL4_Word type, seL4_Word size_bits, uintptr_t paddr, seL4_Word *cookie);
+typedef int (*vka_utspace_alloc_at_fn)(void *data, const cspacepath_t *dest, seL4_Word type, seL4_Word size_bits,
+                                       uintptr_t paddr, seL4_Word *cookie);
 
 /**
  * Allocate a portion of an untyped into an object
@@ -85,7 +87,8 @@ typedef int (*vka_utspace_alloc_at_fn)(void *data, const cspacepath_t *dest, seL
  * @param res pointer to a location to store the cookie representing this allocation
  * @return 0 on success
  */
-typedef int (*vka_utspace_alloc_maybe_device_fn)(void *data, const cspacepath_t *dest, seL4_Word type, seL4_Word size_bits, bool can_use_dev, seL4_Word *res);
+typedef int (*vka_utspace_alloc_maybe_device_fn)(void *data, const cspacepath_t *dest, seL4_Word type,
+                                                 seL4_Word size_bits, bool can_use_dev, seL4_Word *res);
 
 /**
  * Free a portion of an allocated untyped. Is the responsibility of the caller to
@@ -133,8 +136,7 @@ typedef struct vka {
     vka_utspace_paddr_fn utspace_paddr;
 } vka_t;
 
-static inline int
-vka_cspace_alloc(vka_t *vka, seL4_CPtr *res)
+static inline int vka_cspace_alloc(vka_t *vka, seL4_CPtr *res)
 {
     if (!vka) {
         ZF_LOGE("vka is NULL");
@@ -154,8 +156,7 @@ vka_cspace_alloc(vka_t *vka, seL4_CPtr *res)
     return vka->cspace_alloc(vka->data, res);
 }
 
-static inline void
-vka_cspace_make_path(vka_t *vka, seL4_CPtr slot, cspacepath_t *res)
+static inline void vka_cspace_make_path(vka_t *vka, seL4_CPtr slot, cspacepath_t *res)
 {
 
     if (!res) {
@@ -176,8 +177,7 @@ vka_cspace_make_path(vka_t *vka, seL4_CPtr slot, cspacepath_t *res)
 /*
  * Wrapper functions to make calls more convenient
  */
-static inline int
-vka_cspace_alloc_path(vka_t *vka, cspacepath_t *res)
+static inline int vka_cspace_alloc_path(vka_t *vka, cspacepath_t *res)
 {
     seL4_CPtr slot;
     int error = vka_cspace_alloc(vka, &slot);
@@ -189,8 +189,7 @@ vka_cspace_alloc_path(vka_t *vka, cspacepath_t *res)
     return error;
 }
 
-static inline void
-vka_cspace_free(vka_t *vka, seL4_CPtr slot)
+static inline void vka_cspace_free(vka_t *vka, seL4_CPtr slot)
 {
 #ifdef CONFIG_DEBUG_BUILD
     if (seL4_DebugCapIdentify(slot) != 0) {
@@ -207,14 +206,13 @@ vka_cspace_free(vka_t *vka, seL4_CPtr slot)
     vka->cspace_free(vka->data, slot);
 }
 
-static inline void
-vka_cspace_free_path(vka_t *vka, cspacepath_t path)
+static inline void vka_cspace_free_path(vka_t *vka, cspacepath_t path)
 {
     vka_cspace_free(vka, path.capPtr);
 }
 
-static inline int
-vka_utspace_alloc(vka_t *vka, const cspacepath_t *dest, seL4_Word type, seL4_Word size_bits, seL4_Word *res)
+static inline int vka_utspace_alloc(vka_t *vka, const cspacepath_t *dest, seL4_Word type, seL4_Word size_bits,
+                                    seL4_Word *res)
 {
     if (!vka) {
         ZF_LOGE("vka is NULL");
@@ -234,9 +232,8 @@ vka_utspace_alloc(vka_t *vka, const cspacepath_t *dest, seL4_Word type, seL4_Wor
     return vka->utspace_alloc(vka->data, dest, type, size_bits, res);
 }
 
-static inline int
-vka_utspace_alloc_maybe_device(vka_t *vka, const cspacepath_t *dest, seL4_Word type,
-                seL4_Word size_bits, bool can_use_dev, seL4_Word *res)
+static inline int vka_utspace_alloc_maybe_device(vka_t *vka, const cspacepath_t *dest, seL4_Word type,
+                                                 seL4_Word size_bits, bool can_use_dev, seL4_Word *res)
 {
     if (!vka) {
         ZF_LOGE("vka is NULL");
@@ -256,9 +253,8 @@ vka_utspace_alloc_maybe_device(vka_t *vka, const cspacepath_t *dest, seL4_Word t
     return vka->utspace_alloc_maybe_device(vka->data, dest, type, size_bits, can_use_dev, res);
 }
 
-static inline int
-vka_utspace_alloc_at(vka_t *vka, const cspacepath_t *dest, seL4_Word type, seL4_Word size_bits,
-                     uintptr_t paddr, seL4_Word *cookie)
+static inline int vka_utspace_alloc_at(vka_t *vka, const cspacepath_t *dest, seL4_Word type, seL4_Word size_bits,
+                                       uintptr_t paddr, seL4_Word *cookie)
 {
     if (!vka) {
         ZF_LOGE("vka is NULL");
@@ -276,8 +272,7 @@ vka_utspace_alloc_at(vka_t *vka, const cspacepath_t *dest, seL4_Word type, seL4_
     return vka->utspace_alloc_at(vka->data, dest, type, size_bits, paddr, cookie);
 }
 
-static inline void
-vka_utspace_free(vka_t *vka, seL4_Word type, seL4_Word size_bits, seL4_Word target)
+static inline void vka_utspace_free(vka_t *vka, seL4_Word type, seL4_Word size_bits, seL4_Word target)
 {
     if (!vka) {
         ZF_LOGE("vka is NULL");
@@ -295,8 +290,7 @@ vka_utspace_free(vka_t *vka, seL4_Word type, seL4_Word size_bits, seL4_Word targ
     vka->utspace_free(vka->data, type, size_bits, target);
 }
 
-static inline uintptr_t
-vka_utspace_paddr(vka_t *vka, seL4_Word target, seL4_Word type, seL4_Word size_bits)
+static inline uintptr_t vka_utspace_paddr(vka_t *vka, seL4_Word target, seL4_Word type, seL4_Word size_bits)
 {
 
     if (!vka) {

@@ -24,8 +24,7 @@
 #include <vka/object.h>
 
 #ifndef CONFIG_KERNEL_RT
-static inline int
-vka_cnode_saveCaller(const cspacepath_t* src)
+static inline int vka_cnode_saveCaller(const cspacepath_t *src)
 {
     return seL4_CNode_SaveCaller(
                /* _service */      src->root,
@@ -35,8 +34,7 @@ vka_cnode_saveCaller(const cspacepath_t* src)
 }
 #endif
 
-static inline int
-vka_cnode_copy(const cspacepath_t* dest, const cspacepath_t* src, seL4_CapRights_t rights)
+static inline int vka_cnode_copy(const cspacepath_t *dest, const cspacepath_t *src, seL4_CapRights_t rights)
 {
     return seL4_CNode_Copy(
                /* _service */      dest->root,
@@ -49,8 +47,7 @@ vka_cnode_copy(const cspacepath_t* dest, const cspacepath_t* src, seL4_CapRights
            );
 }
 
-static inline int
-vka_cnode_delete(const cspacepath_t* src)
+static inline int vka_cnode_delete(const cspacepath_t *src)
 {
     return seL4_CNode_Delete(
                /* _service */      src->root,
@@ -59,9 +56,8 @@ vka_cnode_delete(const cspacepath_t* src)
            );
 }
 
-static inline int
-vka_cnode_mint(const cspacepath_t* dest, const cspacepath_t* src,
-               seL4_CapRights_t rights, seL4_Word badge)
+static inline int vka_cnode_mint(const cspacepath_t *dest, const cspacepath_t *src,
+                                 seL4_CapRights_t rights, seL4_Word badge)
 {
     return seL4_CNode_Mint(
                /* _service */      dest->root,
@@ -75,8 +71,7 @@ vka_cnode_mint(const cspacepath_t* dest, const cspacepath_t* src,
            );
 }
 
-static inline int
-vka_cnode_move(const cspacepath_t* dest, const cspacepath_t* src)
+static inline int vka_cnode_move(const cspacepath_t *dest, const cspacepath_t *src)
 {
     return seL4_CNode_Move(
                /* _service */      dest->root,
@@ -88,9 +83,8 @@ vka_cnode_move(const cspacepath_t* dest, const cspacepath_t* src)
            );
 }
 
-static inline int
-vka_cnode_mutate(const cspacepath_t* dest, const cspacepath_t* src,
-                 seL4_Word badge)
+static inline int vka_cnode_mutate(const cspacepath_t *dest, const cspacepath_t *src,
+                                   seL4_Word badge)
 {
     return seL4_CNode_Mutate(
                /* _service */      dest->root,
@@ -103,8 +97,7 @@ vka_cnode_mutate(const cspacepath_t* dest, const cspacepath_t* src,
            );
 }
 
-static inline int
-vka_cnode_cancelBadgedSends(const cspacepath_t* src)
+static inline int vka_cnode_cancelBadgedSends(const cspacepath_t *src)
 {
     return seL4_CNode_CancelBadgedSends(
                /* _service */      src->root,
@@ -113,8 +106,7 @@ vka_cnode_cancelBadgedSends(const cspacepath_t* src)
            );
 }
 
-static inline int
-vka_cnode_revoke(const cspacepath_t* src)
+static inline int vka_cnode_revoke(const cspacepath_t *src)
 {
     return seL4_CNode_Revoke(
                /* _service */      src->root,
@@ -123,9 +115,8 @@ vka_cnode_revoke(const cspacepath_t* src)
            );
 }
 
-static inline int
-vka_cnode_rotate(const cspacepath_t *dest, seL4_Word dest_badge, const cspacepath_t *pivot,
-                 seL4_Word pivot_badge, const cspacepath_t *src)
+static inline int vka_cnode_rotate(const cspacepath_t *dest, seL4_Word dest_badge, const cspacepath_t *pivot,
+                                   seL4_Word pivot_badge, const cspacepath_t *src)
 {
     return seL4_CNode_Rotate(dest->root, dest->capPtr, dest->capDepth, dest_badge,
                              pivot->root, pivot->capPtr, pivot->capDepth, pivot_badge,
@@ -139,10 +130,11 @@ vka_cnode_rotate(const cspacepath_t *dest, seL4_Word dest_badge, const cspacepat
  *
  * size_bits is only relevant for dynamically sized objects - untypeds + captables
  */
-static inline int
-vka_untyped_retype(vka_object_t *untyped, int type, int size_bits, int num_objects, const cspacepath_t *dest)
+static inline int vka_untyped_retype(vka_object_t *untyped, int type, int size_bits, int num_objects,
+                                     const cspacepath_t *dest)
 {
     size_bits = vka_get_object_size(type, size_bits);
-    return seL4_Untyped_Retype(untyped->cptr, type, size_bits, dest->root, dest->dest, dest->destDepth, dest->offset, num_objects);
+    return seL4_Untyped_Retype(untyped->cptr, type, size_bits, dest->root, dest->dest, dest->destDepth, dest->offset,
+                               num_objects);
 }
 

@@ -16,8 +16,7 @@
 #include <sel4/sel4.h>
 #include <stdio.h>
 
-void
-debug_cap_identify(seL4_CPtr cap)
+void debug_cap_identify(seL4_CPtr cap)
 {
 #ifdef CONFIG_DEBUG_BUILD
     int type = seL4_DebugCapIdentify(cap);

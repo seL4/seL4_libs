@@ -50,15 +50,15 @@ typedef struct guest_vspace {
 #endif
 } guest_vspace_t;
 
-static int
-guest_vspace_map(vspace_t *vspace, seL4_CPtr cap, void *vaddr, seL4_CapRights_t rights,
-        int cacheable, size_t size_bits) {
+static int guest_vspace_map(vspace_t *vspace, seL4_CPtr cap, void *vaddr, seL4_CapRights_t rights,
+                            int cacheable, size_t size_bits)
+{
     struct sel4utils_alloc_data *data = get_alloc_data(vspace);
     int error;
     /* this type cast works because the alloc data was at the start of the struct
      * so it has the same address.
      * This conversion is guaranteed to work by the C standard */
-    guest_vspace_t *guest_vspace = (guest_vspace_t*) data;
+    guest_vspace_t *guest_vspace = (guest_vspace_t *) data;
     /* perfrom the ept mapping */
     error = sel4utils_map_page_ept(vspace, cap, vaddr, rights, cacheable, size_bits);
     if (error) {
@@ -76,15 +76,16 @@ guest_vspace_map(vspace_t *vspace, seL4_CPtr cap, void *vaddr, seL4_CapRights_t 
     error = vka_cnode_copy(&new_path, &orig_path, seL4_AllRights);
     assert(error == seL4_NoError);
     /* perform the regular mapping */
-    void *vmm_vaddr = vspace_map_pages(&guest_vspace->vmm_vspace, &new_path.capPtr, NULL, seL4_AllRights, 1, size_bits, cacheable);
-    if (!vmm_vaddr){
+    void *vmm_vaddr = vspace_map_pages(&guest_vspace->vmm_vspace, &new_path.capPtr, NULL, seL4_AllRights, 1, size_bits,
+                                       cacheable);
+    if (!vmm_vaddr) {
         ZF_LOGE("Failed to map into VMM vspace");
         return -1;
     }
     /* add translation information. give dummy cap value of 42 as it cannot be zero
      * but we really just want to store information in the cookie */
     error = update_entries(&guest_vspace->translation_vspace, (uintptr_t)vaddr, 42, size_bits, (uintptr_t)vmm_vaddr);
-    if (error){
+    if (error) {
         ZF_LOGE("Failed to add translation information");
         return error;
     }
@@ -125,9 +126,10 @@ guest_vspace_map(vspace_t *vspace, seL4_CPtr cap, void *vaddr, seL4_CapRights_t 
     return 0;
 }
 
-void guest_vspace_unmap(vspace_t *vspace, void *vaddr, size_t num_pages, size_t size_bits, vka_t *vka) {
+void guest_vspace_unmap(vspace_t *vspace, void *vaddr, size_t num_pages, size_t size_bits, vka_t *vka)
+{
     struct sel4utils_alloc_data *data = get_alloc_data(vspace);
-    guest_vspace_t *guest_vspace = (guest_vspace_t*) data;
+    guest_vspace_t *guest_vspace = (guest_vspace_t *) data;
 
     int error;
 
@@ -142,10 +144,10 @@ void guest_vspace_unmap(vspace_t *vspace, void *vaddr, size_t num_pages, size_t 
 
     for (int i = 0; i < num_pages; i++) {
 
-        void *page_vaddr = (void*)(vaddr + i * page_size);
+        void *page_vaddr = (void *)(vaddr + i * page_size);
 
         // look up vaddr in vmm vspace by consulting entry in translation vspace
-        void *vmm_vaddr = (void*)vspace_get_cookie(&guest_vspace->translation_vspace, page_vaddr);
+        void *vmm_vaddr = (void *)vspace_get_cookie(&guest_vspace->translation_vspace, page_vaddr);
 
         // remove mapping from vmm vspace
         vspace_unmap_pages(&guest_vspace->vmm_vspace, vmm_vaddr, 1 /* num pages */, size_bits, vka);
@@ -192,9 +194,10 @@ void guest_vspace_unmap(vspace_t *vspace, void *vaddr, size_t num_pages, size_t 
 }
 
 #ifdef CONFIG_IOMMU
-int vmm_guest_vspace_add_iospace(vspace_t *loader, vspace_t *vspace, seL4_CPtr iospace) {
+int vmm_guest_vspace_add_iospace(vspace_t *loader, vspace_t *vspace, seL4_CPtr iospace)
+{
     struct sel4utils_alloc_data *data = get_alloc_data(vspace);
-    guest_vspace_t *guest_vspace = (guest_vspace_t*) data;
+    guest_vspace_t *guest_vspace = (guest_vspace_t *) data;
 
     assert(!guest_vspace->done_mapping);
 
@@ -215,7 +218,8 @@ int vmm_guest_vspace_add_iospace(vspace_t *loader, vspace_t *vspace, seL4_CPtr i
 }
 #endif
 
-int vmm_get_guest_vspace(vspace_t *loader, vspace_t *vmm, vspace_t *new_vspace, vka_t *vka, seL4_CPtr page_directory) {
+int vmm_get_guest_vspace(vspace_t *loader, vspace_t *vmm, vspace_t *new_vspace, vka_t *vka, seL4_CPtr page_directory)
+{
     int error;
     guest_vspace_t *vspace = malloc(sizeof(*vspace));
     if (!vspace) {
@@ -229,12 +233,14 @@ int vmm_get_guest_vspace(vspace_t *loader, vspace_t *vmm, vspace_t *new_vspace, 
     assert(vspace->iospaces);
 #endif
     vspace->vmm_vspace = *vmm;
-    error = sel4utils_get_vspace(loader, &vspace->translation_vspace, &vspace->translation_vspace_data, vka, page_directory, NULL, NULL);
+    error = sel4utils_get_vspace(loader, &vspace->translation_vspace, &vspace->translation_vspace_data, vka, page_directory,
+                                 NULL, NULL);
     if (error) {
         ZF_LOGE("Failed to create translation vspace");
         return error;
     }
-    error = sel4utils_get_vspace_with_map(loader, new_vspace, &vspace->vspace_data, vka, page_directory, NULL, NULL, guest_vspace_map);
+    error = sel4utils_get_vspace_with_map(loader, new_vspace, &vspace->vspace_data, vka, page_directory, NULL, NULL,
+                                          guest_vspace_map);
     if (error) {
         ZF_LOGE("Failed to create guest vspace");
         return error;
@@ -247,22 +253,26 @@ int vmm_get_guest_vspace(vspace_t *loader, vspace_t *vmm, vspace_t *new_vspace, 
 
 /* Helpers for use with touch below */
 int vmm_guest_get_phys_data_help(uintptr_t addr, void *vaddr, size_t size,
-        size_t offset, void *cookie) {
+                                 size_t offset, void *cookie)
+{
     memcpy(cookie, vaddr, size);
 
     return 0;
 }
 
 int vmm_guest_set_phys_data_help(uintptr_t addr, void *vaddr, size_t size,
-        size_t offset, void *cookie) {
+                                 size_t offset, void *cookie)
+{
     memcpy(vaddr, cookie, size);
 
     return 0;
 }
 
-int vmm_guest_vspace_touch(vspace_t *vspace, uintptr_t addr, size_t size, vmm_guest_vspace_touch_callback callback, void *cookie) {
+int vmm_guest_vspace_touch(vspace_t *vspace, uintptr_t addr, size_t size, vmm_guest_vspace_touch_callback callback,
+                           void *cookie)
+{
     struct sel4utils_alloc_data *data = get_alloc_data(vspace);
-    guest_vspace_t *guest_vspace = (guest_vspace_t*) data;
+    guest_vspace_t *guest_vspace = (guest_vspace_t *) data;
     uintptr_t current_addr;
     uintptr_t next_addr;
     uintptr_t end_addr = (uintptr_t)(addr + size);
@@ -270,12 +280,13 @@ int vmm_guest_vspace_touch(vspace_t *vspace, uintptr_t addr, size_t size, vmm_gu
         uintptr_t current_aligned = PAGE_ALIGN_4K(current_addr);
         uintptr_t next_page_start = current_aligned + PAGE_SIZE_4K;
         next_addr = MIN(end_addr, next_page_start);
-        void *vaddr = (void*)sel4utils_get_cookie(&guest_vspace->translation_vspace, (void*)current_aligned);
+        void *vaddr = (void *)sel4utils_get_cookie(&guest_vspace->translation_vspace, (void *)current_aligned);
         if (!vaddr) {
-            ZF_LOGE("Failed to get cookie at %p", (void*)current_aligned);
+            ZF_LOGE("Failed to get cookie at %p", (void *)current_aligned);
             return -1;
         }
-        int result = callback(current_addr, (void*)(vaddr + (current_addr - current_aligned)), next_addr - current_addr, current_addr - addr, cookie);
+        int result = callback(current_addr, (void *)(vaddr + (current_addr - current_aligned)), next_addr - current_addr,
+                              current_addr - addr, cookie);
         if (result) {
             return result;
         }

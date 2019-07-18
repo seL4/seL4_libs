@@ -44,11 +44,10 @@ DEPRECATED("Use KOBJECT_ENDPOINT") static const kobject_t KOBJECT_SYNC_ENDPOINT 
  * Get the size (in bits) of the untyped memory required to
  * create an object of the given size.
  */
-static inline seL4_Word
-kobject_get_size(kobject_t type, seL4_Word objectSize)
+static inline seL4_Word kobject_get_size(kobject_t type, seL4_Word objectSize)
 {
     switch (type) {
-        /* Generic objects. */
+    /* Generic objects. */
     case KOBJECT_TCB:
         return seL4_TCBBits;
     case KOBJECT_CNODE:
@@ -80,11 +79,10 @@ kobject_get_size(kobject_t type, seL4_Word objectSize)
     }
 }
 
-static inline seL4_Word
-kobject_get_type(kobject_t type, seL4_Word objectSize)
+static inline seL4_Word kobject_get_type(kobject_t type, seL4_Word objectSize)
 {
     switch (type) {
-        /* Generic objects. */
+    /* Generic objects. */
     case KOBJECT_TCB:
         return seL4_TCBObject;
     case KOBJECT_CNODE:

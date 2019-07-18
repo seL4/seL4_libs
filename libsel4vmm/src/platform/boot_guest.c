@@ -50,17 +50,20 @@ typedef struct boot_guest_cookie {
     FILE *file;
 } boot_guest_cookie_t;
 
-static int guest_elf_write_address(uintptr_t paddr, void *vaddr, size_t size, size_t offset, void *cookie) {
+static int guest_elf_write_address(uintptr_t paddr, void *vaddr, size_t size, size_t offset, void *cookie)
+{
     memcpy(vaddr, cookie + offset, size);
     return 0;
 }
 
-static int guest_elf_read_address(uintptr_t paddr, void *vaddr, size_t size, size_t offset, void *cookie) {
+static int guest_elf_read_address(uintptr_t paddr, void *vaddr, size_t size, size_t offset, void *cookie)
+{
     memcpy(cookie + offset, vaddr, size);
     return 0;
 }
 
-void vmm_plat_guest_elf_relocate(vmm_t *vmm, const char *relocs_filename) {
+void vmm_plat_guest_elf_relocate(vmm_t *vmm, const char *relocs_filename)
+{
     guest_image_t *image = &vmm->guest_image;
     int delta = image->relocation_offset;
     if (delta == 0) {
@@ -77,12 +80,12 @@ void vmm_plat_guest_elf_relocate(vmm_t *vmm, const char *relocs_filename) {
 
     size_t relocs_size = 0;
     FILE *file = fopen(relocs_filename, "r");
-    if(!file) {
+    if (!file) {
         printf(COLOUR_Y "ERROR: Guest OS kernel relocation is required, but corresponding"
-          "%s was not found. This is most likely due to a Makefile"
-          "error, or configuration error.\n", relocs_filename);
-           panic("Relocation required but relocation data file not found.");
-           return;
+               "%s was not found. This is most likely due to a Makefile"
+               "error, or configuration error.\n", relocs_filename);
+        panic("Relocation required but relocation data file not found.");
+        return;
     }
     fseek(file, 0, SEEK_END);
     relocs_size = ftell(file);
@@ -107,7 +110,7 @@ void vmm_plat_guest_elf_relocate(vmm_t *vmm, const char *relocs_filename) {
     for (int i = 0; ; i++) {
         uint32_t vaddr;
         /* Get the next relocation from the relocs file. */
-        uint32_t offset = relocs_size - (sizeof(uint32_t) * (i+1));
+        uint32_t offset = relocs_size - (sizeof(uint32_t) * (i + 1));
         fseek(file, offset, SEEK_SET);
         size_t result = fread(&vaddr, sizeof(uint32_t), 1, file);
         ZF_LOGF_IF(result != 1, "Read failed unexpectedly");
@@ -121,17 +124,17 @@ void vmm_plat_guest_elf_relocate(vmm_t *vmm, const char *relocs_filename) {
            allocated and mapped the ELF contents into. */
         assert(vaddr >= (uint32_t)image->link_vaddr);
         uintptr_t guest_paddr = (uintptr_t)vaddr - (uintptr_t)image->link_vaddr +
-            (uintptr_t)(load_addr + delta);
+                                (uintptr_t)(load_addr + delta);
 //        assert(vmm_guest_mem_check_elf_segment(resource, guest_paddr, guest_paddr + 4));
 
         /* Perform the relocation. */
         DPRINTF(5, "   reloc vaddr 0x%x guest_addr 0x%x\n", (unsigned int)vaddr, (unsigned int)guest_paddr);
         uint32_t addr;
         vmm_guest_vspace_touch(&vmm->guest_mem.vspace, guest_paddr, sizeof(int),
-                guest_elf_read_address, &addr);
+                               guest_elf_read_address, &addr);
         addr += delta;
         vmm_guest_vspace_touch(&vmm->guest_mem.vspace, guest_paddr, sizeof(int),
-                guest_elf_write_address, &addr);
+                               guest_elf_write_address, &addr);
 
         if (i && i % 50000 == 0) {
             DPRINTF(2, "    %u relocs done.\n", i);
@@ -149,8 +152,9 @@ void vmm_plat_guest_elf_relocate(vmm_t *vmm, const char *relocs_filename) {
 
 }
 
-static int vmm_guest_load_boot_module_continued(uintptr_t paddr, void *addr, size_t size, size_t offset, void *cookie) {
-    boot_guest_cookie_t *pass = ( boot_guest_cookie_t *) cookie;
+static int vmm_guest_load_boot_module_continued(uintptr_t paddr, void *addr, size_t size, size_t offset, void *cookie)
+{
+    boot_guest_cookie_t *pass = (boot_guest_cookie_t *) cookie;
     fseek(pass->file, offset, SEEK_SET);
     size_t result = fread(addr, size, 1, pass->file);
     ZF_LOGF_IF(result != 1, "Read failed unexpectedly");
@@ -158,7 +162,8 @@ static int vmm_guest_load_boot_module_continued(uintptr_t paddr, void *addr, siz
     return 0;
 }
 
-int vmm_guest_load_boot_module(vmm_t *vmm, const char *name) {
+int vmm_guest_load_boot_module(vmm_t *vmm, const char *name)
+{
     uintptr_t load_addr = guest_ram_largest_free_region_start(&vmm->guest_mem);
     printf("Loading boot module \"%s\" at 0x%x\n", name, (unsigned int)load_addr);
 
@@ -191,12 +196,14 @@ int vmm_guest_load_boot_module(vmm_t *vmm, const char *name) {
     return 0;
 }
 
-static inline uint32_t vmm_plat_vesa_fbuffer_size(seL4_VBEModeInfoBlock_t *block) {
+static inline uint32_t vmm_plat_vesa_fbuffer_size(seL4_VBEModeInfoBlock_t *block)
+{
     assert(block);
     return ALIGN_UP(block->vbe_common.bytesPerScanLine * block->vbe12_part1.yRes, 65536);
 }
 
-static int make_guest_page_dir_continued(uintptr_t guest_phys, void *vaddr, size_t size, size_t offset, void *cookie) {
+static int make_guest_page_dir_continued(uintptr_t guest_phys, void *vaddr, size_t size, size_t offset, void *cookie)
+{
     assert(offset == 0);
     assert(size == BIT(seL4_PageBits));
     /* Write into this frame as the init page directory: 4M pages, 1 to 1 mapping. */
@@ -208,7 +215,8 @@ static int make_guest_page_dir_continued(uintptr_t guest_phys, void *vaddr, size
     return 0;
 }
 
-static int make_guest_page_dir(vmm_t *vmm) {
+static int make_guest_page_dir(vmm_t *vmm)
+{
     /* Create a 4K Page to be our 1-1 pd */
     /* This is constructed with magical new memory that we will not tell Linux about */
     uintptr_t pd = (uintptr_t)vspace_new_pages(&vmm->guest_mem.vspace, seL4_AllRights, 1, seL4_PageBits);
@@ -221,14 +229,16 @@ static int make_guest_page_dir(vmm_t *vmm) {
     return vmm_guest_vspace_touch(&vmm->guest_mem.vspace, pd, BIT(seL4_PageBits), make_guest_page_dir_continued, NULL);
 }
 
-static int make_guest_cmd_line_continued(uintptr_t phys, void *vaddr, size_t size, size_t offset, void *cookie) {
+static int make_guest_cmd_line_continued(uintptr_t phys, void *vaddr, size_t size, size_t offset, void *cookie)
+{
     /* Copy the string to this area. */
-    const char *cmdline = (const char*)cookie;
+    const char *cmdline = (const char *)cookie;
     memcpy(vaddr, cmdline + offset, size);
     return 0;
 }
 
-static int make_guest_cmd_line(vmm_t *vmm, const char *cmdline) {
+static int make_guest_cmd_line(vmm_t *vmm, const char *cmdline)
+{
     /* Allocate command line from guest ram */
     int len = strlen(cmdline);
     uintptr_t cmd_addr = guest_ram_allocate(&vmm->guest_mem, len + 1);
@@ -239,15 +249,18 @@ static int make_guest_cmd_line(vmm_t *vmm, const char *cmdline) {
     printf("Constructing guest cmdline at 0x%x of size %d\n", (unsigned int)cmd_addr, len);
     vmm->guest_image.cmd_line = cmd_addr;
     vmm->guest_image.cmd_line_len = len;
-    return vmm_guest_vspace_touch(&vmm->guest_mem.vspace, cmd_addr, len + 1, make_guest_cmd_line_continued, (void*)cmdline);
+    return vmm_guest_vspace_touch(&vmm->guest_mem.vspace, cmd_addr, len + 1, make_guest_cmd_line_continued,
+                                  (void *)cmdline);
 }
 
-static void make_guest_screen_info(vmm_t *vmm, struct screen_info *info) {
+static void make_guest_screen_info(vmm_t *vmm, struct screen_info *info)
+{
     /* VESA information */
     seL4_X86_BootInfo_VBE vbeinfo;
     ssize_t result;
     int error;
-    result = simple_get_extended_bootinfo(&vmm->host_simple, SEL4_BOOTINFO_HEADER_X86_VBE, &vbeinfo, sizeof(seL4_X86_BootInfo_VBE));
+    result = simple_get_extended_bootinfo(&vmm->host_simple, SEL4_BOOTINFO_HEADER_X86_VBE, &vbeinfo,
+                                          sizeof(seL4_X86_BootInfo_VBE));
     uintptr_t base = 0;
     size_t fbuffer_size;
     if (config_set(CONFIG_VMM_VESA_FRAMEBUFFER) && result != -1) {
@@ -298,7 +311,8 @@ static void make_guest_screen_info(vmm_t *vmm, struct screen_info *info) {
     }
 }
 
-static int make_guest_e820_map(struct e820entry *e820, guest_memory_t *guest_memory) {
+static int make_guest_e820_map(struct e820entry *e820, guest_memory_t *guest_memory)
+{
     int i;
     int entry = 0;
     printf("Constructing e820 memory map for guest with:\n");
@@ -339,25 +353,27 @@ static int make_guest_e820_map(struct e820entry *e820, guest_memory_t *guest_mem
     e820[entry].type = E820_RESERVED;
     printf("Final e820 map is:\n");
     for (i = 0; i <= entry; i++) {
-        printf("\t0x%x - 0x%x type %d\n", (unsigned int)e820[i].addr, (unsigned int)(e820[i].addr + e820[i].size), e820[i].type);
+        printf("\t0x%x - 0x%x type %d\n", (unsigned int)e820[i].addr, (unsigned int)(e820[i].addr + e820[i].size),
+               e820[i].type);
         assert(e820[i].addr < e820[i].addr + e820[i].size);
     }
     return entry + 1;
 }
 
-static int make_guest_boot_info(vmm_t *vmm) {
+static int make_guest_boot_info(vmm_t *vmm)
+{
     /* TODO: Bootinfo struct needs to be allocated in location accessable by real mode? */
     uintptr_t addr = guest_ram_allocate(&vmm->guest_mem, sizeof(struct boot_params));
     if (addr == 0) {
         ZF_LOGE("Failed to allocate %zu bytes for guest boot info struct", sizeof(struct boot_params));
         return -1;
     }
-    printf("Guest boot info allocated at %p. Populating...\n", (void*)addr);
+    printf("Guest boot info allocated at %p. Populating...\n", (void *)addr);
     vmm->guest_image.boot_info = addr;
 
     /* Map in BIOS boot info structure. */
     struct boot_params boot_info;
-    memset(&boot_info, 0, sizeof (struct boot_params));
+    memset(&boot_info, 0, sizeof(struct boot_params));
 
     /* Initialise basic bootinfo structure. Src: Linux kernel Documentation/x86/boot.txt */
     boot_info.hdr.header = 0x53726448; /* Magic number 'HdrS' */
@@ -396,7 +412,8 @@ static int make_guest_boot_info(vmm_t *vmm) {
 }
 
 /* Init the guest page directory, cmd line args and boot info structures. */
-void vmm_plat_init_guest_boot_structure(vmm_t *vmm, const char *cmdline) {
+void vmm_plat_init_guest_boot_structure(vmm_t *vmm, const char *cmdline)
+{
     int UNUSED err;
 
     err = make_guest_page_dir(vmm);
@@ -412,7 +429,8 @@ void vmm_plat_init_guest_boot_structure(vmm_t *vmm, const char *cmdline) {
     assert(!err);
 }
 
-void vmm_init_guest_thread_state(vmm_vcpu_t *vcpu) {
+void vmm_init_guest_thread_state(vmm_vcpu_t *vcpu)
+{
     vmm_set_user_context(&vcpu->guest_state, USER_CONTEXT_EAX, 0);
     vmm_set_user_context(&vcpu->guest_state, USER_CONTEXT_EBX, 0);
     vmm_set_user_context(&vcpu->guest_state, USER_CONTEXT_ECX, 0);
@@ -444,7 +462,8 @@ void vmm_init_guest_thread_state(vmm_vcpu_t *vcpu) {
 
 /* TODO: Refactor and stop rewriting fucking elf loading code */
 static int vmm_load_guest_segment(vmm_t *vmm, seL4_Word source_offset,
-        seL4_Word dest_addr, unsigned int segment_size, unsigned int file_size, FILE *file) {
+                                  seL4_Word dest_addr, unsigned int segment_size, unsigned int file_size, FILE *file)
+{
 
     int ret;
     unsigned int page_size = vmm->page_size;
@@ -463,9 +482,9 @@ static int vmm_load_guest_segment(vmm_t *vmm, seL4_Word source_offset,
     while (current < segment_size) {
         /* Retrieve the mapping */
         seL4_CPtr cap;
-        cap = vspace_get_cap(&vmm->guest_mem.vspace, (void*)dest_addr);
+        cap = vspace_get_cap(&vmm->guest_mem.vspace, (void *)dest_addr);
         if (!cap) {
-            ZF_LOGE("Failed to find frame cap while loading elf segment at %p", (void*)dest_addr);
+            ZF_LOGE("Failed to find frame cap while loading elf segment at %p", (void *)dest_addr);
             return -1;
         }
         cspacepath_t cap_path;
@@ -492,7 +511,7 @@ static int vmm_load_guest_segment(vmm_t *vmm, seL4_Word source_offset,
             }
 
             DPRINTF(5, "load page src %zu dest %p remain %zu offset %zu copy vaddr %p "
-                    "copy len %zu\n", source_offset, (void*)dest_addr, remain, offset, copy_vaddr, copy_len);
+                    "copy len %zu\n", source_offset, (void *)dest_addr, remain, offset, copy_vaddr, copy_len);
 
             fseek(file, source_offset, SEEK_SET);
             size_t result = fread(copy_vaddr, copy_len, 1, file);
@@ -523,7 +542,8 @@ static int vmm_load_guest_segment(vmm_t *vmm, seL4_Word source_offset,
 
 */
 /* TODO: refactor yet more elf loading code */
-int vmm_load_guest_elf(vmm_t *vmm, const char *elfname, size_t alignment) {
+int vmm_load_guest_elf(vmm_t *vmm, const char *elfname, size_t alignment)
+{
     int ret;
     char elf_file[256];
     elf_t elf;
@@ -536,7 +556,7 @@ int vmm_load_guest_elf(vmm_t *vmm, const char *elfname, size_t alignment) {
     }
 
     ret = vmm_read_elf_headers(elf_file, vmm, file, sizeof(elf_file), &elf);
-    if(ret < 0) {
+    if (ret < 0) {
         ZF_LOGE("Guest elf \"%s\" invalid.", elfname);
         return -1;
     }
@@ -566,13 +586,13 @@ int vmm_load_guest_elf(vmm_t *vmm, const char *elfname, size_t alignment) {
     }
 
     printf("Guest kernel is compiled to be located at paddr 0x%x vaddr 0x%x\n",
-            (unsigned int)guest_kernel_addr, (unsigned int)guest_kernel_vaddr);
+           (unsigned int)guest_kernel_addr, (unsigned int)guest_kernel_vaddr);
     printf("Guest kernel allocated 1:1 start is at paddr = 0x%x\n", (unsigned int)load_addr);
     int guest_relocation_offset = (int)((int64_t)load_addr - (int64_t)guest_kernel_addr);
     printf("Therefore relocation offset is %d (%s0x%x)\n",
-            guest_relocation_offset,
-            guest_relocation_offset < 0 ? "-" : "",
-            abs(guest_relocation_offset));
+           guest_relocation_offset,
+           guest_relocation_offset < 0 ? "-" : "",
+           abs(guest_relocation_offset));
 
     for (int i = 0; i < n_headers; i++) {
         seL4_Word source_offset, dest_addr;

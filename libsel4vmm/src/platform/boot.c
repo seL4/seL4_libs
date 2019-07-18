@@ -29,7 +29,9 @@
 #include "vmm/processor/apicdef.h"
 #include "vmm/processor/lapic.h"
 
-int vmm_init(vmm_t *vmm, allocman_t *allocman, simple_t simple, vka_t vka, vspace_t vspace, platform_callbacks_t callbacks) {
+int vmm_init(vmm_t *vmm, allocman_t *allocman, simple_t simple, vka_t vka, vspace_t vspace,
+             platform_callbacks_t callbacks)
+{
     int err;
     memset(vmm, 0, sizeof(vmm_t));
     vmm->allocman = allocman;
@@ -61,12 +63,14 @@ int vmm_init(vmm_t *vmm, allocman_t *allocman, simple_t simple, vka_t vka, vspac
     return 0;
 }
 
-int vmm_init_host(vmm_t *vmm) {
+int vmm_init_host(vmm_t *vmm)
+{
     vmm->done_host_init = 1;
     return 0;
 }
 
-static int vmm_init_vcpu(vmm_t *vmm, unsigned int vcpu_num, int priority) {
+static int vmm_init_vcpu(vmm_t *vmm, unsigned int vcpu_num, int priority)
+{
     int UNUSED error;
     assert(vcpu_num < vmm->num_vcpus);
     vmm_vcpu_t *vcpu = &vmm->vcpus[vcpu_num];
@@ -90,11 +94,13 @@ static int vmm_init_vcpu(vmm_t *vmm, unsigned int vcpu_num, int priority) {
     return 0;
 }
 
-int vmm_init_guest(vmm_t *vmm, int priority) {
+int vmm_init_guest(vmm_t *vmm, int priority)
+{
     return vmm_init_guest_multi(vmm, priority, 1);
 }
 
-int vmm_init_guest_multi(vmm_t *vmm, int priority, int num_vcpus) {
+int vmm_init_guest_multi(vmm_t *vmm, int priority, int num_vcpus)
+{
     int error;
 
     assert(vmm->done_host_init);
@@ -121,7 +127,7 @@ int vmm_init_guest_multi(vmm_t *vmm, int priority, int num_vcpus) {
     assert(error == seL4_NoError);
     /* Initialize a vspace for the guest */
     error = vmm_get_guest_vspace(&vmm->host_vspace, &vmm->host_vspace,
-            &vmm->guest_mem.vspace, &vmm->vka, vmm->guest_pd);
+                                 &vmm->guest_mem.vspace, &vmm->vka, vmm->guest_pd);
     if (error) {
         return error;
     }
@@ -136,8 +142,8 @@ int vmm_init_guest_multi(vmm_t *vmm, int priority, int num_vcpus) {
     vmm->guest_mem.ram_regions = malloc(0);
 
     vmm_mmio_add_handler(&vmm->mmio_list, APIC_DEFAULT_PHYS_BASE,
-            APIC_DEFAULT_PHYS_BASE + sizeof(struct local_apic_regs) - 1,
-            NULL, "Local APIC", vmm_apic_mmio_read, vmm_apic_mmio_write);
+                         APIC_DEFAULT_PHYS_BASE + sizeof(struct local_apic_regs) - 1,
+                         NULL, "Local APIC", vmm_apic_mmio_read, vmm_apic_mmio_write);
 
     vmm->done_guest_init = 1;
     return 0;

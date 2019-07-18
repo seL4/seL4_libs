@@ -25,16 +25,15 @@
  * either edit .config manually or add it using "make menuconfig" by selecting
  * "Kernel" -> "seL4 System Parameters" -> "Adds a log buffer to the kernel for instrumentation."
  */
-static inline void
-seL4_BenchmarkTraceDumpFullLog(benchmark_tracepoint_log_entry_t *logBuffer, size_t logSize)
+static inline void seL4_BenchmarkTraceDumpFullLog(benchmark_tracepoint_log_entry_t *logBuffer, size_t logSize)
 {
     seL4_Word index = 0;
     FILE *fd = stdout;
 
     while ((index * sizeof(benchmark_tracepoint_log_entry_t)) < logSize) {
-            if(logBuffer[index].duration != 0) {
-                fprintf(fd, "tracepoint id = %u \tduration = %u\n", logBuffer[index].id, logBuffer[index].duration);
-            }
+        if (logBuffer[index].duration != 0) {
+            fprintf(fd, "tracepoint id = %u \tduration = %u\n", logBuffer[index].id, logBuffer[index].duration);
+        }
         index++;
     }
 

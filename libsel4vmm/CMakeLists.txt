@@ -83,11 +83,7 @@ file(
 
 add_library(sel4vmm STATIC EXCLUDE_FROM_ALL ${sources})
 
-target_include_directories(
-    sel4vmm
-    PUBLIC
-        include
-)
+target_include_directories(sel4vmm PUBLIC include)
 target_link_libraries(
     sel4vmm
     PUBLIC

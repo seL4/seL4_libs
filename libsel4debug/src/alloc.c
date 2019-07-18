@@ -113,7 +113,7 @@ static void *box(void *ptr, size_t size)
         return ptr;
     }
 
-    metadata_t *pre = (metadata_t*)ptr;
+    metadata_t *pre = (metadata_t *)ptr;
     ptr += sizeof(*pre);
     unaligned_uintptr_t *post = ptr + size;
 
@@ -145,7 +145,7 @@ static void *unbox(void *ptr, void *ret_addr)
         return ptr;
     }
 
-    metadata_t *pre = (metadata_t*)(ptr - sizeof(*pre));
+    metadata_t *pre = (metadata_t *)(ptr - sizeof(*pre));
     unaligned_uintptr_t *post = ptr + pre->size;
 
     /* Check the leading canary (underflow). */
@@ -165,7 +165,7 @@ static void *unbox(void *ptr, void *ret_addr)
               "to %p)\n", ptr, ret_addr);
     }
 
-    return (void*)pre;
+    return (void *)pre;
 }
 
 /* Buffer for tracking currently live heap pointers. This is used to detect
@@ -251,9 +251,9 @@ void __wrap_free(void *ptr)
      * use-after-free bugs. If we fault while doing this, it probably means the
      * user underran their buffer and overwrote the 'size' metadata.
      */
-    metadata_t *pre = (metadata_t*)(ptr - sizeof(*pre));
+    metadata_t *pre = (metadata_t *)(ptr - sizeof(*pre));
     for (unsigned int i = 0; i < pre->size; i++) {
-        ((char*)ptr)[i] ^= (char)~i;
+        ((char *)ptr)[i] ^= (char)~i;
     }
 
     ptr = unbox(ptr, ret);

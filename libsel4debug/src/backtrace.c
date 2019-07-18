@@ -35,9 +35,10 @@ seL4_IPCBuffer *seL4_GetIPCBuffer(void) __attribute__((no_instrument_function));
  */
 #define BACKTRACE_BASE (((void*)seL4_GetIPCBuffer()) + sizeof(seL4_IPCBuffer))
 
-int backtrace(void **buffer, int size) {
-    int *bt_stack_sz = (int*)BACKTRACE_BASE;
-    void **bt_stack = (void**)(BACKTRACE_BASE + sizeof(int));
+int backtrace(void **buffer, int size)
+{
+    int *bt_stack_sz = (int *)BACKTRACE_BASE;
+    void **bt_stack = (void **)(BACKTRACE_BASE + sizeof(int));
 
     /* Write as many entries as we can, starting from the top of the stack,
      * into the caller's buffer.
@@ -52,26 +53,28 @@ int backtrace(void **buffer, int size) {
 
 #ifdef CONFIG_LIBSEL4DEBUG_FUNCTION_INSTRUMENTATION_BACKTRACE
 
-void __cyg_profile_func_enter(void *func, void *caller) {
+void __cyg_profile_func_enter(void *func, void *caller)
+{
     if (seL4_GetIPCBuffer() == NULL) {
         /* The caller doesn't have a valid IPC buffer. Assume it has not been
          * setup yet and just skip logging the current function.
          */
         return;
     }
-    int *bt_stack_sz = (int*)BACKTRACE_BASE;
-    void **bt_stack = (void**)(BACKTRACE_BASE + sizeof(int));
+    int *bt_stack_sz = (int *)BACKTRACE_BASE;
+    void **bt_stack = (void **)(BACKTRACE_BASE + sizeof(int));
 
     /* Push the current function */
     bt_stack[*bt_stack_sz] = func;
     *bt_stack_sz += 1;
 }
 
-void __cyg_profile_func_exit(void *func, void *caller) {
+void __cyg_profile_func_exit(void *func, void *caller)
+{
     if (seL4_GetIPCBuffer() == NULL) {
         return;
     }
-    int *bt_stack_sz = (int*)BACKTRACE_BASE;
+    int *bt_stack_sz = (int *)BACKTRACE_BASE;
 
     /* Pop the current function */
     *bt_stack_sz -= 1;

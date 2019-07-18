@@ -48,8 +48,7 @@ typedef struct sel4platsupport_io_mapper_cookie {
     io_mapping_t *head;
 } sel4platsupport_io_mapper_cookie_t;
 
-static void
-free_node(io_mapping_t *node)
+static void free_node(io_mapping_t *node)
 {
     assert(node);
     if (node->caps) {
@@ -61,8 +60,7 @@ free_node(io_mapping_t *node)
     free(node);
 }
 
-static io_mapping_t *
-new_node(size_t num_pages)
+static io_mapping_t *new_node(size_t num_pages)
 {
     io_mapping_t *ret = calloc(1, sizeof(io_mapping_t));
 
@@ -86,8 +84,7 @@ new_node(size_t num_pages)
     return ret;
 }
 
-static void
-destroy_node(vka_t *vka, io_mapping_t *mapping)
+static void destroy_node(vka_t *vka, io_mapping_t *mapping)
 {
     cspacepath_t path;
     for (size_t i = 0; i < mapping->num_pages; i++) {
@@ -102,8 +99,7 @@ destroy_node(vka_t *vka, io_mapping_t *mapping)
     free_node(mapping);
 }
 
-static void
-insert_node(sel4platsupport_io_mapper_cookie_t *io_mapper, io_mapping_t *node)
+static void insert_node(sel4platsupport_io_mapper_cookie_t *io_mapper, io_mapping_t *node)
 {
     node->prev = NULL;
     node->next = io_mapper->head;
@@ -113,8 +109,7 @@ insert_node(sel4platsupport_io_mapper_cookie_t *io_mapper, io_mapping_t *node)
     io_mapper->head = node;
 }
 
-static io_mapping_t *
-find_node(sel4platsupport_io_mapper_cookie_t *io_mapper, void *returned_addr)
+static io_mapping_t *find_node(sel4platsupport_io_mapper_cookie_t *io_mapper, void *returned_addr)
 {
     io_mapping_t *current;
     for (current = io_mapper->head; current; current = current->next) {
@@ -125,8 +120,7 @@ find_node(sel4platsupport_io_mapper_cookie_t *io_mapper, void *returned_addr)
     return NULL;
 }
 
-static void
-remove_node(sel4platsupport_io_mapper_cookie_t *io_mapper, io_mapping_t *node)
+static void remove_node(sel4platsupport_io_mapper_cookie_t *io_mapper, io_mapping_t *node)
 {
     if (node->prev) {
         node->prev->next = node->next;
@@ -139,8 +133,8 @@ remove_node(sel4platsupport_io_mapper_cookie_t *io_mapper, io_mapping_t *node)
     }
 }
 
-static void *
-sel4platsupport_map_paddr_with_page_size(sel4platsupport_io_mapper_cookie_t *io_mapper, uintptr_t paddr, size_t size, size_t page_size_bits, bool cached)
+static void *sel4platsupport_map_paddr_with_page_size(sel4platsupport_io_mapper_cookie_t *io_mapper, uintptr_t paddr,
+                                                      size_t size, size_t page_size_bits, bool cached)
 {
 
     vka_t *vka = &io_mapper->vka;
@@ -190,7 +184,8 @@ sel4platsupport_map_paddr_with_page_size(sel4platsupport_io_mapper_cookie_t *io_
     }
 
     /* Now map the frames in */
-    mapping->mapped_addr = vspace_map_pages(vspace, mapping->caps, mapping->alloc_cookies, seL4_AllRights, mapping->num_pages,
+    mapping->mapped_addr = vspace_map_pages(vspace, mapping->caps, mapping->alloc_cookies, seL4_AllRights,
+                                            mapping->num_pages,
                                             mapping->page_size_bits, cached);
     if (mapping->mapped_addr != NULL) {
         /* fill out and insert node */
@@ -203,10 +198,10 @@ error:
     return NULL;
 }
 
-static void *
-sel4platsupport_map_paddr(void *cookie, uintptr_t paddr, size_t size, int cached, UNUSED ps_mem_flags_t flags)
+static void *sel4platsupport_map_paddr(void *cookie, uintptr_t paddr, size_t size, int cached,
+                                       UNUSED ps_mem_flags_t flags)
 {
-    sel4platsupport_io_mapper_cookie_t* io_mapper = (sel4platsupport_io_mapper_cookie_t*)cookie;
+    sel4platsupport_io_mapper_cookie_t *io_mapper = (sel4platsupport_io_mapper_cookie_t *)cookie;
     int frame_size_index = 0;
     /* find the largest reasonable frame size */
     while (frame_size_index + 1 < SEL4_NUM_PAGE_SIZES) {
@@ -229,10 +224,9 @@ sel4platsupport_map_paddr(void *cookie, uintptr_t paddr, size_t size, int cached
     return NULL;
 }
 
-static void
-sel4platsupport_unmap_vaddr(void * cookie, void *vaddr, UNUSED size_t size)
+static void sel4platsupport_unmap_vaddr(void *cookie, void *vaddr, UNUSED size_t size)
 {
-    sel4platsupport_io_mapper_cookie_t* io_mapper = cookie;
+    sel4platsupport_io_mapper_cookie_t *io_mapper = cookie;
 
     vspace_t *vspace = &io_mapper->vspace;
     vka_t *vka = &io_mapper->vka;
@@ -252,8 +246,7 @@ sel4platsupport_unmap_vaddr(void * cookie, void *vaddr, UNUSED size_t size)
     destroy_node(vka, mapping);
 }
 
-int
-sel4platsupport_new_io_mapper(vspace_t vspace, vka_t vka, ps_io_mapper_t *io_mapper)
+int sel4platsupport_new_io_mapper(vspace_t vspace, vka_t vka, ps_io_mapper_t *io_mapper)
 {
     sel4platsupport_io_mapper_cookie_t *cookie = calloc(1, sizeof(sel4platsupport_io_mapper_cookie_t));
     if (!cookie) {
@@ -269,8 +262,7 @@ sel4platsupport_new_io_mapper(vspace_t vspace, vka_t vka, ps_io_mapper_t *io_map
 
     return 0;
 }
-int
-sel4platsupport_new_malloc_ops(ps_malloc_ops_t *ops)
+int sel4platsupport_new_malloc_ops(ps_malloc_ops_t *ops)
 {
     ps_new_stdlib_malloc_ops(ops);
     return 0;
@@ -282,8 +274,7 @@ sel4platsupport_new_malloc_ops(ps_malloc_ops_t *ops)
 gpio_sys_t gpio_sys;
 #endif
 
-void *
-get_mux_dependencies(void)
+void *get_mux_dependencies(void)
 {
 #ifdef CONFIG_PLAT_TK1
     /* The TK1's mux depends on an instance of the GPIO driver. */
@@ -294,8 +285,7 @@ get_mux_dependencies(void)
 #endif
 }
 
-int
-sel4platsupport_new_io_ops(vspace_t vspace, vka_t vka, ps_io_ops_t *io_ops)
+int sel4platsupport_new_io_ops(vspace_t vspace, vka_t vka, ps_io_ops_t *io_ops)
 {
     memset(io_ops, 0, sizeof(ps_io_ops_t));
 

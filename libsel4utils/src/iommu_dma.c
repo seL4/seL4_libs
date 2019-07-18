@@ -37,14 +37,14 @@ static void unmap_range(dma_man_t *dma, uintptr_t addr, size_t size)
     uintptr_t end = addr + size;
     for (uintptr_t addr = start; addr < end; addr += PAGE_SIZE_4K) {
         for (int i = 0; i < dma->num_iospaces; i++) {
-            uintptr_t *cookie = (uintptr_t*)vspace_get_cookie(dma->iospaces + i, (void*)addr);
+            uintptr_t *cookie = (uintptr_t *)vspace_get_cookie(dma->iospaces + i, (void *)addr);
             assert(cookie);
             (*cookie)--;
             if (*cookie == 0) {
-                seL4_CPtr page = vspace_get_cap(dma->iospaces + i, (void*)addr);
+                seL4_CPtr page = vspace_get_cap(dma->iospaces + i, (void *)addr);
                 cspacepath_t page_path;
                 assert(page);
-                vspace_unmap_pages(dma->iospaces + i, (void*)addr, 1, seL4_PageBits, NULL);
+                vspace_unmap_pages(dma->iospaces + i, (void *)addr, 1, seL4_PageBits, NULL);
                 vka_cspace_make_path(&dma->vka, page, &page_path);
                 vka_cnode_delete(&page_path);
                 vka_cspace_free(&dma->vka, page);
@@ -54,9 +54,9 @@ static void unmap_range(dma_man_t *dma, uintptr_t addr, size_t size)
     }
 }
 
-int sel4utils_iommu_dma_alloc_iospace(void* cookie, void *vaddr, size_t size)
+int sel4utils_iommu_dma_alloc_iospace(void *cookie, void *vaddr, size_t size)
 {
-    dma_man_t *dma = (dma_man_t*)cookie;
+    dma_man_t *dma = (dma_man_t *)cookie;
     int error;
 
     /* for each page duplicate and map it into all the iospaces */
@@ -65,7 +65,7 @@ int sel4utils_iommu_dma_alloc_iospace(void* cookie, void *vaddr, size_t size)
     seL4_CPtr last_page = 0;
     for (uintptr_t addr = start; addr < end; addr += PAGE_SIZE_4K) {
         cspacepath_t page_path;
-        seL4_CPtr page = vspace_get_cap(&dma->vspace, (void*)addr);
+        seL4_CPtr page = vspace_get_cap(&dma->vspace, (void *)addr);
         if (!page) {
             ZF_LOGE("Failed to retrieve frame cap for malloc region. "
                     "Is your malloc backed by the correct vspace? "
@@ -84,7 +84,7 @@ int sel4utils_iommu_dma_alloc_iospace(void* cookie, void *vaddr, size_t size)
         /* work out the size of this page */
         for (int i = 0; i < dma->num_iospaces; i++) {
             /* see if its already mapped */
-            uintptr_t *cookie = (uintptr_t*)vspace_get_cookie(dma->iospaces + i, (void*)addr);
+            uintptr_t *cookie = (uintptr_t *)vspace_get_cookie(dma->iospaces + i, (void *)addr);
             if (cookie) {
                 /* increment the counter */
                 (*cookie)++;
@@ -106,7 +106,7 @@ int sel4utils_iommu_dma_alloc_iospace(void* cookie, void *vaddr, size_t size)
                     return -1;
                 }
                 /* now map it in */
-                reservation_t res = vspace_reserve_range_at(dma->iospaces + i, (void*)addr, PAGE_SIZE_4K, seL4_AllRights, 1);
+                reservation_t res = vspace_reserve_range_at(dma->iospaces + i, (void *)addr, PAGE_SIZE_4K, seL4_AllRights, 1);
                 if (!res.res) {
                     ZF_LOGE("Failed to create a reservation");
                     vka_cnode_delete(&copy_path);
@@ -124,7 +124,8 @@ int sel4utils_iommu_dma_alloc_iospace(void* cookie, void *vaddr, size_t size)
                     return -1;
                 }
                 *cookie = 1;
-                error = vspace_map_pages_at_vaddr(dma->iospaces + i, &copy_path.capPtr, (uintptr_t*)&cookie, (void*)addr, 1, seL4_PageBits, res);
+                error = vspace_map_pages_at_vaddr(dma->iospaces + i, &copy_path.capPtr, (uintptr_t *)&cookie, (void *)addr, 1,
+                                                  seL4_PageBits, res);
                 if (error) {
                     ZF_LOGE("Failed to map frame into iospace");
                     free(cookie);
@@ -142,7 +143,7 @@ int sel4utils_iommu_dma_alloc_iospace(void* cookie, void *vaddr, size_t size)
     return 0;
 }
 
-static void* dma_alloc(void *cookie, size_t size, int align, int cached, ps_mem_flags_t flags)
+static void *dma_alloc(void *cookie, size_t size, int align, int cached, ps_mem_flags_t flags)
 {
     int error;
     if (cached || flags != PS_MEM_NORMAL) {
@@ -192,7 +193,8 @@ static void dma_cache_op(void *cookie, void *addr, size_t size, dma_cache_op_t o
 #endif
 }
 
-int sel4utils_make_iommu_dma_alloc(vka_t *vka, vspace_t *vspace, ps_dma_man_t *dma_man, unsigned int num_iospaces, seL4_CPtr *iospaces)
+int sel4utils_make_iommu_dma_alloc(vka_t *vka, vspace_t *vspace, ps_dma_man_t *dma_man, unsigned int num_iospaces,
+                                   seL4_CPtr *iospaces)
 {
     dma_man_t *dma = calloc(1, sizeof(*dma));
     if (!dma) {
@@ -217,7 +219,8 @@ int sel4utils_make_iommu_dma_alloc(vka_t *vka, vspace_t *vspace, ps_dma_man_t *d
         goto error;
     }
     for (unsigned int i = 0; i < num_iospaces; i++) {
-        int err = sel4utils_get_vspace_with_map(&dma->vspace, dma->iospaces + i, dma->iospace_data + i, &dma->vka, iospaces[i], NULL, NULL, sel4utils_map_page_iommu);
+        int err = sel4utils_get_vspace_with_map(&dma->vspace, dma->iospaces + i, dma->iospace_data + i, &dma->vka, iospaces[i],
+                                                NULL, NULL, sel4utils_map_page_iommu);
         if (err) {
             for (unsigned int j = 0; j < i; j++) {
                 vspace_tear_down(dma->iospaces + i, &dma->vka);

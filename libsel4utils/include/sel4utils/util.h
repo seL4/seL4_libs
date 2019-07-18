@@ -54,7 +54,7 @@ static inline void sel4utils_64_set_mr(seL4_Word offset, uint64_t value)
 {
     seL4_SetMR(offset, (seL4_Word) value);
     if (SEL4UTILS_64_WORDS == 2) {
-        seL4_SetMR(offset + 1, (seL4_Word) (value >> 32llu));
+        seL4_SetMR(offset + 1, (seL4_Word)(value >> 32llu));
     }
     assert(sel4utils_64_get_mr(offset) == value);
 }

@@ -18,12 +18,11 @@
 #include <vka/cspacepath_t.h>
 #include <vka/object.h>
 
-static inline void
-vka_set_cap_receive_path(const cspacepath_t* src)
+static inline void vka_set_cap_receive_path(const cspacepath_t *src)
 {
     seL4_SetCapReceivePath(
-               /* _service */      src->root,
-               /* index */         src->capPtr,
-               /* depth */         src->capDepth
-           );
+        /* _service */      src->root,
+        /* index */         src->capPtr,
+        /* depth */         src->capDepth
+    );
 }

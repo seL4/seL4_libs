@@ -22,7 +22,8 @@
 #include "vmm/vmm.h"
 #include "vmm/platform/vmcs.h"
 
-int vmm_vmx_timer_handler(vmm_vcpu_t *vcpu) {
+int vmm_vmx_timer_handler(vmm_vcpu_t *vcpu)
+{
 #ifdef CONFIG_LIB_VMM_VMX_TIMER_DEBUG
     vmm_print_guest_context(0, vcpu);
 //    vmm_vmcs_write(vmm->guest_vcpu, VMX_CONTROL_PIN_EXECUTION_CONTROLS, vmm_vmcs_read(vmm->guest_vcpu, VMX_CONTROL_PIN_EXECUTION_CONTROLS) | BIT(6));

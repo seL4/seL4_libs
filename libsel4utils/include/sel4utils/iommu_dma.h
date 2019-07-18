@@ -38,7 +38,8 @@
  * @param iospaces Pointer to list of cptrs representing the iospaces to map into
  * @return 0 on success
  */
-int sel4utils_make_iommu_dma_alloc(vka_t *vka, vspace_t *vspace, ps_dma_man_t *dma_man, unsigned int num_iospaces, seL4_CPtr *iospaces);
+int sel4utils_make_iommu_dma_alloc(vka_t *vka, vspace_t *vspace, ps_dma_man_t *dma_man, unsigned int num_iospaces,
+                                   seL4_CPtr *iospaces);
 
 /**
  * Variant of ps_dma_alloc that allows the caller to allocate memory in their address space for use

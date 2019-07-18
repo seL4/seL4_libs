@@ -134,7 +134,7 @@ uintptr_t sel4utils_elf_get_vsyscall(elf_t *elf);
  *
  * @return Address of section or 0 if not found
  */
-uintptr_t sel4utils_elf_get_section(elf_t *elf, const char *section_name, uint64_t* section_size);
+uintptr_t sel4utils_elf_get_section(elf_t *elf, const char *section_name, uint64_t *section_size);
 
 /**
  * Parses an elf file and returns the number of phdrs. The result of this

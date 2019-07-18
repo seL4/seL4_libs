@@ -262,6 +262,7 @@ int sel4platsupport_new_io_mapper(vspace_t vspace, vka_t vka, ps_io_mapper_t *io
 
     return 0;
 }
+
 int sel4platsupport_new_malloc_ops(ps_malloc_ops_t *ops)
 {
     ps_new_stdlib_malloc_ops(ops);

@@ -28,11 +28,13 @@ int vspace_get_map_obj(seL4_Word failed_bits, vspace_map_obj_t *obj) {
         obj->type = seL4_ARM_PageDirectoryObject;
         obj->map_fn = seL4_ARM_PageDirectory_Map;
         return 0;
+#if !(defined CONFIG_ARM_HYPERVISOR_SUPPORT && defined CONFIG_ARM_PA_SIZE_BITS_40)
     case SEL4_MAPPING_LOOKUP_NO_PUD:
         obj->size_bits = seL4_PUDBits;
         obj->type = seL4_ARM_PageUpperDirectoryObject;
         obj->map_fn = seL4_ARM_PageUpperDirectory_Map;
         return 0;
+#endif
     default:
         return EINVAL;
     }

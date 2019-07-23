@@ -21,6 +21,16 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+/*
+ * NOTE: All vspace, vka, simple interfaces that are passed in *MUST* remain
+ * valid for the lifetime of these interfaces.
+ *
+ * Additionally, these interfaces are not thread-safe, so care must be taken to
+ * ensure that synchronisation is controlled externally. This also includes the
+ * simple, vspace and vka interfaces that were passed in to initialise these
+ * interfaces.
+ */
+
 /**
  * Creates a new implementation of the platsupport io_mapper interface using a
  * provided simple, vspace and vka
@@ -31,7 +41,7 @@
  *
  * @return returns 0 on success
  */
-int sel4platsupport_new_io_mapper(vspace_t vspace, vka_t vka, ps_io_mapper_t *io_mapper);
+int sel4platsupport_new_io_mapper(vspace_t *vspace, vka_t *vka, ps_io_mapper_t *io_mapper);
 
 /**
  * Create a new malloc ops using stdlib malloc, calloc and free.
@@ -61,15 +71,15 @@ int sel4platsupport_new_fdt_ops(ps_io_fdt_t *io_fdt, simple_t *simple, ps_malloc
  *
  * @return returns 0 on success
  */
-int sel4platsupport_new_io_ops(vspace_t vspace, vka_t vka, ps_io_ops_t *io_ops);
+int sel4platsupport_new_io_ops(vspace_t *vspace, vka_t *vka, ps_io_ops_t *io_ops);
 
 /* Initialise all arch-specific io ops for this platform
  *
  * sel4platsupport_new_io_ops should have already populated relevant non-arch specific
  * io ops (memory allocation, mapping).
  *
- * @param simple a simple interface which must remain valid after this call.
- * @param vka a vka interface which must remain valid after this call.
+ * @param simple a simple interface
+ * @param vka a vka interface
  * @return 0 on success.
  */
 int sel4platsupport_new_arch_ops(ps_io_ops_t *ops, simple_t *simple, vka_t *vka);

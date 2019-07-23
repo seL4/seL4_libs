@@ -339,10 +339,14 @@ exit:
     return ret;
 }
 
-int sel4platsupport_new_irq_ops(ps_irq_ops_t *irq_ops, vka_t *vka, simple_t *simple, size_t max_irq_ids,
-                                size_t max_ntfn_ids, ps_malloc_ops_t *malloc_ops)
+int sel4platsupport_new_irq_ops(ps_irq_ops_t *irq_ops, vka_t *vka, simple_t *simple,
+                                 irq_interface_config_t irq_config, ps_malloc_ops_t *malloc_ops)
 {
     if (!irq_ops || !vka || !simple || !malloc_ops) {
+        return -EINVAL;
+    }
+
+    if (irq_config.max_irq_ids == 0 || irq_config.max_ntfn_ids == 0) {
         return -EINVAL;
     }
 
@@ -356,31 +360,31 @@ int sel4platsupport_new_irq_ops(ps_irq_ops_t *irq_ops, vka_t *vka, simple_t *sim
     }
 
     /* Allocate the IRQ bookkeeping array, and set default values for some of the members */
-    err = ps_calloc(malloc_ops, 1, sizeof(irq_entry_t) * max_irq_ids, (void **) & (cookie->irq_table));
+    err = ps_calloc(malloc_ops, 1, sizeof(irq_entry_t) * irq_config.max_irq_ids, (void **) & (cookie->irq_table));
     if (err) {
         ZF_LOGE("Failed to allocate IRQ bookkeeping array");
         goto error;
     }
-    for (int i = 0; i < max_irq_ids; i++) {
+    for (int i = 0; i < irq_config.max_irq_ids; i++) {
         cookie->irq_table[i].paired_ntfn = UNPAIRED_ID;
         cookie->irq_table[i].allocated_badge_index = UNALLOCATED_BADGE_INDEX;
     }
 
     /* Allocate the notification bookkeeping array, and set default values for some of the members */
-    err = ps_calloc(malloc_ops, 1, sizeof(ntfn_entry_t) * max_ntfn_ids,
+    err = ps_calloc(malloc_ops, 1, sizeof(ntfn_entry_t) * irq_config.max_ntfn_ids,
                     (void **) & (cookie->ntfn_table));
     if (err) {
         ZF_LOGE("Failed to allocate notification bookkeeping array");
         goto error;
     }
-    for (int i = 0; i < max_ntfn_ids; i++) {
+    for (int i = 0; i < irq_config.max_ntfn_ids; i++) {
         memset(cookie->ntfn_table[i].bound_irqs, UNPAIRED_ID, MAX_INTERRUPTS_TO_NOTIFICATIONS);
     }
 
     /* Figure out how many bitfields we need to keep track of the allocation status of the IDs */
     size_t bits_in_seL4_Word = sizeof(seL4_Word) * CHAR_BIT;
-    size_t num_irq_bitfields = ALIGN_UP(max_irq_ids, bits_in_seL4_Word) / sizeof(seL4_Word);
-    size_t num_ntfn_bitfields = ALIGN_UP(max_ntfn_ids, bits_in_seL4_Word) / sizeof(seL4_Word);
+    size_t num_irq_bitfields = ALIGN_UP(irq_config.max_irq_ids, bits_in_seL4_Word) / sizeof(seL4_Word);
+    size_t num_ntfn_bitfields = ALIGN_UP(irq_config.max_ntfn_ids, bits_in_seL4_Word) / sizeof(seL4_Word);
     err = ps_calloc(malloc_ops, 1, num_irq_bitfields * sizeof(seL4_Word),
                     (void **) & (cookie->allocated_irq_bitfields));
     if (err) {
@@ -397,8 +401,8 @@ int sel4platsupport_new_irq_ops(ps_irq_ops_t *irq_ops, vka_t *vka, simple_t *sim
     cookie->simple = simple;
     cookie->vka = vka;
     cookie->malloc_ops = malloc_ops;
-    cookie->max_irq_ids = max_irq_ids;
-    cookie->max_ntfn_ids = max_ntfn_ids;
+    cookie->max_irq_ids = irq_config.max_irq_ids;
+    cookie->max_ntfn_ids = irq_config.max_ntfn_ids;
     cookie->num_irq_bitfields = num_irq_bitfields;
     cookie->num_ntfn_bitfields = num_ntfn_bitfields;
 
@@ -412,11 +416,11 @@ int sel4platsupport_new_irq_ops(ps_irq_ops_t *irq_ops, vka_t *vka, simple_t *sim
 error:
     if (cookie) {
         if (cookie->irq_table) {
-            ps_free(malloc_ops, sizeof(irq_entry_t) * max_irq_ids, cookie->irq_table);
+            ps_free(malloc_ops, sizeof(irq_entry_t) * irq_config.max_irq_ids, cookie->irq_table);
         }
 
         if (cookie->ntfn_table) {
-            ps_free(malloc_ops, sizeof(ntfn_entry_t) * max_ntfn_ids,
+            ps_free(malloc_ops, sizeof(ntfn_entry_t) * irq_config.max_ntfn_ids,
                     cookie->ntfn_table);
         }
 

@@ -27,6 +27,14 @@ typedef struct sel4ps_irq {
     ps_irq_t irq;
 } sel4ps_irq_t;
 
+typedef struct irq_interface_config {
+    size_t max_irq_ids;
+    size_t max_ntfn_ids;
+} irq_interface_config_t;
+
+/* Constant defining some defaults for IRQ interface configurations */
+#define DEFAULT_IRQ_INTERFACE_CONFIG (struct irq_interface_config) { 64, 64 }
+
 /* This is the maximum number of interrupts that can be bound on a particular
  * notification instance */
 #define MAX_INTERRUPTS_TO_NOTIFICATIONS seL4_BadgeBits
@@ -54,7 +62,7 @@ typedef int ntfn_id_t;
  * @return 0 on success, otherwise an error code
  */
 int sel4platsupport_new_irq_ops(ps_irq_ops_t *irq_ops, vka_t *vka, simple_t *simple,
-                                size_t max_irq_ids, size_t max_ntfn_ids,
+                                irq_interface_config_t irq_config,
                                 ps_malloc_ops_t *malloc_ops);
 
 /*

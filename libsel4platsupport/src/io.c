@@ -344,23 +344,39 @@ void *get_mux_dependencies(void)
 #endif
 }
 
-int sel4platsupport_new_io_ops(vspace_t *vspace, vka_t *vka, ps_io_ops_t *io_ops)
+int sel4platsupport_new_io_ops(vspace_t *vspace, vka_t *vka, simple_t *simple, ps_io_ops_t *io_ops)
 {
     memset(io_ops, 0, sizeof(ps_io_ops_t));
 
-    int err = sel4platsupport_new_io_mapper(vspace, vka, &io_ops->io_mapper);
-    if (err) {
-        return err;
+    int error = 0;
+
+    /* Initialise the interfaces which do not require memory allocation/need to be initialised first */
+    error = sel4platsupport_new_malloc_ops(&io_ops->malloc_ops)
+#ifdef ARCH_ARM
+            || clock_sys_init(io_ops, &io_ops->clock_sys)
+#ifdef CONFIG_PLAT_TK1
+            || gpio_sys_init(io_ops, &gpio_sys)
+#endif
+            || mux_sys_init(io_ops, get_mux_dependencies(), &io_ops->mux_sys)
+#endif
+            ;
+    if (error) {
+        return error;
     }
 
-#ifdef ARCH_ARM
-    clock_sys_init(io_ops, &io_ops->clock_sys);
-#ifdef CONFIG_PLAT_TK1
-    gpio_sys_init(io_ops, &gpio_sys);
-#endif
-    mux_sys_init(io_ops, get_mux_dependencies(), &io_ops->mux_sys);
-#endif
+    /* Now allocate the IO-specific interfaces (the ones that can be found in this file) */
+    error = sel4platsupport_new_io_mapper(vspace, vka, &io_ops->io_mapper);
+    if (error) {
+        return error;
+    }
 
-    sel4platsupport_new_malloc_ops(&io_ops->malloc_ops);
-    return err;
+    error = sel4platsupport_new_irq_ops(&io_ops->irq_ops, vka, simple, DEFAULT_IRQ_INTERFACE_CONFIG,
+                                        &io_ops->malloc_ops);
+    if (error) {
+        free(io_ops->io_mapper.cookie);
+        io_ops->io_mapper.cookie = NULL;
+        return error;
+    }
+
+    return 0;
 }

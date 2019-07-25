@@ -16,6 +16,7 @@
 #include <vspace/vspace.h>
 #include <platsupport/io.h>
 #include <simple/simple.h>
+#include <sel4platsupport/irq.h>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -67,11 +68,12 @@ int sel4platsupport_new_fdt_ops(ps_io_fdt_t *io_fdt, simple_t *simple, ps_malloc
  *
  * @param vspace VSpace interface to use for mapping
  * @param vka VKA interface for allocating physical frames, and any extra objects or cslots
+ * @param simple A simple interface to access init caps from
  * @param io_ops Interface to fill in
  *
  * @return returns 0 on success
  */
-int sel4platsupport_new_io_ops(vspace_t *vspace, vka_t *vka, ps_io_ops_t *io_ops);
+int sel4platsupport_new_io_ops(vspace_t *vspace, vka_t *vka, simple_t *simple, ps_io_ops_t *io_ops);
 
 /* Initialise all arch-specific io ops for this platform
  *

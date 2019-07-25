@@ -291,31 +291,35 @@ int sel4platsupport_new_fdt_ops(ps_io_fdt_t *io_fdt, simple_t *simple, ps_malloc
     }
 
     ssize_t block_size = simple_get_extended_bootinfo_length(simple, SEL4_BOOTINFO_HEADER_FDT);
+    if (block_size > 0) {
+        int error = ps_calloc(malloc_ops, 1, block_size, &io_fdt->cookie);
+        if (error) {
+            ZF_LOGE("Failed to allocate %zu bytes for the FDT", block_size);
+            return -1;
+        }
 
-    int error = ps_calloc(malloc_ops, 1, block_size, &io_fdt->cookie);
-    if (error) {
-        ZF_LOGE("Failed to allocate %zu bytes for the FDT", block_size);
-        return -1;
+        /* Copy the FDT from the extended bootinfo */
+        ssize_t copied_size = simple_get_extended_bootinfo(simple, SEL4_BOOTINFO_HEADER_FDT,
+                                                           io_fdt->cookie, block_size);
+        if (copied_size != block_size) {
+            ZF_LOGE("Failed to copy the FDT");
+            ZF_LOGF_IF(ps_free(malloc_ops, block_size, io_fdt->cookie),
+                       "Failed to clean-up after a failed operation!");
+            return -1;
+        }
+
+        /* Cut off the bootinfo header from the start of the buffer */
+        ssize_t fdt_size = block_size - sizeof(seL4_BootInfoHeader);
+        void *fdt_start = io_fdt->cookie + sizeof(seL4_BootInfoHeader);
+        memmove(io_fdt->cookie, fdt_start, fdt_size);
+
+        /* Trim off the extra bytes at the end of the FDT */
+        void *fdt_end = io_fdt->cookie + fdt_size;
+        memset(fdt_end, 0, sizeof(seL4_BootInfoHeader));
+    } else {
+        /* No FDT is available so just set the cookie to NULL */
+        io_fdt->cookie = NULL;
     }
-
-    /* Copy the FDT from the extended bootinfo */
-    ssize_t copied_size = simple_get_extended_bootinfo(simple, SEL4_BOOTINFO_HEADER_FDT,
-                                                       io_fdt->cookie, block_size);
-    if (copied_size != block_size) {
-        ZF_LOGE("Failed to copy the FDT");
-        ZF_LOGF_IF(ps_free(malloc_ops, block_size, io_fdt->cookie),
-                   "Failed to clean-up after a failed operation!");
-        return -1;
-    }
-
-    /* Cut off the bootinfo header from the start of the buffer */
-    ssize_t fdt_size = block_size - sizeof(seL4_BootInfoHeader);
-    void *fdt_start = io_fdt->cookie + sizeof(seL4_BootInfoHeader);
-    memmove(io_fdt->cookie, fdt_start, fdt_size);
-
-    /* Trim off the extra bytes at the end of the FDT */
-    void *fdt_end = io_fdt->cookie + fdt_size;
-    memset(fdt_end, 0, sizeof(seL4_BootInfoHeader));
 
     /* Set the function pointer inside the io_fdt interface */
     io_fdt->get_fn = sel4platsupport_io_fdt_get;

@@ -201,6 +201,11 @@ error:
 static void *sel4platsupport_map_paddr(void *cookie, uintptr_t paddr, size_t size, int cached,
                                        UNUSED ps_mem_flags_t flags)
 {
+    if (!cookie) {
+        ZF_LOGE("cookie is NULL");
+        return NULL;
+    }
+
     sel4platsupport_io_mapper_cookie_t *io_mapper = (sel4platsupport_io_mapper_cookie_t *)cookie;
     int frame_size_index = 0;
     /* find the largest reasonable frame size */
@@ -226,6 +231,10 @@ static void *sel4platsupport_map_paddr(void *cookie, uintptr_t paddr, size_t siz
 
 static void sel4platsupport_unmap_vaddr(void *cookie, void *vaddr, UNUSED size_t size)
 {
+    if (!cookie) {
+        ZF_LOGE("cookie is NULL");
+    }
+
     sel4platsupport_io_mapper_cookie_t *io_mapper = cookie;
 
     vspace_t *vspace = io_mapper->vspace;

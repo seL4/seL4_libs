@@ -351,7 +351,8 @@ irq_server_t *irq_server_new(vspace_t *vspace, vka_t *vka, seL4_Word priority,
 
     /* Set max_ntfn_ids to equal the number of IRQs. We can calculate the ntfn IDs we need,
      * but this is really complex, and leads to code that is hard to maintain. */
-    error = sel4platsupport_new_irq_ops(&(new->irq_ops), vka, simple, num_irqs, num_irqs, malloc_ops);
+    irq_interface_config_t irq_config = { .max_irq_ids = num_irqs, .max_ntfn_ids = num_irqs } ;
+    error = sel4platsupport_new_irq_ops(&(new->irq_ops), vka, simple, irq_config, malloc_ops);
     if (error) {
         ZF_LOGE("Failed to initialise supporting backend for IRQ server");
         return NULL;

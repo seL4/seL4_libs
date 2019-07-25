@@ -370,11 +370,23 @@ int sel4platsupport_new_io_ops(vspace_t *vspace, vka_t *vka, simple_t *simple, p
         return error;
     }
 
+    error = sel4platsupport_new_fdt_ops(&io_ops->io_fdt, simple, &io_ops->malloc_ops);
+    if (error) {
+        free(io_ops->io_mapper.cookie);
+        io_ops->io_mapper.cookie = NULL;
+        return error;
+    }
+
     error = sel4platsupport_new_irq_ops(&io_ops->irq_ops, vka, simple, DEFAULT_IRQ_INTERFACE_CONFIG,
                                         &io_ops->malloc_ops);
     if (error) {
         free(io_ops->io_mapper.cookie);
         io_ops->io_mapper.cookie = NULL;
+        ssize_t fdt_size = simple_get_extended_bootinfo_length(simple, SEL4_BOOTINFO_HEADER_FDT);
+        if (fdt_size > 0) {
+            /* The FDT is available on this platform and we actually copied it, so we free it */
+            ps_free(&io_ops->malloc_ops, fdt_size, &io_ops->io_fdt.cookie);
+        }
         return error;
     }
 

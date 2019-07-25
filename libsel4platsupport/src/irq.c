@@ -340,7 +340,7 @@ exit:
 }
 
 int sel4platsupport_new_irq_ops(ps_irq_ops_t *irq_ops, vka_t *vka, simple_t *simple,
-                                 irq_interface_config_t irq_config, ps_malloc_ops_t *malloc_ops)
+                                irq_interface_config_t irq_config, ps_malloc_ops_t *malloc_ops)
 {
     if (!irq_ops || !vka || !simple || !malloc_ops) {
         return -EINVAL;

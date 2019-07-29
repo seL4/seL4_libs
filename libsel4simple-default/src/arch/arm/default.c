@@ -27,10 +27,14 @@ seL4_Error simple_default_get_irq(void *data, int irq, seL4_CNode root, seL4_Wor
     return seL4_IRQControl_Get(seL4_CapIRQControl, irq, root, index, depth);
 }
 
-seL4_Error simple_default_get_irq_trigger(void *data, int irq, int trigger, seL4_CNode root,
+seL4_Error simple_default_get_irq_trigger(void *data, int irq, int trigger, UNUSED int core, seL4_CNode root,
                                           seL4_Word index, uint8_t depth)
 {
+#if CONFIG_MAX_NUM_NODES > 1
+    return seL4_IRQControl_GetTriggerCore(seL4_CapIRQControl, irq, trigger, root, index, depth, core);
+#else
     return seL4_IRQControl_GetTrigger(seL4_CapIRQControl, irq, trigger, root, index, depth);
+#endif
 }
 
 #ifdef CONFIG_ARM_SMMU

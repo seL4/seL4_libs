@@ -34,7 +34,7 @@
  */
 typedef seL4_Error(*simple_get_IRQ_handler_fn)(void *data, int irq, seL4_CNode cnode,
                                                seL4_Word index, uint8_t depth);
-typedef seL4_Error(*simple_get_IRQ_trigger_fn)(void *data, int irq, int trigger, seL4_CNode root,
+typedef seL4_Error(*simple_get_IRQ_trigger_fn)(void *data, int irq, int trigger, int core, seL4_CNode root,
                                                seL4_Word index, uint8_t depth);
 
 typedef seL4_Error(*simple_get_iospace_cap_count_fn)(void *data, int *count);
@@ -70,5 +70,20 @@ static inline seL4_Error arch_simple_get_IRQ_trigger(arch_simple_t *simple, int 
         return seL4_InvalidArgument;
     }
 
-    return simple->irq_trigger(simple->data, irq, trigger, path.root, path.capPtr, path.capDepth);
+    return simple->irq_trigger(simple->data, irq, trigger, 0, path.root, path.capPtr, path.capDepth);
+}
+
+static inline seL4_Error arch_simple_get_IRQ_trigger_cpu(arch_simple_t *simple, int irq, int trigger, int core,
+                                                     cspacepath_t path)
+{
+    if (!simple) {
+        ZF_LOGE("Simple is NULL");
+        return seL4_InvalidArgument;
+    }
+    if (!simple->irq_trigger) {
+        ZF_LOGE("Not implemented");
+        return seL4_InvalidArgument;
+    }
+
+    return simple->irq_trigger(simple->data, irq, trigger, core, path.root, path.capPtr, path.capDepth);
 }

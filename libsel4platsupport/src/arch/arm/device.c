@@ -18,6 +18,8 @@ int sel4platsupport_arch_copy_irq_cap(arch_simple_t *arch_simple, ps_irq_t *irq,
     switch (irq->type) {
     case PS_TRIGGER:
         return arch_simple_get_IRQ_trigger(arch_simple, irq->trigger.number, irq->trigger.trigger, *dest);
+    case PS_PER_CPU:
+        return arch_simple_get_IRQ_trigger_cpu(arch_simple, irq->cpu.number, irq->cpu.trigger, irq->cpu.cpu_idx, *dest);
     default:
         ZF_LOGE("unknown irq type");
         return -1;

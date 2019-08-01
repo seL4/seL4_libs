@@ -31,17 +31,6 @@
 #include <sel4utils/helpers.h>
 #include <utils/stack.h>
 
-static int write_ipc_buffer_user_data(vka_t *vka, vspace_t *vspace, seL4_CPtr ipc_buf, uintptr_t buf_loc)
-{
-    void *mapping = sel4utils_dup_and_map(vka, vspace, ipc_buf, seL4_PageBits);
-    if (!mapping) {
-        return -1;
-    }
-    seL4_IPCBuffer *buffer = mapping;
-    buffer->userData = buf_loc;
-    sel4utils_unmap_dup(vka, vspace, mapping, seL4_PageBits);
-    return 0;
-}
 
 int sel4utils_configure_thread(vka_t *vka, vspace_t *parent, vspace_t *alloc, seL4_CPtr fault_endpoint,
                                seL4_CNode cspace, seL4_Word cspace_root_data, sel4utils_thread_t *res)
@@ -71,11 +60,6 @@ int sel4utils_configure_thread_config(vka_t *vka, vspace_t *parent, vspace_t *al
 
         if (res->ipc_buffer_addr == 0) {
             ZF_LOGE("ipc buffer allocation failed");
-            return -1;
-        }
-
-        if (write_ipc_buffer_user_data(vka, parent, res->ipc_buffer, res->ipc_buffer_addr)) {
-            ZF_LOGE("failed to set user data word in IPC buffer");
             return -1;
         }
     }

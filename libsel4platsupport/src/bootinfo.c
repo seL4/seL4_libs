@@ -24,8 +24,6 @@ seL4_BootInfo *platsupport_get_bootinfo(void)
         ZF_LOGE("Attempted %s in an environment without bootinfo.", __FUNCTION__);
         return NULL;
     }
-    /* Save the address of the IPC buffer for seL4_GetIPCBuffer on IA32. */
-    seL4_SetUserData((seL4_Word)bootinfo->ipcBuffer);
     return bootinfo;
 }
 

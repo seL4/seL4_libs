@@ -41,13 +41,17 @@ static inline int sync_sem_bare_wait(seL4_CPtr ep, volatile int *value)
     if (oldval <= 0) {
 #ifdef CONFIG_ARCH_IA32
 #ifdef CONFIG_KERNEL_RT
-        seL4_RecvWithMRs(ep, NULL, NULL);
+        seL4_WaitWithMRs(ep, NULL, NULL);
 #else
         seL4_RecvWithMRs(ep, NULL, NULL, NULL);
 #endif /* CONFIG_KERNEL_RT */
 #else // all other platforms have 4 mrs
-
+#ifdef CONFIG_KERNEL_RT
+        seL4_WaitWithMRs(ep, NULL, NULL, NULL, NULL, NULL);
+#else
         seL4_RecvWithMRs(ep, NULL, NULL, NULL, NULL, NULL);
+#endif
+
 #endif
         /* Even though we performed an acquire barrier during the atomic
          * decrement we did not actually have the lock yet, so we have

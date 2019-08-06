@@ -206,11 +206,84 @@ static int find_free_ntfn_badge_index(ntfn_entry_t *ntfn_entry)
     return CTZL(unallocated_bitfield);
 }
 
-static irq_id_t sel4platsupport_irq_register(void *cookie, ps_irq_t irq, irq_callback_fn_t callback,
-                                             void *callback_data)
+static int irq_set_ntfn_common(irq_cookie_t *irq_cookie, ntfn_id_t ntfn_id, irq_id_t irq_id,
+                               seL4_Word *ret_badge)
 {
-    irq_cookie_t *irq_cookie = cookie;
+    irq_entry_t *irq_entry = &(irq_cookie->irq_table[irq_id]);
 
+    /* Check if the IRQ is already bound to something */
+    if (irq_entry->paired_ntfn > UNPAIRED_ID) {
+        return -EINVAL;
+    }
+
+    ntfn_entry_t *ntfn_entry = &(irq_cookie->ntfn_table[ntfn_id]);
+
+    /* Check if we have space to bound another IRQ to this notification */
+    if (ntfn_entry->num_irqs_bound >= MAX_INTERRUPTS_TO_NOTIFICATIONS) {
+        return -ENOSPC;
+    }
+
+    /* Find an empty space (unclaimed bit in the badge) for the IRQ */
+    int badge_index = find_free_ntfn_badge_index(ntfn_entry);
+    if (badge_index == -1) {
+        return -ENOSPC;
+    }
+
+    /* Allocate a CSpace slot and mint the root notification object with badge */
+    cspacepath_t mint_path = {0};
+    int error = vka_cspace_alloc_path(irq_cookie->vka, &mint_path);
+    if (error) {
+        return -ENOMEM;
+    }
+
+    seL4_Word badge = BIT(badge_index);
+    error = vka_cnode_mint(&mint_path, &(ntfn_entry->root_ntfn_path), seL4_AllRights, badge);
+    if (error) {
+        vka_cspace_free_path(irq_cookie->vka, mint_path);
+        return -ENOMEM;
+    }
+
+    /* Bind the notification with the handler now */
+    error = seL4_IRQHandler_SetNotification(irq_entry->handler_path.capPtr, mint_path.capPtr);
+    if (error) {
+        ZF_LOGE("Failed to set a notification with the IRQ handler");
+        error = vka_cnode_delete(&mint_path);
+        ZF_LOGF_IF(error, "Failed to cleanup after a failed IRQ set ntfn operation");
+        vka_cspace_free_path(irq_cookie->vka, mint_path);
+        return -EFAULT;
+    }
+
+    /* Acknowledge the handler so interrupts can arrive on the notification */
+    error = seL4_IRQHandler_Ack(irq_entry->handler_path.capPtr);
+    if (error) {
+        ZF_LOGE("Failed to ack an IRQ handler");
+        error = seL4_IRQHandler_Clear(irq_entry->handler_path.capPtr);
+        ZF_LOGF_IF(error, "Failed to unpair a notification after a failed IRQ set ntfn operation");
+        error = vka_cnode_delete(&mint_path);
+        ZF_LOGF_IF(error, "Failed to cleanup after a failed IRQ set ntfn operation");
+        vka_cspace_free_path(irq_cookie->vka, mint_path);
+        return -EFAULT;
+    }
+
+    if (ret_badge) {
+        *ret_badge = badge;
+    }
+
+    /* Fill in the bookkeeping information */
+    ntfn_entry->num_irqs_bound++;
+    ntfn_entry->status_bitfield |= badge;
+    ntfn_entry->bound_irqs[badge_index] = irq_id;
+
+    irq_entry->ntfn_path = mint_path;
+    irq_entry->paired_ntfn = ntfn_id;
+    irq_entry->allocated_badge_index = badge_index;
+
+    return 0;
+}
+
+static irq_id_t irq_register_common(irq_cookie_t *irq_cookie, ps_irq_t irq, irq_callback_fn_t callback,
+                                    void *callback_data)
+{
     if (check_irq_id_all_allocated(irq_cookie)) {
         return -EMFILE;
     }
@@ -252,104 +325,26 @@ static irq_id_t sel4platsupport_irq_register(void *cookie, ps_irq_t irq, irq_cal
     return free_id;
 }
 
-static int sel4platsupport_irq_unregister(void *cookie, irq_id_t irq_id)
+static void provide_ntfn_common(irq_cookie_t *irq_cookie, seL4_CPtr ntfn, seL4_Word usable_mask,
+                                ntfn_id_t allocated_id)
 {
-    irq_cookie_t *irq_cookie = cookie;
+    cspacepath_t ntfn_path = {0};
+    vka_cspace_make_path(irq_cookie->vka, ntfn, &ntfn_path);
 
-    if (!check_irq_id_is_valid(irq_cookie, irq_id)) {
-        return -EINVAL;
-    }
+    /* Clear the notification entry and then fill in bookkeeping information */
+    ntfn_entry_t *ntfn_entry = &(irq_cookie->ntfn_table[allocated_id]);
+    memset(ntfn_entry, 0, sizeof(ntfn_entry_t));
+    ntfn_entry->allocated = true;
+    ntfn_entry->root_ntfn_path = ntfn_path;
+    ntfn_entry->usable_mask = usable_mask;
 
-    if (!check_irq_id_is_allocated(irq_cookie, irq_id)) {
-        return -EINVAL;
-    }
-
-    irq_entry_t *irq_entry = &(irq_cookie->irq_table[irq_id]);
-
-    if (irq_entry->paired_ntfn > UNPAIRED_ID) {
-        /* Clear the handler */
-        int error = seL4_IRQHandler_Clear(irq_entry->handler_path.capPtr);
-        if (error) {
-            /* Give a slightly ambigious message as we don't want to leak implementation details */
-            ZF_LOGE("Failed to unregister an IRQ");
-            return -EFAULT;
-        }
-
-        /* Delete the notification */
-        vka_cnode_delete(&(irq_entry->ntfn_path));
-        vka_cspace_free_path(irq_cookie->vka, irq_entry->ntfn_path);
-
-        /* Clear the necessary information in the notification array */
-        ntfn_entry_t *ntfn_entry = &(irq_cookie->ntfn_table[irq_entry->paired_ntfn]);
-        ntfn_entry->status_bitfield &= ~BIT(irq_entry->allocated_badge_index);
-        ntfn_entry->pending_bitfield &= ~BIT(irq_entry->allocated_badge_index);
-        ntfn_entry->bound_irqs[irq_entry->allocated_badge_index] = UNPAIRED_ID;
-        ntfn_entry->num_irqs_bound--;
-    }
-
-    /* Delete the handler */
-    vka_cnode_delete(&(irq_entry->handler_path));
-    vka_cspace_free_path(irq_cookie->vka, irq_entry->handler_path);
-
-    /* Zero-out the entire entry */
-    memset(irq_entry, 0, sizeof(irq_entry_t));
-    /* Reset parts of the entry */
-    irq_entry->paired_ntfn = UNPAIRED_ID;
-    irq_entry->allocated_badge_index = UNALLOCATED_BADGE_INDEX;
-
-    irq_cookie->num_registered_irqs--;
-    unfill_bit_in_bitfield(irq_cookie->allocated_irq_bitfields, irq_id);
-
-    return 0;
+    irq_cookie->num_allocated_ntfns++;
+    fill_bit_in_bitfield(irq_cookie->allocated_ntfn_bitfields, allocated_id);
 }
 
-static int sel4platsupport_irq_acknowledge(void *ack_data)
+static irq_cookie_t *new_irq_ops_common(vka_t *vka, simple_t *simple, irq_interface_config_t irq_config,
+                                        ps_malloc_ops_t *malloc_ops)
 {
-    if (!ack_data) {
-        return -EINVAL;
-    }
-
-    int ret = 0;
-
-    ack_data_t *data = ack_data;
-    irq_cookie_t *irq_cookie = data->irq_cookie;
-    irq_id_t irq_id = data->irq_id;
-
-    if (!check_irq_id_is_valid(irq_cookie, irq_id)) {
-        ret = -EINVAL;
-        goto exit;
-    }
-
-    if (!check_irq_id_is_allocated(irq_cookie, irq_id)) {
-        ret = -EINVAL;
-        goto exit;
-    }
-
-    irq_entry_t *irq_entry = &(irq_cookie->irq_table[irq_id]);
-    int error = seL4_IRQHandler_Ack(irq_entry->handler_path.capPtr);
-    if (error) {
-        ZF_LOGE("Failed to acknowledge IRQ");
-        ret = -EFAULT;
-        goto exit;
-    }
-
-exit:
-    ps_free(irq_cookie->malloc_ops, sizeof(ack_data_t), data);
-
-    return ret;
-}
-
-int sel4platsupport_new_irq_ops(ps_irq_ops_t *irq_ops, vka_t *vka, simple_t *simple,
-                                irq_interface_config_t irq_config, ps_malloc_ops_t *malloc_ops)
-{
-    if (!irq_ops || !vka || !simple || !malloc_ops) {
-        return -EINVAL;
-    }
-
-    if (irq_config.max_irq_ids == 0 || irq_config.max_ntfn_ids == 0) {
-        return -EINVAL;
-    }
-
     int err = 0;
 
     irq_cookie_t *cookie = 0;
@@ -406,12 +401,7 @@ int sel4platsupport_new_irq_ops(ps_irq_ops_t *irq_ops, vka_t *vka, simple_t *sim
     cookie->num_irq_bitfields = num_irq_bitfields;
     cookie->num_ntfn_bitfields = num_ntfn_bitfields;
 
-    /* Fill in the actual IRQ ops structure now */
-    irq_ops->cookie = (void *) cookie;
-    irq_ops->irq_register_fn = sel4platsupport_irq_register;
-    irq_ops->irq_unregister_fn = sel4platsupport_irq_unregister;
-
-    return 0;
+    return cookie;
 
 error:
     if (cookie) {
@@ -431,24 +421,127 @@ error:
         ps_free(malloc_ops, sizeof(irq_cookie_t), cookie);
     }
 
-    return -ENOMEM;
+    return NULL;
 }
 
-static void provide_ntfn_common(irq_cookie_t *irq_cookie, seL4_CPtr ntfn, seL4_Word usable_mask,
-                                ntfn_id_t allocated_id)
+static int sel4platsupport_irq_unregister(void *cookie, irq_id_t irq_id)
 {
-    cspacepath_t ntfn_path = {0};
-    vka_cspace_make_path(irq_cookie->vka, ntfn, &ntfn_path);
+    irq_cookie_t *irq_cookie = cookie;
 
-    /* Clear the notification entry and then fill in bookkeeping information */
-    ntfn_entry_t *ntfn_entry = &(irq_cookie->ntfn_table[allocated_id]);
-    memset(ntfn_entry, 0, sizeof(ntfn_entry_t));
-    ntfn_entry->allocated = true;
-    ntfn_entry->root_ntfn_path = ntfn_path;
-    ntfn_entry->usable_mask = usable_mask;
+    if (!check_irq_id_is_valid(irq_cookie, irq_id)) {
+        return -EINVAL;
+    }
 
-    irq_cookie->num_allocated_ntfns++;
-    fill_bit_in_bitfield(irq_cookie->allocated_ntfn_bitfields, allocated_id);
+    if (!check_irq_id_is_allocated(irq_cookie, irq_id)) {
+        return -EINVAL;
+    }
+
+    irq_entry_t *irq_entry = &(irq_cookie->irq_table[irq_id]);
+
+    if (irq_entry->paired_ntfn > UNPAIRED_ID) {
+        /* Clear the handler */
+        int error = seL4_IRQHandler_Clear(irq_entry->handler_path.capPtr);
+        if (error) {
+            /* Give a slightly ambigious message as we don't want to leak implementation details */
+            ZF_LOGE("Failed to unregister an IRQ");
+            return -EFAULT;
+        }
+
+        /* Delete the notification */
+        vka_cnode_delete(&(irq_entry->ntfn_path));
+        vka_cspace_free_path(irq_cookie->vka, irq_entry->ntfn_path);
+
+        /* Clear the necessary information in the notification array */
+        ntfn_entry_t *ntfn_entry = &(irq_cookie->ntfn_table[irq_entry->paired_ntfn]);
+        ntfn_entry->status_bitfield &= ~BIT(irq_entry->allocated_badge_index);
+        ntfn_entry->pending_bitfield &= ~BIT(irq_entry->allocated_badge_index);
+        ntfn_entry->bound_irqs[irq_entry->allocated_badge_index] = UNPAIRED_ID;
+        ntfn_entry->num_irqs_bound--;
+    }
+
+    /* Delete the handler */
+    vka_cnode_delete(&(irq_entry->handler_path));
+    vka_cspace_free_path(irq_cookie->vka, irq_entry->handler_path);
+
+    /* Zero-out the entire entry */
+    memset(irq_entry, 0, sizeof(irq_entry_t));
+    /* Reset parts of the entry */
+    irq_entry->paired_ntfn = UNPAIRED_ID;
+    irq_entry->allocated_badge_index = UNALLOCATED_BADGE_INDEX;
+
+    irq_cookie->num_registered_irqs--;
+    unfill_bit_in_bitfield(irq_cookie->allocated_irq_bitfields, irq_id);
+
+    return 0;
+}
+
+/* The register function for the standard IRQ interface */
+static irq_id_t sel4platsupport_irq_register(void *cookie, ps_irq_t irq, irq_callback_fn_t callback,
+                                             void *callback_data)
+{
+    irq_cookie_t *irq_cookie = cookie;
+
+    return irq_register_common(irq_cookie, irq, callback, callback_data);
+}
+
+static int sel4platsupport_irq_acknowledge(void *ack_data)
+{
+    if (!ack_data) {
+        return -EINVAL;
+    }
+
+    int ret = 0;
+
+    ack_data_t *data = ack_data;
+    irq_cookie_t *irq_cookie = data->irq_cookie;
+    irq_id_t irq_id = data->irq_id;
+
+    if (!check_irq_id_is_valid(irq_cookie, irq_id)) {
+        ret = -EINVAL;
+        goto exit;
+    }
+
+    if (!check_irq_id_is_allocated(irq_cookie, irq_id)) {
+        ret = -EINVAL;
+        goto exit;
+    }
+
+    irq_entry_t *irq_entry = &(irq_cookie->irq_table[irq_id]);
+    int error = seL4_IRQHandler_Ack(irq_entry->handler_path.capPtr);
+    if (error) {
+        ZF_LOGE("Failed to acknowledge IRQ");
+        ret = -EFAULT;
+        goto exit;
+    }
+
+exit:
+    ps_free(irq_cookie->malloc_ops, sizeof(ack_data_t), data);
+
+    return ret;
+}
+
+int sel4platsupport_new_irq_ops(ps_irq_ops_t *irq_ops, vka_t *vka, simple_t *simple,
+                                irq_interface_config_t irq_config, ps_malloc_ops_t *malloc_ops)
+{
+    if (!irq_ops || !vka || !simple || !malloc_ops) {
+        return -EINVAL;
+    }
+
+    if (irq_config.max_irq_ids == 0 || irq_config.max_ntfn_ids == 0) {
+        return -EINVAL;
+    }
+
+    irq_cookie_t *cookie = new_irq_ops_common(vka, simple, irq_config, malloc_ops);
+    if (!cookie) {
+        return -ENOMEM;
+    }
+
+    /* Fill in the actual IRQ ops structure now */
+    irq_ops->cookie = (void *) cookie;
+    irq_ops->irq_register_fn = sel4platsupport_irq_register;
+    irq_ops->irq_unregister_fn = sel4platsupport_irq_unregister;
+
+    return 0;
 }
 
 ntfn_id_t sel4platsupport_irq_provide_ntfn(ps_irq_ops_t *irq_ops, seL4_CPtr ntfn, seL4_Word usable_mask)
@@ -565,76 +658,7 @@ int sel4platsupport_irq_set_ntfn(ps_irq_ops_t *irq_ops, ntfn_id_t ntfn_id, irq_i
         return -EINVAL;
     }
 
-    irq_entry_t *irq_entry = &(irq_cookie->irq_table[irq_id]);
-
-    /* Check if the IRQ is already bound to something */
-    if (irq_entry->paired_ntfn > UNPAIRED_ID) {
-        return -EINVAL;
-    }
-
-    ntfn_entry_t *ntfn_entry = &(irq_cookie->ntfn_table[ntfn_id]);
-
-    /* Check if we have space to bound another IRQ to this notification */
-    if (ntfn_entry->num_irqs_bound >= MAX_INTERRUPTS_TO_NOTIFICATIONS) {
-        return -ENOSPC;
-    }
-
-    /* Find an empty space (unclaimed bit in the badge) for the IRQ */
-    int badge_index = find_free_ntfn_badge_index(ntfn_entry);
-    if (badge_index == -1) {
-        return -ENOSPC;
-    }
-
-    /* Allocate a CSpace slot and mint the root notification object with badge */
-    cspacepath_t mint_path = {0};
-    int error = vka_cspace_alloc_path(irq_cookie->vka, &mint_path);
-    if (error) {
-        return -ENOMEM;
-    }
-
-    seL4_Word badge = BIT(badge_index);
-    error = vka_cnode_mint(&mint_path, &(ntfn_entry->root_ntfn_path), seL4_AllRights, badge);
-    if (error) {
-        vka_cspace_free_path(irq_cookie->vka, mint_path);
-        return -ENOMEM;
-    }
-
-    /* Bind the notification with the handler now */
-    error = seL4_IRQHandler_SetNotification(irq_entry->handler_path.capPtr, mint_path.capPtr);
-    if (error) {
-        ZF_LOGE("Failed to set a notification with the IRQ handler");
-        error = vka_cnode_delete(&mint_path);
-        ZF_LOGF_IF(error, "Failed to cleanup after a failed IRQ set ntfn operation");
-        vka_cspace_free_path(irq_cookie->vka, mint_path);
-        return -EFAULT;
-    }
-
-    /* Acknowledge the handler so interrupts can arrive on the notification */
-    error = seL4_IRQHandler_Ack(irq_entry->handler_path.capPtr);
-    if (error) {
-        ZF_LOGE("Failed to ack an IRQ handler");
-        error = seL4_IRQHandler_Clear(irq_entry->handler_path.capPtr);
-        ZF_LOGF_IF(error, "Failed to unpair a notification after a failed IRQ set ntfn operation");
-        error = vka_cnode_delete(&mint_path);
-        ZF_LOGF_IF(error, "Failed to cleanup after a failed IRQ set ntfn operation");
-        vka_cspace_free_path(irq_cookie->vka, mint_path);
-        return -EFAULT;
-    }
-
-    if (ret_badge) {
-        *ret_badge = badge;
-    }
-
-    /* Fill in the bookkeeping information */
-    ntfn_entry->num_irqs_bound++;
-    ntfn_entry->status_bitfield |= badge;
-    ntfn_entry->bound_irqs[badge_index] = irq_id;
-
-    irq_entry->ntfn_path = mint_path;
-    irq_entry->paired_ntfn = ntfn_id;
-    irq_entry->allocated_badge_index = badge_index;
-
-    return 0;
+    return irq_set_ntfn_common(irq_cookie, ntfn_id, irq_id, ret_badge);
 }
 
 int sel4platsupport_irq_unset_ntfn(ps_irq_ops_t *irq_ops, irq_id_t irq_id)

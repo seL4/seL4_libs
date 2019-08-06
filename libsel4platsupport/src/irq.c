@@ -30,6 +30,11 @@
 #define UNPAIRED_ID -1
 #define UNALLOCATED_BADGE_INDEX -1
 
+typedef enum irq_iface_type {
+    STANDARD_IFACE,
+    MINI_IFACE
+} irq_iface_type_t;
+
 typedef struct {
     /* These are always non-empty if this particular IRQ ID is in use */
     bool allocated;
@@ -63,6 +68,7 @@ typedef struct {
 } ntfn_entry_t;
 
 typedef struct {
+    irq_iface_type_t iface_type;
     size_t num_registered_irqs;
     size_t num_allocated_ntfns;
 
@@ -343,7 +349,7 @@ static void provide_ntfn_common(irq_cookie_t *irq_cookie, seL4_CPtr ntfn, seL4_W
 }
 
 static irq_cookie_t *new_irq_ops_common(vka_t *vka, simple_t *simple, irq_interface_config_t irq_config,
-                                        ps_malloc_ops_t *malloc_ops)
+                                        ps_malloc_ops_t *malloc_ops, irq_iface_type_t iface_type)
 {
     int err = 0;
 
@@ -393,6 +399,7 @@ static irq_cookie_t *new_irq_ops_common(vka_t *vka, simple_t *simple, irq_interf
         goto error;
     }
 
+    cookie->iface_type = iface_type;
     cookie->simple = simple;
     cookie->vka = vka;
     cookie->malloc_ops = malloc_ops;
@@ -484,6 +491,29 @@ static irq_id_t sel4platsupport_irq_register(void *cookie, ps_irq_t irq, irq_cal
     return irq_register_common(irq_cookie, irq, callback, callback_data);
 }
 
+/* The register function for the mini IRQ interface */
+static irq_id_t sel4platsupport_irq_register_mini(void *cookie, ps_irq_t irq, irq_callback_fn_t callback,
+                                                  void *callback_data)
+{
+    irq_cookie_t *irq_cookie = cookie;
+
+    irq_id_t assigned_id = irq_register_common(irq_cookie, irq, callback, callback_data);
+    if (assigned_id < 0) {
+        /* Contains the error code if < 0 */
+        return assigned_id;
+    }
+
+    /* Pair this IRQ with the only notification */
+    int error = irq_set_ntfn_common(irq_cookie, MINI_IRQ_INTERFACE_NTFN_ID, assigned_id, NULL);
+    if (error) {
+        ZF_LOGF_IF(sel4platsupport_irq_unregister(irq_cookie, assigned_id),
+                   "Failed to clean-up a failed operation");
+        return error;
+    }
+
+    return assigned_id;
+}
+
 static int sel4platsupport_irq_acknowledge(void *ack_data)
 {
     if (!ack_data) {
@@ -531,7 +561,7 @@ int sel4platsupport_new_irq_ops(ps_irq_ops_t *irq_ops, vka_t *vka, simple_t *sim
         return -EINVAL;
     }
 
-    irq_cookie_t *cookie = new_irq_ops_common(vka, simple, irq_config, malloc_ops);
+    irq_cookie_t *cookie = new_irq_ops_common(vka, simple, irq_config, malloc_ops, STANDARD_IFACE);
     if (!cookie) {
         return -ENOMEM;
     }
@@ -544,6 +574,40 @@ int sel4platsupport_new_irq_ops(ps_irq_ops_t *irq_ops, vka_t *vka, simple_t *sim
     return 0;
 }
 
+int sel4platsupport_new_mini_irq_ops(ps_irq_ops_t *irq_ops, vka_t *vka, simple_t *simple,
+                                     ps_malloc_ops_t *malloc_ops, seL4_CPtr ntfn, seL4_Word usable_mask)
+{
+    if (!irq_ops || !vka || !simple || !malloc_ops || !usable_mask) {
+        return -EINVAL;
+    }
+
+    if (ntfn == seL4_CapNull) {
+        return -EINVAL;
+    }
+
+    /* Get the number of bits that we can use in the badge,
+     * this is the amount of interrupts that can be registered at a given time */
+    size_t bits_in_mask = POPCOUNTL(usable_mask);
+
+    /* max_ntfn_ids is kinda irrelevant in the mini interface, but set it anyway */
+    irq_interface_config_t irq_config = { .max_irq_ids = bits_in_mask, .max_ntfn_ids = 1 };
+
+    irq_cookie_t *cookie = new_irq_ops_common(vka, simple, irq_config, malloc_ops, MINI_IFACE);
+    if (!cookie) {
+        return -ENOMEM;
+    }
+
+    /* Fill in the actual IRQ ops structure now */
+    irq_ops->cookie = (void *) cookie;
+    irq_ops->irq_register_fn = sel4platsupport_irq_register_mini;
+    irq_ops->irq_unregister_fn = sel4platsupport_irq_unregister;
+
+    /* Provide the ntfn */
+    provide_ntfn_common(cookie, ntfn, usable_mask, MINI_IRQ_INTERFACE_NTFN_ID);
+
+    return 0;
+}
+
 ntfn_id_t sel4platsupport_irq_provide_ntfn(ps_irq_ops_t *irq_ops, seL4_CPtr ntfn, seL4_Word usable_mask)
 {
     if (!irq_ops || ntfn == seL4_CapNull || !usable_mask) {
@@ -551,6 +615,11 @@ ntfn_id_t sel4platsupport_irq_provide_ntfn(ps_irq_ops_t *irq_ops, seL4_CPtr ntfn
     }
 
     irq_cookie_t *irq_cookie = irq_ops->cookie;
+
+    if (irq_cookie->iface_type == MINI_IFACE) {
+        ZF_LOGE("Trying to use %s with the mini IRQ Interface", __func__);
+        return -EPERM;
+    }
 
     if (check_ntfn_id_all_allocated(irq_cookie)) {
         return -EMFILE;
@@ -575,6 +644,11 @@ int sel4platsupport_irq_provide_ntfn_with_id(ps_irq_ops_t *irq_ops, seL4_CPtr nt
 
     irq_cookie_t *irq_cookie = irq_ops->cookie;
 
+    if (irq_cookie->iface_type == MINI_IFACE) {
+        ZF_LOGE("Trying to use %s with the mini IRQ Interface", __func__);
+        return -EPERM;
+    }
+
     if (check_ntfn_id_all_allocated(irq_cookie)) {
         return -EMFILE;
     }
@@ -596,6 +670,11 @@ int sel4platsupport_irq_return_ntfn(ps_irq_ops_t *irq_ops, ntfn_id_t ntfn_id,
     }
 
     irq_cookie_t *irq_cookie = irq_ops->cookie;
+
+    if (irq_cookie->iface_type == MINI_IFACE) {
+        ZF_LOGE("Trying to use %s with the mini IRQ Interface", __func__);
+        return -EPERM;
+    }
 
     if (!check_ntfn_id_is_valid(irq_cookie, ntfn_id)) {
         return -EINVAL;
@@ -648,6 +727,11 @@ int sel4platsupport_irq_set_ntfn(ps_irq_ops_t *irq_ops, ntfn_id_t ntfn_id, irq_i
 
     irq_cookie_t *irq_cookie = irq_ops->cookie;
 
+    if (irq_cookie->iface_type == MINI_IFACE) {
+        ZF_LOGE("Trying to use %s with the mini IRQ Interface", __func__);
+        return -EPERM;
+    }
+
     if (!check_ntfn_id_is_valid(irq_cookie, ntfn_id) ||
         !check_ntfn_id_is_allocated(irq_cookie, ntfn_id)) {
         return -EINVAL;
@@ -668,6 +752,11 @@ int sel4platsupport_irq_unset_ntfn(ps_irq_ops_t *irq_ops, irq_id_t irq_id)
     }
 
     irq_cookie_t *irq_cookie = irq_ops->cookie;
+
+    if (irq_cookie->iface_type == MINI_IFACE) {
+        ZF_LOGE("Trying to use %s with the mini IRQ Interface", __func__);
+        return -EPERM;
+    }
 
     if (!check_irq_id_is_valid(irq_cookie, irq_id) ||
         !check_irq_id_is_allocated(irq_cookie, irq_id)) {

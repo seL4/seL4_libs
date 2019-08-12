@@ -58,7 +58,6 @@ void sel4platsupport_handle_timer_irq(seL4_timer_t *timer, seL4_Word badge)
             /* mask the bit out of the badge */
             badge &= ~BIT(irq);
             if (timer->to.irqs[i].irq.type != PS_NONE) {
-                ltimer_handle_irq(&timer->ltimer, &timer->to.irqs[i].irq);
                 int error = seL4_IRQHandler_Ack(timer->to.irqs[i].handler_path.capPtr);
                 if (error) {
                     ZF_LOGE("Failed to ack irq %lu, error %d", irq, error);
@@ -167,7 +166,7 @@ int sel4platsupport_init_default_timer_ops(vka_t *vka, UNUSED vspace_t *vspace, 
     }
 
     if (!error)  {
-        error = ltimer_default_init(&timer->ltimer, ops);
+        error = ltimer_default_init(&timer->ltimer, ops, NULL, NULL);
     }
     return error;
 }

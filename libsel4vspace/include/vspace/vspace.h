@@ -275,6 +275,28 @@ typedef int (*vspace_map_pages_at_vaddr_fn)(vspace_t *vspace, seL4_CPtr caps[], 
                                             void *vaddr, size_t num_pages,
                                             size_t size_bits, reservation_t reservation);
 
+/**
+ * Map in existing page capabilities, using contiguos virtual memory at the specified virtual address.
+ * Mapping is performed with the rights given by the caller if the reservation given has no rights
+ * associated with it.
+ *
+ * This will FAIL if the virtual address is already mapped in.
+ *`
+ * @param vspace the virtual memory allocator used.
+ * @param seL4_CPtr caps array of caps to map in
+ * @param uintptr_t cookies array of allocation cookies. Populate this if you want the vspace to
+ *                         be able to free the caps for you with a vka. NULL acceptable.
+ * @param size_bits size, in bits, of an individual page -- all pages must be the same size.
+ * @param num_pages the number of pages to map in (must correspond to the size of the array).
+ * @param rights the rights to map the pages in.
+ * @param reservation reservation to the range the allocation will take place in.
+ *
+ * @return seL4_NoError on success. -1 on failure.
+ */
+typedef int (*vspace_deferred_rights_map_pages_at_vaddr_fn)(vspace_t *vspace, seL4_CPtr caps[], uintptr_t cookies[],
+                                                            void *vaddr, size_t num_pages,
+                                                            size_t size_bits, seL4_CapRights_t rights, reservation_t reservation);
+
 /* potential values for vspace_unmap_pages */
 #define VSPACE_FREE ((vka_t *) 0xffffffff)
 #define VSPACE_PRESERVE ((vka_t *) 0)
@@ -355,6 +377,22 @@ typedef reservation_t (*vspace_reserve_range_aligned_fn)(vspace_t *vspace, size_
  */
 typedef reservation_t (*vspace_reserve_range_at_fn)(vspace_t *vspace, void *vaddr,
                                                     size_t bytes, seL4_CapRights_t rights, int cacheable);
+
+/**
+ * Reserve a range to map memory in to later at a specific address.
+ * The rights of the memory within the range are deferred to when performing the mapping.
+ * Regions will be aligned to 4K boundaries.
+ *
+ * @param vspace the virtual memory allocator to use.
+ * @param vaddr the virtual address to start the range at.
+ * @param bytes the size in bytes to map.
+ * @param rights the rights to map the pages in with in this reservation
+ * @param cacheable 1 if the pages should be mapped with cacheable attributes. 0 for DMA.
+ *
+ * @return a reservation to use when mapping pages in the range.
+ */
+typedef reservation_t (*vspace_reserve_deferred_rights_range_at_fn)(vspace_t *vspace, void *vaddr,
+                                                                    size_t bytes, int cacheable);
 
 /**
  * Free a reservation.
@@ -441,12 +479,14 @@ struct vspace {
     vspace_new_pages_at_vaddr_fn new_pages_at_vaddr;
 
     vspace_map_pages_at_vaddr_fn map_pages_at_vaddr;
+    vspace_deferred_rights_map_pages_at_vaddr_fn deferred_rights_map_pages_at_vaddr;
 
     vspace_unmap_pages_fn unmap_pages;
     vspace_tear_down_fn tear_down;
 
     vspace_reserve_range_aligned_fn reserve_range_aligned;
     vspace_reserve_range_at_fn reserve_range_at;
+    vspace_reserve_deferred_rights_range_at_fn reserve_deferred_rights_range_at;
     vspace_free_reservation_fn free_reservation;
     vspace_free_reservation_by_vaddr_fn free_reservation_by_vaddr;
 
@@ -600,6 +640,33 @@ static inline int vspace_map_pages_at_vaddr(vspace_t *vspace, seL4_CPtr caps[], 
     return vspace->map_pages_at_vaddr(vspace, caps, cookies, vaddr, num_pages, size_bits, reservation);
 }
 
+static inline int vspace_deferred_rights_map_pages_at_vaddr(vspace_t *vspace, seL4_CPtr caps[], uintptr_t cookies[],
+                                                            void *vaddr, size_t num_pages, size_t size_bits,
+                                                            seL4_CapRights_t rights, reservation_t reservation)
+{
+    if (vspace == NULL) {
+        ZF_LOGE("vspace is NULL");
+        return -1;
+    }
+
+    if (num_pages == 0) {
+        ZF_LOGW("Attempt to map 0 pages");
+        return -1;
+    }
+
+    if (vaddr == NULL) {
+        ZF_LOGW("Mapping NULL");
+    }
+
+    if (vspace->deferred_rights_map_pages_at_vaddr == NULL) {
+        ZF_LOGW("Unimplemented\n");
+        return -1;
+    }
+
+    return vspace->deferred_rights_map_pages_at_vaddr(vspace, caps, cookies, vaddr, num_pages,
+                                                      size_bits, rights, reservation);
+}
+
 static inline void vspace_unmap_pages(vspace_t *vspace, void *vaddr, size_t num_pages, size_t size_bits, vka_t *vka)
 {
 
@@ -689,6 +756,28 @@ static inline reservation_t vspace_reserve_range_at(vspace_t *vspace, void *vadd
     }
 
     return vspace->reserve_range_at(vspace, vaddr, bytes, rights, cacheable);
+}
+
+static inline reservation_t vspace_reserve_deferred_rights_range_at(vspace_t *vspace, void *vaddr,
+                                                                    size_t bytes, int cacheable)
+{
+    reservation_t error = { .res = 0 };
+
+    if (vspace == NULL) {
+        ZF_LOGE("vspace is NULL");
+        return error;
+    }
+
+    if (vspace->reserve_deferred_rights_range_at == NULL) {
+        ZF_LOGE("Not implemented");
+        return error;
+    }
+
+    if (bytes == 0) {
+        ZF_LOGE("Attempt to reserve 0 length range");
+        return error;
+    }
+    return vspace->reserve_deferred_rights_range_at(vspace, vaddr, bytes, cacheable);
 }
 
 static inline void vspace_free_reservation(vspace_t *vspace, reservation_t reservation)

@@ -65,6 +65,7 @@ struct sel4utils_res {
     seL4_CapRights_t rights;
     int cacheable;
     int malloced;
+    bool rights_deferred;
     struct sel4utils_res *next;
 };
 

@@ -445,6 +445,8 @@ reservation_t sel4utils_reserve_range_aligned(vspace_t *vspace, size_t size, siz
                                               int cacheable, void **vaddr);
 reservation_t sel4utils_reserve_range_at(vspace_t *vspace, void *vaddr, size_t size,
                                          seL4_CapRights_t rights, int cacheable);
+reservation_t sel4utils_reserve_deferred_rights_range_at(vspace_t *vspace, void *vaddr,
+                                                         size_t size, int cacheable);
 void sel4utils_free_reservation(vspace_t *vspace, reservation_t reservation);
 void sel4utils_free_reservation_by_vaddr(vspace_t *vspace, void *vaddr);
 void sel4utils_tear_down(vspace_t *vspace, vka_t *vka);

@@ -597,6 +597,15 @@ reservation_t sel4utils_reserve_range_at(vspace_t *vspace, void *vaddr, size_t s
     return reservation;
 }
 
+reservation_t sel4utils_reserve_deferred_rights_range_at(vspace_t *vspace, void *vaddr, size_t size, int cacheable)
+{
+    reservation_t reservation = sel4utils_reserve_range_at(vspace, vaddr, size, seL4_NoRights, cacheable);
+    if (reservation.res != NULL) {
+        ((sel4utils_res_t *)reservation.res)->rights_deferred = true;
+    }
+    return reservation;
+}
+
 void sel4utils_free_reservation(vspace_t *vspace, reservation_t reservation)
 {
     sel4utils_alloc_data_t *data = get_alloc_data(vspace);

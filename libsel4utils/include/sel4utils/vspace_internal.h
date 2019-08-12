@@ -434,6 +434,9 @@ void *sel4utils_map_pages(vspace_t *vspace, seL4_CPtr caps[], uintptr_t cookies[
                           int cacheable);
 int sel4utils_map_pages_at_vaddr(vspace_t *vspace, seL4_CPtr caps[], uintptr_t cookies[], void *vaddr,
                                  size_t num_pages, size_t size_bits, reservation_t reservation);
+int sel4utils_deferred_rights_map_pages_at_vaddr(vspace_t *vspace, seL4_CPtr caps[], uintptr_t cookies[], void *vaddr,
+                                                 size_t num_pages, size_t size_bits, seL4_CapRights_t rights,
+                                                 reservation_t reservation);
 void sel4utils_unmap_pages(vspace_t *vspace, void *vaddr, size_t num_pages, size_t size_bits, vka_t *vka);
 
 void *sel4utils_new_pages(vspace_t *vspace, seL4_CapRights_t rights,

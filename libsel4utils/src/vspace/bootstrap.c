@@ -71,6 +71,7 @@ static void common_init_post_bootstrap(vspace_t *vspace, sel4utils_map_page_fn m
     vspace->map_pages = sel4utils_map_pages;
     vspace->new_pages_at_vaddr = sel4utils_new_pages_at_vaddr;
     vspace->map_pages_at_vaddr = sel4utils_map_pages_at_vaddr;
+    vspace->deferred_rights_map_pages_at_vaddr = sel4utils_deferred_rights_map_pages_at_vaddr;
     vspace->unmap_pages = sel4utils_unmap_pages;
 
     vspace->reserve_range_aligned = sel4utils_reserve_range_aligned;

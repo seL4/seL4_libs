@@ -357,8 +357,39 @@ int sel4utils_map_pages_at_vaddr(vspace_t *vspace, seL4_CPtr caps[], uintptr_t c
         return -1;
     }
 
+    if (res->rights_deferred) {
+        ZF_LOGE("Reservation has no rights associated with it");
+        return -1;
+    }
+
     return map_pages_at_vaddr(vspace, caps, cookies, vaddr, num_pages, size_bits,
                               res->rights, res->cacheable);
+}
+
+int sel4utils_deferred_rights_map_pages_at_vaddr(vspace_t *vspace, seL4_CPtr caps[], uintptr_t cookies[], void *vaddr,
+                                                 size_t num_pages, size_t size_bits,
+                                                 seL4_CapRights_t rights, reservation_t reservation)
+{
+    sel4utils_alloc_data_t *data = get_alloc_data(vspace);
+    sel4utils_res_t *res = reservation_to_res(reservation);
+
+    if (!sel4_valid_size_bits(size_bits)) {
+        ZF_LOGE("Invalid size_bits %zu", size_bits);
+        return -1;
+    }
+
+    if (!check_reservation(data->top_level, res, (uintptr_t) vaddr, (uintptr_t)vaddr + num_pages * BIT(size_bits))) {
+        ZF_LOGE("Invalid reservation");
+        return -1;
+    }
+
+    if (!res->rights_deferred) {
+        ZF_LOGE("Invalid rights: rights already given to reservation");
+        return -1;
+    }
+
+    return map_pages_at_vaddr(vspace, caps, cookies, vaddr, num_pages, size_bits,
+                              rights, res->cacheable);
 }
 
 void *sel4utils_map_pages(vspace_t *vspace, seL4_CPtr caps[], uintptr_t cookies[],

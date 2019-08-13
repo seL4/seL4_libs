@@ -211,7 +211,6 @@ ssize_t simple_default_get_extended_bootinfo_size(void *data, seL4_Word type) {
         }
         cur += header->len;
     }
-    ZF_LOGE("bootinfo header type not found");
     return -1;
 }
 

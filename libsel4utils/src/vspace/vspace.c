@@ -550,6 +550,7 @@ int sel4utils_reserve_range_no_alloc_aligned(vspace_t *vspace, sel4utils_res_t *
 
     *result = vaddr;
     reservation->malloced = 0;
+    reservation->rights_deferred = false;
     perform_reservation(vspace, reservation, (uintptr_t) vaddr, size, rights, cacheable);
     return 0;
 }
@@ -601,6 +602,7 @@ int sel4utils_reserve_range_at_no_alloc(vspace_t *vspace, sel4utils_res_t *reser
         return -1;
     }
     reservation->malloced = 0;
+    reservation->rights_deferred = false;
     perform_reservation(vspace, reservation, (uintptr_t) vaddr, size, rights, cacheable);
     return 0;
 }

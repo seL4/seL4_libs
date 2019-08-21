@@ -37,7 +37,7 @@
  *
  * @param The path to where to put this cap
  */
-typedef seL4_Error (*simple_get_frame_cap_fn)(void *data, void *paddr, int size_bits, cspacepath_t *path);
+typedef seL4_Error(*simple_get_frame_cap_fn)(void *data, void *paddr, int size_bits, cspacepath_t *path);
 
 /**
  * Request mapped address to a region of physical memory.
@@ -80,7 +80,7 @@ typedef void *(*simple_get_frame_info_fn)(void *data, void *paddr, int size_bits
  *
  * @param vspace to assign
 */
-typedef seL4_Error (*simple_ASIDPool_assign_fn)(void *data, seL4_CPtr vspace);
+typedef seL4_Error(*simple_ASIDPool_assign_fn)(void *data, seL4_CPtr vspace);
 
 /**
  * Get the total number of caps this library can address
@@ -101,7 +101,7 @@ typedef int (*simple_get_cap_count_fn)(void *data);
  *
  * @param the nth starting at 0
 */
-typedef seL4_CPtr (*simple_get_nth_cap_fn)(void *data, int n);
+typedef seL4_CPtr(*simple_get_nth_cap_fn)(void *data, int n);
 
 /**
  * Get the cap to init caps with numbering based on bootinfo.h
@@ -111,7 +111,7 @@ typedef seL4_CPtr (*simple_get_nth_cap_fn)(void *data, int n);
  * @param the value of the enum matching in bootinfo.h
 */
 
-typedef seL4_CPtr (*simple_get_init_cap_fn)(void *data, seL4_CPtr cap);
+typedef seL4_CPtr(*simple_get_init_cap_fn)(void *data, seL4_CPtr cap);
 
 /**
  * Get the size of the threads cnode in bits
@@ -119,7 +119,7 @@ typedef seL4_CPtr (*simple_get_init_cap_fn)(void *data, seL4_CPtr cap);
  * @param data for the underlying implementation
 */
 
-typedef uint8_t  (*simple_get_cnode_size_fn)(void *data);
+typedef uint8_t (*simple_get_cnode_size_fn)(void *data);
 
 /**
  * Get the amount of untyped caps available
@@ -141,7 +141,7 @@ typedef int (*simple_get_untyped_count_fn)(void *data);
  * @param the physical address of the returned cap
 */
 
-typedef seL4_CPtr (*simple_get_nth_untyped_fn)(void *data, int n, size_t *size_bits, uintptr_t *paddr, bool *device);
+typedef seL4_CPtr(*simple_get_nth_untyped_fn)(void *data, int n, size_t *size_bits, uintptr_t *paddr, bool *device);
 
 /**
  * Get the amount of user image caps available
@@ -161,7 +161,7 @@ typedef int (*simple_get_userimage_count_fn)(void *data);
  *
 */
 
-typedef seL4_CPtr (*simple_get_nth_userimage_fn)(void *data, int n);
+typedef seL4_CPtr(*simple_get_nth_userimage_fn)(void *data, int n);
 
 /**
  * Get number of available cores
@@ -182,14 +182,14 @@ typedef int (*simple_get_core_count_fn)(void *data);
  * @param path Path to where to put this cap
  *
 */
-typedef seL4_Error (*simple_get_iospace_fn)(void *data, uint16_t domainID, uint16_t deviceID, cspacepath_t *path);
+typedef seL4_Error(*simple_get_iospace_fn)(void *data, uint16_t domainID, uint16_t deviceID, cspacepath_t *path);
 #endif
 
 /*
  * Get the sched ctrl for the requested core (0 for uniprocessor).
  * @return seL4_CapNull if CONFIG_RT is disabled
  */
-typedef seL4_CPtr (*simple_get_sched_ctrl_fn)(void *data, int core);
+typedef seL4_CPtr(*simple_get_sched_ctrl_fn)(void *data, int core);
 
 /**
  *
@@ -245,8 +245,8 @@ typedef struct simple_t {
     arch_simple_t arch_simple;
 } simple_t;
 
-static inline void *
-simple_get_frame_info(simple_t *simple, void *paddr, int size_bits, seL4_CPtr *frame_cap, seL4_Word *ut_offset)
+static inline void *simple_get_frame_info(simple_t *simple, void *paddr, int size_bits, seL4_CPtr *frame_cap,
+                                          seL4_Word *ut_offset)
 {
     if (!simple) {
         ZF_LOGE("Simple is NULL");
@@ -260,8 +260,7 @@ simple_get_frame_info(simple_t *simple, void *paddr, int size_bits, seL4_CPtr *f
     return simple->frame_info(simple->data, paddr, size_bits, frame_cap, ut_offset);
 }
 
-static inline seL4_Error
-simple_get_frame_cap(simple_t *simple, void *paddr, int size_bits, cspacepath_t *path)
+static inline seL4_Error simple_get_frame_cap(simple_t *simple, void *paddr, int size_bits, cspacepath_t *path)
 {
     if (!simple) {
         ZF_LOGE("Simple is NULL");
@@ -274,8 +273,7 @@ simple_get_frame_cap(simple_t *simple, void *paddr, int size_bits, cspacepath_t 
     return simple->frame_cap(simple->data, paddr, size_bits, path);
 }
 
-static inline void *
-simple_get_frame_vaddr(simple_t *simple, void *paddr, int size_bits)
+static inline void *simple_get_frame_vaddr(simple_t *simple, void *paddr, int size_bits)
 {
     if (!simple) {
         ZF_LOGE("Simple is NULL");
@@ -303,8 +301,7 @@ simple_get_IRQ_control(simple_t *simple, int irq, cspacepath_t path)
     return simple->arch_simple.irq(simple->data, irq, path.root, path.capPtr, path.capDepth);
 }
 
-static inline seL4_Error
-simple_get_IRQ_handler(simple_t *simple, int irq, cspacepath_t path)
+static inline seL4_Error simple_get_IRQ_handler(simple_t *simple, int irq, cspacepath_t path)
 {
     if (!simple) {
         ZF_LOGE("Simple is NULL");
@@ -317,8 +314,7 @@ simple_get_IRQ_handler(simple_t *simple, int irq, cspacepath_t path)
     return simple->arch_simple.irq(simple->data, irq, path.root, path.capPtr, path.capDepth);
 }
 
-static inline seL4_Error
-simple_ASIDPool_assign(simple_t *simple, seL4_CPtr vspace)
+static inline seL4_Error simple_ASIDPool_assign(simple_t *simple, seL4_CPtr vspace)
 {
     if (!simple) {
         ZF_LOGE("Simple is NULL");
@@ -333,7 +329,8 @@ simple_ASIDPool_assign(simple_t *simple, seL4_CPtr vspace)
 }
 
 static inline
-seL4_Error simple_get_IOPort_cap(simple_t *simple, uint16_t start_port, uint16_t end_port, seL4_Word root, seL4_Word dest, seL4_Word depth)
+seL4_Error simple_get_IOPort_cap(simple_t *simple, uint16_t start_port, uint16_t end_port, seL4_Word root,
+                                 seL4_Word dest, seL4_Word depth)
 {
     if (!simple) {
         ZF_LOGE("Simple is NULL");
@@ -343,8 +340,7 @@ seL4_Error simple_get_IOPort_cap(simple_t *simple, uint16_t start_port, uint16_t
     return arch_simple_get_IOPort_cap(&simple->arch_simple, start_port, end_port, root, dest, depth);
 }
 
-static inline int
-simple_get_cap_count(simple_t *simple)
+static inline int simple_get_cap_count(simple_t *simple)
 {
     if (!simple) {
         ZF_LOGE("Simple is NULL");
@@ -356,8 +352,7 @@ simple_get_cap_count(simple_t *simple)
     return simple->cap_count(simple->data);
 }
 
-static inline seL4_CPtr
-simple_get_nth_cap(simple_t *simple, int n)
+static inline seL4_CPtr simple_get_nth_cap(simple_t *simple, int n)
 {
     if (!simple) {
         ZF_LOGE("Simple is NULL");
@@ -372,8 +367,7 @@ simple_get_nth_cap(simple_t *simple, int n)
     return simple->nth_cap(simple->data, n);
 }
 
-static inline int
-simple_get_cnode_size_bits(simple_t *simple)
+static inline int simple_get_cnode_size_bits(simple_t *simple)
 {
     if (!simple) {
         ZF_LOGE("Simple is NULL");
@@ -387,8 +381,7 @@ simple_get_cnode_size_bits(simple_t *simple)
     return simple->cnode_size(simple->data);
 }
 
-static inline seL4_CPtr
-simple_init_cap(simple_t *simple, seL4_CPtr cap)
+static inline seL4_CPtr simple_init_cap(simple_t *simple, seL4_CPtr cap)
 {
     if (!simple) {
         ZF_LOGE("Simple is NULL");
@@ -403,20 +396,17 @@ simple_init_cap(simple_t *simple, seL4_CPtr cap)
     return simple->init_cap(simple->data, cap);
 }
 
-static inline seL4_CPtr
-simple_get_cnode(simple_t *simple)
+static inline seL4_CPtr simple_get_cnode(simple_t *simple)
 {
     return simple_init_cap(simple, seL4_CapInitThreadCNode);
 }
 
-static inline seL4_CPtr
-simple_get_tcb(simple_t *simple)
+static inline seL4_CPtr simple_get_tcb(simple_t *simple)
 {
     return simple_init_cap(simple, seL4_CapInitThreadTCB);
 }
 
-static inline seL4_CPtr
-simple_get_sc(UNUSED simple_t *simple)
+static inline seL4_CPtr simple_get_sc(UNUSED simple_t *simple)
 {
 #ifdef CONFIG_KERNEL_MCS
     return simple_init_cap(simple, seL4_CapInitThreadSC);
@@ -425,26 +415,22 @@ simple_get_sc(UNUSED simple_t *simple)
 #endif
 }
 
-static inline seL4_CPtr
-simple_get_pd(simple_t *simple)
+static inline seL4_CPtr simple_get_pd(simple_t *simple)
 {
     return simple_init_cap(simple, seL4_CapInitThreadPD);
 }
 
-static inline seL4_CPtr
-simple_get_irq_ctrl(simple_t *simple)
+static inline seL4_CPtr simple_get_irq_ctrl(simple_t *simple)
 {
     return simple_init_cap(simple, seL4_CapIRQControl);
 }
 
-static inline seL4_CPtr
-simple_get_init_cap(simple_t *simple, seL4_CPtr cap)
+static inline seL4_CPtr simple_get_init_cap(simple_t *simple, seL4_CPtr cap)
 {
     return simple_init_cap(simple, cap);
 }
 
-static inline int
-simple_get_untyped_count(simple_t *simple)
+static inline int simple_get_untyped_count(simple_t *simple)
 {
     if (!simple) {
         ZF_LOGE("Simple is NULL");
@@ -458,8 +444,8 @@ simple_get_untyped_count(simple_t *simple)
     return simple->untyped_count(simple->data);
 }
 
-static inline seL4_CPtr
-simple_get_nth_untyped(simple_t *simple, int n, size_t *size_bits, uintptr_t *paddr, bool *device)
+static inline seL4_CPtr simple_get_nth_untyped(simple_t *simple, int n, size_t *size_bits, uintptr_t *paddr,
+                                               bool *device)
 {
     if (!simple) {
         ZF_LOGE("Simple is NULL");
@@ -473,8 +459,7 @@ simple_get_nth_untyped(simple_t *simple, int n, size_t *size_bits, uintptr_t *pa
     return simple->nth_untyped(simple->data, n, size_bits, paddr, device);
 }
 
-static inline int
-simple_get_userimage_count(simple_t *simple)
+static inline int simple_get_userimage_count(simple_t *simple)
 {
     if (!simple) {
         ZF_LOGE("Simple is NULL");
@@ -488,8 +473,7 @@ simple_get_userimage_count(simple_t *simple)
     return simple->userimage_count(simple->data);
 }
 
-static inline seL4_CPtr
-simple_get_nth_userimage(simple_t *simple, int n)
+static inline seL4_CPtr simple_get_nth_userimage(simple_t *simple, int n)
 {
     if (!simple) {
         ZF_LOGE("Simple is NULL");
@@ -502,8 +486,7 @@ simple_get_nth_userimage(simple_t *simple, int n)
     return simple->nth_userimage(simple->data, n);
 }
 
-static inline int
-simple_get_core_count(simple_t *simple)
+static inline int simple_get_core_count(simple_t *simple)
 {
     if (!simple) {
         ZF_LOGE("Simple is NULL");
@@ -518,8 +501,7 @@ simple_get_core_count(simple_t *simple)
 }
 
 #ifdef CONFIG_IOMMU
-static inline seL4_CPtr
-simple_get_iospace(simple_t *simple, uint16_t domainID, uint16_t deviceID, cspacepath_t *path)
+static inline seL4_CPtr simple_get_iospace(simple_t *simple, uint16_t domainID, uint16_t deviceID, cspacepath_t *path)
 {
     if (!simple) {
         ZF_LOGE("Simple is NULL");
@@ -535,8 +517,7 @@ simple_get_iospace(simple_t *simple, uint16_t domainID, uint16_t deviceID, cspac
 #endif
 
 #ifdef CONFIG_ARM_SMMU
-static inline seL4_Error
-simple_get_iospace_cap_count(simple_t *simple, int *count)
+static inline seL4_Error simple_get_iospace_cap_count(simple_t *simple, int *count)
 {
     if (!simple) {
         ZF_LOGE("Simple is NULL");
@@ -558,8 +539,7 @@ simple_get_iospace_cap_count(simple_t *simple, int *count)
     return simple->arch_simple.iospace_cap_count(simple->data, count);
 }
 
-static inline seL4_CPtr
-simple_get_nth_iospace_cap(simple_t *simple, int n)
+static inline seL4_CPtr simple_get_nth_iospace_cap(simple_t *simple, int n)
 {
     if (!simple) {
         ZF_LOGE("Simple is NULL");
@@ -578,8 +558,7 @@ simple_get_nth_iospace_cap(simple_t *simple, int n)
 }
 #endif
 
-static inline void
-simple_print(simple_t *simple)
+static inline void simple_print(simple_t *simple)
 {
     if (!simple) {
         ZF_LOGE("Simple is NULL");
@@ -593,8 +572,7 @@ simple_print(simple_t *simple)
     simple->print(simple->data);
 }
 
-static inline seL4_CPtr
-simple_get_sched_ctrl(simple_t *simple, int core)
+static inline seL4_CPtr simple_get_sched_ctrl(simple_t *simple, int core)
 {
     if (!simple) {
         ZF_LOGE("Simple is NULL");
@@ -612,8 +590,7 @@ simple_get_sched_ctrl(simple_t *simple, int core)
     return simple->sched_ctrl(simple->data, core);
 }
 
-static inline ssize_t
-simple_get_extended_bootinfo_length(simple_t *simple, seL4_Word type)
+static inline ssize_t simple_get_extended_bootinfo_length(simple_t *simple, seL4_Word type)
 {
     if (!simple) {
         ZF_LOGE("Simple is NULL");
@@ -626,8 +603,7 @@ simple_get_extended_bootinfo_length(simple_t *simple, seL4_Word type)
     return simple->extended_bootinfo_len(simple->data, type);
 }
 
-static inline ssize_t
-simple_get_extended_bootinfo(simple_t *simple, seL4_Word type, void *dest, ssize_t max_len)
+static inline ssize_t simple_get_extended_bootinfo(simple_t *simple, seL4_Word type, void *dest, ssize_t max_len)
 {
     if (!simple) {
         ZF_LOGE("Simple is NULL");

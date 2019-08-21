@@ -23,7 +23,7 @@
 #include <vka/cspacepath_t.h>
 #include <vka/object.h>
 
-#ifndef CONFIG_KERNEL_RT
+#ifndef CONFIG_KERNEL_MCS
 static inline int vka_cnode_saveCaller(const cspacepath_t *src)
 {
     return seL4_CNode_SaveCaller(

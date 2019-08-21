@@ -200,7 +200,7 @@ void simple_default_print(void *data)
 seL4_CPtr simple_default_sched_control(void *data, int core)
 {
     assert(core < simple_default_core_count(data));
-#if CONFIG_KERNEL_RT
+#if CONFIG_KERNEL_MCS
     return ((seL4_BootInfo *) data)->schedcontrol.start + core;
 #else
     ZF_LOGW("not implemented");

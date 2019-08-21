@@ -344,7 +344,7 @@ irq_server_t *irq_server_new(vspace_t *vspace, vka_t *vka, seL4_Word priority,
 
     error = ps_calloc(malloc_ops, 1, sizeof(irq_server_t), (void **) &new);
 
-    if (config_set(CONFIG_KERNEL_RT) && vka_alloc_reply(vka, &(new->reply)) != 0) {
+    if (config_set(CONFIG_KERNEL_MCS) && vka_alloc_reply(vka, &(new->reply)) != 0) {
         ZF_LOGE("Failed to allocate reply object");
         return NULL;
     }

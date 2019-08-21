@@ -71,7 +71,7 @@ static inline sched_params_t sched_params_periodic(sched_params_t params, simple
                                                    uint64_t period_us,
                                                    uint64_t budget_us, seL4_Word extra_refills, seL4_Word badge)
 {
-    if (!config_set(CONFIG_KERNEL_RT)) {
+    if (!config_set(CONFIG_KERNEL_MCS)) {
         ZF_LOGW("Setting sched params on non-RT kernel will have no effect");
     }
     params.sched_ctrl = simple_get_sched_ctrl(simple, core);
@@ -91,7 +91,7 @@ static inline sched_params_t sched_params_round_robin(sched_params_t params, sim
 
 static inline sched_params_t sched_params_core(sched_params_t params, seL4_Word core)
 {
-    if (!config_set(CONFIG_KERNEL_RT)) {
+    if (!config_set(CONFIG_KERNEL_MCS)) {
         ZF_LOGW("Setting core on RT kernel will have no effect - sched ctrl required");
     }
     params.core = core;
@@ -180,7 +180,7 @@ static inline sel4utils_thread_config_t thread_config_default(simple_t *simple, 
     config = thread_config_cspace(config, cnode, data);
     config = thread_config_fault_endpoint(config, fault_ep);
     config = thread_config_priority(config, prio);
-    if (config_set(CONFIG_KERNEL_RT)) {
+    if (config_set(CONFIG_KERNEL_MCS)) {
         uint64_t timeslice = CONFIG_BOOT_THREAD_TIME_SLICE;
         config.sched_params = sched_params_round_robin(config.sched_params, simple, 0, timeslice * US_IN_MS);
     }

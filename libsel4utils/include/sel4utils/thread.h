@@ -216,7 +216,7 @@ void sel4utils_print_fault_message(seL4_MessageInfo_t tag, const char *name);
  *
  * On master, only use sched_params_set_core to set the core then call this function.
  *
- * If CONFIG_KERNEL_RT is set, the sched params must be fully populated or the scheduling
+ * If CONFIG_KERNEL_MCS is set, the sched params must be fully populated or the scheduling
  * context will be empty when it changes core as scheduling parameters of scheduling
  * contexts are not maintained across migrations.
  */

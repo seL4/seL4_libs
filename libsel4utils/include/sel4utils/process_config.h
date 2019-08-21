@@ -189,7 +189,7 @@ static inline sel4utils_process_config_t process_config_default_simple(simple_t 
     config = process_config_create_vspace(config, NULL, 0);
     config = process_config_create_fault_endpoint(config);
 
-    if (config_set(CONFIG_KERNEL_RT)) {
+    if (config_set(CONFIG_KERNEL_MCS)) {
         uint64_t timeslice = CONFIG_BOOT_THREAD_TIME_SLICE;
         config.sched_params = sched_params_round_robin(config.sched_params, simple, 0, timeslice * US_IN_MS);
     }

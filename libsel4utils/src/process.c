@@ -604,7 +604,7 @@ int sel4utils_configure_process_custom(sel4utils_process_t *process, vka_t *vka,
      * the required virtual memory*/
     sel4utils_thread_config_t thread_config = {0};
     thread_config = thread_config_cspace(thread_config, process->cspace.cptr, cspace_root_data);
-    if (config_set(CONFIG_KERNEL_RT)) {
+    if (config_set(CONFIG_KERNEL_MCS)) {
         /* on the MCS kernel, use the fault endpoint in the current cspace */
         thread_config = thread_config_fault_endpoint(thread_config, process->fault_endpoint.cptr);
     } else if (process->fault_endpoint.cptr != 0) {
@@ -632,7 +632,7 @@ int sel4utils_configure_process_custom(sel4utils_process_t *process, vka_t *vka,
     }
 
     if (config.create_cspace) {
-        if (config_set(CONFIG_KERNEL_RT)) {
+        if (config_set(CONFIG_KERNEL_MCS)) {
             seL4_CPtr UNUSED slot = sel4utils_copy_cap_to_process(process, vka, process->thread.sched_context.cptr);
             assert(slot == SEL4UTILS_SCHED_CONTEXT_SLOT);
             slot = sel4utils_copy_cap_to_process(process, vka, process->thread.reply.cptr);
@@ -733,7 +733,7 @@ seL4_CPtr sel4utils_process_init_cap(void *data, seL4_CPtr cap)
         return SEL4UTILS_PD_SLOT;
     case seL4_CapInitThreadASIDPool:
         return SEL4UTILS_ASID_POOL_SLOT;
-#ifdef CONFIG_KERNEL_RT
+#ifdef CONFIG_KERNEL_MCS
     case seL4_CapInitThreadSC:
         return SEL4UTILS_SCHED_CONTEXT_SLOT;
 #endif

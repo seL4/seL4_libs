@@ -418,7 +418,7 @@ simple_get_tcb(simple_t *simple)
 static inline seL4_CPtr
 simple_get_sc(UNUSED simple_t *simple)
 {
-#ifdef CONFIG_KERNEL_RT
+#ifdef CONFIG_KERNEL_MCS
     return simple_init_cap(simple, seL4_CapInitThreadSC);
 #else
     return seL4_CapNull;

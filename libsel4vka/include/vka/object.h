@@ -152,7 +152,7 @@ static inline int vka_alloc_tcb(vka_t *vka, vka_object_t *result)
 
 static inline int vka_alloc_sched_context(UNUSED vka_t *vka, UNUSED vka_object_t *result)
 {
-#ifdef CONFIG_KERNEL_RT
+#ifdef CONFIG_KERNEL_MCS
     return vka_alloc_object(vka, seL4_SchedContextObject, seL4_MinSchedContextBits, result);
 #else
     ZF_LOGW("Allocating sched context on non RT kernel");
@@ -162,7 +162,7 @@ static inline int vka_alloc_sched_context(UNUSED vka_t *vka, UNUSED vka_object_t
 
 static inline int vka_alloc_sched_context_size(UNUSED vka_t *vka, UNUSED vka_object_t *result, UNUSED uint32_t size_bits)
 {
-#ifdef CONFIG_KERNEL_RT
+#ifdef CONFIG_KERNEL_MCS
     if (size_bits < seL4_MinSchedContextBits) {
         ZF_LOGE("Invalid size bits for sc");
         return -1;
@@ -193,7 +193,7 @@ vka_alloc_async_endpoint(vka_t *vka, vka_object_t *result)
 
 static inline int vka_alloc_reply(UNUSED vka_t *vka, vka_object_t *result)
 {
-#ifdef CONFIG_KERNEL_RT
+#ifdef CONFIG_KERNEL_MCS
     return vka_alloc_object(vka, seL4_ReplyObject, seL4_ReplyBits, result);
 #else
     *result = (vka_object_t) {};
@@ -310,7 +310,7 @@ vka_get_object_size(seL4_Word objectType, seL4_Word objectSize)
         return objectSize;
     case seL4_TCBObject:
         return seL4_TCBBits;
-#ifdef CONFIG_KERNEL_RT
+#ifdef CONFIG_KERNEL_MCS
     case seL4_SchedContextObject:
         return objectSize > seL4_MinSchedContextBits ? objectSize : seL4_MinSchedContextBits;
     case seL4_ReplyObject:

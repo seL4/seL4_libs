@@ -64,7 +64,7 @@ static inline seL4_Word kobject_get_size(kobject_t type, seL4_Word objectSize)
         return seL4_PageDirBits;
     case KOBJECT_PAGE_TABLE:
         return seL4_PageTableBits;
-#ifdef CONFIG_KERNEL_RT
+#ifdef CONFIG_KERNEL_MCS
     case KOBJECT_REPLY:
         return seL4_ReplyBits;
     case KOBJECT_SCHED_CONTEXT:
@@ -95,7 +95,7 @@ static inline seL4_Word kobject_get_type(kobject_t type, seL4_Word objectSize)
         return seL4_EndpointObject;
     case KOBJECT_NOTIFICATION:
         return seL4_NotificationObject;
-#ifdef CONFIG_KERNEL_RT
+#ifdef CONFIG_KERNEL_MCS
     case KOBJECT_SCHED_CONTEXT:
         return seL4_SchedContextObject;
     case KOBJECT_REPLY:

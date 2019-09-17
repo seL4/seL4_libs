@@ -74,7 +74,7 @@ static inline seL4_Error arch_simple_get_IRQ_trigger(arch_simple_t *simple, int 
 }
 
 static inline seL4_Error arch_simple_get_IRQ_trigger_cpu(arch_simple_t *simple, int irq, int trigger, int core,
-                                                     cspacepath_t path)
+                                                         cspacepath_t path)
 {
     if (!simple) {
         ZF_LOGE("Simple is NULL");

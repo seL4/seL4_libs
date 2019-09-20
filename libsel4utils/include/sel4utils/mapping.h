@@ -73,11 +73,11 @@ void *sel4utils_dup_and_map(vka_t *vka, vspace_t *vspace, seL4_CPtr page, size_t
  */
 void sel4utils_unmap_dup(vka_t *vka, vspace_t *vspace, void *mapping, size_t size_bits);
 
-#if defined(CONFIG_IOMMU) || defined(CONFIG_ARM_SMMU)
+#if defined(CONFIG_IOMMU) || defined(CONFIG_TK1_SMMU)
 int sel4utils_map_iospace_page(vka_t *vka, seL4_CPtr iospace, seL4_CPtr frame, seL4_Word vaddr,
                                seL4_CapRights_t rights, int cacheable, seL4_Word size_bits,
                                vka_object_t *pts, int *num_pts);
-#endif /* defined(CONFIG_IOMMU) || defined(CONFIG_ARM_SMMU) */
+#endif /* defined(CONFIG_IOMMU) || defined(CONFIG_TK1_SMMU) */
 
 #ifdef CONFIG_VTX
 int sel4utils_map_ept_page(vka_t *vka, seL4_CPtr pd, seL4_CPtr frame, seL4_Word vaddr,

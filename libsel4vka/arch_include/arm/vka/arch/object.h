@@ -27,7 +27,7 @@ static inline int vka_alloc_vcpu(vka_t *vka, vka_object_t *result)
 LEAKY(vcpu)
 #endif
 
-#ifdef CONFIG_ARM_SMMU
+#ifdef CONFIG_TK1_SMMU
 static inline int vka_alloc_io_page_table(vka_t *vka, vka_object_t *result)
 {
     return vka_alloc_object(vka, seL4_ARM_IOPageTableObject, seL4_IOPageTableBits, result);
@@ -54,7 +54,7 @@ vka_arch_get_object_size(seL4_Word objectType)
         return seL4_PageDirBits;
     case seL4_ARM_VCPUObject:
         return seL4_ARM_VCPUBits;
-#ifdef CONFIG_ARM_SMMU
+#ifdef CONFIG_TK1_SMMU
     case seL4_ARM_IOPageTableObject:
         return seL4_IOPageTableBits;
 #endif

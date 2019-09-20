@@ -37,7 +37,7 @@ seL4_Error simple_default_get_irq_trigger(void *data, int irq, int trigger, UNUS
 #endif
 }
 
-#ifdef CONFIG_ARM_SMMU
+#ifdef CONFIG_TK1_SMMU
 seL4_Error simple_default_get_iospace_cap_count(void *data, int *count)
 {
     seL4_BootInfo *bi = data;
@@ -97,7 +97,7 @@ void simple_default_init_arch_simple(arch_simple_t *simple, void *data)
     simple->data = data;
     simple->irq = simple_default_get_irq;
     simple->irq_trigger = simple_default_get_irq_trigger;
-#ifdef CONFIG_ARM_SMMU
+#ifdef CONFIG_TK1_SMMU
     simple->iospace_cap_count = simple_default_get_iospace_cap_count;
     simple->iospace_get_nth_cap = simple_default_get_iospace_nth_cap;
 #endif

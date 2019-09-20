@@ -25,7 +25,7 @@ typedef seL4_Error(*vspace_map_page_fn_t)(seL4_CPtr cap, seL4_CPtr vspace_root, 
 static inline seL4_Error vspace_iospace_map_page(seL4_CPtr cap, seL4_CPtr root, seL4_Word vaddr,
                                                  seL4_CapRights_t rights, UNUSED seL4_Word attr)
 {
-#if defined(CONFIG_IOMMU) || defined(CONFIG_ARM_SMMU)
+#if defined(CONFIG_IOMMU) || defined(CONFIG_TK1_SMMU)
     return seL4_ARCH_Page_MapIO(cap, root, rights, vaddr);
 #else
     return -1;

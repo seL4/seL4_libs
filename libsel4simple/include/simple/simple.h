@@ -516,7 +516,8 @@ static inline seL4_CPtr simple_get_iospace(simple_t *simple, uint16_t domainID, 
 }
 #endif
 
-#ifdef CONFIG_ARM_SMMU
+
+#ifdef CONFIG_TK1_SMMU
 static inline seL4_Error simple_get_iospace_cap_count(simple_t *simple, int *count)
 {
     if (!simple) {

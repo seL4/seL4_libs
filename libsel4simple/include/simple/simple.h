@@ -191,6 +191,7 @@ typedef seL4_Error(*simple_get_iospace_fn)(void *data, uint16_t domainID, uint16
  */
 typedef seL4_CPtr(*simple_get_sched_ctrl_fn)(void *data, int core);
 
+
 /**
  *
  * Get simple to print all the information it has about its environment
@@ -558,6 +559,16 @@ static inline seL4_CPtr simple_get_nth_iospace_cap(simple_t *simple, int n)
     return simple->arch_simple.iospace_get_nth_cap(simple->data, n);
 }
 #endif
+
+static inline seL4_CPtr simple_get_sid_ctrl(simple_t *simple)
+{
+    return simple_init_cap(simple, seL4_CapSMMUSIDControl);
+}
+
+static inline seL4_CPtr simple_get_cb_ctrl(simple_t *simple)
+{
+    return simple_init_cap(simple, seL4_CapSMMUCBControl);
+}
 
 static inline void simple_print(simple_t *simple)
 {

@@ -43,7 +43,5 @@ static const UNUSED size_t sel4_page_sizes[] = {
 #define seL4_ARCH_Uncached_VMAttributes seL4_X86_CacheDisabled
 #define seL4_ARCH_LargePageObject      seL4_X86_LargePageObject
 /* for size of a large page object use seL4_LargePageBits */
-/* Remap does not exist on all kernels */
-#define seL4_ARCH_Page_Remap           seL4_X86_Page_Remap
 #define ARCHPageGetAddress             X86PageGetAddress
 

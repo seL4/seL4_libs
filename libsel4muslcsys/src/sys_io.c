@@ -326,6 +326,17 @@ long sys_writev(va_list ap)
     return ret;
 }
 
+long sys_write(va_list ap)
+{
+
+    int fd = va_arg(ap, int);
+    void *buf = va_arg(ap, void *);
+    size_t count = va_arg(ap, size_t);
+    /* construct an iovec and call writev */
+    struct iovec iov = {.iov_base = buf, .iov_len = count };
+    return writev(fd, &iov, 1);
+}
+
 long sys_readv(va_list ap)
 {
     int fd = va_arg(ap, int);

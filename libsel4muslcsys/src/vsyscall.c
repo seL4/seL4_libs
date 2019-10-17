@@ -120,6 +120,9 @@ static muslcsys_syscall_t syscall_table[MUSLC_NUM_SYSCALLS] = {
 #endif
     [__NR_set_tid_address] = boot_set_tid_address,
     [__NR_writev] = boot_sys_writev,
+    /* We don't need a boot_sys_write variant as this implementation wraps
+     * whatever __NR_writev is set to. */
+    [__NR_write] = sys_write,
     [__NR_sched_yield] = sys_sched_yield,
     [__NR_exit] = sys_exit,
     [__NR_rt_sigprocmask] = sys_rt_sigprocmask,

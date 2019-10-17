@@ -39,6 +39,7 @@ long sys_brk(va_list ap);
 long sys_mmap2(va_list ap);
 long sys_mmap(va_list ap);
 long sys_mremap(va_list ap);
+long sys_write(va_list ap);
 long sys_writev(va_list ap);
 long sys_madvise(va_list ap);
 

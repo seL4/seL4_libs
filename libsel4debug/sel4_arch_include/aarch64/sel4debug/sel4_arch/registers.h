@@ -52,6 +52,7 @@ static UNUSED const char *register_names[] = {
     "x27",
     "x28",
     "tpidr_el0",
+    "tpidrro_el0"
 };
 
 /* assert that register_names correspond to seL4_UserContext */
@@ -89,5 +90,6 @@ compile_time_assert(x25_correct_position, offsetof(seL4_UserContext, x25)       
 compile_time_assert(x26_correct_position, offsetof(seL4_UserContext, x26)         == 31 * sizeof(seL4_Word));
 compile_time_assert(x27_correct_position, offsetof(seL4_UserContext, x27)         == 32 * sizeof(seL4_Word));
 compile_time_assert(x28_correct_position, offsetof(seL4_UserContext, x28)         == 33 * sizeof(seL4_Word));
-compile_time_assert(x28_correct_position, offsetof(seL4_UserContext, tpidr_el0)   == 34 * sizeof(seL4_Word));
+compile_time_assert(tpidr_el0_correct_position, offsetof(seL4_UserContext, tpidr_el0)   == 34 * sizeof(seL4_Word));
+compile_time_assert(tpidrro_el0_correct_position, offsetof(seL4_UserContext, tpidrro_el0)   == 35 * sizeof(seL4_Word));
 

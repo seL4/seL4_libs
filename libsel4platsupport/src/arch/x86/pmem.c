@@ -20,7 +20,7 @@ int sel4platsupport_get_num_pmem_regions(simple_t *simple) {
     seL4_X86_BootInfo_mmap_t data;
     int error = simple_get_extended_bootinfo(simple, SEL4_BOOTINFO_HEADER_X86_MBMMAP, &data, sizeof(seL4_X86_BootInfo_mmap_t));
     if (error == -1) {
-        ZF_LOGE("Could not find info");
+        ZF_LOGW("Could not find info");
         return 0;
     }
 
@@ -31,7 +31,7 @@ int sel4platsupport_get_pmem_region_list(simple_t *simple, size_t max_length, pm
     seL4_X86_BootInfo_mmap_t data;
     int error = simple_get_extended_bootinfo(simple, SEL4_BOOTINFO_HEADER_X86_MBMMAP, &data, sizeof(seL4_X86_BootInfo_mmap_t));
     if (error == -1) {
-        ZF_LOGE("Could not find info");
+        ZF_LOGW("Could not find info");
         return -1;
     }
     seL4_X86_mb_mmap_t *mmap = (seL4_X86_mb_mmap_t *)((unsigned long)data.mmap);

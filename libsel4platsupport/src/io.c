@@ -327,23 +327,6 @@ int sel4platsupport_new_fdt_ops(ps_io_fdt_t *io_fdt, simple_t *simple, ps_malloc
     return 0;
 }
 
-#ifdef CONFIG_PLAT_TK1
-#include <platsupport/gpio.h>
-
-gpio_sys_t gpio_sys;
-#endif
-
-void *get_mux_dependencies(void)
-{
-#ifdef CONFIG_PLAT_TK1
-    /* The TK1's mux depends on an instance of the GPIO driver. */
-    return &gpio_sys;
-#else
-    /* The other platforms don't have any such dependency issues. */
-    return NULL;
-#endif
-}
-
 int sel4platsupport_new_io_ops(vspace_t *vspace, vka_t *vka, simple_t *simple, ps_io_ops_t *io_ops)
 {
     memset(io_ops, 0, sizeof(ps_io_ops_t));
@@ -351,15 +334,7 @@ int sel4platsupport_new_io_ops(vspace_t *vspace, vka_t *vka, simple_t *simple, p
     int error = 0;
 
     /* Initialise the interfaces which do not require memory allocation/need to be initialised first */
-    error = sel4platsupport_new_malloc_ops(&io_ops->malloc_ops)
-#ifdef ARCH_ARM
-            || clock_sys_init(io_ops, &io_ops->clock_sys)
-#ifdef CONFIG_PLAT_TK1
-            || gpio_sys_init(io_ops, &gpio_sys)
-#endif
-            || mux_sys_init(io_ops, get_mux_dependencies(), &io_ops->mux_sys)
-#endif
-            ;
+    error = sel4platsupport_new_malloc_ops(&io_ops->malloc_ops);
     if (error) {
         return error;
     }

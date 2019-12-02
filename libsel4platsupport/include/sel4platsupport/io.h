@@ -64,7 +64,8 @@ int sel4platsupport_new_fdt_ops(ps_io_fdt_t *io_fdt, simple_t *simple, ps_malloc
 
 /**
  * Creates a new implementation of the platsupport io_ops interface using a
- * provided vspace and vka
+ * provided vspace and vka. Keep in mind that the more device specific
+ * interfaces like MUX and CLK subsystems are not initialised.
  *
  * @param vspace VSpace interface to use for mapping
  * @param vka VKA interface for allocating physical frames, and any extra objects or cslots

@@ -80,6 +80,7 @@ typedef struct sel4utils_alloc_data {
     vspace_t *bootstrap;
     sel4utils_map_page_fn map_page;
     sel4utils_res_t *reservation_head;
+    bool is_empty;
 } sel4utils_alloc_data_t;
 
 static inline sel4utils_res_t *reservation_to_res(reservation_t res)
@@ -109,7 +110,28 @@ int
 sel4utils_get_vspace_with_map(vspace_t *loader, vspace_t *new_vspace, sel4utils_alloc_data_t *data,
                               vka_t *vka, seL4_CPtr vspace_root,
                               vspace_allocated_object_fn allocated_object_fn, void *allocated_object_cookie, sel4utils_map_page_fn map_page);
-
+/**
+ * Allows for an empty vspace to be created with an arbitrary function to invoke for the mapping of pages.
+ * This is useful if you want a vspace manager, but you do not want parts of the virtual address space to be
+ * pre-reserved e.g the kernel region. The vspace is useful for guest virtual machine-based applications.
+ *
+ * @param loader                  vspace of the current process, used to allocate
+ *                                virtual memory book keeping.
+ * @param new_vspace              uninitialised vspace struct to populate.
+ * @param data                    uninitialised vspace data struct to populate.
+ * @param vka                     initialised vka that this virtual memory allocator will use to
+ *                                allocate pages and pagetables. This allocator will never invoke free.
+ * @param vspace_root             root object for the new vspace.
+ * @param allocated_object_fn     function to call when objects are allocated. Can be null.
+ * @param allocated_object_cookie cookie passed when the above function is called. Can be null.
+ * @param map_page                Function that will be called to map seL4 pages
+ *
+ * @return 0 on success.
+ */
+int
+sel4utils_get_empty_vspace_with_map(vspace_t *loader, vspace_t *new_vspace, sel4utils_alloc_data_t *data,
+                                    vka_t *vka, seL4_CPtr vspace_root,
+                                    vspace_allocated_object_fn allocated_object_fn, void *allocated_object_cookie, sel4utils_map_page_fn map_page);
 /**
  * Initialise a vspace allocator for a new address space (not the current one).
  *

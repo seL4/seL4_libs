@@ -46,6 +46,7 @@ static int common_init(vspace_t *vspace, vka_t *vka, seL4_CPtr vspace_root,
     data->vka = vka;
     data->last_allocated = 0x10000000;
     data->reservation_head = NULL;
+    data->is_empty = false;
 
     data->vspace_root = vspace_root;
     vspace->allocated_object = allocated_object_fn;
@@ -59,9 +60,11 @@ static void common_init_post_bootstrap(vspace_t *vspace, sel4utils_map_page_fn m
     sel4utils_alloc_data_t *data = get_alloc_data(vspace);
     /* reserve the kernel region, we do this by marking the
      * top level entry as RESERVED */
-    for (int i = TOP_LEVEL_INDEX(KERNEL_RESERVED_START);
-         i < VSPACE_LEVEL_SIZE; i++) {
-        data->top_level->table[i] = RESERVED;
+    if (!data->is_empty) {
+        for (int i = TOP_LEVEL_INDEX(KERNEL_RESERVED_START);
+             i < VSPACE_LEVEL_SIZE; i++) {
+            data->top_level->table[i] = RESERVED;
+        }
     }
 
     data->map_page = map_page;
@@ -311,6 +314,21 @@ int sel4utils_get_vspace_with_map(vspace_t *loader, vspace_t *new_vspace, sel4ut
     if (common_init(new_vspace, vka, vspace_root, allocated_object_fn, allocated_object_cookie)) {
         return -1;
     }
+
+    return get_vspace_bootstrap(loader, new_vspace, data, map_page);
+}
+
+int sel4utils_get_empty_vspace_with_map(vspace_t *loader, vspace_t *new_vspace, sel4utils_alloc_data_t *data,
+                                        vka_t *vka, seL4_CPtr vspace_root,
+                                        vspace_allocated_object_fn allocated_object_fn, void *allocated_object_cookie, sel4utils_map_page_fn map_page)
+{
+
+    new_vspace->data = (void *) data;
+
+    if (common_init(new_vspace, vka, vspace_root, allocated_object_fn, allocated_object_cookie)) {
+        return -1;
+    }
+    data->is_empty = true;
 
     return get_vspace_bootstrap(loader, new_vspace, data, map_page);
 }

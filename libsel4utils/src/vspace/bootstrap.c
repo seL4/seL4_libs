@@ -285,8 +285,23 @@ void *bootstrap_create_level(vspace_t *vspace, size_t size)
     return alloc_and_map(vspace, size);
 }
 
-/* Interface functions */
 
+static int get_vspace_bootstrap(vspace_t *loader, vspace_t *new_vspace, sel4utils_alloc_data_t *data,
+                                sel4utils_map_page_fn map_page)
+{
+    data->bootstrap = loader;
+    /* create the top level page table from the loading vspace */
+    data->top_level = vspace_new_pages(loader, seL4_AllRights, sizeof(vspace_mid_level_t) / PAGE_SIZE_4K, seL4_PageBits);
+    if (data->top_level == NULL) {
+        return -1;
+    }
+    memset(data->top_level, 0, sizeof(vspace_mid_level_t));
+
+    common_init_post_bootstrap(new_vspace, map_page);
+    return 0;
+}
+
+/* Interface functions */
 int sel4utils_get_vspace_with_map(vspace_t *loader, vspace_t *new_vspace, sel4utils_alloc_data_t *data,
                                   vka_t *vka, seL4_CPtr vspace_root,
                                   vspace_allocated_object_fn allocated_object_fn, void *allocated_object_cookie, sel4utils_map_page_fn map_page)
@@ -297,18 +312,7 @@ int sel4utils_get_vspace_with_map(vspace_t *loader, vspace_t *new_vspace, sel4ut
         return -1;
     }
 
-    data->bootstrap = loader;
-
-    /* create the top level page table from the loading vspace */
-    data->top_level = vspace_new_pages(loader, seL4_AllRights, sizeof(vspace_mid_level_t) / PAGE_SIZE_4K, seL4_PageBits);
-    if (data->top_level == NULL) {
-        return -1;
-    }
-    memset(data->top_level, 0, sizeof(vspace_mid_level_t));
-
-    common_init_post_bootstrap(new_vspace, map_page);
-
-    return 0;
+    return get_vspace_bootstrap(loader, new_vspace, data, map_page);
 }
 
 int sel4utils_get_vspace(vspace_t *loader, vspace_t *new_vspace, sel4utils_alloc_data_t *data,

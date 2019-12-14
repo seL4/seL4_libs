@@ -151,6 +151,28 @@ int sel4utils_get_vspace(vspace_t *loader, vspace_t *new_vspace, sel4utils_alloc
                          vka_t *vka, seL4_CPtr vspace_root, vspace_allocated_object_fn allocated_object_fn,
                          void *allocated_object_cookie);
 
+/**
+ * Allows for an empty vspace to be created.
+ * This is useful if you want a vspace manager, but you do not want parts of the virtual address space to be
+ * pre-reserved e.g the kernel region. The vspace is useful for guest virtual machine-based applications.
+ *
+ * @param loader                  vspace of the current process, used to allocate
+ *                                virtual memory book keeping.
+ * @param new_vspace              uninitialised vspace struct to populate.
+ * @param data                    uninitialised vspace data struct to populate.
+ * @param vka                     initialised vka that this virtual memory allocator will use to
+ *                                allocate pages and pagetables. This allocator will never invoke free.
+ * @param vspace_root             root object for the new vspace.
+ * @param allocated_object_fn     function to call when objects are allocated. Can be null.
+ * @param allocated_object_cookie cookie passed when the above function is called. Can be null.
+ *
+ * @return 0 on success.
+ */
+int sel4utils_get_empty_vspace(vspace_t *loader, vspace_t *new_vspace, sel4utils_alloc_data_t *data,
+                               vka_t *vka, seL4_CPtr vspace_root, vspace_allocated_object_fn allocated_object_fn,
+                               void *allocated_object_cookie);
+
+
 #ifdef CONFIG_VTX
 /**
  * Initialise a vspace allocator for an EPT address space

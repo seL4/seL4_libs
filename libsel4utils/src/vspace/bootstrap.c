@@ -341,6 +341,21 @@ int sel4utils_get_vspace(vspace_t *loader, vspace_t *new_vspace, sel4utils_alloc
                                          allocated_object_cookie, sel4utils_map_page_pd);
 }
 
+int sel4utils_get_empty_vspace(vspace_t *loader, vspace_t *new_vspace, sel4utils_alloc_data_t *data,
+                               vka_t *vka, seL4_CPtr vspace_root,
+                               vspace_allocated_object_fn allocated_object_fn, void *allocated_object_cookie)
+{
+    new_vspace->data = (void *) data;
+
+    if (common_init(new_vspace, vka, vspace_root, allocated_object_fn, allocated_object_cookie)) {
+        return -1;
+    }
+    data->is_empty = true;
+
+    return get_vspace_bootstrap(loader, new_vspace, data, sel4utils_map_page_pd);
+}
+
+
 #ifdef CONFIG_VTX
 int sel4utils_get_vspace_ept(vspace_t *loader, vspace_t *new_vspace, vka_t *vka,
                              seL4_CPtr ept, vspace_allocated_object_fn allocated_object_fn, void *allocated_object_cookie)

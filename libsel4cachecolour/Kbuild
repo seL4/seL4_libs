@@ -1,0 +1,5 @@
+# @LICENSE(NICTA_CORE)
+
+libs-$(CONFIG_LIB_SEL4_CACHECOLOURING) += libsel4cachecolour
+
+libsel4cachecolour: libsel4 $(libc) libsel4vka libsel4allocman common

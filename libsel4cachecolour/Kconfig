@@ -1,0 +1,30 @@
+# @LICENSE(NICTA_CORE)
+
+menuconfig LIB_SEL4_CACHECOLOURING
+    bool "cache colouring allocator"
+    default y
+    depends on LIB_SEL4 && HAVE_LIBC && LIB_SEL4_VKA && LIB_SEL4_ALLOCMAN
+    help
+        cache coloring allocator for partitioning the physically-indexed cache
+    
+    config NUM_CACHE_COLOURS 
+    int "Number of cache colours on this platform" 
+    depends on LIB_SEL4_CACHECOLOURING 
+    default  32 
+    help 
+          number of page colours that the user would like to colouring the cache 
+
+     config COLOUR_ALLOC_SIZEBITS
+     int "allocated untype for all colours (Bits)" 
+     depends on LIB_SEL4_CACHECOLOURING 
+     default 17  
+     help 
+           the maximum untype size that is managed by cache colouring allocator. It then breaks the untype into few coloured unyptes (pages).
+
+     config COLOUR_MSPACE_RESERVES
+     int "number of chunks reserved for the utype nodes in mspace"
+     depends on LIB_SEL4_CACHECOLOURING 
+     default 10
+     help  
+            in mspace refill the water mark with the static memory pool, handling the recursive allocation for the untype retypes, cache colouring allocator may be called recurisively for inserting coloured untype nodes. 
+

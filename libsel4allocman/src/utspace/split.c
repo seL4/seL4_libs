@@ -263,7 +263,7 @@ seL4_Word _utspace_split_alloc(allocman_t *alloc, void *_split, size_t size_bits
         }
         if (!head) {
             SET_ERROR(error, 1);
-            ZF_LOGE("Failed to find any untyped capable of creating an object at address %p", (void *)paddr);
+            ZF_LOGV("Failed to find any untyped capable of creating an object at address %p", (void *)paddr);
             return 0;
         }
         if (_refill_pool(alloc, split, head, size_bits, paddr)) {

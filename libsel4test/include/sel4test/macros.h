@@ -15,6 +15,7 @@
 /* Include Kconfig variables. */
 #include <autoconf.h>
 #include <sel4test/gen_config.h>
+#include <sel4test/testutil.h>
 
 #define SEL4TEST_PRINT_BUFFER 200
 

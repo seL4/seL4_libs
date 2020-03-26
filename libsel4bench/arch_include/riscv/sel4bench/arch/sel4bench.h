@@ -150,18 +150,18 @@ static FASTFN void sel4bench_set_count_event(counter_t counter, event_id_t event
 
         /* Reset and start the counter*/
 #if __riscv_xlen == 32
-        asm volatile("csrw hpmcounterh3, 0");
+        asm volatile("csrw mhpmcounterh3, 0");
 #endif
-        asm volatile("csrw hpmcounter3, 0\n"
+        asm volatile("csrw mhpmcounter3, 0\n"
                      "csrw mhpmevent3, %0\n"
                      :: "r"(event));
         break;
     case 1:
         asm volatile("csrw mhpmevent4, 0");
 #if __riscv_xlen == 32
-        asm volatile("csrw hpmcounterh4, 0");
+        asm volatile("csrw mhpmcounterh4, 0");
 #endif
-        asm volatile("csrw hpmcounter4, 0\n"
+        asm volatile("csrw mhpmcounter4, 0\n"
                      "csrw mhpmevent4, %0\n"
                      :: "r"(event));
         break;

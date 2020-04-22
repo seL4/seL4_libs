@@ -17,6 +17,9 @@
 
 #include <sel4/sel4.h>
 #include <sel4/types.h>
+#ifdef CONFIG_DEBUG_BUILD
+#include <sel4debug/debug.h>
+#endif
 #include <assert.h>
 #include <stdint.h>
 #include <utils/util.h>
@@ -192,7 +195,7 @@ static inline int vka_cspace_alloc_path(vka_t *vka, cspacepath_t *res)
 static inline void vka_cspace_free(vka_t *vka, seL4_CPtr slot)
 {
 #ifdef CONFIG_DEBUG_BUILD
-    if (seL4_DebugCapIdentify(slot) != 0) {
+    if (debug_cap_is_valid(slot)) {
         ZF_LOGF("slot is not free: call vka_cnode_delete first");
         /* this terminates the system */
     }

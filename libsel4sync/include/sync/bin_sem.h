@@ -15,6 +15,9 @@
 #include <autoconf.h>
 #include <assert.h>
 #include <sel4/sel4.h>
+#ifdef CONFIG_DEBUG_BUILD
+#include <sel4debug/debug.h>
+#endif
 #include <vka/vka.h>
 #include <vka/object.h>
 #include <stddef.h>
@@ -44,7 +47,7 @@ static inline int sync_bin_sem_init(sync_bin_sem_t *sem, seL4_CPtr notification,
 
 #ifdef CONFIG_DEBUG_BUILD
     /* Check the cap actually is a notification. */
-    assert(seL4_DebugCapIdentify(notification) == 6);
+    assert(debug_cap_is_notification(notification));
 #endif
 
     sem->notification.cptr = notification;

@@ -15,6 +15,9 @@
 #include <autoconf.h>
 #include <assert.h>
 #include <sel4/sel4.h>
+#ifdef CONFIG_DEBUG_BUILD
+#include <sel4debug/debug.h>
+#endif
 #include <vka/vka.h>
 #include <vka/object.h>
 #include <stddef.h>
@@ -38,7 +41,7 @@ static inline int sync_sem_init(sync_sem_t *sem, seL4_CPtr ep, int value)
     }
 #ifdef CONFIG_DEBUG_BUILD
     /* Check the cap actually is an EP. */
-    assert(seL4_DebugCapIdentify(ep) == 4);
+    assert(debug_cap_is_endpoint(ep));
 #endif
 
     sem->ep.cptr = ep;

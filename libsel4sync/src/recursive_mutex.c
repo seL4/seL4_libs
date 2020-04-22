@@ -17,6 +17,9 @@
 #include <limits.h>
 
 #include <sel4/sel4.h>
+#ifdef CONFIG_DEBUG_BUILD
+#include <sel4debug/debug.h>
+#endif
 
 static void *thread_id(void)
 {
@@ -31,7 +34,7 @@ int sync_recursive_mutex_init(sync_recursive_mutex_t *mutex, seL4_CPtr notificat
     }
 #ifdef CONFIG_DEBUG_BUILD
     /* Check the cap actually is a notification. */
-    assert(seL4_DebugCapIdentify(notification) == 6);
+    assert(debug_cap_is_notification(notification));
 #endif
 
     mutex->notification.cptr = notification;

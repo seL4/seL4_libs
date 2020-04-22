@@ -14,6 +14,9 @@
 
 #include <autoconf.h>
 #include <sel4/sel4.h>
+#ifdef CONFIG_DEBUG_BUILD
+#include <sel4debug/debug.h>
+#endif
 #include <vka/vka.h>
 #include <vka/object.h>
 #include <platsupport/sync/atomic.h>
@@ -38,7 +41,7 @@ static inline int sync_cv_init(sync_cv_t *cv, seL4_CPtr notification)
 
 #ifdef CONFIG_DEBUG_BUILD
     /* Check the cap actually is a notification. */
-    assert(seL4_DebugCapIdentify(notification) == 6);
+    assert(debug_cap_is_notification(notification));
 #endif
 
     cv->notification.cptr = notification;

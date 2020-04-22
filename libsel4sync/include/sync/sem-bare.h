@@ -22,6 +22,9 @@
 #include <assert.h>
 #include <limits.h>
 #include <sel4/sel4.h>
+#ifdef CONFIG_DEBUG_BUILD
+#include <sel4debug/debug.h>
+#endif
 #include <stddef.h>
 #include <platsupport/sync/atomic.h>
 
@@ -29,7 +32,7 @@ static inline int sync_sem_bare_wait(seL4_CPtr ep, volatile int *value)
 {
 #ifdef CONFIG_DEBUG_BUILD
     /* Check the cap actually is an EP. */
-    assert(seL4_DebugCapIdentify(ep) == 4);
+    assert(debug_cap_is_endpoint(ep));
 #endif
     assert(value != NULL);
     int oldval;
@@ -80,7 +83,7 @@ static inline int sync_sem_bare_post(seL4_CPtr ep, volatile int *value)
 {
 #ifdef CONFIG_DEBUG_BUILD
     /* Check the cap actually is an EP. */
-    assert(seL4_DebugCapIdentify(ep) == 4);
+    assert(debug_cap_is_endpoint(ep));
 #endif
     assert(value != NULL);
     /* We can do an "unsafe" increment here because we know the lock cannot be

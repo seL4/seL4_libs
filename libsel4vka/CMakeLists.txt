@@ -69,3 +69,6 @@ target_link_libraries(
         sel4vka_Config
         sel4_autoconf
 )
+if(KernelDebugBuild)
+    target_link_libraries(sel4vka PUBLIC sel4debug)
+endif()

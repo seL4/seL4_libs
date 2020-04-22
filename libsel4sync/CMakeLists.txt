@@ -20,11 +20,7 @@ list(SORT deps)
 
 add_library(sel4sync STATIC EXCLUDE_FROM_ALL ${deps})
 
-target_include_directories(
-    sel4sync
-    PUBLIC
-        include
-)
+target_include_directories(sel4sync PUBLIC include)
 
 target_link_libraries(
     sel4sync
@@ -37,3 +33,7 @@ target_link_libraries(
         sel4_
         autoconf
 )
+
+if(KernelDebugBuild)
+    target_link_libraries(sel4sync PUBLIC sel4debug)
+endif()

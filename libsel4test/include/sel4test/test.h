@@ -199,6 +199,21 @@ static inline test_result_t _test_abort(const char *condition, const char *file,
     return ABORT;
 }
 
+static inline void print_error_in_ipc(seL4_Error e)
+{
+#ifdef CONFIG_KERNEL_INVOCATION_REPORT_ERROR_IPC
+    // If it hasnt been printed already
+    if (!seL4_CanPrintError() && e != seL4_NoError) {
+        printf("%s", seL4_GetDebugError());
+    }
+#endif
+}
+
+#define test_error_eq(e, c) \
+    if (!((e) == (c))) { \
+        print_error_in_ipc(e); \
+        return _test_fail(#e, __FILE__, __LINE__); \
+    }
 #define test_assert(e) if (!(e)) return _test_fail(#e, __FILE__, __LINE__)
 #define test_check(e) if (!(e)) _test_error(#e, __FILE__, __LINE__)
 #define test_assert_fatal(e) if (!(e)) return _test_abort(#e, __FILE__, __LINE__)

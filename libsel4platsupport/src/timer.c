@@ -287,6 +287,9 @@ seL4_CPtr sel4platsupport_timer_objs_get_irq_cap(timer_objects_t *to, int id, ir
                 break;
             case PS_NONE:
                 ZF_LOGE("Invalid irq type");
+                break;
+            default:
+                ZF_LOGE("Unsupported irq type");
             }
         }
     }

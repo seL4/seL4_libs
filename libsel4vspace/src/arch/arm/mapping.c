@@ -13,12 +13,12 @@
 #include <autoconf.h>
 #include <vspace/mapping.h>
 
+#ifdef CONFIG_ARM_SMMU
 static seL4_Error vspace_map_io(seL4_CPtr cap, seL4_CPtr iospace_root, seL4_Word vaddr, UNUSED seL4_Word attr)
 {
-#ifdef CONFIG_ARM_SMMU
     return seL4_ARM_IOPageTable_Map(cap, iospace_root, vaddr);
-#endif
 }
+#endif
 
 int vspace_get_iospace_map_obj(UNUSED seL4_Word failed_bits, vspace_map_obj_t *obj)
 {
@@ -29,6 +29,6 @@ int vspace_get_iospace_map_obj(UNUSED seL4_Word failed_bits, vspace_map_obj_t *o
     obj->size_bits = seL4_IOPageTableBits;
     obj->type = seL4_ARM_IOPageTableObject;
     obj->map_fn = vspace_map_io;
-    return 0;
 #endif
+    return 0;
 }

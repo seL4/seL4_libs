@@ -352,6 +352,10 @@ static irq_cookie_t *new_irq_ops_common(vka_t *vka, simple_t *simple, irq_interf
                                         ps_malloc_ops_t *malloc_ops, irq_iface_type_t iface_type)
 {
     int err = 0;
+    /* Figure out how many bitfields we need to keep track of the allocation status of the IDs */
+    size_t bits_in_seL4_Word = sizeof(seL4_Word) * CHAR_BIT;
+    size_t num_irq_bitfields = ALIGN_UP(irq_config.max_irq_ids, bits_in_seL4_Word) / sizeof(seL4_Word);
+    size_t num_ntfn_bitfields = ALIGN_UP(irq_config.max_ntfn_ids, bits_in_seL4_Word) / sizeof(seL4_Word);
 
     irq_cookie_t *cookie = 0;
     err = ps_calloc(malloc_ops, 1, sizeof(irq_cookie_t), (void **) &cookie);
@@ -379,13 +383,9 @@ static irq_cookie_t *new_irq_ops_common(vka_t *vka, simple_t *simple, irq_interf
         goto error;
     }
     for (int i = 0; i < irq_config.max_ntfn_ids; i++) {
-        memset(cookie->ntfn_table[i].bound_irqs, UNPAIRED_ID, MAX_INTERRUPTS_TO_NOTIFICATIONS);
+        memset(cookie->ntfn_table[i].bound_irqs, UNPAIRED_ID, sizeof(irq_id_t) * MAX_INTERRUPTS_TO_NOTIFICATIONS);
     }
 
-    /* Figure out how many bitfields we need to keep track of the allocation status of the IDs */
-    size_t bits_in_seL4_Word = sizeof(seL4_Word) * CHAR_BIT;
-    size_t num_irq_bitfields = ALIGN_UP(irq_config.max_irq_ids, bits_in_seL4_Word) / sizeof(seL4_Word);
-    size_t num_ntfn_bitfields = ALIGN_UP(irq_config.max_ntfn_ids, bits_in_seL4_Word) / sizeof(seL4_Word);
     err = ps_calloc(malloc_ops, 1, num_irq_bitfields * sizeof(seL4_Word),
                     (void **) & (cookie->allocated_irq_bitfields));
     if (err) {
@@ -711,7 +711,7 @@ int sel4platsupport_irq_return_ntfn(ps_irq_ops_t *irq_ops, ntfn_id_t ntfn_id,
     /* Zero out the entire entry */
     memset(ntfn_entry, 0, sizeof(ntfn_entry_t));
     /* Reset the bound_irqs array for the entry */
-    memset(ntfn_entry->bound_irqs, UNPAIRED_ID, MAX_INTERRUPTS_TO_NOTIFICATIONS);
+    memset(ntfn_entry->bound_irqs, UNPAIRED_ID, sizeof(irq_id_t) * MAX_INTERRUPTS_TO_NOTIFICATIONS);
 
     irq_cookie->num_allocated_ntfns--;
     unfill_bit_in_bitfield(irq_cookie->allocated_ntfn_bitfields, ntfn_id);
@@ -843,7 +843,7 @@ int sel4platsupport_irq_handle(ps_irq_ops_t *irq_ops, ntfn_id_t ntfn_id, seL4_Wo
         bool callback_called = perform_callback(irq_cookie, paired_irq_id, bit_index);
         if (callback_called && ntfn_entry->pending_bitfield & BIT(bit_index)) {
             /* Unset the bit, we've performed the callback for that interrupt */
-            ntfn_entry->pending_bitfield & ~BIT(bit_index);
+            ntfn_entry->pending_bitfield &= ~BIT(bit_index);
         }
         unchecked_bits &= ~BIT(bit_index);
     }

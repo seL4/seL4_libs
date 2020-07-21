@@ -21,18 +21,20 @@ cspacepath_t _cspace_two_level_make_path(void *_cspace, seL4_CPtr slot)
 {
     cspacepath_t l1_path, l2_path;
     size_t l1slot, l2slot;
-    cspace_two_level_t *cspace = (cspace_two_level_t*)_cspace;
+    cspace_two_level_t *cspace = (cspace_two_level_t *)_cspace;
     l1slot = slot >> cspace->config.level_two_bits;
     l2slot = slot & MASK(cspace->config.level_two_bits);
     /* This is an excessive way of constructing the path. But it's cool to do it in a way that
        makes no assumptions about the underlying cspace structures. In particular the second level
        could be a two level cspace and this would still work */
-    if(!cspace->second_levels[l1slot]) {
+    if (!cspace->second_levels[l1slot]) {
         assert(!"ERROR: Tried make a path to a non existant slot\n");
-        return (cspacepath_t) {0, 0, 0, 0, 0, 0, 0};
+        return (cspacepath_t) {
+            0, 0, 0, 0, 0, 0, 0
+        };
     }
     l1_path = _cspace_single_level_make_path(&cspace->first_level, l1slot);
-    l2_path =_cspace_single_level_make_path(&cspace->second_levels[l1slot]->second_level, l2slot);
+    l2_path = _cspace_single_level_make_path(&cspace->second_levels[l1slot]->second_level, l2slot);
     return (cspacepath_t) {
         .root = l1_path.root,
         .capPtr = (l1_path.capPtr << l2_path.capDepth) | l2_path.capPtr,
@@ -62,13 +64,15 @@ static int _create_second_level(allocman_t *alloc, cspace_two_level_t *cspace, s
         .first_slot = 0,
         .end_slot = BIT(cspace->config.level_two_bits)
     };
-    cspace->second_levels[index] = (struct cspace_two_level_node*) allocman_mspace_alloc(alloc, sizeof(struct cspace_two_level_node), &error);
+    cspace->second_levels[index] = (struct cspace_two_level_node *) allocman_mspace_alloc(alloc,
+                                                                                          sizeof(struct cspace_two_level_node), &error);
     if (error) {
         return error;
     }
     if (alloc_node) {
         cspacepath_t path = _cspace_single_level_make_path(&cspace->first_level, index);
-        cspace->second_levels[index]->cookie = allocman_utspace_alloc(alloc, cspace->config.level_two_bits + seL4_SlotBits, seL4_CapTableObject, &path, false, &error);
+        cspace->second_levels[index]->cookie = allocman_utspace_alloc(alloc, cspace->config.level_two_bits + seL4_SlotBits,
+                                                                      seL4_CapTableObject, &path, false, &error);
         cspace->second_levels[index]->cookie_valid = 1;
     } else {
         cspace->second_levels[index]->cookie_valid = 0;
@@ -101,13 +105,15 @@ int cspace_two_level_create(allocman_t *alloc, cspace_two_level_t *cspace, struc
         .end_slot = config.end_slot
     };
     cspace->config = config;
-    cspace->second_levels = (struct cspace_two_level_node **)allocman_mspace_alloc(alloc, sizeof(struct cspace_two_level_node*) * BIT(config.cnode_size_bits), &error);
+    cspace->second_levels = (struct cspace_two_level_node **)allocman_mspace_alloc(alloc,
+                                                                                   sizeof(struct cspace_two_level_node *) * BIT(config.cnode_size_bits), &error);
     if (error) {
         return error;
     }
     error = cspace_single_level_create(alloc, &cspace->first_level, single_config);
     if (error) {
-        allocman_mspace_free(alloc, cspace->second_levels, sizeof(struct cspace_two_level_node*) * BIT(config.cnode_size_bits));
+        allocman_mspace_free(alloc, cspace->second_levels,
+                             sizeof(struct cspace_two_level_node *) * BIT(config.cnode_size_bits));
         return error;
     }
     for (i = 0; i < BIT(config.cnode_size_bits); i++) {
@@ -137,8 +143,9 @@ int cspace_two_level_create(allocman_t *alloc, cspace_two_level_t *cspace, struc
     return 0;
 }
 
-int _cspace_two_level_alloc_at(allocman_t *alloc, void *_cspace, seL4_CPtr slot) {
-    cspace_two_level_t *cspace = (cspace_two_level_t*)_cspace;
+int _cspace_two_level_alloc_at(allocman_t *alloc, void *_cspace, seL4_CPtr slot)
+{
+    cspace_two_level_t *cspace = (cspace_two_level_t *)_cspace;
     size_t l1slot;
     size_t l2slot;
     int error;
@@ -147,7 +154,7 @@ int _cspace_two_level_alloc_at(allocman_t *alloc, void *_cspace, seL4_CPtr slot)
     /* see if the first level exists */
     if (!cspace->second_levels[l1slot]) {
         error = _cspace_single_level_alloc_at(alloc, &cspace->first_level, l1slot);
-        if(error) {
+        if (error) {
             return error;
         }
         error = _create_second_level(alloc, cspace, l1slot, 1);
@@ -166,7 +173,7 @@ int _cspace_two_level_alloc_at(allocman_t *alloc, void *_cspace, seL4_CPtr slot)
 
 int _cspace_two_level_alloc(allocman_t *alloc, void *_cspace, cspacepath_t *slot)
 {
-    cspace_two_level_t *cspace = (cspace_two_level_t*)_cspace;
+    cspace_two_level_t *cspace = (cspace_two_level_t *)_cspace;
     size_t i;
     int found;
     int first;
@@ -216,7 +223,7 @@ static void _destroy_second_level(allocman_t *alloc, cspace_two_level_t *cspace,
     cspace_single_level_destroy(alloc, &cspace->second_levels[index]->second_level);
     if (cspace->second_levels[index]->cookie_valid) {
         int UNUSED error = seL4_CNode_Delete(cspace->config.cnode, index,
-                                      seL4_WordBits - cspace->config.level_two_bits);
+                                             seL4_WordBits - cspace->config.level_two_bits);
         assert(error == seL4_NoError);
         allocman_utspace_free(alloc, cspace->second_levels[index]->cookie, cspace->config.level_two_bits + seL4_SlotBits);
     }
@@ -231,7 +238,7 @@ void _cspace_two_level_free(struct allocman *alloc, void *_cspace, const cspacep
     size_t l2slot;
     seL4_CPtr cptr = slot->capPtr;
     cspacepath_t path;
-    cspace_two_level_t *cspace = (cspace_two_level_t*)_cspace;
+    cspace_two_level_t *cspace = (cspace_two_level_t *)_cspace;
     l1slot = cptr >> cspace->config.level_two_bits;
     l2slot = cptr & MASK(cspace->config.level_two_bits);
     path = _cspace_single_level_make_path(&cspace->second_levels[l1slot]->second_level, l2slot);
@@ -251,6 +258,7 @@ void cspace_two_level_destroy(struct allocman *alloc, cspace_two_level_t *cspace
             _destroy_second_level(alloc, cspace, i);
         }
     }
-    allocman_mspace_free(alloc, cspace->second_levels, sizeof(struct cspace_two_level_node*) * BIT(cspace->config.cnode_size_bits));
+    allocman_mspace_free(alloc, cspace->second_levels,
+                         sizeof(struct cspace_two_level_node *) * BIT(cspace->config.cnode_size_bits));
     cspace_single_level_destroy(alloc, &cspace->first_level);
 }

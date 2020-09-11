@@ -23,7 +23,7 @@
 #define PMU_READ(reg, v) asm volatile("mrs %0, " reg :  "=r"(v))
 
 #define PMUSERENR   "PMUSERENR_EL0"
-#define PMINTENCLR  "PMINTENCLR_EL0"
+#define PMINTENCLR  "PMINTENCLR_EL1"
 #define PMINTENSET  "PMINTENSET_EL1"
 #define PMCR        "PMCR_EL0"
 #define PMCNTENCLR  "PMCNTENCLR_EL0"

@@ -14,7 +14,9 @@
 #include <sel4muslcsys/gen_config.h>
 #include <stdio.h>
 #include <stdint.h>
+#include <stddef.h>
 #include <sel4/sel4.h>
+#include <sel4runtime.h>
 #include <utils/util.h>
 #include <bits/syscall.h>
 #include <bits/errno.h>
@@ -219,7 +221,7 @@ muslcsys_syscall_t muslcsys_install_syscall(int syscall, muslcsys_syscall_t new_
  * it can be overriden. We are able to have this constructor
  * in this file since we know it will get looked at by the linker due
  * to __vsyscall_ptr being here */
-static void CONSTRUCTOR(CONSTRUCTOR_MIN_PRIORITY) init_syscall_table(void)
+static void CONSTRUCTOR(CONSTRUCTOR_MIN_PRIORITY + 1) init_syscall_table(void)
 {
     muslcsys_syscall_t ret UNUSED;
     ret = muslcsys_install_syscall(__NR_set_tid_address, sys_set_tid_address);
@@ -240,7 +242,7 @@ static void CONSTRUCTOR(CONSTRUCTOR_MIN_PRIORITY) init_syscall_table(void)
 #ifdef CONFIG_LIB_SEL4_MUSLC_SYS_CPIO_FS
 extern char _cpio_archive[];
 extern char _cpio_archive_end[];
-static void CONSTRUCTOR(CONSTRUCTOR_MIN_PRIORITY) install_default_cpio(void)
+static void CONSTRUCTOR(CONSTRUCTOR_MIN_PRIORITY + 1) install_default_cpio(void)
 {
     unsigned long cpio_len = _cpio_archive_end - _cpio_archive;
     muslcsys_install_cpio_interface(_cpio_archive, cpio_len, cpio_get_file);
@@ -292,3 +294,15 @@ long sel4_vsyscall(long sysnum, ...)
 /* Put a pointer to sel4_vsyscall in a special section so anyone loading us
  * knows how to configure our syscall table */
 uintptr_t VISIBLE SECTION("__vsyscall") __vsyscall_ptr = (uintptr_t) sel4_vsyscall;
+
+/* muslc provides a function used to initialise the C standard library
+ * environment. */
+extern void __init_libc(char const *const *envp, char const *pn);
+
+/* Initialise muslc environment */
+void CONSTRUCTOR(CONSTRUCTOR_MIN_PRIORITY) muslcsys_init_muslc(void)
+{
+    seL4_IPCBuffer *tmp = __sel4_ipc_buffer;
+    __init_libc(sel4runtime_envp(), sel4runtime_argv()[0]);
+    __sel4_ipc_buffer = tmp;
+}

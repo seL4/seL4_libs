@@ -139,7 +139,7 @@ since it's super-convenient. We will be using 3 Client threads in our example:
         /* I'm not going to cover how to initialize vkas here. */
         SETUP_YOUR_CLIENT'S_VKA(&client_vkas[i]);
 
-        /* Ask the Serrver to Mint badged endpoints to the clients: the library
+        /* Ask the Server to Mint badged endpoints to the clients: the library
          * automatically both allocates a unique badge value and mints the
          * capability for us.
          *

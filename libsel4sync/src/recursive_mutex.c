@@ -18,11 +18,13 @@
 
 #include <sel4/sel4.h>
 
-static void *thread_id(void) {
-    return (void*)seL4_GetIPCBuffer();
+static void *thread_id(void)
+{
+    return (void *)seL4_GetIPCBuffer();
 }
 
-int sync_recursive_mutex_init(sync_recursive_mutex_t *mutex, seL4_CPtr notification) {
+int sync_recursive_mutex_init(sync_recursive_mutex_t *mutex, seL4_CPtr notification)
+{
     if (mutex == NULL) {
         ZF_LOGE("Mutex passed to sync_recursive_mutex_init is NULL");
         return -1;
@@ -41,7 +43,8 @@ int sync_recursive_mutex_init(sync_recursive_mutex_t *mutex, seL4_CPtr notificat
     return 0;
 }
 
-int sync_recursive_mutex_lock(sync_recursive_mutex_t *mutex) {
+int sync_recursive_mutex_lock(sync_recursive_mutex_t *mutex)
+{
     if (mutex == NULL) {
         ZF_LOGE("Mutex passed to sync_recursive_mutex_lock is NULL");
         return -1;
@@ -65,7 +68,8 @@ int sync_recursive_mutex_lock(sync_recursive_mutex_t *mutex) {
     return 0;
 }
 
-int sync_recursive_mutex_unlock(sync_recursive_mutex_t *mutex) {
+int sync_recursive_mutex_unlock(sync_recursive_mutex_t *mutex)
+{
     if (mutex == NULL) {
         ZF_LOGE("Mutex passed to sync_recursive_mutex_lock is NULL");
         return -1;
@@ -81,7 +85,8 @@ int sync_recursive_mutex_unlock(sync_recursive_mutex_t *mutex) {
     return 0;
 }
 
-int sync_recursive_mutex_new(vka_t *vka, sync_recursive_mutex_t *mutex) {
+int sync_recursive_mutex_new(vka_t *vka, sync_recursive_mutex_t *mutex)
+{
     int error = vka_alloc_notification(vka, &(mutex->notification));
 
     if (error != 0) {
@@ -91,7 +96,8 @@ int sync_recursive_mutex_new(vka_t *vka, sync_recursive_mutex_t *mutex) {
     }
 }
 
-int sync_recursive_mutex_destroy(vka_t *vka, sync_recursive_mutex_t *mutex) {
+int sync_recursive_mutex_destroy(vka_t *vka, sync_recursive_mutex_t *mutex)
+{
     vka_free_object(vka, &(mutex->notification));
     return 0;
 }

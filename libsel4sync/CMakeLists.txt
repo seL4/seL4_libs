@@ -19,5 +19,21 @@ file(GLOB deps src/*.c)
 list(SORT deps)
 
 add_library(sel4sync STATIC EXCLUDE_FROM_ALL ${deps})
-target_include_directories(sel4sync PUBLIC include)
-target_link_libraries(sel4sync muslc sel4 sel4vka platsupport utils sel4_autoconf)
+
+target_include_directories(
+    sel4sync
+    PUBLIC
+        include
+)
+
+target_link_libraries(
+    sel4sync
+    PUBLIC
+        muslc
+        sel4
+        sel4vka
+        platsupport
+        utils
+        sel4_
+        autoconf
+)

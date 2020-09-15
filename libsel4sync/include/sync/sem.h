@@ -30,7 +30,8 @@ typedef struct {
  * @param notification  An endpoint to use for the lock.
  * @param value         An initial value for the semaphore.
  * @return              0 on success, an error code on failure. */
-static inline int sync_sem_init(sync_sem_t *sem, seL4_CPtr ep, int value) {
+static inline int sync_sem_init(sync_sem_t *sem, seL4_CPtr ep, int value)
+{
     if (sem == NULL) {
         ZF_LOGE("Semaphore passed to sync_sem_init was NULL");
         return -1;
@@ -48,7 +49,8 @@ static inline int sync_sem_init(sync_sem_t *sem, seL4_CPtr ep, int value) {
 /* Wait on a semaphore
  * @param sem           An initialised semaphore to acquire.
  * @return              0 on success, an error code on failure. */
-static inline int sync_sem_wait(sync_sem_t *sem) {
+static inline int sync_sem_wait(sync_sem_t *sem)
+{
     if (sem == NULL) {
         ZF_LOGE("Semaphore passed to sync_sem_wait was NULL");
         return -1;
@@ -60,7 +62,8 @@ static inline int sync_sem_wait(sync_sem_t *sem) {
  * i.e. check the semaphore value in a loop
  * @param sem           An initialised semaphore to acquire.
  * @return              0 on success, an error code on failure. */
-static inline int sync_sem_trywait(sync_sem_t *sem) {
+static inline int sync_sem_trywait(sync_sem_t *sem)
+{
     if (sem == NULL) {
         ZF_LOGE("Semaphore passed to sync_sem_trywait was NULL");
         return -1;
@@ -71,7 +74,8 @@ static inline int sync_sem_trywait(sync_sem_t *sem) {
 /* Signal a binary semaphore
  * @param sem           An initialised semaphore to release.
  * @return              0 on success, an error code on failure. */
-static inline int sync_sem_post(sync_sem_t *sem) {
+static inline int sync_sem_post(sync_sem_t *sem)
+{
     if (sem == NULL) {
         ZF_LOGE("Semaphore passed to sync_sem_post was NULL");
         return -1;
@@ -84,7 +88,8 @@ static inline int sync_sem_post(sync_sem_t *sem) {
  * @param sem           A semaphore object to initialise.
  * @param value         An initial value for the semaphore.
  * @return              0 on success, an error code on failure. */
-static inline int sync_sem_new(vka_t *vka, sync_sem_t *sem, int value) {
+static inline int sync_sem_new(vka_t *vka, sync_sem_t *sem, int value)
+{
     if (sem == NULL) {
         ZF_LOGE("Semaphore passed to sync_sem_new was NULL");
         return -1;
@@ -102,7 +107,8 @@ static inline int sync_sem_new(vka_t *vka, sync_sem_t *sem, int value) {
  * @param vka           A VKA instance used to deallocate the endpoint.
  * @param sem           A semaphore object initialised by sync_sem_new.
  * @return              0 on success, an error code on failure. */
-static inline int sync_sem_destroy(vka_t *vka, sync_sem_t *sem) {
+static inline int sync_sem_destroy(vka_t *vka, sync_sem_t *sem)
+{
     if (sem == NULL) {
         ZF_LOGE("Semaphore passed to sync_sem_destroy was NULL");
         return -1;

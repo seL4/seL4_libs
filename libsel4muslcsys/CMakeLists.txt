@@ -53,6 +53,17 @@ config_option(
     DEFAULT
     OFF
 )
+
+config_string(
+    LibSel4MuslcSysConstructorPriority
+    LIB_SEL4_MUSLC_SYS_CONSTRUCTOR_PRIORITY
+    "Set the priority of the muslc initialisation constructors such that
+	they occur after external initialisation of the system call
+	dependencies."
+    DEFAULT
+    "CONSTRUCTOR_MIN_PRIORITY + 1"
+    UNQUOTE
+)
 mark_as_advanced(
     LibSel4MuslcSysMorecoreBytes
     LibSel4MuslcSysDebugHalt

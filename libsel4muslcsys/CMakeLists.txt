@@ -79,7 +79,7 @@ target_include_directories(sel4muslcsys PUBLIC include)
 target_link_libraries(
     sel4muslcsys
     PUBLIC
-    # These quotes are needed to prevent cmake splitting these arguments
+        # These quotes are needed to prevent cmake splitting these arguments
         "-Wl,-u -Wl,__vsyscall_ptr"
         muslc
         sel4

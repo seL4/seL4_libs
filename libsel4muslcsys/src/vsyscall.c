@@ -299,10 +299,23 @@ uintptr_t VISIBLE SECTION("__vsyscall") __vsyscall_ptr = (uintptr_t) sel4_vsysca
  * environment. */
 extern void __init_libc(char const *const *envp, char const *pn);
 
+/* This is needed to force GCC to re-read the TLS base address on some
+ * platforms when setting the IPC buffer address after it has changed.
+ *
+ * At higher optimisation levels on aarch64, GCC will read the location
+ * for `__sel4_ipc_buffer` only once in the same function, even across
+ * function calls, and thus will not update any newly created TLS region
+ * with the IPC buffer address.
+ */
+static void NO_INLINE update_ipc_buffer(seL4_IPCBuffer *tmp)
+{
+    __sel4_ipc_buffer = tmp;
+}
+
 /* Initialise muslc environment */
 void CONSTRUCTOR(CONFIG_LIB_SEL4_MUSLC_SYS_CONSTRUCTOR_PRIORITY) muslcsys_init_muslc(void)
 {
     seL4_IPCBuffer *tmp = __sel4_ipc_buffer;
     __init_libc(sel4runtime_envp(), sel4runtime_argv()[0]);
-    __sel4_ipc_buffer = tmp;
+    update_ipc_buffer(tmp);
 }

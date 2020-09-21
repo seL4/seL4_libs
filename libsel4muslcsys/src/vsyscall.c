@@ -291,6 +291,20 @@ long sel4_vsyscall(long sysnum, ...)
     return ret;
 }
 
+extern void *__sysinfo;
+
+/* Set the virtual syscall handler so that a portion of muslc will
+ * function.
+ *
+ * This is required for apps using a dynamic heap, which need to make
+ * use of malloc in order to provide an implementation of brk and mmap
+ * that are used during the initialisation of muslc.
+ */
+static void CONSTRUCTOR(MUSLCSYS_WITH_VSYSCALL_PRIORITY - 1) init_vsyscall(void)
+{
+    __sysinfo = sel4_vsyscall;
+}
+
 /* Put a pointer to sel4_vsyscall in a special section so anyone loading us
  * knows how to configure our syscall table */
 uintptr_t VISIBLE SECTION("__vsyscall") __vsyscall_ptr = (uintptr_t) sel4_vsyscall;

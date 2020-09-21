@@ -61,7 +61,7 @@ config_string(
 	they occur after external initialisation of the system call
 	dependencies."
     DEFAULT
-    "CONSTRUCTOR_MIN_PRIORITY + 1"
+    "MUSLCSYS_WITH_VSYSCALL_PRIORITY + 10"
     UNQUOTE
 )
 mark_as_advanced(

@@ -19,6 +19,8 @@
 #include <bits/syscall.h>
 #include <utils/attribute.h>
 
+#define MUSLCSYS_WITH_VSYSCALL_PRIORITY (CONSTRUCTOR_MIN_PRIORITY + 10)
+
 typedef long (*muslcsys_syscall_t)(va_list);
 
 /* Installs a new handler for the given syscall. Any previous handler is returned

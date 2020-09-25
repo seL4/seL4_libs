@@ -30,8 +30,7 @@ target_link_libraries(
         sel4vka
         platsupport
         utils
-        sel4_
-        autoconf
+        sel4_autoconf
 )
 
 if(KernelDebugBuild)

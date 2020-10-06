@@ -66,7 +66,7 @@ def print_tag(f, tag):
 def main():
     parser = argparse.ArgumentParser('Cleanup messy XML output from sel4test')
     parser.add_argument('input',
-                        nargs='?', help='Input file', type=argparse.FileType('r'),
+                        nargs='?', help='Input file', type=argparse.FileType('r', errors="ignore"),
                         default=sys.stdin)
     parser.add_argument('output',
                         nargs='?', help='Output file', type=argparse.FileType('w'),

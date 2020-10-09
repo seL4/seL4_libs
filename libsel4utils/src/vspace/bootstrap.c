@@ -459,7 +459,10 @@ int sel4utils_bootstrap_clone_into_vspace(vspace_t *current, vspace_t *clone, re
 #ifdef CONFIG_ARCH_ARM
         seL4_ARM_Page_Unify_Instruction(dest.capPtr, 0, PAGE_SIZE_4K);
         seL4_ARM_Page_Unify_Instruction(cap, 0, PAGE_SIZE_4K);
-#endif /* CONFIG_ARCH_ARM */
+#elif CONFIG_ARCH_RISCV
+        /* Ensure that the writes to memory that may be executed become visible */
+        asm volatile("fence.i" ::: "memory");
+#endif
 
         /* unmap our copy */
         vspace_unmap_pages(current, dest_addr, 1, seL4_PageBits, VSPACE_PRESERVE);

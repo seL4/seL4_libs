@@ -560,6 +560,7 @@ static inline seL4_CPtr simple_get_nth_iospace_cap(simple_t *simple, int n)
 }
 #endif
 
+#ifdef CONFIG_ARM_SMMU
 static inline seL4_CPtr simple_get_sid_ctrl(simple_t *simple)
 {
     return simple_init_cap(simple, seL4_CapSMMUSIDControl);
@@ -569,6 +570,7 @@ static inline seL4_CPtr simple_get_cb_ctrl(simple_t *simple)
 {
     return simple_init_cap(simple, seL4_CapSMMUCBControl);
 }
+#endif
 
 static inline void simple_print(simple_t *simple)
 {

@@ -12,6 +12,7 @@
 
 #pragma once
 
+#include <sel4/config.h>
 #include <sel4/types.h>
 #include <sel4/arch/constants.h>
 #include <sel4/simple_types.h>
@@ -101,9 +102,9 @@ kernel_logging_finalize_log(void)
 static inline seL4_Error
 kernel_logging_set_log_buffer(seL4_CPtr logBuffer_cap)
 {
-#ifdef CONFIG_BENCHMARK_USE_KERNEL_LOG_BUFFER
+#ifdef CONFIG_KERNEL_LOG_BUFFER
     return seL4_BenchmarkSetLogBuffer(logBuffer_cap);
 #else
     return seL4_NoError;
-#endif /* CONFIG_BENCHMARK_USE_KERNEL_LOG_BUFFER */
+#endif /* CONFIG_KERNEL_LOG_BUFFER */
 }

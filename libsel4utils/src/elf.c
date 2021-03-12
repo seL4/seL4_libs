@@ -31,7 +31,7 @@ static inline seL4_CapRights_t rights_from_elf(unsigned long permissions)
 
 static int load_segment(vspace_t *loadee_vspace, vspace_t *loader_vspace,
                         vka_t *loadee_vka, vka_t *loader_vka,
-                        char *src, size_t file_size, int num_regions,
+                        const char *src, size_t file_size, int num_regions,
                         sel4utils_elf_region_t regions[num_regions], int region_index)
 {
     int error = seL4_NoError;
@@ -163,12 +163,12 @@ static int load_segment(vspace_t *loadee_vspace, vspace_t *loader_vspace,
  * @return 0 on success.
  */
 static int load_segments(vspace_t *loadee_vspace, vspace_t *loader_vspace,
-                         vka_t *loadee_vka, vka_t *loader_vka, elf_t *elf_file,
+                         vka_t *loadee_vka, vka_t *loader_vka, const elf_t *elf_file,
                          int num_regions, sel4utils_elf_region_t regions[num_regions])
 {
     for (int i = 0; i < num_regions; i++) {
         int segment_index = regions[i].segment_index;
-        char *source_addr = elf_getProgramSegment(elf_file, segment_index);
+        const char *source_addr = elf_getProgramSegment(elf_file, segment_index);
         if (source_addr == NULL) {
             return 1;
         }
@@ -183,12 +183,12 @@ static int load_segments(vspace_t *loadee_vspace, vspace_t *loader_vspace,
     return 0;
 }
 
-static bool is_loadable_section(elf_t *elf_file, int index)
+static bool is_loadable_section(const elf_t *elf_file, int index)
 {
     return elf_getProgramHeaderType(elf_file, index) == PT_LOAD;
 }
 
-static int count_loadable_regions(elf_t *elf_file)
+static int count_loadable_regions(const elf_t *elf_file)
 {
     int num_headers = elf_getNumProgramHeaders(elf_file);
     int loadable_headers = 0;
@@ -202,7 +202,7 @@ static int count_loadable_regions(elf_t *elf_file)
     return loadable_headers;
 }
 
-int sel4utils_elf_num_regions(elf_t *elf_file)
+int sel4utils_elf_num_regions(const elf_t *elf_file)
 {
     return count_loadable_regions(elf_file);
 }
@@ -348,7 +348,7 @@ static int prepare_reservations(size_t total_regions, sel4utils_elf_region_t reg
  *
  * @return 0 on success.
  */
-static int read_regions(elf_t *elf_file, size_t total_regions, sel4utils_elf_region_t regions[total_regions])
+static int read_regions(const elf_t *elf_file, size_t total_regions, sel4utils_elf_region_t regions[total_regions])
 {
     int num_headers = elf_getNumProgramHeaders(elf_file);
     int region_id = 0;
@@ -414,7 +414,7 @@ static int compare_regions(sel4utils_elf_region_t a, sel4utils_elf_region_t b)
  *
  * @return 0 on success.
  */
-static int elf_reserve_regions_in_vspace(vspace_t *loadee, elf_t *elf_file,
+static int elf_reserve_regions_in_vspace(vspace_t *loadee, const elf_t *elf_file,
                                          int num_regions, sel4utils_elf_region_t regions[num_regions], int mapanywhere)
 {
     int error = read_regions(elf_file, num_regions, regions);
@@ -439,7 +439,7 @@ static int elf_reserve_regions_in_vspace(vspace_t *loadee, elf_t *elf_file,
     return 0;
 }
 
-static void *entry_point(elf_t *elf_file)
+static void *entry_point(const elf_t *elf_file)
 {
     uint64_t entry_point = elf_getEntryPoint(elf_file);
     if ((uint32_t)(entry_point >> 32) != 0) {
@@ -452,7 +452,7 @@ static void *entry_point(elf_t *elf_file)
 }
 
 
-void *sel4utils_elf_reserve(vspace_t *loadee, elf_t *elf_file, sel4utils_elf_region_t *regions)
+void *sel4utils_elf_reserve(vspace_t *loadee, const elf_t *elf_file, sel4utils_elf_region_t *regions)
 {
     /* Count number of loadable segments */
     int num_regions = count_loadable_regions(elf_file);
@@ -469,7 +469,7 @@ void *sel4utils_elf_reserve(vspace_t *loadee, elf_t *elf_file, sel4utils_elf_reg
 }
 
 void *sel4utils_elf_load_record_regions(vspace_t *loadee, vspace_t *loader, vka_t *loadee_vka, vka_t *loader_vka,
-                                        elf_t *elf_file, sel4utils_elf_region_t *regions, int mapanywhere)
+                                        const elf_t *elf_file, sel4utils_elf_region_t *regions, int mapanywhere)
 {
     /* Calculate number of loadable regions.  Use stack array if one wasn't passed in */
     int num_regions = count_loadable_regions(elf_file);
@@ -507,7 +507,7 @@ void *sel4utils_elf_load_record_regions(vspace_t *loadee, vspace_t *loader, vka_
     return entry_point(elf_file);
 }
 
-uintptr_t sel4utils_elf_get_vsyscall(elf_t *elf_file)
+uintptr_t sel4utils_elf_get_vsyscall(const elf_t *elf_file)
 {
     uintptr_t *addr = (uintptr_t *)sel4utils_elf_get_section(elf_file, "__vsyscall", NULL);
     if (addr) {
@@ -517,11 +517,11 @@ uintptr_t sel4utils_elf_get_vsyscall(elf_t *elf_file)
     }
 }
 
-uintptr_t sel4utils_elf_get_section(elf_t *elf_file, const char *section_name, uint64_t *section_size)
+uintptr_t sel4utils_elf_get_section(const elf_t *elf_file, const char *section_name, uint64_t *section_size)
 {
     /* See if we can find the section */
     size_t section_id;
-    void *addr = elf_getSectionNamed(elf_file, section_name, &section_id);
+    const void *addr = elf_getSectionNamed(elf_file, section_name, &section_id);
     if (addr) {
         if (section_size != NULL) {
             *section_size = elf_getSectionSize(elf_file, section_id);
@@ -532,17 +532,18 @@ uintptr_t sel4utils_elf_get_section(elf_t *elf_file, const char *section_name, u
     }
 }
 
-void *sel4utils_elf_load(vspace_t *loadee, vspace_t *loader, vka_t *loadee_vka, vka_t *loader_vka, elf_t *elf_file)
+void *sel4utils_elf_load(vspace_t *loadee, vspace_t *loader, vka_t *loadee_vka, vka_t *loader_vka,
+                         const elf_t *elf_file)
 {
     return sel4utils_elf_load_record_regions(loadee, loader, loadee_vka, loader_vka, elf_file, NULL, 0);
 }
 
-uint32_t sel4utils_elf_num_phdrs(elf_t *elf_file)
+uint32_t sel4utils_elf_num_phdrs(const elf_t *elf_file)
 {
     return elf_getNumProgramHeaders(elf_file);
 }
 
-void sel4utils_elf_read_phdrs(elf_t *elf_file, size_t max_phdrs, Elf_Phdr *phdrs)
+void sel4utils_elf_read_phdrs(const elf_t *elf_file, size_t max_phdrs, Elf_Phdr *phdrs)
 {
     size_t num_phdrs = elf_getNumProgramHeaders(elf_file);
     for (size_t i = 0; i < num_phdrs && i < max_phdrs; i++) {

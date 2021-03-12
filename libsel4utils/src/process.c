@@ -555,7 +555,7 @@ int sel4utils_configure_process_custom(sel4utils_process_t *process, vka_t *vka,
     if (config.is_elf) {
         unsigned long size;
         unsigned long cpio_len = _cpio_archive_end - _cpio_archive;
-        char *file = cpio_get_file(_cpio_archive, cpio_len, config.image_name, &size);
+        char const *file = cpio_get_file(_cpio_archive, cpio_len, config.image_name, &size);
         elf_t elf;
         elf_newFile(file, size, &elf);
 

@@ -14,7 +14,8 @@ void debug_cap_identify(seL4_CPtr cap)
 {
 #ifdef CONFIG_DEBUG_BUILD
     int type = seL4_DebugCapIdentify(cap);
-
-    printf("Cap type number is %d\n", type);
-#endif /* CONFIG_DEBUG_BUILD */
+    printf("Cap %d has type %d\n", cap, type);
+#else
+    printf("DEBUG_BUILD not set, can't get type of cap %d", cap);
+#endif
 }

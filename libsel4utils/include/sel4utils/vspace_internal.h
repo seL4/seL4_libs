@@ -95,7 +95,7 @@ static int reserve_entries_mid(vspace_t *vspace, vspace_mid_level_t *level, int 
         /* calculate the start of the next index */
         uintptr_t next_start = aligned_start + BYTES_FOR_LEVEL(level_num);
         int must_recurse = 0;
-        if (next_start > end) {
+        if (next_start > end || next_start < aligned_start) {
             next_start = end;
             must_recurse = 1;
         } else if (start != aligned_start) {
@@ -167,7 +167,7 @@ static int clear_entries_mid(vspace_t *vspace, vspace_mid_level_t *level, int le
         uintptr_t aligned_start = start & ALIGN_FOR_LEVEL(level_num);
         /* calculate the start of the next index */
         uintptr_t next_start = aligned_start + BYTES_FOR_LEVEL(level_num);
-        if (next_start > end) {
+        if (next_start > end || next_start < aligned_start) {
             next_start = end;
         }
         uintptr_t next_table = level->table[index];
@@ -218,7 +218,7 @@ static int update_entries_mid(vspace_t *vspace, vspace_mid_level_t *level, int l
         uintptr_t aligned_start = start & ALIGN_FOR_LEVEL(level_num);
         /* calculate the start of the next index */
         uintptr_t next_start = aligned_start + BYTES_FOR_LEVEL(level_num);
-        if (next_start > end) {
+        if (next_start > end || next_start < aligned_start) {
             next_start = end;
         }
         uintptr_t next_table = level->table[index];
@@ -273,7 +273,7 @@ static bool is_reserved_or_empty_mid(vspace_mid_level_t *level, int level_num, u
         uintptr_t aligned_start = start & ALIGN_FOR_LEVEL(level_num);
         /* calculate the start of the next index */
         uintptr_t next_start = aligned_start + BYTES_FOR_LEVEL(level_num);
-        if (next_start > end) {
+        if (next_start > end || next_start < aligned_start) {
             next_start = end;
         }
         uintptr_t next_table = level->table[index];

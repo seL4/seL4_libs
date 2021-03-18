@@ -12,7 +12,7 @@
 
 #pragma once
 
-#include <sel4/config.h>
+//#include <sel4/config.h>
 #include <sel4/types.h>
 #include <sel4/arch/constants.h>
 #include <sel4/simple_types.h>

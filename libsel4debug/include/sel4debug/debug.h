@@ -21,6 +21,7 @@ __attribute__((no_instrument_function));
 
 void debug_cap_identify(seL4_CPtr cap);
 
+#ifdef CONFIG_DEBUG_BUILD
 static inline int debug_cap_is_valid(seL4_CPtr cap)
 {
 #ifdef CONFIG_DEBUG_BUILD
@@ -51,7 +52,7 @@ static inline int debug_cap_is_notification(seL4_CPtr cap)
     return 0; /* fail check on non-debug kernels */
 #endif
 }
-
+#endif /* CONFIG_DEBUG_BUILD */
 
 void debug_print_bootinfo(seL4_BootInfo *info);
 

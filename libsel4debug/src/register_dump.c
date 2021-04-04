@@ -30,6 +30,6 @@ void sel4debug_dump_registers_prefix(seL4_CPtr tcb, char *prefix)
 
     printf("%sRegister dump:\n", prefix);
     for (int i = 0; i < num_regs; i++) {
-        printf("%s%s\t:0x%lx\n", prefix, register_names[i], (long) ((seL4_Word * )&context)[i]);
+        printf("%s%s:\t0x%lx\n", prefix, register_names[i], (long) ((seL4_Word * )&context)[i]);
     }
 }

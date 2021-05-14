@@ -1,13 +1,7 @@
 /*
- * Copyright 2017, Data61
- * Commonwealth Scientific and Industrial Research Organisation (CSIRO)
- * ABN 41 687 119 230.
+ * Copyright 2017, Data61, CSIRO (ABN 41 687 119 230)
  *
- * This software may be distributed and modified according to the terms of
- * the BSD 2-Clause license. Note that NO WARRANTY is provided.
- * See "LICENSE_BSD2.txt" for details.
- *
- * @TAG(DATA61_BSD)
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 #include <autoconf.h>
 #include <sel4utils/gen_config.h>
@@ -561,7 +555,7 @@ int sel4utils_configure_process_custom(sel4utils_process_t *process, vka_t *vka,
     if (config.is_elf) {
         unsigned long size;
         unsigned long cpio_len = _cpio_archive_end - _cpio_archive;
-        char *file = cpio_get_file(_cpio_archive, cpio_len, config.image_name, &size);
+        char const *file = cpio_get_file(_cpio_archive, cpio_len, config.image_name, &size);
         elf_t elf;
         elf_newFile(file, size, &elf);
 

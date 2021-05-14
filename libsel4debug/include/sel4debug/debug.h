@@ -1,13 +1,7 @@
 /*
- * Copyright 2017, Data61
- * Commonwealth Scientific and Industrial Research Organisation (CSIRO)
- * ABN 41 687 119 230.
+ * Copyright 2017, Data61, CSIRO (ABN 41 687 119 230)
  *
- * This software may be distributed and modified according to the terms of
- * the BSD 2-Clause license. Note that NO WARRANTY is provided.
- * See "LICENSE_BSD2.txt" for details.
- *
- * @TAG(DATA61_BSD)
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
@@ -27,25 +21,38 @@ __attribute__((no_instrument_function));
 
 void debug_cap_identify(seL4_CPtr cap);
 
+#ifdef CONFIG_DEBUG_BUILD
 static inline int debug_cap_is_valid(seL4_CPtr cap)
 {
+#ifdef CONFIG_DEBUG_BUILD
     return (0 != seL4_DebugCapIdentify(cap));
+#else
+    return 0; /* fail check on non-debug kernels */
+#endif
 }
 
 static inline int debug_cap_is_endpoint(seL4_CPtr cap)
 {
+#ifdef CONFIG_DEBUG_BUILD
     // there is kernel/generated/arch/object/structures_gen.h that defines
     // cap_endpoint_cap = 4, but we can't include it here
     return (4 == seL4_DebugCapIdentify(cap));
+#else
+    return 0; /* fail check on non-debug kernels */
+#endif
 }
 
 static inline int debug_cap_is_notification(seL4_CPtr cap)
 {
+#ifdef CONFIG_DEBUG_BUILD
     // there is kernel/generated/arch/object/structures_gen.h that defines
     // cap_notification_cap = 6, but we can't include it here
     return (6 == seL4_DebugCapIdentify(cap));
+#else
+    return 0; /* fail check on non-debug kernels */
+#endif
 }
-
+#endif /* CONFIG_DEBUG_BUILD */
 
 void debug_print_bootinfo(seL4_BootInfo *info);
 

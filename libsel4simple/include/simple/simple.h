@@ -1,13 +1,7 @@
 /*
- * Copyright 2017, Data61
- * Commonwealth Scientific and Industrial Research Organisation (CSIRO)
- * ABN 41 687 119 230.
+ * Copyright 2017, Data61, CSIRO (ABN 41 687 119 230)
  *
- * This software may be distributed and modified according to the terms of
- * the BSD 2-Clause license. Note that NO WARRANTY is provided.
- * See "LICENSE_BSD2.txt" for details.
- *
- * @TAG(DATA61_BSD)
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
@@ -190,6 +184,7 @@ typedef seL4_Error(*simple_get_iospace_fn)(void *data, uint16_t domainID, uint16
  * @return seL4_CapNull if CONFIG_RT is disabled
  */
 typedef seL4_CPtr(*simple_get_sched_ctrl_fn)(void *data, int core);
+
 
 /**
  *
@@ -516,7 +511,8 @@ static inline seL4_CPtr simple_get_iospace(simple_t *simple, uint16_t domainID, 
 }
 #endif
 
-#ifdef CONFIG_ARM_SMMU
+
+#ifdef CONFIG_TK1_SMMU
 static inline seL4_Error simple_get_iospace_cap_count(simple_t *simple, int *count)
 {
     if (!simple) {
@@ -555,6 +551,18 @@ static inline seL4_CPtr simple_get_nth_iospace_cap(simple_t *simple, int n)
     }
 
     return simple->arch_simple.iospace_get_nth_cap(simple->data, n);
+}
+#endif
+
+#ifdef CONFIG_ARM_SMMU
+static inline seL4_CPtr simple_get_sid_ctrl(simple_t *simple)
+{
+    return simple_init_cap(simple, seL4_CapSMMUSIDControl);
+}
+
+static inline seL4_CPtr simple_get_cb_ctrl(simple_t *simple)
+{
+    return simple_init_cap(simple, seL4_CapSMMUCBControl);
 }
 #endif
 

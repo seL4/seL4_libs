@@ -1,13 +1,7 @@
-<!---
-  Copyright 2017, Data61
-  Commonwealth Scientific and Industrial Research Organisation (CSIRO)
-  ABN 41 687 119 230.
+<!--
+     Copyright 2017, Data61, CSIRO (ABN 41 687 119 230)
 
-  This software may be distributed and modified according to the terms of
-  the BSD 2-Clause license. Note that NO WARRANTY is provided.
-  See "LICENSE_BSD2.txt" for details.
-
-    @TAG(DATA61_BSD)
+     SPDX-License-Identifier: CC-BY-SA-4.0
 -->
 
 libsel4utils
@@ -64,9 +58,3 @@ Configuration options
 * `SEL4UTILS_STACK_SIZE` -- the default stack size to use for processes and threads.
 * `SEL4UTILS_CSPACE_SIZE_BITS` -- the default cspace size for new processes (threads use the current
                                 cspace).
-
-License
-========
-
-The files in this repository are release under standard open source licenses.
-Please see individual file headers and the `LICENSE_BSD2`.txt file for details.

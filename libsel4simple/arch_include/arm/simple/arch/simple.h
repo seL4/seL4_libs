@@ -1,13 +1,7 @@
 /*
- * Copyright 2017, Data61
- * Commonwealth Scientific and Industrial Research Organisation (CSIRO)
- * ABN 41 687 119 230.
+ * Copyright 2017, Data61, CSIRO (ABN 41 687 119 230)
  *
- * This software may be distributed and modified according to the terms of
- * the BSD 2-Clause license. Note that NO WARRANTY is provided.
- * See "LICENSE_BSD2.txt" for details.
- *
- * @TAG(DATA61_BSD)
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
@@ -43,7 +37,7 @@ typedef seL4_CPtr(*simple_get_nth_iospace_cap_fn)(void *data, int n);
 typedef struct arch_simple {
     simple_get_IRQ_handler_fn irq;
     simple_get_IRQ_trigger_fn irq_trigger;
-#ifdef CONFIG_ARM_SMMU
+#ifdef CONFIG_TK1_SMMU
     simple_get_iospace_cap_count_fn iospace_cap_count;
     simple_get_nth_iospace_cap_fn   iospace_get_nth_cap;
 #endif

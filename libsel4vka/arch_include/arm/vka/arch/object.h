@@ -1,13 +1,7 @@
 /*
- * Copyright 2017, Data61
- * Commonwealth Scientific and Industrial Research Organisation (CSIRO)
- * ABN 41 687 119 230.
+ * Copyright 2017, Data61, CSIRO (ABN 41 687 119 230)
  *
- * This software may be distributed and modified according to the terms of
- * the BSD 2-Clause license. Note that NO WARRANTY is provided.
- * See "LICENSE_BSD2.txt" for details.
- *
- * @TAG(DATA61_BSD)
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
@@ -27,7 +21,7 @@ static inline int vka_alloc_vcpu(vka_t *vka, vka_object_t *result)
 LEAKY(vcpu)
 #endif
 
-#ifdef CONFIG_ARM_SMMU
+#ifdef CONFIG_TK1_SMMU
 static inline int vka_alloc_io_page_table(vka_t *vka, vka_object_t *result)
 {
     return vka_alloc_object(vka, seL4_ARM_IOPageTableObject, seL4_IOPageTableBits, result);
@@ -54,7 +48,7 @@ vka_arch_get_object_size(seL4_Word objectType)
         return seL4_PageDirBits;
     case seL4_ARM_VCPUObject:
         return seL4_ARM_VCPUBits;
-#ifdef CONFIG_ARM_SMMU
+#ifdef CONFIG_TK1_SMMU
     case seL4_ARM_IOPageTableObject:
         return seL4_IOPageTableBits;
 #endif

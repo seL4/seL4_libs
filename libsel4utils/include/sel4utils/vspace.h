@@ -1,13 +1,7 @@
 /*
- * Copyright 2017, Data61
- * Commonwealth Scientific and Industrial Research Organisation (CSIRO)
- * ABN 41 687 119 230.
+ * Copyright 2017, Data61, CSIRO (ABN 41 687 119 230)
  *
- * This software may be distributed and modified according to the terms of
- * the BSD 2-Clause license. Note that NO WARRANTY is provided.
- * See "LICENSE_BSD2.txt" for details.
- *
- * @TAG(DATA61_BSD)
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 /*
@@ -31,6 +25,7 @@
 #pragma once
 
 #include <autoconf.h>
+#include <sel4utils/gen_config.h>
 
 #include <vspace/vspace.h>
 #include <vka/vka.h>
@@ -55,7 +50,8 @@ typedef struct vspace_bottom_level {
     uintptr_t cookie[VSPACE_LEVEL_SIZE];
 } vspace_bottom_level_t;
 
-typedef int(*sel4utils_map_page_fn)(vspace_t *vspace, seL4_CPtr cap, void *vaddr, seL4_CapRights_t rights, int cacheable, size_t size_bits);
+typedef int(*sel4utils_map_page_fn)(vspace_t *vspace, seL4_CPtr cap, void *vaddr, seL4_CapRights_t rights,
+                                    int cacheable, size_t size_bits);
 
 struct sel4utils_res {
     uintptr_t start;
@@ -63,6 +59,7 @@ struct sel4utils_res {
     seL4_CapRights_t rights;
     int cacheable;
     int malloced;
+    bool rights_deferred;
     struct sel4utils_res *next;
 };
 
@@ -77,10 +74,10 @@ typedef struct sel4utils_alloc_data {
     vspace_t *bootstrap;
     sel4utils_map_page_fn map_page;
     sel4utils_res_t *reservation_head;
+    bool is_empty;
 } sel4utils_alloc_data_t;
 
-static inline sel4utils_res_t *
-reservation_to_res(reservation_t res)
+static inline sel4utils_res_t *reservation_to_res(reservation_t res)
 {
     return (sel4utils_res_t *) res.res;
 }
@@ -107,7 +104,28 @@ int
 sel4utils_get_vspace_with_map(vspace_t *loader, vspace_t *new_vspace, sel4utils_alloc_data_t *data,
                               vka_t *vka, seL4_CPtr vspace_root,
                               vspace_allocated_object_fn allocated_object_fn, void *allocated_object_cookie, sel4utils_map_page_fn map_page);
-
+/**
+ * Allows for an empty vspace to be created with an arbitrary function to invoke for the mapping of pages.
+ * This is useful if you want a vspace manager, but you do not want parts of the virtual address space to be
+ * pre-reserved e.g the kernel region. The vspace is useful for guest virtual machine-based applications.
+ *
+ * @param loader                  vspace of the current process, used to allocate
+ *                                virtual memory book keeping.
+ * @param new_vspace              uninitialised vspace struct to populate.
+ * @param data                    uninitialised vspace data struct to populate.
+ * @param vka                     initialised vka that this virtual memory allocator will use to
+ *                                allocate pages and pagetables. This allocator will never invoke free.
+ * @param vspace_root             root object for the new vspace.
+ * @param allocated_object_fn     function to call when objects are allocated. Can be null.
+ * @param allocated_object_cookie cookie passed when the above function is called. Can be null.
+ * @param map_page                Function that will be called to map seL4 pages
+ *
+ * @return 0 on success.
+ */
+int
+sel4utils_get_empty_vspace_with_map(vspace_t *loader, vspace_t *new_vspace, sel4utils_alloc_data_t *data,
+                                    vka_t *vka, seL4_CPtr vspace_root,
+                                    vspace_allocated_object_fn allocated_object_fn, void *allocated_object_cookie, sel4utils_map_page_fn map_page);
 /**
  * Initialise a vspace allocator for a new address space (not the current one).
  *
@@ -126,6 +144,28 @@ sel4utils_get_vspace_with_map(vspace_t *loader, vspace_t *new_vspace, sel4utils_
 int sel4utils_get_vspace(vspace_t *loader, vspace_t *new_vspace, sel4utils_alloc_data_t *data,
                          vka_t *vka, seL4_CPtr vspace_root, vspace_allocated_object_fn allocated_object_fn,
                          void *allocated_object_cookie);
+
+/**
+ * Allows for an empty vspace to be created.
+ * This is useful if you want a vspace manager, but you do not want parts of the virtual address space to be
+ * pre-reserved e.g the kernel region. The vspace is useful for guest virtual machine-based applications.
+ *
+ * @param loader                  vspace of the current process, used to allocate
+ *                                virtual memory book keeping.
+ * @param new_vspace              uninitialised vspace struct to populate.
+ * @param data                    uninitialised vspace data struct to populate.
+ * @param vka                     initialised vka that this virtual memory allocator will use to
+ *                                allocate pages and pagetables. This allocator will never invoke free.
+ * @param vspace_root             root object for the new vspace.
+ * @param allocated_object_fn     function to call when objects are allocated. Can be null.
+ * @param allocated_object_cookie cookie passed when the above function is called. Can be null.
+ *
+ * @return 0 on success.
+ */
+int sel4utils_get_empty_vspace(vspace_t *loader, vspace_t *new_vspace, sel4utils_alloc_data_t *data,
+                               vka_t *vka, seL4_CPtr vspace_root, vspace_allocated_object_fn allocated_object_fn,
+                               void *allocated_object_cookie);
+
 
 #ifdef CONFIG_VTX
 /**
@@ -194,34 +234,32 @@ int sel4utils_bootstrap_vspace_with_bootinfo(vspace_t *vspace, sel4utils_alloc_d
 /* Wrapper function that configures a vspaceator such that all allocated objects are not
  * tracked.
  */
-static inline int
-sel4utils_get_vspace_leaky(vspace_t *loader, vspace_t *new_vspace, sel4utils_alloc_data_t *data,
-                           vka_t *vka, seL4_CPtr vspace_root)
+static inline int sel4utils_get_vspace_leaky(vspace_t *loader, vspace_t *new_vspace, sel4utils_alloc_data_t *data,
+                                             vka_t *vka, seL4_CPtr vspace_root)
 {
     return sel4utils_get_vspace(loader, new_vspace, data, vka, vspace_root,
                                 (vspace_allocated_object_fn) NULL, NULL);
 }
 
 #ifdef CONFIG_VTX
-static inline int
-sel4utils_get_vspace_ept_leaky(vspace_t *loader, vspace_t *new_vspace,
-                               vka_t *vka, seL4_CPtr vspace_root)
+static inline int sel4utils_get_vspace_ept_leaky(vspace_t *loader, vspace_t *new_vspace,
+                                                 vka_t *vka, seL4_CPtr vspace_root)
 {
     return sel4utils_get_vspace_ept(loader, new_vspace, vka, vspace_root,
                                     (vspace_allocated_object_fn) NULL, NULL);
 }
 #endif /* CONFIG_VTX */
 
-static inline int
-sel4utils_bootstrap_vspace_with_bootinfo_leaky(vspace_t *vspace, sel4utils_alloc_data_t *data, seL4_CPtr vspace_root,
-                                               vka_t *vka, seL4_BootInfo *info)
+static inline int sel4utils_bootstrap_vspace_with_bootinfo_leaky(vspace_t *vspace, sel4utils_alloc_data_t *data,
+                                                                 seL4_CPtr vspace_root,
+                                                                 vka_t *vka, seL4_BootInfo *info)
 {
     return sel4utils_bootstrap_vspace_with_bootinfo(vspace, data, vspace_root, vka, info, NULL, NULL);
 }
 
-static inline int
-sel4utils_bootstrap_vspace_leaky(vspace_t *vspace, sel4utils_alloc_data_t *data, seL4_CPtr vspace_root, vka_t *vka,
-                                 void *existing_frames[])
+static inline int sel4utils_bootstrap_vspace_leaky(vspace_t *vspace, sel4utils_alloc_data_t *data,
+                                                   seL4_CPtr vspace_root, vka_t *vka,
+                                                   void *existing_frames[])
 {
     return sel4utils_bootstrap_vspace(vspace, data, vspace_root, vka, NULL, NULL, existing_frames);
 }

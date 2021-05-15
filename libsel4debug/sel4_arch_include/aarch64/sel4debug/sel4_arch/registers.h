@@ -1,13 +1,7 @@
 /*
- * Copyright 2017, Data61
- * Commonwealth Scientific and Industrial Research Organisation (CSIRO)
- * ABN 41 687 119 230.
+ * Copyright 2017, Data61, CSIRO (ABN 41 687 119 230)
  *
- * This software may be distributed and modified according to the terms of
- * the BSD 2-Clause license. Note that NO WARRANTY is provided.
- * See "LICENSE_BSD2.txt" for details.
- *
- * @TAG(DATA61_BSD)
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
@@ -52,6 +46,7 @@ static UNUSED const char *register_names[] = {
     "x27",
     "x28",
     "tpidr_el0",
+    "tpidrro_el0"
 };
 
 /* assert that register_names correspond to seL4_UserContext */
@@ -89,5 +84,6 @@ compile_time_assert(x25_correct_position, offsetof(seL4_UserContext, x25)       
 compile_time_assert(x26_correct_position, offsetof(seL4_UserContext, x26)         == 31 * sizeof(seL4_Word));
 compile_time_assert(x27_correct_position, offsetof(seL4_UserContext, x27)         == 32 * sizeof(seL4_Word));
 compile_time_assert(x28_correct_position, offsetof(seL4_UserContext, x28)         == 33 * sizeof(seL4_Word));
-compile_time_assert(x28_correct_position, offsetof(seL4_UserContext, tpidr_el0)   == 34 * sizeof(seL4_Word));
+compile_time_assert(tpidr_el0_correct_position, offsetof(seL4_UserContext, tpidr_el0)   == 34 * sizeof(seL4_Word));
+compile_time_assert(tpidrro_el0_correct_position, offsetof(seL4_UserContext, tpidrro_el0)   == 35 * sizeof(seL4_Word));
 

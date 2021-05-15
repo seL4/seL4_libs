@@ -1,13 +1,7 @@
 /*
- * Copyright 2017, Data61
- * Commonwealth Scientific and Industrial Research Organisation (CSIRO)
- * ABN 41 687 119 230.
+ * Copyright 2017, Data61, CSIRO (ABN 41 687 119 230)
  *
- * This software may be distributed and modified according to the terms of
- * the BSD 2-Clause license. Note that NO WARRANTY is provided.
- * See "LICENSE_BSD2.txt" for details.
- *
- * @TAG(DATA61_BSD)
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
@@ -33,8 +27,9 @@ static UNUSED const char *register_names[] = {
     "r5",
     "r6",
     "r7",
-    "lr",
+    "r14",
     "tpidrurw",
+    "tpidruro"
 };
 
 /* assert that register_names correspond to seL4_UserContext */
@@ -56,4 +51,5 @@ compile_time_assert(r6_correct_position, offsetof(seL4_UserContext, r6)     == 1
 compile_time_assert(r7_correct_position, offsetof(seL4_UserContext, r7)     == 15 * sizeof(seL4_Word));
 compile_time_assert(r14_correct_position, offsetof(seL4_UserContext, r14)   == 16 * sizeof(seL4_Word));
 compile_time_assert(tpidrurw_correct_position, offsetof(seL4_UserContext, tpidrurw) == 17 * sizeof(seL4_Word));
+compile_time_assert(tpidruro_correct_position, offsetof(seL4_UserContext, tpidruro) == 18 * sizeof(seL4_Word));
 

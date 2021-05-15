@@ -1,22 +1,19 @@
 /*
- * Copyright 2017, Data61
- * Commonwealth Scientific and Industrial Research Organisation (CSIRO)
- * ABN 41 687 119 230.
+ * Copyright 2017, Data61, CSIRO (ABN 41 687 119 230)
  *
- * This software may be distributed and modified according to the terms of
- * the BSD 2-Clause license. Note that NO WARRANTY is provided.
- * See "LICENSE_BSD2.txt" for details.
- *
- * @TAG(DATA61_BSD)
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
 
 #include <autoconf.h>
+#include <sel4muslcsys/gen_config.h>
 #include <stdarg.h>
 #include <stdbool.h>
 #include <bits/syscall.h>
 #include <utils/attribute.h>
+
+#define MUSLCSYS_WITH_VSYSCALL_PRIORITY (CONSTRUCTOR_MIN_PRIORITY + 10)
 
 typedef long (*muslcsys_syscall_t)(va_list);
 

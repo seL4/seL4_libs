@@ -1,16 +1,11 @@
 /*
- * Copyright 2017, Data61
- * Commonwealth Scientific and Industrial Research Organisation (CSIRO)
- * ABN 41 687 119 230.
+ * Copyright 2017, Data61, CSIRO (ABN 41 687 119 230)
  *
- * This software may be distributed and modified according to the terms of
- * the BSD 2-Clause license. Note that NO WARRANTY is provided.
- * See "LICENSE_BSD2.txt" for details.
- *
- * @TAG(DATA61_BSD)
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 #pragma once
 #include <autoconf.h>
+#include <sel4utils/gen_config.h>
 #ifdef CONFIG_BENCHMARK_TRACK_KERNEL_ENTRIES
 
 #include <stdio.h>
@@ -18,8 +13,7 @@
 #include <sel4/benchmark_track_types.h>
 
 /* Print out a summary of what has been tracked */
-static inline void
-seL4_BenchmarkTrackDumpSummary(benchmark_track_kernel_entry_t *logBuffer, size_t logSize)
+static inline void seL4_BenchmarkTrackDumpSummary(benchmark_track_kernel_entry_t *logBuffer, size_t logSize)
 {
     seL4_Word index = 0;
     seL4_Word syscall_entries = 0;
@@ -52,25 +46,26 @@ seL4_BenchmarkTrackDumpSummary(benchmark_track_kernel_entry_t *logBuffer, size_t
 }
 
 /* Print out logged system call invocations */
-static inline void
-seL4_BenchmarkTrackDumpFullSyscallLog(benchmark_track_kernel_entry_t *logBuffer, size_t logSize)
+static inline void seL4_BenchmarkTrackDumpFullSyscallLog(benchmark_track_kernel_entry_t *logBuffer, size_t logSize)
 {
     seL4_Word index = 0;
     FILE *fd = stdout;
 
     /* Get details of each system call invocation */
-    fprintf(fd, "-----------------------------------------------------------------------------------------------------------------------------\n");
+    fprintf(fd,
+            "-----------------------------------------------------------------------------------------------------------------------------\n");
     fprintf(fd, "|     %-15s|     %-15s|     %-15s|     %-15s|     %-15s|     %-15s|     %-15s|\n",
             "Log ID", "System Call ID", "Start Time", "Duration", "Capability Type",
             "Invocation Tag",  "Fastpath?");
-    fprintf(fd, "-----------------------------------------------------------------------------------------------------------------------------\n");
+    fprintf(fd,
+            "-----------------------------------------------------------------------------------------------------------------------------\n");
 
     while (logBuffer[index].start_time != 0 && (index * sizeof(benchmark_track_kernel_entry_t)) < logSize) {
         if (logBuffer[index].entry.path == Entry_Syscall) {
             fprintf(fd, "|     %-15d|     %-15d|     %-15llu|     %-15d|     %-15d|     %-15d|     %-15d|\n",
                     index,
                     logBuffer[index].entry.syscall_no,
-                    (uint64_t ) logBuffer[index].start_time,
+                    (uint64_t) logBuffer[index].start_time,
                     logBuffer[index].duration,
                     logBuffer[index].entry.cap_type,
                     logBuffer[index].entry.invocation_tag,
@@ -81,17 +76,18 @@ seL4_BenchmarkTrackDumpFullSyscallLog(benchmark_track_kernel_entry_t *logBuffer,
 }
 
 /* Print out logged interrupt invocations */
-static inline void
-seL4_BenchmarkTrackDumpFullInterruptLog(benchmark_track_kernel_entry_t *logBuffer, size_t logSize)
+static inline void seL4_BenchmarkTrackDumpFullInterruptLog(benchmark_track_kernel_entry_t *logBuffer, size_t logSize)
 {
     seL4_Word index = 0;
     FILE *fd = stdout;
 
     /* Get details of each invocation */
-    fprintf(fd, "-----------------------------------------------------------------------------------------------------------------------------\n");
+    fprintf(fd,
+            "-----------------------------------------------------------------------------------------------------------------------------\n");
     fprintf(fd, "|     %-15s|     %-15s|     %-15s|     %-15s|\n", "Log ID", "IRQ", "Start Time",
             "Duration");
-    fprintf(fd, "-----------------------------------------------------------------------------------------------------------------------------\n");
+    fprintf(fd,
+            "-----------------------------------------------------------------------------------------------------------------------------\n");
 
     while (logBuffer[index].start_time != 0 && (index * sizeof(benchmark_track_kernel_entry_t)) < logSize) {
         if (logBuffer[index].entry.path == Entry_Interrupt) {

@@ -1,13 +1,7 @@
 /*
- * Copyright 2017, Data61
- * Commonwealth Scientific and Industrial Research Organisation (CSIRO)
- * ABN 41 687 119 230.
+ * Copyright 2017, Data61, CSIRO (ABN 41 687 119 230)
  *
- * This software may be distributed and modified according to the terms of
- * the BSD 2-Clause license. Note that NO WARRANTY is provided.
- * See "LICENSE_BSD2.txt" for details.
- *
- * @TAG(DATA61_BSD)
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 /* This file contains functionality for debugging heap corruption issues. It is
@@ -46,6 +40,7 @@
 
 #include <assert.h>
 #include <autoconf.h>
+#include <sel4debug/gen_config.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h> /* for size_t */
@@ -112,7 +107,7 @@ static void *box(void *ptr, size_t size)
         return ptr;
     }
 
-    metadata_t *pre = (metadata_t*)ptr;
+    metadata_t *pre = (metadata_t *)ptr;
     ptr += sizeof(*pre);
     unaligned_uintptr_t *post = ptr + size;
 
@@ -144,7 +139,7 @@ static void *unbox(void *ptr, void *ret_addr)
         return ptr;
     }
 
-    metadata_t *pre = (metadata_t*)(ptr - sizeof(*pre));
+    metadata_t *pre = (metadata_t *)(ptr - sizeof(*pre));
     unaligned_uintptr_t *post = ptr + pre->size;
 
     /* Check the leading canary (underflow). */
@@ -164,7 +159,7 @@ static void *unbox(void *ptr, void *ret_addr)
               "to %p)\n", ptr, ret_addr);
     }
 
-    return (void*)pre;
+    return (void *)pre;
 }
 
 /* Buffer for tracking currently live heap pointers. This is used to detect
@@ -250,9 +245,9 @@ void __wrap_free(void *ptr)
      * use-after-free bugs. If we fault while doing this, it probably means the
      * user underran their buffer and overwrote the 'size' metadata.
      */
-    metadata_t *pre = (metadata_t*)(ptr - sizeof(*pre));
+    metadata_t *pre = (metadata_t *)(ptr - sizeof(*pre));
     for (unsigned int i = 0; i < pre->size; i++) {
-        ((char*)ptr)[i] ^= (char)~i;
+        ((char *)ptr)[i] ^= (char)~i;
     }
 
     ptr = unbox(ptr, ret);

@@ -1,19 +1,16 @@
 /*
- * Copyright 2017, Data61
- * Commonwealth Scientific and Industrial Research Organisation (CSIRO)
- * ABN 41 687 119 230.
+ * Copyright 2017, Data61, CSIRO (ABN 41 687 119 230)
  *
- * This software may be distributed and modified according to the terms of
- * the BSD 2-Clause license. Note that NO WARRANTY is provided.
- * See "LICENSE_BSD2.txt" for details.
- *
- * @TAG(DATA61_BSD)
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <autoconf.h>
+#include <sel4muslcsys/gen_config.h>
 #include <stdio.h>
 #include <stdint.h>
+#include <stddef.h>
 #include <sel4/sel4.h>
+#include <sel4runtime.h>
 #include <utils/util.h>
 #include <bits/syscall.h>
 #include <bits/errno.h>
@@ -36,8 +33,9 @@ static int *boot_set_tid_address_arg;
 static bool boot_set_thread_area_happened;
 static void *boot_set_thread_area_arg;
 
-static long boot_set_thread_area(va_list ap) {
-    void *tp = va_arg(ap, void*);
+static long boot_set_thread_area(va_list ap)
+{
+    void *tp = va_arg(ap, void *);
     if (boot_set_thread_area_happened) {
         ZF_LOGE("Boot version of set_thread_area somehow got called twice");
         return -ESRCH;
@@ -55,7 +53,7 @@ static long boot_set_thread_area(va_list ap) {
     char *tcb_string = getenv("boot_tcb_cptr");
     if (tcb_string) {
         seL4_CPtr tcb;
-        if (sscanf(tcb_string, "%p", (void**)&tcb) == 1) {
+        if (sscanf(tcb_string, "%p", (void **)&tcb) == 1) {
             seL4_TCB_SetTLSBase(tcb, (seL4_Word)tp);
         }
     }
@@ -65,14 +63,16 @@ static long boot_set_thread_area(va_list ap) {
     return 0;
 }
 
-bool muslcsys_get_boot_set_thread_area(void **arg) {
+bool muslcsys_get_boot_set_thread_area(void **arg)
+{
     *arg = boot_set_thread_area_arg;
     return boot_set_thread_area_happened;
 }
 #endif
 
-static long boot_set_tid_address(va_list ap) {
-    int *tid = va_arg(ap, int*);
+static long boot_set_tid_address(va_list ap)
+{
+    int *tid = va_arg(ap, int *);
     if (boot_set_tid_address_happened) {
         ZF_LOGE("Boot version of set_tid_address somehow got called twice");
         return 1;
@@ -82,21 +82,23 @@ static long boot_set_tid_address(va_list ap) {
     return 1;
 }
 
-bool muslcsys_get_boot_set_tid_address(int **arg) {
+bool muslcsys_get_boot_set_tid_address(int **arg)
+{
     *arg = boot_set_tid_address_arg;
     return boot_set_tid_address_happened;
 }
 
 /* Basic sys_writev for use during booting that will only use seL4_DebugPutChar */
-long boot_sys_writev(va_list ap) {
+long boot_sys_writev(va_list ap)
+{
     int UNUSED fildes = va_arg(ap, int);
     struct iovec *iov = va_arg(ap, struct iovec *);
     int iovcnt = va_arg(ap, int);
 
     ssize_t ret = 0;
 
-    for(int i = 0; i < iovcnt; i++) {
-        char * UNUSED base = (char*)iov[i].iov_base;
+    for (int i = 0; i < iovcnt; i++) {
+        char *UNUSED base = (char *)iov[i].iov_base;
         for (int j = 0; j < iov[i].iov_len; j++) {
 #ifdef CONFIG_PRINTING
             seL4_DebugPutChar(base[j]);
@@ -114,6 +116,9 @@ static muslcsys_syscall_t syscall_table[MUSLC_NUM_SYSCALLS] = {
 #endif
     [__NR_set_tid_address] = boot_set_tid_address,
     [__NR_writev] = boot_sys_writev,
+    /* We don't need a boot_sys_write variant as this implementation wraps
+     * whatever __NR_writev is set to. */
+    [__NR_write] = sys_write,
     [__NR_sched_yield] = sys_sched_yield,
     [__NR_exit] = sys_exit,
     [__NR_rt_sigprocmask] = sys_rt_sigprocmask,
@@ -177,7 +182,8 @@ static sparse_syscall_t sparse_syscall_table[] = {
 #endif
 };
 
-static int find_sparse_syscall(int syscall) {
+static int find_sparse_syscall(int syscall)
+{
     for (int i = 0; i < ARRAY_SIZE(sparse_syscall_table); i++) {
         if (sparse_syscall_table[i].sysnum == syscall) {
             return i;
@@ -186,12 +192,14 @@ static int find_sparse_syscall(int syscall) {
     return -1;
 }
 
-muslcsys_syscall_t muslcsys_install_syscall(int syscall, muslcsys_syscall_t new_syscall) {
+muslcsys_syscall_t muslcsys_install_syscall(int syscall, muslcsys_syscall_t new_syscall)
+{
     muslcsys_syscall_t ret;
     if (syscall >= ARRAY_SIZE(syscall_table)) {
         int index = find_sparse_syscall(syscall);
         if (index < 0) {
-            ZF_LOGF("Syscall %d exceeds syscall table size of %zu and not found in sparse table", syscall, ARRAY_SIZE(syscall_table));
+            ZF_LOGF("Syscall %d exceeds syscall table size of %zu and not found in sparse table", syscall,
+                    ARRAY_SIZE(syscall_table));
         }
         ret = sparse_syscall_table[index].syscall;
         sparse_syscall_table[index].syscall = ret;
@@ -207,7 +215,8 @@ muslcsys_syscall_t muslcsys_install_syscall(int syscall, muslcsys_syscall_t new_
  * it can be overriden. We are able to have this constructor
  * in this file since we know it will get looked at by the linker due
  * to __vsyscall_ptr being here */
-static void CONSTRUCTOR(CONSTRUCTOR_MIN_PRIORITY) init_syscall_table(void) {
+static void CONSTRUCTOR(CONSTRUCTOR_MIN_PRIORITY) init_syscall_table(void)
+{
     muslcsys_syscall_t ret UNUSED;
     ret = muslcsys_install_syscall(__NR_set_tid_address, sys_set_tid_address);
     assert(ret == boot_set_tid_address);
@@ -227,14 +236,16 @@ static void CONSTRUCTOR(CONSTRUCTOR_MIN_PRIORITY) init_syscall_table(void) {
 #ifdef CONFIG_LIB_SEL4_MUSLC_SYS_CPIO_FS
 extern char _cpio_archive[];
 extern char _cpio_archive_end[];
-static void CONSTRUCTOR(CONSTRUCTOR_MIN_PRIORITY) install_default_cpio(void) {
+static void CONSTRUCTOR(CONSTRUCTOR_MIN_PRIORITY) install_default_cpio(void)
+{
     unsigned long cpio_len = _cpio_archive_end - _cpio_archive;
     muslcsys_install_cpio_interface(_cpio_archive, cpio_len, cpio_get_file);
 }
 #endif
 
 #ifdef CONFIG_PRINTING
-static void debug_error(int sysnum) {
+static void debug_error(int sysnum)
+{
     char buf[100];
     int i;
     sprintf(buf, "libsel4muslcsys: Error attempting syscall %d\n", sysnum);
@@ -243,11 +254,13 @@ static void debug_error(int sysnum) {
     }
 }
 #else
-static void debug_error(int sysnum) {
+static void debug_error(int sysnum)
+{
 }
 #endif
 
-long sel4_vsyscall(long sysnum, ...) {
+long sel4_vsyscall(long sysnum, ...)
+{
     va_list al;
     va_start(al, sysnum);
     muslcsys_syscall_t syscall;
@@ -272,6 +285,45 @@ long sel4_vsyscall(long sysnum, ...) {
     return ret;
 }
 
+extern void *__sysinfo;
+
+/* Set the virtual syscall handler so that a portion of muslc will
+ * function.
+ *
+ * This is required for apps using a dynamic heap, which need to make
+ * use of malloc in order to provide an implementation of brk and mmap
+ * that are used during the initialisation of muslc.
+ */
+static void CONSTRUCTOR(MUSLCSYS_WITH_VSYSCALL_PRIORITY - 1) init_vsyscall(void)
+{
+    __sysinfo = sel4_vsyscall;
+}
+
 /* Put a pointer to sel4_vsyscall in a special section so anyone loading us
  * knows how to configure our syscall table */
 uintptr_t VISIBLE SECTION("__vsyscall") __vsyscall_ptr = (uintptr_t) sel4_vsyscall;
+
+/* muslc provides a function used to initialise the C standard library
+ * environment. */
+extern void __init_libc(char const *const *envp, char const *pn);
+
+/* This is needed to force GCC to re-read the TLS base address on some
+ * platforms when setting the IPC buffer address after it has changed.
+ *
+ * At higher optimisation levels on aarch64, GCC will read the location
+ * for `__sel4_ipc_buffer` only once in the same function, even across
+ * function calls, and thus will not update any newly created TLS region
+ * with the IPC buffer address.
+ */
+static void NO_INLINE update_ipc_buffer(seL4_IPCBuffer *tmp)
+{
+    __sel4_ipc_buffer = tmp;
+}
+
+/* Initialise muslc environment */
+void CONSTRUCTOR(CONFIG_LIB_SEL4_MUSLC_SYS_CONSTRUCTOR_PRIORITY) muslcsys_init_muslc(void)
+{
+    seL4_IPCBuffer *tmp = __sel4_ipc_buffer;
+    __init_libc(sel4runtime_envp(), sel4runtime_argv()[0]);
+    update_ipc_buffer(tmp);
+}

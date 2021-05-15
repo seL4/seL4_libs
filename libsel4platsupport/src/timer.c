@@ -1,16 +1,11 @@
 /*
- * Copyright 2017, Data61
- * Commonwealth Scientific and Industrial Research Organisation (CSIRO)
- * ABN 41 687 119 230.
+ * Copyright 2017, Data61, CSIRO (ABN 41 687 119 230)
  *
- * This software may be distributed and modified according to the terms of
- * the BSD 2-Clause license. Note that NO WARRANTY is provided.
- * See "LICENSE_BSD2.txt" for details.
- *
-* @TAG(DATA61_BSD)
-*/
+ * SPDX-License-Identifier: BSD-2-Clause
+ */
 
 #include <autoconf.h>
+#include <sel4platsupport/gen_config.h>
 #include <vka/object.h>
 #include <vka/vka.h>
 #include <vka/capops.h>
@@ -57,7 +52,6 @@ void sel4platsupport_handle_timer_irq(seL4_timer_t *timer, seL4_Word badge)
             /* mask the bit out of the badge */
             badge &= ~BIT(irq);
             if (timer->to.irqs[i].irq.type != PS_NONE) {
-                ltimer_handle_irq(&timer->ltimer, &timer->to.irqs[i].irq);
                 int error = seL4_IRQHandler_Ack(timer->to.irqs[i].handler_path.capPtr);
                 if (error) {
                     ZF_LOGE("Failed to ack irq %lu, error %d", irq, error);
@@ -166,7 +160,7 @@ int sel4platsupport_init_default_timer_ops(vka_t *vka, UNUSED vspace_t *vspace, 
     }
 
     if (!error)  {
-        error = ltimer_default_init(&timer->ltimer, ops);
+        error = ltimer_default_init(&timer->ltimer, ops, NULL, NULL);
     }
     return error;
 }
@@ -179,7 +173,7 @@ int sel4platsupport_init_default_timer(vka_t *vka, vspace_t *vspace, simple_t *s
     /* initialise io ops */
     ps_io_ops_t ops;
     memset(&ops, 0, sizeof(ops));
-    error = sel4platsupport_new_io_ops(*vspace, *vka, &ops);
+    error = sel4platsupport_new_io_ops(vspace, vka, simple, &ops);
     if (!error) {
         /* we have no way of storing the fact that we allocated these io ops so we'll just leak
          * them forever */
@@ -207,7 +201,7 @@ int sel4platsupport_init_default_timer_caps(vka_t *vka, vspace_t *vspace, simple
     /* initialise io ops */
     ps_io_ops_t ops;
     memset(&ops, 0, sizeof(ops));
-    int error = sel4platsupport_new_io_ops(*vspace, *vka, &ops);
+    int error = sel4platsupport_new_io_ops(vspace, vka, simple, &ops);
     if (error) {
         ZF_LOGE("Failed to get io ops");
         return error;;
@@ -287,6 +281,9 @@ seL4_CPtr sel4platsupport_timer_objs_get_irq_cap(timer_objects_t *to, int id, ir
                 break;
             case PS_NONE:
                 ZF_LOGE("Invalid irq type");
+                break;
+            default:
+                ZF_LOGE("Unsupported irq type");
             }
         }
     }

@@ -1,13 +1,7 @@
 /*
- * Copyright 2017, Data61
- * Commonwealth Scientific and Industrial Research Organisation (CSIRO)
- * ABN 41 687 119 230.
+ * Copyright 2017, Data61, CSIRO (ABN 41 687 119 230)
  *
- * This software may be distributed and modified according to the terms of
- * the BSD 2-Clause license. Note that NO WARRANTY is provided.
- * See "LICENSE_BSD2.txt" for details.
- *
- * @TAG(DATA61_BSD)
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
@@ -31,7 +25,11 @@ LEAKY(page_upper_directory)
 
 static inline int vka_alloc_vspace_root(vka_t *vka, vka_object_t *result)
 {
-    return vka_alloc_page_global_directory(vka, result);
+    if (config_set(CONFIG_ARM_HYPERVISOR_SUPPORT) && config_set(CONFIG_ARM_PA_SIZE_BITS_40)) {
+        return vka_alloc_page_upper_directory(vka, result);
+    } else {
+        return vka_alloc_page_global_directory(vka, result);
+    }
 }
 
 /*

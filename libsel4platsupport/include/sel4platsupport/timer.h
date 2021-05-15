@@ -1,13 +1,7 @@
 /*
- * Copyright 2017, Data61
- * Commonwealth Scientific and Industrial Research Organisation (CSIRO)
- * ABN 41 687 119 230.
+ * Copyright 2017, Data61, CSIRO (ABN 41 687 119 230)
  *
- * This software may be distributed and modified according to the terms of
- * the BSD 2-Clause license. Note that NO WARRANTY is provided.
- * See "LICENSE_BSD2.txt" for details.
- *
- * @TAG(DATA61_BSD)
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
@@ -66,7 +60,8 @@ struct seL4_timer {
  * @param  timer_objects struct for returning cap meta data.
  * @return               0 on success, otherwise failure.
  */
-int sel4platsupport_init_default_timer_caps(vka_t *vka, vspace_t *vspace, simple_t *simple, timer_objects_t *timer_objects);
+int sel4platsupport_init_default_timer_caps(vka_t *vka, vspace_t *vspace, simple_t *simple,
+                                            timer_objects_t *timer_objects);
 
 /*
  * Initialise the default timer for this platform and do all of the seL4 related work.
@@ -87,14 +82,14 @@ int sel4platsupport_init_default_timer_caps(vka_t *vka, vspace_t *vspace, simple
  * @return             0 on success.
  */
 int sel4platsupport_init_default_timer_ops(vka_t *vka, vspace_t *vspace, simple_t *simple, ps_io_ops_t ops,
-                                seL4_CPtr notification, seL4_timer_t *timer);
+                                           seL4_CPtr notification, seL4_timer_t *timer);
 
 /*
  * Wrapper around sel4platsupport_init_default_timer_ops that generates as much of an
  * io_ops interface as it can from the given vka and vspace
  */
 int sel4platsupport_init_default_timer(vka_t *vka, vspace_t *vspace, simple_t *simple,
-                                seL4_CPtr notification, seL4_timer_t *timer);
+                                       seL4_CPtr notification, seL4_timer_t *timer);
 /*
  * Initialise an seL4_timer with irqs from provided timer objects. As per sel4platsupport_init_timer,
  * timer_objects are provided and the user is expected to initialise the ltimer after calling this function
@@ -112,7 +107,7 @@ int sel4platsupport_init_default_timer(vka_t *vka, vspace_t *vspace, simple_t *s
  * @return             0 on success.
  */
 int sel4platsupport_init_timer_irqs(vka_t *vka, simple_t *simple, seL4_CPtr ntfn,
-        seL4_timer_t *timer, timer_objects_t *objects);
+                                    seL4_timer_t *timer, timer_objects_t *objects);
 
 /*
  * Handle a timer irq for this timer.

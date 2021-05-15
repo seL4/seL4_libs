@@ -1,13 +1,7 @@
 /*
- * Copyright 2017, Data61
- * Commonwealth Scientific and Industrial Research Organisation (CSIRO)
- * ABN 41 687 119 230.
+ * Copyright 2017, Data61, CSIRO (ABN 41 687 119 230)
  *
- * This software may be distributed and modified according to the terms of
- * the BSD 2-Clause license. Note that NO WARRANTY is provided.
- * See "LICENSE_BSD2.txt" for details.
- *
- * @TAG(DATA61_BSD)
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
@@ -15,6 +9,7 @@
 #include <sel4/types.h>
 #include <assert.h>
 #include <autoconf.h>
+#include <sel4vka/gen_config.h>
 #include <utils/util.h>
 #include <vka/arch/kobject_t.h>
 
@@ -43,11 +38,10 @@ DEPRECATED("Use KOBJECT_ENDPOINT") static const kobject_t KOBJECT_SYNC_ENDPOINT 
  * Get the size (in bits) of the untyped memory required to
  * create an object of the given size.
  */
-static inline seL4_Word
-kobject_get_size(kobject_t type, seL4_Word objectSize)
+static inline seL4_Word kobject_get_size(kobject_t type, seL4_Word objectSize)
 {
     switch (type) {
-        /* Generic objects. */
+    /* Generic objects. */
     case KOBJECT_TCB:
         return seL4_TCBBits;
     case KOBJECT_CNODE:
@@ -64,7 +58,7 @@ kobject_get_size(kobject_t type, seL4_Word objectSize)
         return seL4_PageDirBits;
     case KOBJECT_PAGE_TABLE:
         return seL4_PageTableBits;
-#ifdef CONFIG_KERNEL_RT
+#ifdef CONFIG_KERNEL_MCS
     case KOBJECT_REPLY:
         return seL4_ReplyBits;
     case KOBJECT_SCHED_CONTEXT:
@@ -79,11 +73,10 @@ kobject_get_size(kobject_t type, seL4_Word objectSize)
     }
 }
 
-static inline seL4_Word
-kobject_get_type(kobject_t type, seL4_Word objectSize)
+static inline seL4_Word kobject_get_type(kobject_t type, seL4_Word objectSize)
 {
     switch (type) {
-        /* Generic objects. */
+    /* Generic objects. */
     case KOBJECT_TCB:
         return seL4_TCBObject;
     case KOBJECT_CNODE:
@@ -96,7 +89,7 @@ kobject_get_type(kobject_t type, seL4_Word objectSize)
         return seL4_EndpointObject;
     case KOBJECT_NOTIFICATION:
         return seL4_NotificationObject;
-#ifdef CONFIG_KERNEL_RT
+#ifdef CONFIG_KERNEL_MCS
     case KOBJECT_SCHED_CONTEXT:
         return seL4_SchedContextObject;
     case KOBJECT_REPLY:

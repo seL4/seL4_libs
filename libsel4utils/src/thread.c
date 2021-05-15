@@ -1,16 +1,11 @@
 /*
- * Copyright 2017, Data61
- * Commonwealth Scientific and Industrial Research Organisation (CSIRO)
- * ABN 41 687 119 230.
+ * Copyright 2017, Data61, CSIRO (ABN 41 687 119 230)
  *
- * This software may be distributed and modified according to the terms of
- * the BSD 2-Clause license. Note that NO WARRANTY is provided.
- * See "LICENSE_BSD2.txt" for details.
- *
- * @TAG(DATA61_BSD)
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <autoconf.h>
+#include <sel4utils/gen_config.h>
 
 #include <inttypes.h>
 #include <stdio.h>
@@ -30,17 +25,6 @@
 #include <sel4utils/helpers.h>
 #include <utils/stack.h>
 
-static int write_ipc_buffer_user_data(vka_t *vka, vspace_t *vspace, seL4_CPtr ipc_buf, uintptr_t buf_loc)
-{
-    void *mapping = sel4utils_dup_and_map(vka, vspace, ipc_buf, seL4_PageBits);
-    if (!mapping) {
-        return -1;
-    }
-    seL4_IPCBuffer *buffer = mapping;
-    buffer->userData = buf_loc;
-    sel4utils_unmap_dup(vka, vspace, mapping, seL4_PageBits);
-    return 0;
-}
 
 int sel4utils_configure_thread(vka_t *vka, vspace_t *parent, vspace_t *alloc, seL4_CPtr fault_endpoint,
                                seL4_CNode cspace, seL4_Word cspace_root_data, sel4utils_thread_t *res)
@@ -72,14 +56,9 @@ int sel4utils_configure_thread_config(vka_t *vka, vspace_t *parent, vspace_t *al
             ZF_LOGE("ipc buffer allocation failed");
             return -1;
         }
-
-        if (write_ipc_buffer_user_data(vka, parent, res->ipc_buffer, res->ipc_buffer_addr)) {
-            ZF_LOGE("failed to set user data word in IPC buffer");
-            return -1;
-        }
     }
 
-    if (config_set(CONFIG_KERNEL_RT) && config.create_reply) {
+    if (config_set(CONFIG_KERNEL_MCS) && config.create_reply) {
         if (vka_alloc_reply(vka, &res->reply)) {
             ZF_LOGE("Failed to allocate reply");
             sel4utils_clean_up_thread(vka, alloc, res);
@@ -91,7 +70,7 @@ int sel4utils_configure_thread_config(vka_t *vka, vspace_t *parent, vspace_t *al
     }
 
     if (config.sched_params.create_sc) {
-        if (!config_set(CONFIG_KERNEL_RT)) {
+        if (!config_set(CONFIG_KERNEL_MCS)) {
             ZF_LOGE("Cannot create a scheduling context on a non-RT kernel");
             sel4utils_clean_up_thread(vka, alloc, res);
             return -1;
@@ -105,7 +84,7 @@ int sel4utils_configure_thread_config(vka_t *vka, vspace_t *parent, vspace_t *al
         }
 
         /* configure the scheduling context */
-        if (config_set(CONFIG_KERNEL_RT)) {
+        if (config_set(CONFIG_KERNEL_MCS)) {
             error = api_sched_ctrl_configure(config.sched_params.sched_ctrl, res->sched_context.cptr,
                                              config.sched_params.budget, config.sched_params.period,
                                              config.sched_params.extra_refills, config.sched_params.badge);
@@ -290,7 +269,7 @@ void sel4utils_print_fault_message(seL4_MessageInfo_t tag, const char *thread_na
                (void *) seL4_Fault_CapFault_get_Addr(fault),
                COLOR_NORMAL);
         break;
-#ifdef CONFIG_KERNEL_RT
+#ifdef CONFIG_KERNEL_MCS
     case seL4_Fault_Timeout:
         printf("Timeout fault from %s\n", thread_name);
         break;
@@ -404,7 +383,7 @@ sel4utils_free_checkpoint(sel4utils_checkpoint_t *checkpoint)
 
 int sel4utils_set_sched_affinity(sel4utils_thread_t *thread, sched_params_t params) {
 #if CONFIG_MAX_NUM_NODES > 1
-#ifdef CONFIG_KERNEL_RT
+#ifdef CONFIG_KERNEL_MCS
     return api_sched_ctrl_configure(params.sched_ctrl, thread->sched_context.cptr, params.budget, params.period,
                                     params.extra_refills, params.badge);
 

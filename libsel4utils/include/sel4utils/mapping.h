@@ -1,18 +1,13 @@
 /*
- * Copyright 2017, Data61
- * Commonwealth Scientific and Industrial Research Organisation (CSIRO)
- * ABN 41 687 119 230.
+ * Copyright 2017, Data61, CSIRO (ABN 41 687 119 230)
  *
- * This software may be distributed and modified according to the terms of
- * the BSD 2-Clause license. Note that NO WARRANTY is provided.
- * See "LICENSE_BSD2.txt" for details.
- *
- * @TAG(DATA61_BSD)
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
 
 #include <autoconf.h>
+#include <sel4utils/gen_config.h>
 #include <utils/util.h>
 #include <sel4/sel4.h>
 
@@ -58,7 +53,7 @@ static inline int sel4utils_map_page_leaky(vka_t *vka, seL4_CPtr pd, seL4_CPtr f
  *
  * @return virtual address of mapping
  */
-void * sel4utils_dup_and_map(vka_t *vka, vspace_t *vspace, seL4_CPtr page, size_t size_bits);
+void *sel4utils_dup_and_map(vka_t *vka, vspace_t *vspace, seL4_CPtr page, size_t size_bits);
 
 /* Unmap a duplicated page cap and free any resources. Is the opposite
  * of sel4utils_dup_and_map
@@ -72,15 +67,16 @@ void * sel4utils_dup_and_map(vka_t *vka, vspace_t *vspace, seL4_CPtr page, size_
  */
 void sel4utils_unmap_dup(vka_t *vka, vspace_t *vspace, void *mapping, size_t size_bits);
 
-#if defined(CONFIG_IOMMU) || defined(CONFIG_ARM_SMMU)
+#if defined(CONFIG_IOMMU) || defined(CONFIG_TK1_SMMU)
 int sel4utils_map_iospace_page(vka_t *vka, seL4_CPtr iospace, seL4_CPtr frame, seL4_Word vaddr,
                                seL4_CapRights_t rights, int cacheable, seL4_Word size_bits,
                                vka_object_t *pts, int *num_pts);
-#endif /* defined(CONFIG_IOMMU) || defined(CONFIG_ARM_SMMU) */
+#endif /* defined(CONFIG_IOMMU) || defined(CONFIG_TK1_SMMU) */
 
 #ifdef CONFIG_VTX
 int sel4utils_map_ept_page(vka_t *vka, seL4_CPtr pd, seL4_CPtr frame, seL4_Word vaddr,
-                           seL4_CapRights_t rights, int cacheable, seL4_Word size_bits, vka_object_t *pagetable, vka_object_t *pagedir, vka_object_t *pdpt);
+                           seL4_CapRights_t rights, int cacheable, seL4_Word size_bits, vka_object_t *pagetable, vka_object_t *pagedir,
+                           vka_object_t *pdpt);
 
 #endif /* CONFIG_VTX */
 

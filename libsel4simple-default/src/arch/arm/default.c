@@ -1,13 +1,7 @@
 /*
- * Copyright 2017, Data61
- * Commonwealth Scientific and Industrial Research Organisation (CSIRO)
- * ABN 41 687 119 230.
+ * Copyright 2017, Data61, CSIRO (ABN 41 687 119 230)
  *
- * This software may be distributed and modified according to the terms of
- * the BSD 2-Clause license. Note that NO WARRANTY is provided.
- * See "LICENSE_BSD2.txt" for details.
- *
- * @TAG(DATA61_BSD)
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <autoconf.h>
@@ -27,13 +21,17 @@ seL4_Error simple_default_get_irq(void *data, int irq, seL4_CNode root, seL4_Wor
     return seL4_IRQControl_Get(seL4_CapIRQControl, irq, root, index, depth);
 }
 
-seL4_Error simple_default_get_irq_trigger(void *data, int irq, int trigger, seL4_CNode root,
+seL4_Error simple_default_get_irq_trigger(void *data, int irq, int trigger, UNUSED int core, seL4_CNode root,
                                           seL4_Word index, uint8_t depth)
 {
+#if CONFIG_MAX_NUM_NODES > 1
+    return seL4_IRQControl_GetTriggerCore(seL4_CapIRQControl, irq, trigger, root, index, depth, core);
+#else
     return seL4_IRQControl_GetTrigger(seL4_CapIRQControl, irq, trigger, root, index, depth);
+#endif
 }
 
-#ifdef CONFIG_ARM_SMMU
+#ifdef CONFIG_TK1_SMMU
 seL4_Error simple_default_get_iospace_cap_count(void *data, int *count)
 {
     seL4_BootInfo *bi = data;
@@ -93,7 +91,7 @@ void simple_default_init_arch_simple(arch_simple_t *simple, void *data)
     simple->data = data;
     simple->irq = simple_default_get_irq;
     simple->irq_trigger = simple_default_get_irq_trigger;
-#ifdef CONFIG_ARM_SMMU
+#ifdef CONFIG_TK1_SMMU
     simple->iospace_cap_count = simple_default_get_iospace_cap_count;
     simple->iospace_get_nth_cap = simple_default_get_iospace_nth_cap;
 #endif

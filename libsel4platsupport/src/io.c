@@ -1,16 +1,11 @@
 /*
- * Copyright 2017, Data61
- * Commonwealth Scientific and Industrial Research Organisation (CSIRO)
- * ABN 41 687 119 230.
+ * Copyright 2017, Data61, CSIRO (ABN 41 687 119 230)
  *
- * This software may be distributed and modified according to the terms of
- * the BSD 2-Clause license. Note that NO WARRANTY is provided.
- * See "LICENSE_BSD2.txt" for details.
- *
- * @TAG(DATA61_BSD)
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <autoconf.h>
+#include <sel4platsupport/gen_config.h>
 
 #include <sel4platsupport/io.h>
 #ifdef CONFIG_ARCH_ARM
@@ -42,13 +37,12 @@ typedef struct io_mapping {
 } io_mapping_t;
 
 typedef struct sel4platsupport_io_mapper_cookie {
-    vspace_t vspace;
-    vka_t vka;
+    vspace_t *vspace;
+    vka_t *vka;
     io_mapping_t *head;
 } sel4platsupport_io_mapper_cookie_t;
 
-static void
-free_node(io_mapping_t *node)
+static void free_node(io_mapping_t *node)
 {
     assert(node);
     if (node->caps) {
@@ -60,8 +54,7 @@ free_node(io_mapping_t *node)
     free(node);
 }
 
-static io_mapping_t *
-new_node(size_t num_pages)
+static io_mapping_t *new_node(size_t num_pages)
 {
     io_mapping_t *ret = calloc(1, sizeof(io_mapping_t));
 
@@ -85,8 +78,7 @@ new_node(size_t num_pages)
     return ret;
 }
 
-static void
-destroy_node(vka_t *vka, io_mapping_t *mapping)
+static void destroy_node(vka_t *vka, io_mapping_t *mapping)
 {
     cspacepath_t path;
     for (size_t i = 0; i < mapping->num_pages; i++) {
@@ -101,8 +93,7 @@ destroy_node(vka_t *vka, io_mapping_t *mapping)
     free_node(mapping);
 }
 
-static void
-insert_node(sel4platsupport_io_mapper_cookie_t *io_mapper, io_mapping_t *node)
+static void insert_node(sel4platsupport_io_mapper_cookie_t *io_mapper, io_mapping_t *node)
 {
     node->prev = NULL;
     node->next = io_mapper->head;
@@ -112,8 +103,7 @@ insert_node(sel4platsupport_io_mapper_cookie_t *io_mapper, io_mapping_t *node)
     io_mapper->head = node;
 }
 
-static io_mapping_t *
-find_node(sel4platsupport_io_mapper_cookie_t *io_mapper, void *returned_addr)
+static io_mapping_t *find_node(sel4platsupport_io_mapper_cookie_t *io_mapper, void *returned_addr)
 {
     io_mapping_t *current;
     for (current = io_mapper->head; current; current = current->next) {
@@ -124,8 +114,7 @@ find_node(sel4platsupport_io_mapper_cookie_t *io_mapper, void *returned_addr)
     return NULL;
 }
 
-static void
-remove_node(sel4platsupport_io_mapper_cookie_t *io_mapper, io_mapping_t *node)
+static void remove_node(sel4platsupport_io_mapper_cookie_t *io_mapper, io_mapping_t *node)
 {
     if (node->prev) {
         node->prev->next = node->next;
@@ -138,12 +127,12 @@ remove_node(sel4platsupport_io_mapper_cookie_t *io_mapper, io_mapping_t *node)
     }
 }
 
-static void *
-sel4platsupport_map_paddr_with_page_size(sel4platsupport_io_mapper_cookie_t *io_mapper, uintptr_t paddr, size_t size, size_t page_size_bits, bool cached)
+static void *sel4platsupport_map_paddr_with_page_size(sel4platsupport_io_mapper_cookie_t *io_mapper, uintptr_t paddr,
+                                                      size_t size, size_t page_size_bits, bool cached)
 {
 
-    vka_t *vka = &io_mapper->vka;
-    vspace_t *vspace = &io_mapper->vspace;
+    vka_t *vka = io_mapper->vka;
+    vspace_t *vspace = io_mapper->vspace;
 
     /* search at start of page */
     int page_size = BIT(page_size_bits);
@@ -189,7 +178,8 @@ sel4platsupport_map_paddr_with_page_size(sel4platsupport_io_mapper_cookie_t *io_
     }
 
     /* Now map the frames in */
-    mapping->mapped_addr = vspace_map_pages(vspace, mapping->caps, mapping->alloc_cookies, seL4_AllRights, mapping->num_pages,
+    mapping->mapped_addr = vspace_map_pages(vspace, mapping->caps, mapping->alloc_cookies, seL4_AllRights,
+                                            mapping->num_pages,
                                             mapping->page_size_bits, cached);
     if (mapping->mapped_addr != NULL) {
         /* fill out and insert node */
@@ -202,10 +192,15 @@ error:
     return NULL;
 }
 
-static void *
-sel4platsupport_map_paddr(void *cookie, uintptr_t paddr, size_t size, int cached, UNUSED ps_mem_flags_t flags)
+static void *sel4platsupport_map_paddr(void *cookie, uintptr_t paddr, size_t size, int cached,
+                                       UNUSED ps_mem_flags_t flags)
 {
-    sel4platsupport_io_mapper_cookie_t* io_mapper = (sel4platsupport_io_mapper_cookie_t*)cookie;
+    if (!cookie) {
+        ZF_LOGE("cookie is NULL");
+        return NULL;
+    }
+
+    sel4platsupport_io_mapper_cookie_t *io_mapper = (sel4platsupport_io_mapper_cookie_t *)cookie;
     int frame_size_index = 0;
     /* find the largest reasonable frame size */
     while (frame_size_index + 1 < SEL4_NUM_PAGE_SIZES) {
@@ -228,13 +223,16 @@ sel4platsupport_map_paddr(void *cookie, uintptr_t paddr, size_t size, int cached
     return NULL;
 }
 
-static void
-sel4platsupport_unmap_vaddr(void * cookie, void *vaddr, UNUSED size_t size)
+static void sel4platsupport_unmap_vaddr(void *cookie, void *vaddr, UNUSED size_t size)
 {
-    sel4platsupport_io_mapper_cookie_t* io_mapper = cookie;
+    if (!cookie) {
+        ZF_LOGE("cookie is NULL");
+    }
 
-    vspace_t *vspace = &io_mapper->vspace;
-    vka_t *vka = &io_mapper->vka;
+    sel4platsupport_io_mapper_cookie_t *io_mapper = cookie;
+
+    vspace_t *vspace = io_mapper->vspace;
+    vka_t *vka = io_mapper->vka;
     io_mapping_t *mapping = find_node(io_mapper, vaddr);
 
     if (!mapping) {
@@ -251,8 +249,7 @@ sel4platsupport_unmap_vaddr(void * cookie, void *vaddr, UNUSED size_t size)
     destroy_node(vka, mapping);
 }
 
-int
-sel4platsupport_new_io_mapper(vspace_t vspace, vka_t vka, ps_io_mapper_t *io_mapper)
+int sel4platsupport_new_io_mapper(vspace_t *vspace, vka_t *vka, ps_io_mapper_t *io_mapper)
 {
     sel4platsupport_io_mapper_cookie_t *cookie = calloc(1, sizeof(sel4platsupport_io_mapper_cookie_t));
     if (!cookie) {
@@ -268,49 +265,99 @@ sel4platsupport_new_io_mapper(vspace_t vspace, vka_t vka, ps_io_mapper_t *io_map
 
     return 0;
 }
-int
-sel4platsupport_new_malloc_ops(ps_malloc_ops_t *ops)
+
+int sel4platsupport_new_malloc_ops(ps_malloc_ops_t *ops)
 {
     ps_new_stdlib_malloc_ops(ops);
     return 0;
 }
 
-#ifdef CONFIG_PLAT_TK1
-#include <platsupport/gpio.h>
-
-gpio_sys_t gpio_sys;
-#endif
-
-void *
-get_mux_dependencies(void)
+static char *sel4platsupport_io_fdt_get(void *cookie)
 {
-#ifdef CONFIG_PLAT_TK1
-    /* The TK1's mux depends on an instance of the GPIO driver. */
-    return &gpio_sys;
-#else
-    /* The other platforms don't have any such dependency issues. */
-    return NULL;
-#endif
+    return cookie != NULL ? (char *) cookie : NULL;
 }
 
-int
-sel4platsupport_new_io_ops(vspace_t vspace, vka_t vka, ps_io_ops_t *io_ops)
+int sel4platsupport_new_fdt_ops(ps_io_fdt_t *io_fdt, simple_t *simple, ps_malloc_ops_t *malloc_ops)
+{
+    if (!io_fdt || !simple || !malloc_ops) {
+        ZF_LOGE("arguments are NULL");
+        return -1;
+    }
+
+    ssize_t block_size = simple_get_extended_bootinfo_length(simple, SEL4_BOOTINFO_HEADER_FDT);
+    if (block_size > 0) {
+        int error = ps_calloc(malloc_ops, 1, block_size, &io_fdt->cookie);
+        if (error) {
+            ZF_LOGE("Failed to allocate %zu bytes for the FDT", block_size);
+            return -1;
+        }
+
+        /* Copy the FDT from the extended bootinfo */
+        ssize_t copied_size = simple_get_extended_bootinfo(simple, SEL4_BOOTINFO_HEADER_FDT,
+                                                           io_fdt->cookie, block_size);
+        if (copied_size != block_size) {
+            ZF_LOGE("Failed to copy the FDT");
+            ZF_LOGF_IF(ps_free(malloc_ops, block_size, io_fdt->cookie),
+                       "Failed to clean-up after a failed operation!");
+            return -1;
+        }
+
+        /* Cut off the bootinfo header from the start of the buffer */
+        ssize_t fdt_size = block_size - sizeof(seL4_BootInfoHeader);
+        void *fdt_start = io_fdt->cookie + sizeof(seL4_BootInfoHeader);
+        memmove(io_fdt->cookie, fdt_start, fdt_size);
+
+        /* Trim off the extra bytes at the end of the FDT */
+        void *fdt_end = io_fdt->cookie + fdt_size;
+        memset(fdt_end, 0, sizeof(seL4_BootInfoHeader));
+    } else {
+        /* No FDT is available so just set the cookie to NULL */
+        io_fdt->cookie = NULL;
+    }
+
+    /* Set the function pointer inside the io_fdt interface */
+    io_fdt->get_fn = sel4platsupport_io_fdt_get;
+
+    return 0;
+}
+
+int sel4platsupport_new_io_ops(vspace_t *vspace, vka_t *vka, simple_t *simple, ps_io_ops_t *io_ops)
 {
     memset(io_ops, 0, sizeof(ps_io_ops_t));
 
-    int err = sel4platsupport_new_io_mapper(vspace, vka, &io_ops->io_mapper);
-    if (err) {
-        return err;
+    int error = 0;
+
+    /* Initialise the interfaces which do not require memory allocation/need to be initialised first */
+    error = sel4platsupport_new_malloc_ops(&io_ops->malloc_ops);
+    if (error) {
+        return error;
     }
 
-#ifdef ARCH_ARM
-    clock_sys_init(io_ops, &io_ops->clock_sys);
-#ifdef CONFIG_PLAT_TK1
-    gpio_sys_init(io_ops, &gpio_sys);
-#endif
-    mux_sys_init(io_ops, get_mux_dependencies(), &io_ops->mux_sys);
-#endif
+    /* Now allocate the IO-specific interfaces (the ones that can be found in this file) */
+    error = sel4platsupport_new_io_mapper(vspace, vka, &io_ops->io_mapper);
+    if (error) {
+        return error;
+    }
 
-    sel4platsupport_new_malloc_ops(&io_ops->malloc_ops);
-    return err;
+    error = sel4platsupport_new_fdt_ops(&io_ops->io_fdt, simple, &io_ops->malloc_ops);
+    if (error) {
+        free(io_ops->io_mapper.cookie);
+        io_ops->io_mapper.cookie = NULL;
+        return error;
+    }
+
+    error = sel4platsupport_new_irq_ops(&io_ops->irq_ops, vka, simple, DEFAULT_IRQ_INTERFACE_CONFIG,
+                                        &io_ops->malloc_ops);
+    if (error) {
+        free(io_ops->io_mapper.cookie);
+        io_ops->io_mapper.cookie = NULL;
+        ssize_t fdt_size = simple_get_extended_bootinfo_length(simple, SEL4_BOOTINFO_HEADER_FDT);
+        if (fdt_size > 0) {
+            /* The FDT is available on this platform and we actually copied it, so we free it */
+            ps_free(&io_ops->malloc_ops, fdt_size, &io_ops->io_fdt.cookie);
+        }
+        return error;
+    }
+
+    return 0;
 }

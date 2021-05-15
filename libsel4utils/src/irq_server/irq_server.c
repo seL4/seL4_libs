@@ -1,405 +1,389 @@
 /*
- * Copyright 2017, Data61
- * Commonwealth Scientific and Industrial Research Organisation (CSIRO)
- * ABN 41 687 119 230.
+ * Copyright 2019, Data61, CSIRO (ABN 41 687 119 230)
  *
- * This software may be distributed and modified according to the terms of
- * the BSD 2-Clause license. Note that NO WARRANTY is provided.
- * See "LICENSE_BSD2.txt" for details.
- *
- * @TAG(DATA61_BSD)
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <sel4utils/irq_server.h>
 
+#include <errno.h>
 #include <simple/simple.h>
 #include <sel4utils/thread.h>
 #include <vka/capops.h>
 #include <stdlib.h>
 #include <string.h>
+#include <platsupport/irq.h>
+#include <sel4platsupport/irq.h>
 
 #include <utils/util.h>
 
-#define NIRQS_PER_NODE        seL4_BadgeBits
+#define IRQ_SERVER_MESSAGE_LENGTH 2
 
-/*************************
- *** Generic functions ***
- *************************/
+typedef struct irq_server_node {
+    seL4_CPtr ntfn;
+    size_t max_irqs_bound;
+    size_t num_irqs_bound;
+} irq_server_node_t;
 
-void
-irq_data_ack_irq(struct irq_data* irq)
-{
-    if (irq == NULL || irq->cap == seL4_CapNull) {
-        ZF_LOGE("IRQ data invalid when acknowledging IRQ\n");
-    } else {
-        seL4_IRQHandler_Ack(irq->cap);
-    }
-}
+typedef struct irq_server_thread irq_server_thread_t;
 
-/***********************
- *** IRQ server node ***
- ***********************/
-
-struct irq_server_node {
-/// Information about the IRQ that is assigned to each badge bit
-    struct irq_data irqs[NIRQS_PER_NODE];
-/// The notification object that IRQs arrive on
-    seL4_CPtr notification;
-/// A mask for the badge. All set bits within the badge are treated as reserved.
-    seL4_Word badge_mask;
+/* This is also forwarded declared as we have a pointer to a struct of the same type */
+struct irq_server_thread {
+    thread_id_t thread_id;
+    irq_server_node_t *node;
+    seL4_CPtr delivery_ep;
+    seL4_Word label;
+    sel4utils_thread_t thread;
+    /* Linked list chain of threads */
+    irq_server_thread_t *next;
 };
 
-/* Executes the registered callback for incoming IRQS */
-static void
-irq_server_node_handle_irq(struct irq_server_node *n, seL4_Word badge)
+/* This is forward-declared in the header file, hence no typedef */
+struct irq_server {
+    seL4_CPtr delivery_ep;
+    seL4_Word label;
+    vka_object_t reply;
+    irq_server_thread_t *server_threads;
+    size_t num_irqs;
+    size_t max_irqs;
+
+    /* New thread parameters */
+    seL4_Word priority;
+    seL4_CPtr cspace;
+
+    /* Allocation interfaces */
+    vka_t *vka;
+    vspace_t *vspace;
+    simple_t *simple;
+    ps_irq_ops_t irq_ops;
+    ps_malloc_ops_t *malloc_ops;
+};
+
+/* Executes the registered callback for incoming IRQs */
+static void irq_server_node_handle_irq(irq_server_thread_t *thread_info,
+                                       ps_irq_ops_t *irq_ops, seL4_Word badge)
 {
-    struct irq_data* irqs;
-    irqs = n->irqs;
-    /* Mask out reserved bits */
-    badge = badge & n->badge_mask;
-    /* For each bit, call the registered handler */
-    while (badge) {
-        int irq_idx;
-        struct irq_data* irq;
-        irq_idx = CTZL(badge);
-        irq = &irqs[irq_idx];
-        ZF_LOGD("Received IRQ %d, badge 0x%x, index %d\n", irq->irq, (unsigned)badge, irq_idx);
-        irq->cb(irq);
-        badge &= ~BIT(irq_idx);
-    }
-}
-
-/* Binds and IRQ to an endpoint */
-static seL4_CPtr
-irq_bind(irq_t irq, seL4_CPtr notification_cap, int idx, vka_t* vka, simple_t *simple)
-{
-    seL4_CPtr irq_cap, bnotification_cap;
-    cspacepath_t irq_path, notification_path, bnotification_path;
-    seL4_Word badge;
-    int err;
-
-    /* Create an IRQ cap */
-    err = vka_cspace_alloc(vka, &irq_cap);
-    if (err != 0) {
-        ZF_LOGE("Failed to allocate cslot for irq\n");
-        return seL4_CapNull;
-    }
-    vka_cspace_make_path(vka, irq_cap, &irq_path);
-    err = simple_get_IRQ_handler(simple, irq, irq_path);
-    if (err != seL4_NoError) {
-        ZF_LOGE("Failed to get cap to irq_number %d\n", irq);
-        vka_cspace_free(vka, irq_cap);
-        return seL4_CapNull;
-    }
-    /* Badge the provided endpoint. The bit position of the badge tells us the array
-     * index of the associated IRQ data. */
-    err = vka_cspace_alloc(vka, &bnotification_cap);
-    if (err != 0) {
-        ZF_LOGE("Failed to allocate cslot for irq\n");
-        vka_cspace_free(vka, irq_cap);
-        return seL4_CapNull;
-    }
-    vka_cspace_make_path(vka, notification_cap, &notification_path);
-    vka_cspace_make_path(vka, bnotification_cap, &bnotification_path);
-    badge = BIT(idx);
-    err = vka_cnode_mint(&bnotification_path, &notification_path, seL4_AllRights, badge);
-    if (err != seL4_NoError) {
-        ZF_LOGE("Failed to badge IRQ notification endpoint\n");
-        vka_cspace_free(vka, irq_cap);
-        vka_cspace_free(vka, bnotification_cap);
-        return seL4_CapNull;
-    }
-    /* bind the IRQ cap to our badged endpoint */
-    err = seL4_IRQHandler_SetNotification(irq_cap, bnotification_cap);
-    if (err != seL4_NoError) {
-        ZF_LOGE("Failed to bind IRQ handler to notification\n");
-        vka_cspace_free(vka, irq_cap);
-        vka_cspace_free(vka, bnotification_cap);
-        return seL4_CapNull;
-    }
-    /* Finally ACK any pending IRQ and enable the IRQ */
-    seL4_IRQHandler_Ack(irq_cap);
-
-    ZF_LOGD("Registered IRQ %d with badge 0x%lx\n", irq, BIT(idx));
-    return irq_cap;
-}
-
-/* Registers an IRQ callback and enabled the IRQ */
-struct irq_data*
-irq_server_node_register_irq(irq_server_node_t n, irq_t irq, irq_handler_fn cb,
-                             void* token, vka_t* vka, seL4_CPtr cspace,
-                             simple_t *simple) {
-    struct irq_data* irqs;
-    int i;
-    irqs = n->irqs;
-
-    for (i = 0; i < NIRQS_PER_NODE; i++) {
-        /* If a cap has not been registered and the bit in the mask is not set */
-        if (irqs[i].cap == seL4_CapNull && (n->badge_mask & BIT(i))) {
-            irqs[i].cap = irq_bind(irq, n->notification, i, vka, simple);
-            if (irqs[i].cap == seL4_CapNull) {
-                ZF_LOGD("Failed to bind IRQ\n");
-                return NULL;
-            }
-            irqs[i].irq = irq;
-            irqs[i].cb = cb;
-            irqs[i].token = token;
-            return &irqs[i];
+    ntfn_id_t target_ntfn = thread_info->thread_id;
+    int error = sel4platsupport_irq_handle(irq_ops, target_ntfn, badge);
+    if (error) {
+        if (error == -EINVAL) {
+            ZF_LOGE("Passed in a wrong ntfn_id to the IRQ interface! Something is very wrong with the IRQ server");
+        } else {
+            ZF_LOGW("Failed to handle an IRQ");
         }
     }
-    return NULL;
 }
 
-/* Creates a new IRQ server node which contains Thread data and registered IRQ data. */
-struct irq_server_node*
-irq_server_node_new(seL4_CPtr notification, seL4_Word badge_mask) {
-    struct irq_server_node *n;
-    n = calloc(1, sizeof(*n));
-    if (n) {
-        n->notification = notification;
-        n->badge_mask = badge_mask;
+/* Registers an IRQ callback and enables the IRQ */
+static irq_id_t irq_server_node_register_irq(irq_server_node_t *node, ps_irq_t irq, irq_callback_fn_t callback,
+                                             void *callback_data, ntfn_id_t ntfn_id, irq_server_t *irq_server)
+{
+    int error;
+
+    irq_id_t irq_id = ps_irq_register(&(irq_server->irq_ops), irq, callback, callback_data);
+    if (irq_id < 0) {
+        ZF_LOGE("Failed to register an IRQ");
+        /* The ID also serves as an error code */
+        return irq_id;
     }
-    return n;
+
+    error = sel4platsupport_irq_set_ntfn(&(irq_server->irq_ops), ntfn_id, irq_id, NULL);
+    if (error) {
+        ZF_LOGE("Failed to pair an IRQ with a notification");
+        ps_irq_unregister(&(irq_server->irq_ops), irq_id);
+        return error;
+    }
+
+    node->num_irqs_bound++;
+
+    /* Success, return the ID that was assigned to the IRQ */
+    return irq_id;
 }
 
-/*************************
- *** IRQ server thread ***
- *************************/
-
-struct irq_server_thread {
-/// IRQ data which this thread is responsible for
-    struct irq_server_node *node;
-/// A synchronous endpoint to deliver IRQ messages to.
-    seL4_CPtr delivery_sep;
-/// The label that should be assigned to outgoing synchronous messages.
-    seL4_Word label;
-/// Thread data
-    sel4utils_thread_t thread;
-/// notification object data
-    vka_object_t notification;
-/// Linked list chain
-    struct irq_server_thread* next;
-};
+/* Creates a new IRQ server node */
+static irq_server_node_t *irq_server_node_new(seL4_CPtr ntfn, size_t max_irqs_bound,
+                                              ps_malloc_ops_t *malloc_ops)
+{
+    irq_server_node_t *new_node = NULL;
+    ps_calloc(malloc_ops, 1, sizeof(irq_server_node_t), (void **) &new_node);
+    if (new_node) {
+        new_node->ntfn = ntfn;
+        new_node->max_irqs_bound = max_irqs_bound;
+    }
+    return new_node;
+}
 
 /* IRQ handler thread. Wait on a notification object for IRQs. When one arrives, send a
  * synchronous message to the registered endpoint. If no synchronous endpoint was
  * registered, call the appropriate handler function directly (must be thread safe) */
-static void
-_irq_thread_entry(struct irq_server_thread* st)
+static void _irq_thread_entry(irq_server_thread_t *my_thread_info, ps_irq_ops_t *irq_ops)
 {
-    seL4_CPtr sep;
-    seL4_CPtr notification;
-    uintptr_t node_ptr;
+    seL4_CPtr ep;
+    seL4_CPtr ntfn;
+    uintptr_t thread_info_ptr;
     seL4_Word label;
 
-    sep = st->delivery_sep;
-    notification = st->node->notification;
-    node_ptr = (uintptr_t)st->node;
-    label = st->label;
-    ZF_LOGD("thread started. Waiting on endpoint %d\n", notification);
+    ep = my_thread_info->delivery_ep;
+    ntfn = my_thread_info->node->ntfn;
+    thread_info_ptr = (uintptr_t)my_thread_info;
+    label = my_thread_info->label;
+    ZF_LOGD("thread started. Waiting on endpoint %lu\n", ntfn);
 
     while (1) {
-        seL4_Word badge;
-        seL4_Wait(notification, &badge);
-        assert(badge != 0);
-        if (sep != seL4_CapNull) {
+        seL4_Word badge = 0;
+        seL4_Wait(ntfn, &badge);
+        if (ep != seL4_CapNull) {
             /* Synchronous endpoint registered. Send IPC */
-            seL4_MessageInfo_t info = seL4_MessageInfo_new(label, 0, 0, 2);
+            seL4_MessageInfo_t info = seL4_MessageInfo_new(label, 0, 0, IRQ_SERVER_MESSAGE_LENGTH);
             seL4_SetMR(0, badge);
-            seL4_SetMR(1, node_ptr);
-            seL4_Send(sep, info);
+            seL4_SetMR(1, thread_info_ptr);
+            seL4_Send(ep, info);
         } else {
-            /* No synchronous endpoint. Call the handler directly */
-            irq_server_node_handle_irq(st->node, badge);
+            /* No synchronous endpoint. Get the IRQ interface to invoke callbacks */
+            irq_server_node_handle_irq(my_thread_info, irq_ops, badge);
         }
     }
 }
 
-/* Creates a new thread for an IRQ server */
-struct irq_server_thread*
-irq_server_thread_new(vspace_t* vspace, vka_t* vka, seL4_CPtr cspace, seL4_Word priority,
-                      simple_t *simple, seL4_Word label, seL4_CPtr sep) {
-    struct irq_server_thread* st;
-    int err;
+thread_id_t irq_server_thread_new(irq_server_t *irq_server, seL4_CPtr provided_ntfn,
+                                  seL4_Word usable_mask, thread_id_t id_hint)
+{
+    int error;
 
-    /* Allocate memory for the structure */
-    st = malloc(sizeof(*st));
-    if (st == NULL) {
-        return NULL;
+    irq_server_thread_t *new_thread = NULL;
+
+    irq_server_node_t *new_node = NULL;
+
+    /* Check if the user provided a notification, if not, then allocate one */
+    seL4_CPtr ntfn_to_use = seL4_CapNull;
+    seL4_Word mask_to_use = 0;
+    vka_object_t ntfn_obj = {0};
+    if (provided_ntfn != seL4_CapNull) {
+        ntfn_to_use = provided_ntfn;
+        if (usable_mask == 0) {
+            ZF_LOGE("Can't pair any interrupts on this notification");
+            return -EINVAL;
+        }
+        mask_to_use = usable_mask;
+    } else {
+        error = vka_alloc_notification(irq_server->vka, &ntfn_obj);
+        if (error) {
+            ZF_LOGE("Failed to allocate a notification");
+            return -ENOMEM;
+        }
+        ntfn_to_use = ntfn_obj.cptr;
+        mask_to_use = MASK(seL4_BadgeBits);
     }
-    st->node = irq_server_node_new(0, MASK(NIRQS_PER_NODE));
-    if (st->node == NULL) {
-        free(st);
-        return NULL;
+
+    thread_id_t thread_id_to_use = -1;
+    /* Register this notification with the IRQ interface */
+    if (id_hint >= 0) {
+        error = sel4platsupport_irq_provide_ntfn_with_id(&(irq_server->irq_ops), ntfn_to_use,
+                                                         mask_to_use, id_hint);
+        if (error) {
+            goto fail;
+        }
+        thread_id_to_use = id_hint;
+    } else {
+        ntfn_id_t ntfn_id = sel4platsupport_irq_provide_ntfn(&(irq_server->irq_ops), ntfn_to_use, mask_to_use);
+        if (ntfn_id < 0) {
+            /* 'sel4platsupport_irq_provide_ntfn' returns an error code on failure */
+            error = ntfn_id;
+            goto fail;
+        }
+        thread_id_to_use = ntfn_id;
+    }
+
+    error = ps_calloc(irq_server->malloc_ops, 1, sizeof(irq_server_thread_t), (void **) &new_thread);
+    if (new_thread == NULL) {
+        ZF_LOGE("Failed to allocate memory for bookkeeping structure");
+        /* ps_calloc returns errnos but these are greater than 0 */
+        error *= -1;
+        goto fail;
+    }
+
+    /* Find the amount of IRQs that can be bound to this node */
+    size_t max_irqs_bound = POPCOUNTL(mask_to_use);
+    /* Allocate memory for the node */
+    new_node = irq_server_node_new(ntfn_to_use, max_irqs_bound, irq_server->malloc_ops);
+    if (new_node == NULL) {
+        error = -ENOMEM;
+        goto fail;
     }
 
     /* Initialise structure */
-    st->delivery_sep = sep;
-    st->label = label;
-    st->next = NULL;
-    /* Create an endpoint to listen on */
-    err = vka_alloc_notification(vka, &st->notification);
-    if (err) {
-        ZF_LOGE("Failed to allocate IRQ notification endpoint for IRQ server thread\n");
-        return NULL;
-    }
-    st->node->notification = st->notification.cptr;
-    /* Create the IRQ thread */
-    sel4utils_thread_config_t config = thread_config_default(simple, cspace, seL4_NilData, 0, priority);
-    err = sel4utils_configure_thread_config(vka, vspace, vspace, config, &st->thread);
+    new_thread->delivery_ep = irq_server->delivery_ep;
+    new_thread->label = irq_server->label;
+    new_thread->node = new_node;
+    new_thread->thread_id = thread_id_to_use;
 
-    if (err) {
-        ZF_LOGE("Failed to configure IRQ server thread\n");
-        return NULL;
+    /* Create the IRQ thread */
+    sel4utils_thread_config_t config = thread_config_default(irq_server->simple, irq_server->cspace,
+                                                             seL4_NilData, 0, irq_server->priority);
+    error = sel4utils_configure_thread_config(irq_server->vka, irq_server->vspace,
+                                              irq_server->vspace, config, &(new_thread->thread));
+    if (error) {
+        ZF_LOGE("Failed to configure IRQ server thread");
+        goto fail;
     }
+
+    bool thread_created = true;
+
     /* Start the thread */
-    err = sel4utils_start_thread(&st->thread, (void*)_irq_thread_entry, st, NULL, 1);
-    if (err) {
-        ZF_LOGE("Failed to start IRQ server thread\n");
-        return NULL;
+    error = sel4utils_start_thread(&new_thread->thread, (void *)_irq_thread_entry,
+                                   new_thread, &(irq_server->irq_ops), 1);
+    if (error) {
+        ZF_LOGE("Failed to start IRQ server thread");
+        goto fail;
     }
-    return st;
+
+    /* Append this thread structure to the head of the list */
+    new_thread->next = irq_server->server_threads;
+    irq_server->server_threads = new_thread;
+
+    return thread_id_to_use;
+
+fail:
+
+    /* Check if we've registered a notification with the IRQ interface */
+    if (thread_id_to_use) {
+        ZF_LOGF_IF(sel4platsupport_irq_return_ntfn(&(irq_server->irq_ops), thread_id_to_use, NULL),
+                   "Failed to clean-up a failure situation");
+    }
+
+    if (ntfn_obj.cptr) {
+        vka_free_object(irq_server->vka, &ntfn_obj);
+    }
+
+    if (new_node) {
+        ps_free(irq_server->malloc_ops, sizeof(irq_server_node_t), new_node);
+    }
+
+    if (thread_created) {
+        sel4utils_clean_up_thread(irq_server->vka, irq_server->vspace, &(new_thread->thread));
+    }
+
+    if (new_thread) {
+        ps_free(irq_server->malloc_ops, sizeof(irq_server_thread_t), new_node);
+    }
+
+    return error;
 }
 
-/******************
- *** IRQ server ***
- ******************/
-
-struct irq_server {
-    seL4_CPtr delivery_ep;
-    vka_object_t reply;
-    seL4_Word label;
-    int max_irqs;
-    vspace_t* vspace;
-    seL4_CPtr cspace;
-    vka_t* vka;
-    seL4_Word thread_priority;
-    simple_t simple;
-    struct irq_server_thread* server_threads;
-};
-
-/* Handle an incoming IPC from a server node */
-void
-irq_server_handle_irq_ipc(irq_server_t irq_server UNUSED)
+void irq_server_handle_irq_ipc(irq_server_t *irq_server, seL4_MessageInfo_t msginfo)
 {
-    seL4_Word badge;
-    uintptr_t node_ptr;
+    seL4_Word badge = 0;
+    uintptr_t thread_info_ptr = 0;
 
-    badge = seL4_GetMR(0);
-    node_ptr = seL4_GetMR(1);
-    if (node_ptr == 0) {
-        ZF_LOGE("Invalid data in irq server IPC\n");
-    } else {
-        irq_server_node_handle_irq((struct irq_server_node*)node_ptr, badge);
+    seL4_Word label = seL4_MessageInfo_get_label(msginfo);
+    seL4_Word length = seL4_MessageInfo_get_length(msginfo);
+
+    if (label == irq_server->label && length == IRQ_SERVER_MESSAGE_LENGTH) {
+        badge = seL4_GetMR(0);
+        thread_info_ptr = seL4_GetMR(1);
+        if (thread_info_ptr == 0) {
+            ZF_LOGE("Invalid data in IRQ server IPC\n");
+        } else {
+            irq_server_node_handle_irq((irq_server_thread_t *) thread_info_ptr, &(irq_server->irq_ops), badge);
+        }
     }
 }
 
 /* Register for a function to be called when an IRQ arrives */
-struct irq_data*
-irq_server_register_irq(irq_server_t irq_server, irq_t irq,
-                        irq_handler_fn cb, void* token) {
-    struct irq_server_thread* st;
-    struct irq_data* irq_data;
-
-    /* Try to assign the IRQ to an existing node */
-    for (st = irq_server->server_threads; st != NULL; st = st->next) {
-        irq_data = irq_server_node_register_irq(st->node, irq, cb, token,
-                                                irq_server->vka, irq_server->cspace,
-                                                &irq_server->simple);
-        if (irq_data) {
-            return irq_data;
-        }
-    }
-    /* Try to create a new node */
-    if (st == NULL && irq_server->max_irqs < 0) {
-        /* Create the node */
-        ZF_LOGD("Spawning new IRQ server thread\n");
-        st = irq_server_thread_new(irq_server->vspace, irq_server->vka, irq_server->cspace,
-                                   irq_server->thread_priority, &irq_server->simple,
-                                   irq_server->label, irq_server->delivery_ep);
-        if (st == NULL) {
-            ZF_LOGE("Failed to create server thread\n");
-            return NULL;
-        }
-
-        st->next = irq_server->server_threads;
-        irq_server->server_threads = st;
-        irq_data = irq_server_node_register_irq(st->node, irq, cb, token,
-                                                irq_server->vka, irq_server->cspace,
-                                                &irq_server->simple);
-        if (irq_data) {
-            return irq_data;
-        }
-    }
-    /* Give up */
-    ZF_LOGD("Failed to register for IRQ %d\n", irq);
-    return NULL;
-}
-
-/* Create a new IRQ server */
-int
-irq_server_new(vspace_t* vspace, vka_t* vka, seL4_CPtr cspace, seL4_Word priority,
-               simple_t *simple, seL4_CPtr sync_ep, seL4_Word label,
-               int nirqs, irq_server_t *ret_irq_server)
+irq_id_t irq_server_register_irq(irq_server_t *irq_server, ps_irq_t irq,
+                                 irq_callback_fn_t callback, void *callback_data)
 {
-    struct irq_server* irq_server;
-
-    /* Structure allocation and initialisation */
-    irq_server = malloc(sizeof(*irq_server));
     if (irq_server == NULL) {
-        ZF_LOGE("malloc failed on irq server memory allocation");
-        return -1;
+        ZF_LOGE("irq_server is NULL");
+        return -EINVAL;
     }
 
-    if (config_set(CONFIG_KERNEL_RT) && vka_alloc_reply(vka, &irq_server->reply) != 0) {
-        ZF_LOGE("Failed to allocate reply object");
-        free(irq_server);
-        return -1;
-    }
+    irq_server_thread_t *st = NULL;
+    irq_id_t ret_id = 0;
 
-    irq_server->delivery_ep = sync_ep;
-    irq_server->label = label;
-    irq_server->max_irqs = nirqs;
-    irq_server->vspace = vspace;
-    irq_server->cspace = cspace;
-    irq_server->vka = vka;
-    irq_server->thread_priority = priority;
-    irq_server->server_threads = NULL;
-    irq_server->simple = *simple;
-
-    /* If a fixed number of IRQs are requested, create and start the server threads */
-    if (nirqs > -1) {
-        struct irq_server_thread** server_thread;
-        int n_nodes;
-        int i;
-        server_thread = &irq_server->server_threads;
-        n_nodes = (nirqs + NIRQS_PER_NODE - 1) / NIRQS_PER_NODE;
-        for (i = 0; i < n_nodes; i++) {
-            *server_thread = irq_server_thread_new(vspace, vka, cspace, priority,
-                                                   simple, label, sync_ep);
-            server_thread = &(*server_thread)->next;
+    /* Try to assign the IRQ to an existing node/thread */
+    for (st = irq_server->server_threads; st != NULL; st = st->next) {
+        if (st->node->num_irqs_bound < st->node->max_irqs_bound) {
+            /* thread_id is synonymous with a ntfn_id */
+            ret_id = irq_server_node_register_irq(st->node, irq, callback, callback_data,
+                                                  (ntfn_id_t) st->thread_id, irq_server);
+            if (ret_id >= 0) {
+                return ret_id;
+            }
         }
     }
 
-    *ret_irq_server = irq_server;
-    return 0;
+    /* No threads are available to take this IRQ, alert the user */
+    ZF_LOGE("No threads are available to take this interrupt, consider making more");
+    return -ENOENT;
 }
 
-seL4_MessageInfo_t
-irq_server_wait_for_irq(irq_server_t irq_server, seL4_Word* badge_ret)
+irq_server_t *irq_server_new(vspace_t *vspace, vka_t *vka, seL4_Word priority,
+                             simple_t *simple, seL4_CPtr cspace, seL4_CPtr delivery_ep, seL4_Word label,
+                             size_t num_irqs, ps_malloc_ops_t *malloc_ops)
 {
-    seL4_MessageInfo_t msginfo;
-    seL4_Word badge;
+    if (num_irqs < 0) {
+        ZF_LOGE("num_irqs is less than 0");
+        return NULL;
+    }
 
-    /* Wait for an event */
+    if (!vspace || !vka || !simple || !malloc_ops) {
+        ZF_LOGE("ret_irq_server is NULL");
+        return NULL;
+    }
+
+    int error;
+
+    irq_server_t *new = NULL;
+
+    error = ps_calloc(malloc_ops, 1, sizeof(irq_server_t), (void **) &new);
+
+    if (config_set(CONFIG_KERNEL_MCS) && vka_alloc_reply(vka, &(new->reply)) != 0) {
+        ZF_LOGE("Failed to allocate reply object");
+        return NULL;
+    }
+
+    /* Set max_ntfn_ids to equal the number of IRQs. We can calculate the ntfn IDs we need,
+     * but this is really complex, and leads to code that is hard to maintain. */
+    irq_interface_config_t irq_config = { .max_irq_ids = num_irqs, .max_ntfn_ids = num_irqs } ;
+    error = sel4platsupport_new_irq_ops(&(new->irq_ops), vka, simple, irq_config, malloc_ops);
+    if (error) {
+        ZF_LOGE("Failed to initialise supporting backend for IRQ server");
+        return NULL;
+    }
+
+    new->delivery_ep = delivery_ep;
+    new->label = label;
+    new->max_irqs = num_irqs;
+    new->priority = priority;
+
+    new->vka = vka;
+    new->vspace = vspace;
+    new->simple = simple;
+    new->cspace = cspace;
+    new->malloc_ops = malloc_ops;
+
+    return new;
+}
+
+seL4_MessageInfo_t irq_server_wait_for_irq(irq_server_t *irq_server, seL4_Word *ret_badge)
+{
+    seL4_MessageInfo_t msginfo = {0};
+    seL4_Word badge = 0;
+
+    if (irq_server->delivery_ep == seL4_CapNull) {
+        ZF_LOGE("No endpoint was registered with the IRQ server");
+        return msginfo;
+    }
+
+    /* Wait for an event, api_recv instead of seL4_Recv b/c of MCS */
     msginfo = api_recv(irq_server->delivery_ep, &badge, irq_server->reply.cptr);
-    if (badge_ret) {
-        *badge_ret = badge;
+    if (ret_badge) {
+        *ret_badge = badge;
     }
 
     /* Forward to IRQ handlers */
-    if (seL4_MessageInfo_get_label(msginfo) == irq_server->label) {
-        irq_server_handle_irq_ipc(irq_server);
-    }
+    irq_server_handle_irq_ipc(irq_server, msginfo);
+
     return msginfo;
 }

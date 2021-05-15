@@ -1,13 +1,7 @@
 /*
- * Copyright 2017, Data61
- * Commonwealth Scientific and Industrial Research Organisation (CSIRO)
- * ABN 41 687 119 230.
+ * Copyright 2017, Data61, CSIRO (ABN 41 687 119 230)
  *
- * This software may be distributed and modified according to the terms of
- * the BSD 2-Clause license. Note that NO WARRANTY is provided.
- * See "LICENSE_BSD2.txt" for details.
- *
- * @TAG(DATA61_BSD)
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <stdint.h>
@@ -20,7 +14,7 @@ int sel4platsupport_get_num_pmem_regions(simple_t *simple) {
     seL4_X86_BootInfo_mmap_t data;
     int error = simple_get_extended_bootinfo(simple, SEL4_BOOTINFO_HEADER_X86_MBMMAP, &data, sizeof(seL4_X86_BootInfo_mmap_t));
     if (error == -1) {
-        ZF_LOGE("Could not find info");
+        ZF_LOGW("Could not find info");
         return 0;
     }
 
@@ -31,7 +25,7 @@ int sel4platsupport_get_pmem_region_list(simple_t *simple, size_t max_length, pm
     seL4_X86_BootInfo_mmap_t data;
     int error = simple_get_extended_bootinfo(simple, SEL4_BOOTINFO_HEADER_X86_MBMMAP, &data, sizeof(seL4_X86_BootInfo_mmap_t));
     if (error == -1) {
-        ZF_LOGE("Could not find info");
+        ZF_LOGW("Could not find info");
         return -1;
     }
     seL4_X86_mb_mmap_t *mmap = (seL4_X86_mb_mmap_t *)((unsigned long)data.mmap);

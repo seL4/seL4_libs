@@ -1,13 +1,7 @@
 /*
- * Copyright 2017, Data61
- * Commonwealth Scientific and Industrial Research Organisation (CSIRO)
- * ABN 41 687 119 230.
+ * Copyright 2017, Data61, CSIRO (ABN 41 687 119 230)
  *
- * This software may be distributed and modified according to the terms of
- * the BSD 2-Clause license. Note that NO WARRANTY is provided.
- * See "LICENSE_BSD2.txt" for details.
- *
- * @TAG(DATA61_BSD)
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 /**
@@ -21,6 +15,7 @@
 #pragma once
 
 #include <autoconf.h>
+#include <sel4utils/gen_config.h>
 
 #include <sel4/sel4.h>
 #include <stdbool.h>
@@ -215,20 +210,18 @@ void sel4utils_print_fault_message(seL4_MessageInfo_t tag, const char *name);
  *
  * On master, only use sched_params_set_core to set the core then call this function.
  *
- * If CONFIG_KERNEL_RT is set, the sched params must be fully populated or the scheduling
+ * If CONFIG_KERNEL_MCS is set, the sched params must be fully populated or the scheduling
  * context will be empty when it changes core as scheduling parameters of scheduling
  * contexts are not maintained across migrations.
  */
 int sel4utils_set_sched_affinity(sel4utils_thread_t *thread, sched_params_t params);
 
-static inline seL4_TCB
-sel4utils_get_tcb(sel4utils_thread_t *thread)
+static inline seL4_TCB sel4utils_get_tcb(sel4utils_thread_t *thread)
 {
     return thread->tcb.cptr;
 }
 
-static inline int
-sel4utils_suspend_thread(sel4utils_thread_t *thread)
+static inline int sel4utils_suspend_thread(sel4utils_thread_t *thread)
 {
     return seL4_TCB_Suspend(thread->tcb.cptr);
 }

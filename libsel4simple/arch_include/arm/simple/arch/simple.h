@@ -1,13 +1,7 @@
 /*
- * Copyright 2017, Data61
- * Commonwealth Scientific and Industrial Research Organisation (CSIRO)
- * ABN 41 687 119 230.
+ * Copyright 2017, Data61, CSIRO (ABN 41 687 119 230)
  *
- * This software may be distributed and modified according to the terms of
- * the BSD 2-Clause license. Note that NO WARRANTY is provided.
- * See "LICENSE_BSD2.txt" for details.
- *
- * @TAG(DATA61_BSD)
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
@@ -34,7 +28,7 @@
  */
 typedef seL4_Error(*simple_get_IRQ_handler_fn)(void *data, int irq, seL4_CNode cnode,
                                                seL4_Word index, uint8_t depth);
-typedef seL4_Error(*simple_get_IRQ_trigger_fn)(void *data, int irq, int trigger, seL4_CNode root,
+typedef seL4_Error(*simple_get_IRQ_trigger_fn)(void *data, int irq, int trigger, int core, seL4_CNode root,
                                                seL4_Word index, uint8_t depth);
 
 typedef seL4_Error(*simple_get_iospace_cap_count_fn)(void *data, int *count);
@@ -43,7 +37,7 @@ typedef seL4_CPtr(*simple_get_nth_iospace_cap_fn)(void *data, int n);
 typedef struct arch_simple {
     simple_get_IRQ_handler_fn irq;
     simple_get_IRQ_trigger_fn irq_trigger;
-#ifdef CONFIG_ARM_SMMU
+#ifdef CONFIG_TK1_SMMU
     simple_get_iospace_cap_count_fn iospace_cap_count;
     simple_get_nth_iospace_cap_fn   iospace_get_nth_cap;
 #endif
@@ -70,5 +64,20 @@ static inline seL4_Error arch_simple_get_IRQ_trigger(arch_simple_t *simple, int 
         return seL4_InvalidArgument;
     }
 
-    return simple->irq_trigger(simple->data, irq, trigger, path.root, path.capPtr, path.capDepth);
+    return simple->irq_trigger(simple->data, irq, trigger, 0, path.root, path.capPtr, path.capDepth);
+}
+
+static inline seL4_Error arch_simple_get_IRQ_trigger_cpu(arch_simple_t *simple, int irq, int trigger, int core,
+                                                         cspacepath_t path)
+{
+    if (!simple) {
+        ZF_LOGE("Simple is NULL");
+        return seL4_InvalidArgument;
+    }
+    if (!simple->irq_trigger) {
+        ZF_LOGE("Not implemented");
+        return seL4_InvalidArgument;
+    }
+
+    return simple->irq_trigger(simple->data, irq, trigger, core, path.root, path.capPtr, path.capDepth);
 }

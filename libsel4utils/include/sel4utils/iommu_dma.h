@@ -1,18 +1,13 @@
 /*
- * Copyright 2017, Data61
- * Commonwealth Scientific and Industrial Research Organisation (CSIRO)
- * ABN 41 687 119 230.
+ * Copyright 2017, Data61, CSIRO (ABN 41 687 119 230)
  *
- * This software may be distributed and modified according to the terms of
- * the BSD 2-Clause license. Note that NO WARRANTY is provided.
- * See "LICENSE_BSD2.txt" for details.
- *
- * @TAG(DATA61_BSD)
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
 
 #include <autoconf.h>
+#include <sel4utils/gen_config.h>
 
 #if defined(CONFIG_IOMMU)
 
@@ -37,7 +32,8 @@
  * @param iospaces Pointer to list of cptrs representing the iospaces to map into
  * @return 0 on success
  */
-int sel4utils_make_iommu_dma_alloc(vka_t *vka, vspace_t *vspace, ps_dma_man_t *dma_man, unsigned int num_iospaces, seL4_CPtr *iospaces);
+int sel4utils_make_iommu_dma_alloc(vka_t *vka, vspace_t *vspace, ps_dma_man_t *dma_man, unsigned int num_iospaces,
+                                   seL4_CPtr *iospaces);
 
 /**
  * Variant of ps_dma_alloc that allows the caller to allocate memory in their address space for use

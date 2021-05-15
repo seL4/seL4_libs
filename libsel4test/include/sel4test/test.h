@@ -1,19 +1,14 @@
 /*
- * Copyright 2017, Data61
- * Commonwealth Scientific and Industrial Research Organisation (CSIRO)
- * ABN 41 687 119 230.
+ * Copyright 2017, Data61, CSIRO (ABN 41 687 119 230)
  *
- * This software may be distributed and modified according to the terms of
- * the BSD 2-Clause license. Note that NO WARRANTY is provided.
- * See "LICENSE_BSD2.txt" for details.
- *
- * @TAG(DATA61_BSD)
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
 
 /* Include Kconfig variables. */
 #include <autoconf.h>
+#include <sel4test/gen_config.h>
 
 #include <sel4/sel4.h>
 
@@ -45,8 +40,6 @@ struct env {
     vka_t vka;
     /* virtual memory management interface */
     vspace_t vspace;
-    /* initialised timer */
-    seL4_timer_t timer;
     /* abstract interface over application init */
     simple_t simple;
     /* notification for timer */
@@ -66,11 +59,12 @@ struct env {
 #ifdef CONFIG_IOMMU
     seL4_CPtr io_space;
 #endif /* CONFIG_IOMMU */
-#ifdef CONFIG_ARM_SMMU
+#ifdef CONFIG_TK1_SMMU
     seL4_SlotRegion io_space_caps;
 #endif
     seL4_Word cores;
     seL4_CPtr domain;
+    seL4_CPtr device_frame;
 
     int priority;
     int cspace_size_bits;
@@ -155,8 +149,8 @@ extern struct test_type __start__test_type[];
 extern struct test_type __stop__test_type[];
 
 /* Definitions so that we can find the test cases */
-extern struct testcase __start__test_case[];
-extern struct testcase __stop__test_case[];
+extern testcase_t __start__test_case[];
+extern testcase_t __stop__test_case[];
 
 static inline int test_type_comparator(const void *a, const void *b)
 {
@@ -199,6 +193,21 @@ static inline test_result_t _test_abort(const char *condition, const char *file,
     return ABORT;
 }
 
+static inline void print_error_in_ipc(seL4_Error e)
+{
+#ifdef CONFIG_KERNEL_INVOCATION_REPORT_ERROR_IPC
+    // If it hasnt been printed already
+    if (!seL4_CanPrintError() && e != seL4_NoError) {
+        printf("%s", seL4_GetDebugError());
+    }
+#endif
+}
+
+#define test_error_eq(e, c) \
+    if (!((e) == (c))) { \
+        print_error_in_ipc(e); \
+        return _test_fail(#e, __FILE__, __LINE__); \
+    }
 #define test_assert(e) if (!(e)) return _test_fail(#e, __FILE__, __LINE__)
 #define test_check(e) if (!(e)) _test_error(#e, __FILE__, __LINE__)
 #define test_assert_fatal(e) if (!(e)) return _test_abort(#e, __FILE__, __LINE__)

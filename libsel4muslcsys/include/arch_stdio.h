@@ -1,18 +1,13 @@
 /*
- * Copyright 2017, Data61
- * Commonwealth Scientific and Industrial Research Organisation (CSIRO)
- * ABN 41 687 119 230.
+ * Copyright 2017, Data61, CSIRO (ABN 41 687 119 230)
  *
- * This software may be distributed and modified according to the terms of
- * the BSD 2-Clause license. Note that NO WARRANTY is provided.
- * See "LICENSE_BSD2.txt" for details.
- *
- * @TAG(DATA61_BSD)
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
 
 #include <autoconf.h>
+#include <sel4muslcsys/gen_config.h>
 #include <stddef.h>
 
 /*
@@ -33,7 +28,7 @@ typedef size_t (*write_buf_fn)(void *data, size_t count);
 /*
  * Register a function to be called when sys_writev is called on either
  * stdout or stderr.  This will return the existing function that is registered.
- * Calling this function with NULL is valid and will result in no function being 
+ * Calling this function with NULL is valid and will result in no function being
  * called, but writev still returning the number of characters written.  This is
  * similar to piping to /dev/null.
  */

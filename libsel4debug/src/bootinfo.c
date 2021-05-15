@@ -1,24 +1,18 @@
 /*
- * Copyright 2017, Data61
- * Commonwealth Scientific and Industrial Research Organisation (CSIRO)
- * ABN 41 687 119 230.
+ * Copyright 2017, Data61, CSIRO (ABN 41 687 119 230)
  *
- * This software may be distributed and modified according to the terms of
- * the BSD 2-Clause license. Note that NO WARRANTY is provided.
- * See "LICENSE_BSD2.txt" for details.
- *
- * @TAG(DATA61_BSD)
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <autoconf.h>
+#include <sel4debug/gen_config.h>
 
 #include <stdio.h>
 
 #include <sel4/sel4.h>
 #include <utils/util.h>
 
-void
-debug_print_bootinfo(seL4_BootInfo *info)
+void debug_print_bootinfo(seL4_BootInfo *info)
 {
 
     printf("Node %lu of %lu\n", (long)info->nodeID, (long)info->numNodes);
@@ -40,7 +34,8 @@ debug_print_bootinfo(seL4_BootInfo *info)
         int index = info->untypedList[i].sizeBits;
         assert(index < ARRAY_SIZE(sizes));
         sizes[index]++;
-        printf("%p | %zu | %d\n", (void*)info->untypedList[i].paddr, (size_t)info->untypedList[i].sizeBits, (int)info->untypedList[i].isDevice);
+        printf("%p | %zu | %d\n", (void *)info->untypedList[i].paddr, (size_t)info->untypedList[i].sizeBits,
+               (int)info->untypedList[i].isDevice);
     }
 
     printf("Untyped summary\n");

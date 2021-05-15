@@ -1,17 +1,12 @@
 /*
- * Copyright 2017, Data61
- * Commonwealth Scientific and Industrial Research Organisation (CSIRO)
- * ABN 41 687 119 230.
+ * Copyright 2017, Data61, CSIRO (ABN 41 687 119 230)
  *
- * This software may be distributed and modified according to the terms of
- * the BSD 2-Clause license. Note that NO WARRANTY is provided.
- * See "LICENSE_BSD2.txt" for details.
- *
- * @TAG(DATA61_BSD)
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 #pragma once
 
 #include <autoconf.h>
+#include <sel4utils/gen_config.h>
 
 #include <vka/vka.h>
 #include <vspace/vspace.h>
@@ -245,7 +240,8 @@ seL4_CPtr sel4utils_move_cap_to_process(sel4utils_process_t *process, cspacepath
  *
  * @return 0 on failure, otherwise the slot in the cspace where the new cap is.
  */
-seL4_CPtr sel4utils_mint_cap_to_process(sel4utils_process_t *process, cspacepath_t src, seL4_CapRights_t rights, seL4_Word data);
+seL4_CPtr sel4utils_mint_cap_to_process(sel4utils_process_t *process, cspacepath_t src, seL4_CapRights_t rights,
+                                        seL4_Word data);
 
 /**
  * Destroy a process.
@@ -296,4 +292,5 @@ seL4_CPtr sel4utils_process_init_cap(void *data, seL4_CPtr cap);
  *
  * @return 0 on success.
  */
-int sel4utils_copy_timer_caps_to_process(timer_objects_t *to, timer_objects_t *from, vka_t *vka, sel4utils_process_t *process);
+int sel4utils_copy_timer_caps_to_process(timer_objects_t *to, timer_objects_t *from, vka_t *vka,
+                                         sel4utils_process_t *process);

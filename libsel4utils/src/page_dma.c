@@ -1,16 +1,11 @@
 /*
- * Copyright 2017, Data61
- * Commonwealth Scientific and Industrial Research Organisation (CSIRO)
- * ABN 41 687 119 230.
+ * Copyright 2017, Data61, CSIRO (ABN 41 687 119 230)
  *
- * This software may be distributed and modified according to the terms of
- * the BSD 2-Clause license. Note that NO WARRANTY is provided.
- * See "LICENSE_BSD2.txt" for details.
- *
- * @TAG(DATA61_BSD)
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <autoconf.h>
+#include <sel4utils/gen_config.h>
 
 #include <sel4utils/page_dma.h>
 #include <vspace/vspace.h>
@@ -35,7 +30,7 @@ typedef struct dma_alloc {
 static void dma_free(void *cookie, void *addr, size_t size)
 {
     dma_man_t *dma = cookie;
-    dma_alloc_t *alloc = (dma_alloc_t*)vspace_get_cookie(&dma->vspace, addr);
+    dma_alloc_t *alloc = (dma_alloc_t *)vspace_get_cookie(&dma->vspace, addr);
     assert(alloc);
     assert(alloc->base == addr);
     int num_pages = BIT(alloc->ut.size_bits) / PAGE_SIZE_4K;
@@ -54,7 +49,7 @@ static void dma_free(void *cookie, void *addr, size_t size)
 static uintptr_t dma_pin(void *cookie, void *addr, size_t size)
 {
     dma_man_t *dma = cookie;
-    dma_alloc_t *alloc = (dma_alloc_t*)vspace_get_cookie(&dma->vspace, addr);
+    dma_alloc_t *alloc = (dma_alloc_t *)vspace_get_cookie(&dma->vspace, addr);
     if (!alloc) {
         return 0;
     }
@@ -62,7 +57,7 @@ static uintptr_t dma_pin(void *cookie, void *addr, size_t size)
     return alloc->paddr + diff;
 }
 
-static void* dma_alloc(void *cookie, size_t size, int align, int cached, ps_mem_flags_t flags)
+static void *dma_alloc(void *cookie, size_t size, int align, int cached, ps_mem_flags_t flags)
 {
     dma_man_t *dma = cookie;
     cspacepath_t *frames = NULL;
@@ -107,7 +102,8 @@ static void* dma_alloc(void *cookie, size_t size, int align, int cached, ps_mem_
         if (error) {
             goto handle_error;
         }
-        error = seL4_Untyped_Retype(ut.cptr, kobject_get_type(KOBJECT_FRAME, PAGE_BITS_4K), size_bits, frames[i].root, frames[i].dest, frames[i].destDepth, frames[i].offset, 1);
+        error = seL4_Untyped_Retype(ut.cptr, kobject_get_type(KOBJECT_FRAME, PAGE_BITS_4K), size_bits, frames[i].root,
+                                    frames[i].dest, frames[i].destDepth, frames[i].offset, 1);
         if (error != seL4_NoError) {
             goto handle_error;
         }
@@ -127,7 +123,8 @@ static void* dma_alloc(void *cookie, size_t size, int align, int cached, ps_mem_
     alloc->paddr = paddr;
     /* Map in all the pages */
     for (unsigned i = 0; i < num_frames; i++) {
-        error = vspace_map_pages_at_vaddr(&dma->vspace, &frames[i].capPtr, (uintptr_t*)&alloc, base + i * PAGE_SIZE_4K, 1, PAGE_BITS_4K, res);
+        error = vspace_map_pages_at_vaddr(&dma->vspace, &frames[i].capPtr, (uintptr_t *)&alloc, base + i * PAGE_SIZE_4K, 1,
+                                          PAGE_BITS_4K, res);
         if (error) {
             goto handle_error;
         }

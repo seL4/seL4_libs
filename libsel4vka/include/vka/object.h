@@ -1,13 +1,7 @@
 /*
- * Copyright 2017, Data61
- * Commonwealth Scientific and Industrial Research Organisation (CSIRO)
- * ABN 41 687 119 230.
+ * Copyright 2017, Data61, CSIRO (ABN 41 687 119 230)
  *
- * This software may be distributed and modified according to the terms of
- * the BSD 2-Clause license. Note that NO WARRANTY is provided.
- * See "LICENSE_BSD2.txt" for details.
- *
- * @TAG(DATA61_BSD)
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
@@ -37,9 +31,8 @@ typedef struct vka_object {
 /*
  * Generic object allocator used by functions below, can also be used directly
  */
-static inline int
-vka_alloc_object_at_maybe_dev(vka_t *vka, seL4_Word type, seL4_Word size_bits, uintptr_t paddr,
-                    bool can_use_dev, vka_object_t *result)
+static inline int vka_alloc_object_at_maybe_dev(vka_t *vka, seL4_Word type, seL4_Word size_bits, uintptr_t paddr,
+                                                bool can_use_dev, vka_object_t *result)
 {
     int error = -1;
     if (!(type < seL4_ObjectTypeCount)) {
@@ -62,14 +55,14 @@ vka_alloc_object_at_maybe_dev(vka_t *vka, seL4_Word type, seL4_Word size_bits, u
         error = vka_utspace_alloc_maybe_device(vka, &path, type, size_bits, can_use_dev, &result->ut);
         if (unlikely(error)) {
             ZF_LOGE("Failed to allocate object of size %lu, error %d",
-                     BIT(size_bits), error);
+                    BIT(size_bits), error);
             goto error;
         }
     } else {
         error = vka_utspace_alloc_at(vka, &path, type, size_bits, paddr, &result->ut);
         if (unlikely(error)) {
             ZF_LOGE("Failed to allocate object of size %lu at paddr %p, error %d",
-                    BIT(size_bits), (void*)paddr, error);
+                    BIT(size_bits), (void *)paddr, error);
             goto error;
         }
     }
@@ -87,14 +80,12 @@ error:
     return error;
 }
 
-static inline int
-vka_alloc_object_at(vka_t *vka, seL4_Word type, seL4_Word size_bits, uintptr_t paddr,
-                    vka_object_t *result)
+static inline int vka_alloc_object_at(vka_t *vka, seL4_Word type, seL4_Word size_bits, uintptr_t paddr,
+                                      vka_object_t *result)
 {
     return vka_alloc_object_at_maybe_dev(vka, type, size_bits, paddr, false, result);
 }
-static inline int
-vka_alloc_object(vka_t *vka, seL4_Word type, seL4_Word size_bits, vka_object_t *result)
+static inline int vka_alloc_object(vka_t *vka, seL4_Word type, seL4_Word size_bits, vka_object_t *result)
 {
     return vka_alloc_object_at(vka, type, size_bits, VKA_NO_PADDR, result);
 }
@@ -102,15 +93,13 @@ vka_alloc_object(vka_t *vka, seL4_Word type, seL4_Word size_bits, vka_object_t *
 /* convenient wrapper that throws away the vka_object_t and just returns the cptr -
  * note you cannot use this if you intend to free the object */
 static inline seL4_CPtr vka_alloc_object_leaky(vka_t *vka, seL4_Word type, seL4_Word size_bits) WARN_UNUSED_RESULT;
-static inline seL4_CPtr
-vka_alloc_object_leaky(vka_t *vka, seL4_Word type, seL4_Word size_bits)
+static inline seL4_CPtr vka_alloc_object_leaky(vka_t *vka, seL4_Word type, seL4_Word size_bits)
 {
     vka_object_t result = {.cptr = 0, .ut = 0, .type = 0, size_bits = 0};
     return vka_alloc_object(vka, type, size_bits, &result) == -1 ? 0 : result.cptr;
 }
 
-static inline void
-vka_free_object(vka_t *vka, vka_object_t *object)
+static inline void vka_free_object(vka_t *vka, vka_object_t *object)
 {
     cspacepath_t path;
     vka_cspace_make_path(vka, object->cptr, &path);
@@ -127,8 +116,7 @@ vka_free_object(vka_t *vka, vka_object_t *object)
     vka_utspace_free(vka, object->type, object->size_bits, object->ut);
 }
 
-static inline uintptr_t
-vka_object_paddr(vka_t *vka, vka_object_t *object)
+static inline uintptr_t vka_object_paddr(vka_t *vka, vka_object_t *object)
 {
     return vka_utspace_paddr(vka, object->ut, object->type, object->size_bits);
 }
@@ -152,7 +140,7 @@ static inline int vka_alloc_tcb(vka_t *vka, vka_object_t *result)
 
 static inline int vka_alloc_sched_context(UNUSED vka_t *vka, UNUSED vka_object_t *result)
 {
-#ifdef CONFIG_KERNEL_RT
+#ifdef CONFIG_KERNEL_MCS
     return vka_alloc_object(vka, seL4_SchedContextObject, seL4_MinSchedContextBits, result);
 #else
     ZF_LOGW("Allocating sched context on non RT kernel");
@@ -160,9 +148,10 @@ static inline int vka_alloc_sched_context(UNUSED vka_t *vka, UNUSED vka_object_t
 #endif
 }
 
-static inline int vka_alloc_sched_context_size(UNUSED vka_t *vka, UNUSED vka_object_t *result, UNUSED uint32_t size_bits)
+static inline int vka_alloc_sched_context_size(UNUSED vka_t *vka, UNUSED vka_object_t *result,
+                                               UNUSED uint32_t size_bits)
 {
-#ifdef CONFIG_KERNEL_RT
+#ifdef CONFIG_KERNEL_MCS
     if (size_bits < seL4_MinSchedContextBits) {
         ZF_LOGE("Invalid size bits for sc");
         return -1;
@@ -193,7 +182,7 @@ vka_alloc_async_endpoint(vka_t *vka, vka_object_t *result)
 
 static inline int vka_alloc_reply(UNUSED vka_t *vka, vka_object_t *result)
 {
-#ifdef CONFIG_KERNEL_RT
+#ifdef CONFIG_KERNEL_MCS
     return vka_alloc_object(vka, seL4_ReplyObject, seL4_ReplyBits, result);
 #else
     *result = (vka_object_t) {};
@@ -305,12 +294,12 @@ static inline unsigned long
 vka_get_object_size(seL4_Word objectType, seL4_Word objectSize)
 {
     switch (objectType) {
-        /* Generic objects. */
+    /* Generic objects. */
     case seL4_UntypedObject:
         return objectSize;
     case seL4_TCBObject:
         return seL4_TCBBits;
-#ifdef CONFIG_KERNEL_RT
+#ifdef CONFIG_KERNEL_MCS
     case seL4_SchedContextObject:
         return objectSize > seL4_MinSchedContextBits ? objectSize : seL4_MinSchedContextBits;
     case seL4_ReplyObject:

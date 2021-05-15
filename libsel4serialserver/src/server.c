@@ -1,15 +1,11 @@
 /*
- * Copyright 2017, Data61
- * Commonwealth Scientific and Industrial Research Organisation (CSIRO)
- * ABN 41 687 119 230.
+ * Copyright 2017, Data61, CSIRO (ABN 41 687 119 230)
  *
- * This software may be distributed and modified according to the terms of
- * the BSD 2-Clause license. Note that NO WARRANTY is provided.
- * See "LICENSE_BSD2.txt" for details.
- *
- * @TAG(DATA61_BSD)
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 #include <autoconf.h>
+#include <sel4serialserver/gen_config.h>
+
 #include <stdio.h>
 #include <string.h>
 
@@ -64,8 +60,7 @@ static char *colors[] = {
 #define NUM_COLORS ARRAY_SIZE(colors)
 #define BADGE_TO_COLOR(badge) (colors[(badge) % NUM_COLORS])
 
-serial_server_context_t *
-get_serial_server(void)
+serial_server_context_t *get_serial_server(void)
 {
     return &serial_server;
 }
@@ -80,25 +75,23 @@ static inline void reply(seL4_MessageInfo_t tag)
     api_reply(get_serial_server()->server_thread.reply.cptr, tag);
 }
 
-serial_server_registry_entry_t *
-serial_server_registry_get_entry_by_badge(seL4_Word badge_value)
+serial_server_registry_entry_t *serial_server_registry_get_entry_by_badge(seL4_Word badge_value)
 {
     if (badge_value == SERIAL_SERVER_BADGE_VALUE_EMPTY
-            || get_serial_server()->registry == NULL
-            || badge_value > get_serial_server()->registry_n_entries) {
+        || get_serial_server()->registry == NULL
+        || badge_value > get_serial_server()->registry_n_entries) {
         return NULL;
     }
     /* If the badge value has been released, return NULL. */
     if (get_serial_server()->registry[badge_value - 1].badge_value
-            == SERIAL_SERVER_BADGE_VALUE_EMPTY) {
+        == SERIAL_SERVER_BADGE_VALUE_EMPTY) {
         return NULL;
     }
 
     return &get_serial_server()->registry[badge_value - 1];
 }
 
-bool
-serial_server_badge_is_allocated(seL4_Word badge_value)
+bool serial_server_badge_is_allocated(seL4_Word badge_value)
 {
     serial_server_registry_entry_t *tmp;
 
@@ -110,8 +103,7 @@ serial_server_badge_is_allocated(seL4_Word badge_value)
     return tmp->badge_value != SERIAL_SERVER_BADGE_VALUE_EMPTY;
 }
 
-seL4_Word
-serial_server_badge_value_get_unused(void)
+seL4_Word serial_server_badge_value_get_unused(void)
 {
     if (get_serial_server()->registry == NULL) {
         return SERIAL_SERVER_BADGE_VALUE_EMPTY;
@@ -132,8 +124,7 @@ serial_server_badge_value_get_unused(void)
     return SERIAL_SERVER_BADGE_VALUE_EMPTY;
 }
 
-seL4_Word
-serial_server_badge_value_alloc(void)
+seL4_Word serial_server_badge_value_alloc(void)
 {
     serial_server_registry_entry_t *tmp;
     seL4_Word ret;
@@ -164,8 +155,7 @@ serial_server_badge_value_alloc(void)
     return serial_server_badge_value_get_unused();
 }
 
-void
-serial_server_badge_value_free(seL4_Word badge_value)
+void serial_server_badge_value_free(seL4_Word badge_value)
 {
     serial_server_registry_entry_t *tmp;
 
@@ -181,10 +171,9 @@ serial_server_badge_value_free(seL4_Word badge_value)
     tmp->badge_value = SERIAL_SERVER_BADGE_VALUE_EMPTY;
 }
 
-static void
-serial_server_registry_insert(seL4_Word badge_value, void *shmem,
-                              seL4_CPtr *shmem_frame_caps,
-                              size_t shmem_size)
+static void serial_server_registry_insert(seL4_Word badge_value, void *shmem,
+                                          seL4_CPtr *shmem_frame_caps,
+                                          size_t shmem_size)
 {
     serial_server_registry_entry_t *tmp;
 
@@ -202,8 +191,7 @@ serial_server_registry_insert(seL4_Word badge_value, void *shmem,
     tmp->shmem_frame_caps = shmem_frame_caps;
 }
 
-static void
-serial_server_registry_remove(seL4_Word badge_value)
+static void serial_server_registry_remove(seL4_Word badge_value)
 {
     serial_server_registry_entry_t *tmp;
 
@@ -214,8 +202,7 @@ serial_server_registry_remove(seL4_Word badge_value)
     serial_server_badge_value_free(badge_value);
 }
 
-static void
-serial_server_set_frame_recv_path(void)
+static void serial_server_set_frame_recv_path(void)
 {
     seL4_SetCapReceivePath(get_serial_server()->server_cspace,
                            get_serial_server()->frame_cap_recv_cspaths[0].capPtr,
@@ -229,10 +216,9 @@ serial_server_set_frame_recv_path(void)
  * map in order to establish shared mem with those clients. In this function,
  * the library maps the client's frames into the server's VSpace.
  */
-seL4_Error
-serial_server_func_connect(seL4_MessageInfo_t tag,
-                           seL4_Word client_badge_value,
-                           size_t client_shmem_size)
+seL4_Error serial_server_func_connect(seL4_MessageInfo_t tag,
+                                      seL4_Word client_badge_value,
+                                      size_t client_shmem_size)
 {
     seL4_Error error;
     size_t client_shmem_n_pages;
@@ -253,7 +239,7 @@ serial_server_func_connect(seL4_MessageInfo_t tag,
      * is resized as well, so badge allocation is also metadata allocation.
      */
     if (client_badge_value == SERIAL_SERVER_BADGE_VALUE_EMPTY
-            || !serial_server_badge_is_allocated(client_badge_value)) {
+        || !serial_server_badge_is_allocated(client_badge_value)) {
         ZF_LOGW(SERSERVS"connect: Please allocate a badge value to this new "
                 "client.\n");
         return -1;
@@ -366,9 +352,8 @@ out:
     return error;
 }
 
-static int
-serial_server_func_write(serial_server_registry_entry_t *client_data,
-                         size_t message_len, size_t *bytes_written)
+static int serial_server_func_write(serial_server_registry_entry_t *client_data,
+                                    size_t message_len, size_t *bytes_written)
 {
     *bytes_written = 0;
 
@@ -393,8 +378,7 @@ serial_server_func_write(serial_server_registry_entry_t *client_data,
     return 0;
 }
 
-static void
-serial_server_func_disconnect(serial_server_registry_entry_t *client_data)
+static void serial_server_func_disconnect(serial_server_registry_entry_t *client_data)
 {
     /* Tear down shmem and release the badge value for reuse. */
     vspace_unmap_pages(get_serial_server()->server_vspace,
@@ -405,15 +389,14 @@ serial_server_func_disconnect(serial_server_registry_entry_t *client_data)
     serial_server_registry_remove(client_data->badge_value);
 }
 
-static void
-serial_server_func_kill(void)
+static void serial_server_func_kill(void)
 {
     /* Tear down all existing connections. */
     for (int i = 0; i < get_serial_server()->registry_n_entries; i++) {
         serial_server_registry_entry_t *curr = &get_serial_server()->registry[i];
 
         if (curr->badge_value == SERIAL_SERVER_BADGE_VALUE_EMPTY
-                || BYTES_TO_4K_PAGES(curr->shmem_size) == 0) {
+            || BYTES_TO_4K_PAGES(curr->shmem_size) == 0) {
             continue;
         }
 
@@ -452,8 +435,7 @@ void serial_server_registry_dump(bool dump_frame_caps)
     }
 }
 
-void
-serial_server_main(void)
+void serial_server_main(void)
 {
     seL4_MessageInfo_t tag;
     seL4_Word sender_badge;

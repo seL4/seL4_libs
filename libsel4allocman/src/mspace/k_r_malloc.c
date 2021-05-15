@@ -1,6 +1,10 @@
-/* @LICENSE(CUSTOM) */
-
-/* An implementation of malloc as described in the K&R C programming book */
+/*
+ * An implementation of malloc as described in the K&R C programming book
+ *
+ * Copyright 2014, Data61, CSIRO (ABN 41 687 119 230)
+ *
+ * SPDX-License-Identifier: BSD-2-Clause
+ */
 
 #include <allocman/mspace/k_r_malloc.h>
 #include <stddef.h> /* For NULL */

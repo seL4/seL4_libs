@@ -1,13 +1,7 @@
 /*
- * Copyright 2018, Data61
- * Commonwealth Scientific and Industrial Research Organisation (CSIRO)
- * ABN 41 687 119 230.
+ * Copyright 2018, Data61, CSIRO (ABN 41 687 119 230)
  *
- * This software may be distributed and modified according to the terms of
- * the BSD 2-Clause license. Note that NO WARRANTY is provided.
- * See "LICENSE_BSD2.txt" for details.
- *
- * @TAG(DATA61_BSD)
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 #pragma once
 
@@ -44,6 +38,4 @@ static const UNUSED size_t sel4_page_sizes[] = {
 #define seL4_ARCH_Uncached_VMAttributes 0
 #define seL4_ARCH_LargePageObject      seL4_RISCV_Mega_Page
 /* for size of a large page object use seL4_LargePageBits */
-/* Remap does not exist on all kernels */
-#define seL4_ARCH_Page_Remap           seL4_RISCV_Page_Remap
 #define ARCHPageGetAddress             RISCVPageGetAddress

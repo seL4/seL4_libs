@@ -1,13 +1,7 @@
 /*
- * Copyright 2017, Data61
- * Commonwealth Scientific and Industrial Research Organisation (CSIRO)
- * ABN 41 687 119 230.
+ * Copyright 2017, Data61, CSIRO (ABN 41 687 119 230)
  *
- * This software may be distributed and modified according to the terms of
- * the BSD 2-Clause license. Note that NO WARRANTY is provided.
- * See "LICENSE_BSD2.txt" for details.
- *
- * @TAG(DATA61_BSD)
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
@@ -15,6 +9,7 @@
 #include <sel4/types.h>
 #include <assert.h>
 #include <autoconf.h>
+#include <sel4vka/gen_config.h>
 #include <utils/util.h>
 
 enum _x86_mode_kobject_type {
@@ -29,8 +24,7 @@ typedef int kobject_t;
  * Get the size (in bits) of the untyped memory required to
  * create an object of the given size.
  */
-static inline seL4_Word
-x86_mode_kobject_get_size(kobject_t type, seL4_Word UNUSED objectSize)
+static inline seL4_Word x86_mode_kobject_get_size(kobject_t type, seL4_Word UNUSED objectSize)
 {
     switch (type) {
     case KOBJECT_PDPT:
@@ -41,8 +35,7 @@ x86_mode_kobject_get_size(kobject_t type, seL4_Word UNUSED objectSize)
     }
 }
 
-static inline seL4_Word
-x86_mode_kobject_get_type(kobject_t type, seL4_Word UNUSED objectSize)
+static inline seL4_Word x86_mode_kobject_get_type(kobject_t type, seL4_Word UNUSED objectSize)
 {
     switch (type) {
     case KOBJECT_PDPT:

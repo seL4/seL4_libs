@@ -1,13 +1,7 @@
 #
-# Copyright 2017, Data61
-# Commonwealth Scientific and Industrial Research Organisation (CSIRO)
-# ABN 41 687 119 230.
+# Copyright 2017, Data61, CSIRO (ABN 41 687 119 230)
 #
-# This software may be distributed and modified according to the terms of
-# the BSD 2-Clause license. Note that NO WARRANTY is provided.
-# See "LICENSE_BSD2.txt" for details.
-#
-# @TAG(DATA61_BSD)
+# SPDX-License-Identifier: BSD-2-Clause
 #
 
 cmake_minimum_required(VERSION 3.7.2)
@@ -53,6 +47,17 @@ config_option(
     DEFAULT
     OFF
 )
+
+config_string(
+    LibSel4MuslcSysConstructorPriority
+    LIB_SEL4_MUSLC_SYS_CONSTRUCTOR_PRIORITY
+    "Set the priority of the muslc initialisation constructors such that
+	they occur after external initialisation of the system call
+	dependencies."
+    DEFAULT
+    "MUSLCSYS_WITH_VSYSCALL_PRIORITY + 10"
+    UNQUOTE
+)
 mark_as_advanced(
     LibSel4MuslcSysMorecoreBytes
     LibSel4MuslcSysDebugHalt
@@ -73,5 +78,19 @@ set(HighestSyscall 400)
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -D_XOPEN_SOURCE=700 -DMUSLC_HIGHEST_SYSCALL=${HighestSyscall}")
 
 add_library(sel4muslcsys STATIC EXCLUDE_FROM_ALL ${deps})
+# Force the muslcsys_init_muslc constructor to be included in dependants
+target_link_options(sel4muslcsys BEFORE INTERFACE "-Wl,-umuslcsys_init_muslc")
 target_include_directories(sel4muslcsys PUBLIC include)
-target_link_libraries(sel4muslcsys Configuration muslc sel4 cpio utils sel4utils)
+target_link_libraries(
+    sel4muslcsys
+    PUBLIC
+        # These quotes are needed to prevent cmake splitting these arguments
+        "-Wl,-u -Wl,__vsyscall_ptr"
+        muslc
+        sel4
+        cpio
+        utils
+        sel4utils
+        sel4muslcsys_Config
+    PRIVATE sel4_autoconf
+)

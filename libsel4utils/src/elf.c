@@ -67,14 +67,16 @@ static int load_segment(vspace_t *loadee_vspace, vspace_t *loader_vspace,
             //  Have to use reservation from adjacent region
             if ((region_index - 1) < 0) {
                 ZF_LOGE("Invalid regions: bad elf file.");
-                return 1;
+                error = seL4_InvalidArgument;
+                continue;
             }
             reservation = regions[region_index - 1].reservation;
         } else if (loadee_vaddr + (MIN(segment_size - pos, PAGE_SIZE_4K)) >
                    (region.reservation_vstart + region.reservation_size)) {
             if ((region_index + 1) >= num_regions) {
                 ZF_LOGE("Invalid regions: bad elf file.");
-                return 1;
+                error = seL4_InvalidArgument;
+                continue;
             }
             reservation = regions[region_index + 1].reservation;
         } else {

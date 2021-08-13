@@ -8,7 +8,8 @@
 #include <vspace/mapping.h>
 #include <sel4/arch/mapping.h>
 
-static seL4_Error vspace_map_io(seL4_CPtr cap, seL4_CPtr iospace_root, seL4_Word vaddr, UNUSED seL4_Word attr)
+static seL4_Error vspace_map_io(seL4_CPtr cap, seL4_CPtr iospace_root,
+                                seL4_Word vaddr, UNUSED seL4_Word attr)
 {
 #ifdef CONFIG_IOMMU
     return seL4_X86_IOPageTable_Map(cap, iospace_root, vaddr);

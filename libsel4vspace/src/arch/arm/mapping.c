@@ -7,7 +7,8 @@
 #include <autoconf.h>
 #include <vspace/mapping.h>
 
-static seL4_Error vspace_map_io(seL4_CPtr cap, seL4_CPtr iospace_root, seL4_Word vaddr, UNUSED seL4_Word attr)
+static seL4_Error vspace_map_io(seL4_CPtr cap, seL4_CPtr iospace_root,
+                                seL4_Word vaddr, UNUSED seL4_Word attr)
 {
 #ifdef CONFIG_TK1_SMMU
     return seL4_ARM_IOPageTable_Map(cap, iospace_root, vaddr);

@@ -7,12 +7,13 @@
 #include <autoconf.h>
 #include <vspace/mapping.h>
 
-static seL4_Error vspace_map_io(seL4_CPtr cap, seL4_CPtr iospace_root, seL4_Word vaddr, UNUSED seL4_Word attr)
-{
 #ifdef CONFIG_TK1_SMMU
+static seL4_Error vspace_map_io(seL4_CPtr cap, seL4_CPtr iospace_root,
+                                seL4_Word vaddr, UNUSED seL4_Word attr)
+{
     return seL4_ARM_IOPageTable_Map(cap, iospace_root, vaddr);
-#endif
 }
+#endif /* CONFIG_TK1_SMMU */
 
 int vspace_get_iospace_map_obj(UNUSED seL4_Word failed_bits, vspace_map_obj_t *obj)
 {

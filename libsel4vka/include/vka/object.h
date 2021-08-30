@@ -95,7 +95,7 @@ static inline int vka_alloc_object(vka_t *vka, seL4_Word type, seL4_Word size_bi
 static inline seL4_CPtr vka_alloc_object_leaky(vka_t *vka, seL4_Word type, seL4_Word size_bits) WARN_UNUSED_RESULT;
 static inline seL4_CPtr vka_alloc_object_leaky(vka_t *vka, seL4_Word type, seL4_Word size_bits)
 {
-    vka_object_t result = {.cptr = 0, .ut = 0, .type = 0, size_bits = 0};
+    vka_object_t result = {.cptr = 0, .ut = 0, .type = 0, .size_bits = 0};
     return vka_alloc_object(vka, type, size_bits, &result) == -1 ? 0 : result.cptr;
 }
 

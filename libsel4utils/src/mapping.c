@@ -31,6 +31,19 @@ static int map_page(vka_t *vka, vspace_map_page_fn_t map_page_fn, vspace_get_map
     seL4_ARCH_VMAttributes attr = cacheable ? seL4_ARCH_Default_VMAttributes :
                                   seL4_ARCH_Uncached_VMAttributes;
 
+    /* EPT attributes are different than a standard page table. Previously, a kernel bug
+     * masked the problem by always setting EPT mappings to WriteBack. Once the bug was
+     * fixed, every page became uncached, killing VM performance.
+     *
+     * This check ensure the pages are properly cached
+     */
+#ifdef CONFIG_VTX
+    if (seL4_X86_Page_MapEPT == map_page_fn) {
+        attr = cacheable ? seL4_X86_EPT_Default_VMAttributes :
+               seL4_X86_EPT_Uncached_VMAttributes;
+    }
+#endif
+
     *num_objects = 0;
     int error = map_page_fn(frame, root, (seL4_Word) vaddr, rights, attr);
     while (error == seL4_FailedLookup) {

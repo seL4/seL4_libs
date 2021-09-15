@@ -22,9 +22,7 @@
  * can measure the performance of your software.  It will also work out whether
  * certain operations need to be done in kernel mode, and perform kernel code
  * injection calls to make them happen.  As a result, expect that any library
- * call could potentially result in a syscall.  (This is of particular note on
- * the KZM/ARM1136, for which even reading the cycle counter must be done in
- * kernel mode.)
+ * call could potentially result in a syscall.
  *
  * It also goes out of its way to ensure that there's always a cycle counter
  * available for use.  `sel4bench_init()` will start this running, and
@@ -162,8 +160,7 @@ static UNUSED void sel4bench_start_counters(counter_bitfield_t counters);
 /**
  * Stop counting events on a set of performance counters.
  *
- * Note: Some processors (notably, the KZM/ARM1136) may not support this
- * operation.
+ * Note: Some processors may not support this operation.
  *
  * @param counters bitfield indicating which counter(s) to stop
  */

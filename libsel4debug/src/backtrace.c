@@ -4,12 +4,19 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 #include <autoconf.h>
+#include <sel4/types.h>
+
+/* Don't instrument seL4_GetIPCBuffer as it's called in the __cyg_profile_func_*
+ * functions below and we don't want to recurse.
+ * This definition has to come before the definition that is included
+ * for the attribute to have effect.
+ */
+LIBSEL4_INLINE_FUNC seL4_IPCBuffer *seL4_GetIPCBuffer(void) __attribute__((no_instrument_function));
+
 #include <sel4debug/gen_config.h>
 #include <sel4/sel4.h>
 #include <sel4debug/instrumentation.h>
 
-/* Don't instrument seL4_GetIPCBuffer so we don't recurse. */
-seL4_IPCBuffer *seL4_GetIPCBuffer(void) __attribute__((no_instrument_function));
 
 /* We can't just store backtrace information in a single static area because it
  * needs to be tracked per-thread. To do this we assume each thread has a

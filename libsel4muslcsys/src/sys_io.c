@@ -253,8 +253,6 @@ long sys_close(va_list ap)
 
     if (fds->filetype == FILE_TYPE_CPIO) {
         free(fds->data);
-    } else {
-        assert(!"not implemented");
     }
     add_free_fd(fd);
     return 0;

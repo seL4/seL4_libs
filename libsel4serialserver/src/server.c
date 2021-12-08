@@ -257,7 +257,7 @@ seL4_Error serial_server_func_connect(seL4_MessageInfo_t tag,
                 "%dB.",
                 client_badge_value, client_shmem_size,
                 get_serial_server()->shmem_max_size);
-        return SERIAL_SERVER_ERROR_SHMEM_TOO_LARGE;
+        return (seL4_Error) SERIAL_SERVER_ERROR_SHMEM_TOO_LARGE;
     }
 
     if (seL4_MessageInfo_get_extraCaps(tag) != client_shmem_n_pages) {

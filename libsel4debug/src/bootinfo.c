@@ -12,19 +12,30 @@
 #include <sel4/sel4.h>
 #include <utils/util.h>
 
+static void print_slot_reg_info(char const *descr, seL4_SlotRegion *reg)
+{
+    if (reg->end == reg->start) {
+        printf("%snone\n", descr);
+    } else {
+        printf("%s[%"SEL4_PRIu_word" --> %"SEL4_PRIu_word")\n",
+               descr, reg->start, reg->end);
+    }
+}
+
 void debug_print_bootinfo(seL4_BootInfo *info)
 {
-
-    printf("Node %lu of %lu\n", (long)info->nodeID, (long)info->numNodes);
-    printf("IOPT levels:     %u\n", (int)info->numIOPTLevels);
+    printf("Node %"SEL4_PRIu_word" of %"SEL4_PRIu_word"\n", info->nodeID, info->numNodes);
+    printf("IOPT levels:     %"SEL4_PRIu_word"\n", info->numIOPTLevels);
     printf("IPC buffer:      %p\n", info->ipcBuffer);
-    printf("Empty slots:     [%lu --> %lu)\n", (long)info->empty.start, (long)info->empty.end);
-    printf("sharedFrames:    [%lu --> %lu)\n", (long)info->sharedFrames.start, (long)info->sharedFrames.end);
-    printf("userImageFrames: [%lu --> %lu)\n", (long)info->userImageFrames.start, (long)info->userImageFrames.end);
-    printf("userImagePaging: [%lu --> %lu)\n", (long)info->userImagePaging.start, (long)info->userImagePaging.end);
-    printf("untypeds:        [%lu --> %lu)\n", (long)info->untyped.start, (long)info->untyped.end);
-    printf("Initial thread domain: %u\n", (int)info->initThreadDomain);
-    printf("Initial thread cnode size: %u\n", (int)info->initThreadCNodeSizeBits);
+    print_slot_reg_info("Empty slots:     ", &info->empty);
+    print_slot_reg_info("sharedFrames:    ", &info->sharedFrames);
+    print_slot_reg_info("userImageFrames: ", &info->userImageFrames);
+    print_slot_reg_info("userImagePaging: ", &info->userImagePaging);
+    print_slot_reg_info("untypeds:        ", &info->untyped);
+    printf("Initial thread domain: %"SEL4_PRIu_word"\n",
+           info->initThreadDomain);
+    printf("Initial thread cnode size: %"SEL4_PRIu_word"\n",
+           info->initThreadCNodeSizeBits);
     printf("List of untypeds\n");
     printf("------------------\n");
     printf("Paddr    | Size   | Device\n");
@@ -34,7 +45,9 @@ void debug_print_bootinfo(seL4_BootInfo *info)
         int index = info->untypedList[i].sizeBits;
         assert(index < ARRAY_SIZE(sizes));
         sizes[index]++;
-        printf("%p | %zu | %d\n", (void *)info->untypedList[i].paddr, (size_t)info->untypedList[i].sizeBits,
+        printf("0x%"SEL4_PRIx_word" | %zu | %d\n",
+               info->untypedList[i].paddr,
+               (size_t)info->untypedList[i].sizeBits,
                (int)info->untypedList[i].isDevice);
     }
 

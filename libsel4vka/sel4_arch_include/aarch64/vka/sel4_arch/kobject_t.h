@@ -56,7 +56,12 @@ static inline seL4_Word arm_mode_kobject_get_type(kobject_t type, seL4_Word obje
             return -1;
         }
     case KOBJECT_PAGE_GLOBAL_DIRECTORY:
+#if defined(CONFIG_ARM_HYPERVISOR_SUPPORT) && defined (CONFIG_ARM_PA_SIZE_BITS_40)
+        /* This object type is invalid under this configuration. */
+        return -1;
+#else
         return seL4_ARM_PageGlobalDirectoryObject;
+#endif
     case KOBJECT_PAGE_UPPER_DIRECTORY:
         return seL4_ARM_PageUpperDirectoryObject;
     default:

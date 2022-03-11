@@ -42,10 +42,8 @@ vka_arm_mode_get_object_size(seL4_Word objectType)
     switch (objectType) {
     case seL4_ARM_HugePageObject:
         return seL4_HugePageBits;
-    case seL4_ARM_PageGlobalDirectoryObject:
-        return seL4_PGDBits;
-    case seL4_ARM_PageUpperDirectoryObject:
-        return seL4_PUDBits;
+    case seL4_ARM_VSpaceObject:
+        return seL4_VSpaceBits;
     default:
         /* Unknown object type. */
         ZF_LOGE("Unknown object type");

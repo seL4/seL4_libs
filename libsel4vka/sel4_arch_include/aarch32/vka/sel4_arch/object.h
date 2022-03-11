@@ -28,6 +28,8 @@ static inline unsigned long vka_arm_mode_get_object_size(seL4_Word objectType)
         return seL4_SectionBits;
     case seL4_ARM_SuperSectionObject:
         return seL4_SuperSectionBits;
+    case seL4_ARM_PageDirectoryObject:
+        return seL4_PageDirBits;
     default:
         /* Unknown object type. */
         ZF_LOGE("Unknown object type");

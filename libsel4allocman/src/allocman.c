@@ -522,6 +522,8 @@ int allocman_configure_utspace_reserve(allocman_t *alloc, struct allocman_utspac
      * icnreasing reservations, but I cannot see the use case for that */
     for (i = 0; i < alloc->num_utspace_chunks; i++) {
         if (alloc->utspace_chunk[i].size_bits == chunk.size_bits && alloc->utspace_chunk[i].type == chunk.type) {
+            ZF_LOGE("Failed to set reserve for {type: %d size_bits: %d} as one already exists.", chunk.type, chunk.size_bits);
+            ZF_LOGE("Ignoring this could cause the allocator to break in hard-to-identify ways.");
             error = 1;
             goto exit;
         }
@@ -582,6 +584,8 @@ int allocman_configure_mspace_reserve(allocman_t *alloc, struct allocman_mspace_
      * icnreasing reservations, but I cannot see the use case for that */
     for (i = 0; i < alloc->num_mspace_chunks; i++) {
         if (alloc->mspace_chunk[i].size == chunk.size) {
+            ZF_LOGE("Failed to set reserve for {size: %d} as one already exists.", chunk.size);
+            ZF_LOGE("Ignoring this could cause the allocator to break in hard-to-identify ways.");
             error = 1;
             goto exit;
         }

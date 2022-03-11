@@ -9,7 +9,6 @@
 #include <allocman/allocman.h>
 
 static inline void allocman_sel4_arch_configure_reservations(allocman_t *alloc) {
-    allocman_configure_utspace_reserve(alloc, (struct allocman_utspace_chunk) {vka_get_object_size(seL4_ARM_PageDirectoryObject, 0), seL4_ARM_PageDirectoryObject, 1});
-    allocman_configure_utspace_reserve(alloc, (struct allocman_utspace_chunk) {vka_get_object_size(seL4_ARM_PageUpperDirectoryObject, 0), seL4_ARM_PageUpperDirectoryObject, 1});
+    allocman_configure_utspace_reserve(alloc, (struct allocman_utspace_chunk) {vka_get_object_size(seL4_ARCH_PageTableObject, 0), seL4_ARCH_PageTableObject, 3});
 }
 

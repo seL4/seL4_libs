@@ -44,8 +44,6 @@ vka_arch_get_object_size(seL4_Word objectType)
         return seL4_LargePageBits;
     case seL4_ARM_PageTableObject:
         return seL4_PageTableBits;
-    case seL4_ARM_PageDirectoryObject:
-        return seL4_PageDirBits;
     case seL4_ARM_VCPUObject:
         return seL4_ARM_VCPUBits;
 #ifdef CONFIG_TK1_SMMU

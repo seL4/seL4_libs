@@ -1263,7 +1263,9 @@ void bootstrap_configure_virtual_pool(allocman_t *alloc, void *vstart, size_t vs
     /* assume we are using 4k pages. maybe this should be a Kconfig option at some point?
      * we ignore any errors */
     allocman_configure_utspace_reserve(alloc, (struct allocman_utspace_chunk) {vka_get_object_size(seL4_ARCH_4KPage, 0), seL4_ARCH_4KPage, 3});
+#ifndef CONFIG_ARCH_AARCH64
     allocman_configure_utspace_reserve(alloc, (struct allocman_utspace_chunk) {vka_get_object_size(seL4_ARCH_PageTableObject, 0), seL4_ARCH_PageTableObject, 1});
+#endif
     allocman_sel4_arch_configure_reservations(alloc);
     mspace_dual_pool_attach_virtual(
             (mspace_dual_pool_t*)alloc->mspace.mspace,

@@ -7,8 +7,6 @@
 
 #include <stdint.h>
 #include <sel4/sel4.h>
-#include <sel4/arch/pfIPC.h>
-#include <sel4/arch/exIPC.h>
 
 #define EXCEPT_IPC_SYS_MR_IP EXCEPT_IPC_SYS_MR_RIP
 #define ARCH_SYSCALL_INSTRUCTION_SIZE 4

@@ -35,7 +35,7 @@
 /* this implementation does not allow users to close STDOUT or STDERR, so they can't be freed */
 #define FREE_FD_TABLE_SIZE(x) (sizeof(int) * ((x) - FIRST_USER_FD))
 
-static void *cpio_archive_symbol;
+static void const *cpio_archive_symbol;
 static unsigned long cpio_archive_len;
 static muslcsys_cpio_get_file_fn_t cpio_get_file_impl;
 
@@ -181,7 +181,7 @@ static long sys_open_impl(const char *pathname, int flags, mode_t mode)
     }
     /* as we do not support create, ignore the mode */
     long unsigned int size;
-    char *file = NULL;
+    char const *file = NULL;
     if (cpio_get_file_impl && cpio_archive_symbol) {
         file = cpio_get_file_impl(cpio_archive_symbol, cpio_archive_len, pathname, &size);
         if (!file && strncmp(pathname, "./", 2) == 0) {
@@ -530,7 +530,7 @@ long sys_access(va_list ap)
     return -EACCES;
 }
 
-void muslcsys_install_cpio_interface(void *cpio_symbol, unsigned long cpio_len,
+void muslcsys_install_cpio_interface(void const *cpio_symbol, unsigned long cpio_len,
                                      muslcsys_cpio_get_file_fn_t fn)
 {
     cpio_archive_symbol = cpio_symbol;

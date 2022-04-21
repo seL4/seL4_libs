@@ -20,7 +20,7 @@
 #define FILE_TYPE_CPIO 0
 
 typedef struct cpio_file_data {
-    char *start;
+    char const *start;
     uint32_t size;
     off_t current;
 } cpio_file_data_t;
@@ -49,7 +49,10 @@ muslcsys_fd_t *
 get_fd_struct(int fd);
 
 /* install a cpio interface to use with open */
-typedef void *(*muslcsys_cpio_get_file_fn_t)(void *cpio_symbol, unsigned long len,
-                                             const char *name, unsigned long *size);
-void muslcsys_install_cpio_interface(void *cpio_symbol, unsigned long cpio_len,
+typedef void const *(*muslcsys_cpio_get_file_fn_t)(void const *cpio_symbol,
+                                                   unsigned long len,
+                                                   char const *name,
+                                                   unsigned long *size);
+void muslcsys_install_cpio_interface(void const *cpio_symbol,
+                                     unsigned long cpio_len,
                                      muslcsys_cpio_get_file_fn_t fn);

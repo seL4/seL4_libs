@@ -195,6 +195,7 @@ static long sys_mmap_impl_static(void *addr, size_t length, int prot, int flags,
             return -ENOMEM;
         }
         morecore_top = base;
+        ZF_LOGF_IF((base % 0x1000) != 0, "return address: 0x%"PRIxPTR" requires alignment: 0x%x ", base, 0x1000);
         return base;
     }
     assert(!"not implemented");
@@ -212,6 +213,8 @@ static long sys_mmap_impl_dynamic(void *addr, size_t length, int prot, int flags
         /* determine how many pages we need */
         uint32_t pages = BYTES_TO_4K_PAGES(length);
         void *ret = vspace_new_pages(muslc_this_vspace, seL4_AllRights, pages, seL4_PageBits);
+        ZF_LOGF_IF((((uintptr_t)ret) % 0x1000) != 0, "return address: 0x%"PRIxPTR" requires alignment: 0x%x ", (uintptr_t)ret,
+                   0x1000);
         return (long)ret;
     }
     assert(!"not implemented");

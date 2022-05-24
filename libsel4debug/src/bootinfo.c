@@ -30,6 +30,7 @@ void debug_print_bootinfo(seL4_BootInfo *info)
     print_slot_reg_info("Empty slots:     ", &info->empty);
     print_slot_reg_info("sharedFrames:    ", &info->sharedFrames);
     print_slot_reg_info("userImageFrames: ", &info->userImageFrames);
+    print_slot_reg_info("extraBootInfo:   ", &info->extraBIPages);
     print_slot_reg_info("userImagePaging: ", &info->userImagePaging);
     print_slot_reg_info("untypeds:        ", &info->untyped);
     printf("Initial thread domain: %"SEL4_PRIu_word"\n",

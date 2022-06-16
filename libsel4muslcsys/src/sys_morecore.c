@@ -189,8 +189,13 @@ static long sys_mmap_impl_static(void *addr, size_t length, int prot, int flags,
     if (flags & MAP_ANONYMOUS) {
         /* ensure the morecore region is initialized */
         init_morecore_region();
+
+        /* Calculate number of pages needed */
+        uintptr_t pages = BYTES_TO_4K_PAGES(length);
+        uintptr_t adjusted_length = pages * PAGE_SIZE_4K;
+
         /* Steal from the top */
-        uintptr_t base = morecore_top - length;
+        uintptr_t base = morecore_top - adjusted_length;
         if (base < morecore_base) {
             return -ENOMEM;
         }

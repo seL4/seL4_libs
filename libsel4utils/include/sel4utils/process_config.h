@@ -184,8 +184,9 @@ static inline sel4utils_process_config_t process_config_default_simple(simple_t 
     config = process_config_create_fault_endpoint(config);
 
     if (config_set(CONFIG_KERNEL_MCS)) {
-        uint64_t timeslice = CONFIG_BOOT_THREAD_TIME_SLICE;
-        config.sched_params = sched_params_round_robin(config.sched_params, simple, 0, timeslice * US_IN_MS);
+        /* seL4_Time measures time in us, the config parameter uses ms. */
+        seL4_Time timeslice_us = CONFIG_BOOT_THREAD_TIME_SLICE * US_IN_MS;
+        config.sched_params = sched_params_round_robin(config.sched_params, simple, 0, timeslice_us);
     }
 
     return process_config_priority(config, prio);

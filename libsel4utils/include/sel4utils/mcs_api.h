@@ -177,7 +177,7 @@ static inline seL4_SchedContext_Consumed_t api_sc_consumed(UNUSED seL4_CPtr sc)
 }
 
 static inline seL4_Error api_sched_ctrl_configure(UNUSED seL4_CPtr sched_ctrl, UNUSED seL4_CPtr sc,
-                                                  UNUSED uint64_t budget, UNUSED uint64_t period,
+                                                  UNUSED seL4_Time budget, UNUSED seL4_Time period,
                                                   UNUSED seL4_Word refills, UNUSED seL4_Word badge)
 {
     if (!config_set(CONFIG_KERNEL_MCS)) {

@@ -357,8 +357,8 @@ long sys_mmap2(va_list ap)
     int flags = va_arg(ap, int);
     int fd = va_arg(ap, int);
     off_t offset = va_arg(ap, off_t);
-    /* for now redirect to mmap. muslc always defines an off_t as being an int64
-     * so this will not overflow */
+    /* for now redirect to mmap. muslc always defines an off_t as being an int64 */
+    /* so this will not overflow */
     return sys_mmap_impl(addr, length, prot, flags, fd, offset * 4096);
 }
 

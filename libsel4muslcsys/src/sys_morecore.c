@@ -361,3 +361,10 @@ long sys_mmap2(va_list ap)
      * so this will not overflow */
     return sys_mmap_impl(addr, length, prot, flags, fd, offset * 4096);
 }
+
+long sys_munmap(va_list ap)
+{
+    ZF_LOGE("%s is unsupported. This may have been called due to a "
+            "large malloc'd region being free'd.", __func__);
+    return 0;
+}

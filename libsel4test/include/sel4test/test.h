@@ -56,6 +56,9 @@ struct env {
     seL4_CPtr asid_pool;
     seL4_CPtr asid_ctrl;
     seL4_CPtr sched_ctrl;
+#ifdef CONFIG_ALLOW_SMC_CALLS
+    seL4_CPtr smc;
+#endif /* CONFIG_ALLOW_SMC_CALLS */
 #ifdef CONFIG_IOMMU
     seL4_CPtr io_space;
 #endif /* CONFIG_IOMMU */

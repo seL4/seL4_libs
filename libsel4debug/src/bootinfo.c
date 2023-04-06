@@ -45,4 +45,3 @@ void debug_print_bootinfo(seL4_BootInfo *info)
         }
     }
 }
-

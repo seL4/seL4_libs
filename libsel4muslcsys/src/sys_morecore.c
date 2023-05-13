@@ -189,12 +189,18 @@ static long sys_mmap_impl_static(void *addr, size_t length, int prot, int flags,
     if (flags & MAP_ANONYMOUS) {
         /* ensure the morecore region is initialized */
         init_morecore_region();
+
+        /* Calculate number of pages needed */
+        uintptr_t pages = BYTES_TO_4K_PAGES(length);
+        uintptr_t adjusted_length = pages * PAGE_SIZE_4K;
+
         /* Steal from the top */
-        uintptr_t base = morecore_top - length;
+        uintptr_t base = morecore_top - adjusted_length;
         if (base < morecore_base) {
             return -ENOMEM;
         }
         morecore_top = base;
+        ZF_LOGF_IF((base % 0x1000) != 0, "return address: 0x%"PRIxPTR" requires alignment: 0x%x ", base, 0x1000);
         return base;
     }
     assert(!"not implemented");
@@ -212,6 +218,8 @@ static long sys_mmap_impl_dynamic(void *addr, size_t length, int prot, int flags
         /* determine how many pages we need */
         uint32_t pages = BYTES_TO_4K_PAGES(length);
         void *ret = vspace_new_pages(muslc_this_vspace, seL4_AllRights, pages, seL4_PageBits);
+        ZF_LOGF_IF((((uintptr_t)ret) % 0x1000) != 0, "return address: 0x%"PRIxPTR" requires alignment: 0x%x ", (uintptr_t)ret,
+                   0x1000);
         return (long)ret;
     }
     assert(!"not implemented");
@@ -349,7 +357,14 @@ long sys_mmap2(va_list ap)
     int flags = va_arg(ap, int);
     int fd = va_arg(ap, int);
     off_t offset = va_arg(ap, off_t);
-    /* for now redirect to mmap. muslc always defines an off_t as being an int64
-     * so this will not overflow */
+    /* for now redirect to mmap. muslc always defines an off_t as being an int64 */
+    /* so this will not overflow */
     return sys_mmap_impl(addr, length, prot, flags, fd, offset * 4096);
+}
+
+long sys_munmap(va_list ap)
+{
+    ZF_LOGE("%s is unsupported. This may have been called due to a "
+            "large malloc'd region being free'd.", __func__);
+    return 0;
 }

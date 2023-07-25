@@ -586,6 +586,21 @@ int sel4utils_configure_process_custom(sel4utils_process_t *process, vka_t *vka,
             goto error;
         }
         sel4utils_elf_read_phdrs(&elf, process->num_elf_phdrs, process->elf_phdrs);
+
+        /* If PT_PHDR exists in the program headers, assign PT_NULL to it.
+         * This is because muslc libc searches for PT_PHDR and if found,
+         * it assumes it's part of the ELF image and relocates the entire
+         * subsequent program header segments according to PT_PHDR's base. This is
+         * wrong and will trigger mapping errors.
+         */
+        Elf_Phdr *phdr = process->elf_phdrs;
+
+        for (int i = 0; i < process->num_elf_phdrs; i++, phdr++) {
+            if (phdr->p_type == PT_PHDR) {
+                phdr->p_type = PT_NULL;
+            }
+        }
+
     } else {
         process->entry_point = config.entry_point;
         process->sysinfo = config.sysinfo;

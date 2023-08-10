@@ -41,7 +41,8 @@
  * @param dest The index within the CNode to put the cap
  * @param depth of index
  */
-typedef seL4_Error (*arch_simple_get_IOPort_cap_fn)(void *data, uint16_t start_port, uint16_t end_port, seL4_Word root, seL4_Word dest, seL4_Word depth);
+typedef seL4_Error(*arch_simple_get_IOPort_cap_fn)(void *data, uint16_t start_port, uint16_t end_port, seL4_Word root,
+                                                   seL4_Word dest, seL4_Word depth);
 
 /**
  * Request a cap to a specific MSI IRQ number on the system
@@ -52,12 +53,12 @@ typedef seL4_Error (*arch_simple_get_IOPort_cap_fn)(void *data, uint16_t start_p
  * @param the index within the CNode to put cap
  * @param Depth of index
  */
-typedef seL4_Error (*arch_simple_get_msi_fn)(void *data, seL4_CNode root, seL4_Word index,
-                                             uint8_t depth, seL4_Word pci_bus, seL4_Word pci_dev,
-                                             seL4_Word pci_func, seL4_Word handle,
-                                             seL4_Word vector);
+typedef seL4_Error(*arch_simple_get_msi_fn)(void *data, seL4_CNode root, seL4_Word index,
+                                            uint8_t depth, seL4_Word pci_bus, seL4_Word pci_dev,
+                                            seL4_Word pci_func, seL4_Word handle,
+                                            seL4_Word vector);
 
-typedef seL4_Error (*arch_simple_get_ioapic_fn)(void *data, seL4_CNode root, seL4_Word index,
+typedef seL4_Error(*arch_simple_get_ioapic_fn)(void *data, seL4_CNode root, seL4_Word index,
                                                uint8_t depth, seL4_Word ioapic, seL4_Word pin,
                                                seL4_Word level, seL4_Word polarity,
                                                seL4_Word vector);
@@ -71,8 +72,8 @@ typedef seL4_Error (*arch_simple_get_ioapic_fn)(void *data, seL4_CNode root, seL
  * @param the index within the CNode to put cap
  * @param Depth of index
  */
-typedef seL4_Error (*arch_simple_get_IRQ_handler_fn)(void *data, int irq, seL4_CNode cnode, seL4_Word index,
-                                                     uint8_t depth);
+typedef seL4_Error(*arch_simple_get_IRQ_handler_fn)(void *data, int irq, seL4_CNode cnode, seL4_Word index,
+                                                    uint8_t depth);
 
 #ifdef CONFIG_IOMMU
 /**
@@ -84,8 +85,8 @@ typedef seL4_Error (*arch_simple_get_IRQ_handler_fn)(void *data, int irq, seL4_C
  * @param path Path to where to put this cap
  *
 */
-typedef seL4_Error (*arch_simple_get_iospace_fn)(void *data, uint16_t domainID, uint16_t deviceID,
-                                                 cspacepath_t *path);
+typedef seL4_Error(*arch_simple_get_iospace_fn)(void *data, uint16_t domainID, uint16_t deviceID,
+                                                cspacepath_t *path);
 
 #endif
 
@@ -100,8 +101,8 @@ typedef struct arch_simple {
     arch_simple_get_ioapic_fn ioapic;
 } arch_simple_t;
 
-static inline seL4_Error
-arch_simple_get_IOPort_cap(arch_simple_t *arch_simple, uint16_t start_port, uint16_t end_port, seL4_Word root, seL4_Word dest, seL4_Word depth)
+static inline seL4_Error arch_simple_get_IOPort_cap(arch_simple_t *arch_simple, uint16_t start_port, uint16_t end_port,
+                                                    seL4_Word root, seL4_Word dest, seL4_Word depth)
 {
     if (!arch_simple) {
         ZF_LOGE("Arch-simple is NULL");
@@ -116,10 +117,9 @@ arch_simple_get_IOPort_cap(arch_simple_t *arch_simple, uint16_t start_port, uint
     return arch_simple->IOPort_cap(arch_simple->data, start_port, end_port, root, dest, depth);
 }
 
-static inline seL4_Error
-arch_simple_get_msi(arch_simple_t *arch_simple, cspacepath_t path, seL4_Word pci_bus,
-                    seL4_Word pci_dev, seL4_Word pci_func, seL4_Word handle,
-                    seL4_Word vector)
+static inline seL4_Error arch_simple_get_msi(arch_simple_t *arch_simple, cspacepath_t path, seL4_Word pci_bus,
+                                             seL4_Word pci_dev, seL4_Word pci_func, seL4_Word handle,
+                                             seL4_Word vector)
 {
     if (!arch_simple) {
         ZF_LOGE("Arch-simple is NULL");
@@ -134,10 +134,9 @@ arch_simple_get_msi(arch_simple_t *arch_simple, cspacepath_t path, seL4_Word pci
                             pci_dev, pci_func, handle, vector);
 }
 
-static inline seL4_Error
-arch_simple_get_ioapic(arch_simple_t *arch_simple, cspacepath_t path, seL4_Word ioapic,
-                       seL4_Word pin, seL4_Word level, seL4_Word polarity,
-                       seL4_Word vector)
+static inline seL4_Error arch_simple_get_ioapic(arch_simple_t *arch_simple, cspacepath_t path, seL4_Word ioapic,
+                                                seL4_Word pin, seL4_Word level, seL4_Word polarity,
+                                                seL4_Word vector)
 {
     if (!arch_simple) {
         ZF_LOGE("Arch-simple is NULL");
@@ -153,8 +152,8 @@ arch_simple_get_ioapic(arch_simple_t *arch_simple, cspacepath_t path, seL4_Word 
 }
 
 #ifdef CONFIG_IOMMU
-static inline seL4_CPtr
-arch_simple_get_iospace(arch_simple_t *arch_simple, uint16_t domainID, uint16_t deviceID, cspacepath_t *path)
+static inline seL4_CPtr arch_simple_get_iospace(arch_simple_t *arch_simple, uint16_t domainID, uint16_t deviceID,
+                                                cspacepath_t *path)
 {
     if (!arch_simple) {
         ZF_LOGE("Arch-simple is NULL");

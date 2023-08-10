@@ -101,6 +101,19 @@ seL4_CPtr simple_default_nth_cap(void *data, int n)
             true_return++;
         }
 #endif
+#ifndef CONFIG_ARM_SMMU
+        /* skip seL4_CapSMMUSIDControl and seL4_CapSMMUCBControl if
+         * SMMU is not supported on this platform */
+        if (true_return >= seL4_CapSMMUSIDControl) {
+            true_return += 2;
+        }
+#endif
+#ifndef CONFIG_KERNEL_MCS
+        /* skip seL4_CapInitThreadSC if MCS is not enabled */
+        if (true_return >= seL4_CapInitThreadSC) {
+            true_return++;
+        }
+#endif
     } else if (n < shared_frame_range) {
         return bi->sharedFrames.start + (n - SIMPLE_NUM_INIT_CAPS);
     } else if (n < user_img_frame_range) {

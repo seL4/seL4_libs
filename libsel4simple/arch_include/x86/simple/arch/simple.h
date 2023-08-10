@@ -14,13 +14,22 @@
 #include <utils/util.h>
 #include <vka/cspacepath_t.h>
 
-/* Simple does not address initial null caps, including seL4_CapNull */
+/* Simple does not address initial null caps, including seL4_CapNull
+ * seL4_CapSMMUSIDControl, seL4_CapSMMUCBControl are null on x86 */
 #ifdef CONFIG_IOMMU
-#define SIMPLE_SKIPPED_INIT_CAPS 1
+#define SIMPLE_SKIP_IOSPACE 0
 #else
 /* seL4_CapIOSpace is null if IOMMU isn't supported */
-#define SIMPLE_SKIPPED_INIT_CAPS 2
+#define SIMPLE_SKIP_IOSPACE 1
 #endif
+
+#ifdef CONFIG_KERNEL_MCS
+#define SIMPLE_SKIP_THREADSC 0
+#else
+#define SIMPLE_SKIP_THREADSC 1
+#endif
+
+#define SIMPLE_SKIPPED_INIT_CAPS (3 + SIMPLE_SKIP_IOSPACE + SIMPLE_SKIP_THREADSC)
 
 /**
  * Request a cap to the IOPorts

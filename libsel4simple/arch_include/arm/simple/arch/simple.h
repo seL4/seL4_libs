@@ -16,7 +16,19 @@
 
 /* Simple does not address initial null caps, including seL4_CapNull.
  * seL4_CapIOSpace, seL4_CapIOPortControl are null on architectures other than x86 */
-#define SIMPLE_SKIPPED_INIT_CAPS 3
+#ifdef CONFIG_KERNEL_MCS
+#define SIMPLE_SKIP_THREADSC 0
+#else
+#define SIMPLE_SKIP_THREADSC 1
+#endif
+
+#ifdef CONFIG_ARM_SMMU
+#define SIMPLE_SKIP_SMMU_CAPS 0
+#else
+#define SIMPLE_SKIP_SMMU_CAPS 2
+#endif
+
+#define SIMPLE_SKIPPED_INIT_CAPS (3 + SIMPLE_SKIP_THREADSC + SIMPLE_SKIP_SMMU_CAPS)
 
 /* Request a cap to a specific IRQ number on the system
  *

@@ -114,6 +114,12 @@ seL4_CPtr simple_default_nth_cap(void *data, int n)
             true_return++;
         }
 #endif
+#ifndef CONFIG_ALLOW_SMC_CALLS
+        /* skip seL4_CapSMC if SMC Calls are not enabled */
+        if (true_return >= seL4_CapSMC) {
+            true_return++;
+        }
+#endif
     } else if (n < shared_frame_range) {
         return bi->sharedFrames.start + (n - SIMPLE_NUM_INIT_CAPS);
     } else if (n < user_img_frame_range) {

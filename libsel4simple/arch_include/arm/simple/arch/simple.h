@@ -28,7 +28,13 @@
 #define SIMPLE_SKIP_SMMU_CAPS 2
 #endif
 
-#define SIMPLE_SKIPPED_INIT_CAPS (3 + SIMPLE_SKIP_THREADSC + SIMPLE_SKIP_SMMU_CAPS)
+#ifdef CONFIG_ALLOW_SMC_CALLS
+#define SIMPLE_SKIP_SMC 0
+#else
+#define SIMPLE_SKIP_SMC 1
+#endif
+
+#define SIMPLE_SKIPPED_INIT_CAPS (3 + SIMPLE_SKIP_THREADSC + SIMPLE_SKIP_SMMU_CAPS + SIMPLE_SKIP_SMC)
 
 /* Request a cap to a specific IRQ number on the system
  *

@@ -15,7 +15,7 @@
 #include <vka/cspacepath_t.h>
 
 /* Simple does not address initial null caps, including seL4_CapNull
- * seL4_CapSMMUSIDControl, seL4_CapSMMUCBControl are null on x86 */
+ * seL4_CapSMMUSIDControl, seL4_CapSMMUCBControl, seL4_CapSMC are null on x86 */
 #ifdef CONFIG_IOMMU
 #define SIMPLE_SKIP_IOSPACE 0
 #else
@@ -29,7 +29,7 @@
 #define SIMPLE_SKIP_THREADSC 1
 #endif
 
-#define SIMPLE_SKIPPED_INIT_CAPS (3 + SIMPLE_SKIP_IOSPACE + SIMPLE_SKIP_THREADSC)
+#define SIMPLE_SKIPPED_INIT_CAPS (4 + SIMPLE_SKIP_IOSPACE + SIMPLE_SKIP_THREADSC)
 
 /**
  * Request a cap to the IOPorts

@@ -62,6 +62,9 @@ struct env {
 #ifdef CONFIG_TK1_SMMU
     seL4_SlotRegion io_space_caps;
 #endif
+#ifdef CONFIG_ALLOW_SMC_CALLS
+    seL4_CPtr smc_cap;
+#endif
     seL4_Word cores;
     seL4_CPtr domain;
     seL4_CPtr device_frame;

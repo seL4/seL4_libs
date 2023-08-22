@@ -26,7 +26,7 @@ seL4_Error simple_default_get_irq_trigger(void *data, int irq, int trigger, UNUS
     return seL4_IRQControl_GetTrigger(seL4_CapIRQControl, irq, trigger, root, index, depth);
 }
 
-void simple_default_init_arch_simple(arch_simple_t *simple, void *data) 
+void simple_default_init_arch_simple(arch_simple_t *simple, void *data)
 {
     simple->data = data;
     simple->irq = simple_default_get_irq;

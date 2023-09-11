@@ -140,10 +140,10 @@ static void *sel4platsupport_map_paddr_with_page_size(sel4platsupport_io_mapper_
     uintptr_t offset = paddr - start;
     size += offset;
 
-    io_mapping_t *mapping = new_node(BYTES_TO_SIZE_BITS_PAGES(size, page_size_bits));
-    assert(mapping->num_pages << page_size_bits >= size);
+    size_t num_pages = BYTES_TO_SIZE_BITS_PAGES(size, page_size_bits);
+    io_mapping_t *mapping = new_node(num_pages);
     if (!mapping) {
-        ZF_LOGE("Failed to allocate node for %zu pages", mapping->num_pages);
+        ZF_LOGE("Failed to allocate node for %zu pages", num_pages);
         return NULL;
     }
     mapping->page_size_bits = page_size_bits;

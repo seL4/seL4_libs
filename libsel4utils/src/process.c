@@ -267,12 +267,8 @@ int sel4utils_spawn_process(sel4utils_process_t *process, vka_t *vka, vspace_t *
 int sel4utils_spawn_process_v(sel4utils_process_t *process, vka_t *vka, vspace_t *vspace, int argc,
                               char *argv[], int resume)
 {
-    /* define an envp and auxp */
-    int error;
-    int envc = 0;
-    char *envp[] = {};
-
     uintptr_t initial_stack_pointer = (uintptr_t) process->thread.stack_top - sizeof(seL4_Word);
+    int error;
 
     /* Copy the elf headers */
     uintptr_t at_phdr;
@@ -307,7 +303,6 @@ int sel4utils_spawn_process_v(sel4utils_process_t *process, vka_t *vka, vspace_t
     seL4_UserContext context = {0};
 
     uintptr_t dest_argv[argc];
-    uintptr_t dest_envp[envc];
 
     /* write all the strings into the stack */
     /* Copy over the user arguments */
@@ -316,18 +311,11 @@ int sel4utils_spawn_process_v(sel4utils_process_t *process, vka_t *vka, vspace_t
         return -1;
     }
 
-    /* copy the environment */
-    error = sel4utils_stack_copy_args(vspace, &process->vspace, vka, envc, envp, dest_envp, &initial_stack_pointer);
-    if (error) {
-        return -1;
-    }
-
     /* we need to make sure the stack is aligned to a double word boundary after we push on everything else
      * below this point. First, work out how much we are going to push */
     size_t to_push = 5 * sizeof(seL4_Word) + /* constants */
                      sizeof(auxv[0]) * auxc + /* aux */
-                     sizeof(dest_argv) + /* args */
-                     sizeof(dest_envp); /* env */
+                     sizeof(dest_argv); /* args */
     uintptr_t hypothetical_stack_pointer = initial_stack_pointer - to_push;
     uintptr_t rounded_stack_pointer = ALIGN_DOWN(hypothetical_stack_pointer, STACK_CALL_ALIGNMENT);
     ptrdiff_t stack_rounding = hypothetical_stack_pointer - rounded_stack_pointer;
@@ -350,11 +338,6 @@ int sel4utils_spawn_process_v(sel4utils_process_t *process, vka_t *vka, vspace_t
     }
     /* Null terminate environment */
     error = sel4utils_stack_write_constant(vspace, &process->vspace, vka, 0, &initial_stack_pointer);
-    if (error) {
-        return -1;
-    }
-    /* write environment */
-    error = sel4utils_stack_write(vspace, &process->vspace, vka, dest_envp, sizeof(dest_envp), &initial_stack_pointer);
     if (error) {
         return -1;
     }

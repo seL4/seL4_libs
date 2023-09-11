@@ -271,6 +271,7 @@ long sel4_vsyscall(long sysnum, ...)
         int index = find_sparse_syscall(sysnum);
         if (index < 0) {
             debug_error(sysnum);
+            va_end(al);
             return -ENOSYS;
         }
         syscall = sparse_syscall_table[index].syscall;
@@ -280,6 +281,7 @@ long sel4_vsyscall(long sysnum, ...)
     /* Check a syscall is implemented there */
     if (!syscall) {
         debug_error(sysnum);
+        va_end(al);
         return -ENOSYS;
     }
     /* Call it */

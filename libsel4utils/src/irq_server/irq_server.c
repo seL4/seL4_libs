@@ -148,6 +148,7 @@ static void _irq_thread_entry(irq_server_thread_t *my_thread_info, ps_irq_ops_t 
 thread_id_t irq_server_thread_new(irq_server_t *irq_server, seL4_CPtr provided_ntfn,
                                   seL4_Word usable_mask, thread_id_t id_hint)
 {
+    bool thread_created = false;
     int error;
 
     irq_server_thread_t *new_thread = NULL;
@@ -227,7 +228,7 @@ thread_id_t irq_server_thread_new(irq_server_t *irq_server, seL4_CPtr provided_n
         goto fail;
     }
 
-    bool thread_created = true;
+    thread_created = true;
 
     /* Start the thread */
     error = sel4utils_start_thread(&new_thread->thread, (void *)_irq_thread_entry,

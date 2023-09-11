@@ -338,9 +338,14 @@ irq_server_t *irq_server_new(vspace_t *vspace, vka_t *vka, seL4_Word priority,
     irq_server_t *new = NULL;
 
     error = ps_calloc(malloc_ops, 1, sizeof(irq_server_t), (void **) &new);
+    if (error) {
+        ZF_LOGE("Failed to allocate %zu bytes for irq_server", sizeof(irq_server_t));
+        return NULL;
+    }
 
     if (config_set(CONFIG_KERNEL_MCS) && vka_alloc_reply(vka, &(new->reply)) != 0) {
         ZF_LOGE("Failed to allocate reply object");
+        ps_free(malloc_ops, sizeof(irq_server_t), new);
         return NULL;
     }
 
@@ -350,6 +355,8 @@ irq_server_t *irq_server_new(vspace_t *vspace, vka_t *vka, seL4_Word priority,
     error = sel4platsupport_new_irq_ops(&(new->irq_ops), vka, simple, irq_config, malloc_ops);
     if (error) {
         ZF_LOGE("Failed to initialise supporting backend for IRQ server");
+        vka_free_object(vka, &(new->reply));
+        ps_free(malloc_ops, sizeof(irq_server_t), new);
         return NULL;
     }
 

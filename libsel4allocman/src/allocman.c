@@ -48,17 +48,21 @@ static inline void _end_operation(allocman_t *alloc, int root)
     }
 }
 
-static void allocman_mspace_queue_for_free(allocman_t *alloc, void *ptr, size_t bytes) {
+static void allocman_mspace_queue_for_free(allocman_t *alloc, void *ptr, size_t bytes)
+{
     if (alloc->num_freed_mspace_chunks == alloc->desired_freed_mspace_chunks) {
         assert(!"Out of space to store free'd objects. Leaking memory");
         return;
     }
     alloc->freed_mspace_chunks[alloc->num_freed_mspace_chunks] =
-        (struct allocman_freed_mspace_chunk) {ptr, bytes};
+    (struct allocman_freed_mspace_chunk) {
+        ptr, bytes
+    };
     alloc->num_freed_mspace_chunks++;
 }
 
-static void allocman_cspace_queue_for_free(allocman_t *alloc, const cspacepath_t *path) {
+static void allocman_cspace_queue_for_free(allocman_t *alloc, const cspacepath_t *path)
+{
     if (alloc->num_freed_slots == alloc->desired_freed_slots) {
         assert(!"Out of space to store free'd objects. Leaking memory");
         return;
@@ -67,13 +71,16 @@ static void allocman_cspace_queue_for_free(allocman_t *alloc, const cspacepath_t
     alloc->num_freed_slots++;
 }
 
-static void allocman_utspace_queue_for_free(allocman_t *alloc, seL4_Word cookie, size_t size_bits) {
+static void allocman_utspace_queue_for_free(allocman_t *alloc, seL4_Word cookie, size_t size_bits)
+{
     if (alloc->num_freed_utspace_chunks == alloc->desired_freed_utspace_chunks) {
         assert(!"Out of space to store free'd objects. Leaking memory");
         return;
     }
     alloc->freed_utspace_chunks[alloc->num_freed_utspace_chunks] =
-        (struct allocman_freed_utspace_chunk) {size_bits, cookie};
+    (struct allocman_freed_utspace_chunk) {
+        size_bits, cookie
+    };
     alloc->num_freed_utspace_chunks++;
 }
 
@@ -135,7 +142,8 @@ static int _try_watermark_cspace(allocman_t *alloc, cspacepath_t *slot)
     return 0;
 }
 
-static seL4_Word _try_watermark_utspace(allocman_t *alloc, size_t size_bits, seL4_Word type, const cspacepath_t *path, int *_error)
+static seL4_Word _try_watermark_utspace(allocman_t *alloc, size_t size_bits, seL4_Word type, const cspacepath_t *path,
+                                        int *_error)
 {
     size_t i;
 
@@ -255,14 +263,15 @@ static int _allocman_cspace_alloc(allocman_t *alloc, cspacepath_t *slot, int use
     }
 }
 
-static seL4_Word _allocman_utspace_alloc(allocman_t *alloc, size_t size_bits, seL4_Word type, const cspacepath_t *path, uintptr_t paddr, bool canBeDev, int *_error, int use_watermark)
+static seL4_Word _allocman_utspace_alloc(allocman_t *alloc, size_t size_bits, seL4_Word type, const cspacepath_t *path,
+                                         uintptr_t paddr, bool canBeDev, int *_error, int use_watermark)
 {
     int root_op;
     int error;
     seL4_Word ret;
     /* see if we have an allocator installed yet*/
     if (!alloc->have_utspace) {
-        SET_ERROR(_error,1);
+        SET_ERROR(_error, 1);
         return 0;
     }
     /* Check that we are permitted to utspace_alloc here */
@@ -314,7 +323,8 @@ int allocman_cspace_alloc(allocman_t *alloc, cspacepath_t *slot)
     return _allocman_cspace_alloc(alloc, slot, 1);
 }
 
-seL4_Word allocman_utspace_alloc_at(allocman_t *alloc, size_t size_bits, seL4_Word type, const cspacepath_t *path, uintptr_t paddr, bool canBeDev, int *_error)
+seL4_Word allocman_utspace_alloc_at(allocman_t *alloc, size_t size_bits, seL4_Word type, const cspacepath_t *path,
+                                    uintptr_t paddr, bool canBeDev, int *_error)
 {
     return _allocman_utspace_alloc(alloc, size_bits, type, path, paddr, canBeDev, _error, 1);
 }
@@ -379,7 +389,8 @@ static int _refill_watermark(allocman_t *alloc)
                 error = allocman_cspace_alloc(alloc, &slot);
                 if (!error) {
                     /* Now try to allocate */
-                    cookie = _allocman_utspace_alloc(alloc, alloc->utspace_chunk[i].size_bits, alloc->utspace_chunk[i].type, &slot, ALLOCMAN_NO_PADDR, false, &error, 0);
+                    cookie = _allocman_utspace_alloc(alloc, alloc->utspace_chunk[i].size_bits, alloc->utspace_chunk[i].type, &slot,
+                                                     ALLOCMAN_NO_PADDR, false, &error, 0);
                     if (!error) {
                         alloc->utspace_chunks[i][alloc->utspace_chunk_count[i]].cookie = cookie;
                         alloc->utspace_chunks[i][alloc->utspace_chunk_count[i]].slot = slot;
@@ -414,7 +425,8 @@ static int _refill_watermark(allocman_t *alloc)
     return found_empty_pool;
 }
 
-int allocman_create(allocman_t *alloc, struct mspace_interface mspace) {
+int allocman_create(allocman_t *alloc, struct mspace_interface mspace)
+{
     /* zero out the struct */
     memset(alloc, 0, sizeof(allocman_t));
 
@@ -449,15 +461,18 @@ int allocman_fill_reserves(allocman_t *alloc) {
     return 0; \
 }while(0)
 
-int allocman_attach_utspace(allocman_t *alloc, struct utspace_interface utspace) {
+int allocman_attach_utspace(allocman_t *alloc, struct utspace_interface utspace)
+{
     ALLOCMAN_ATTACH(alloc, utspace, utspace);
 }
 
-int allocman_attach_cspace(allocman_t *alloc, struct cspace_interface cspace) {
+int allocman_attach_cspace(allocman_t *alloc, struct cspace_interface cspace)
+{
     ALLOCMAN_ATTACH(alloc, cspace, cspace);
 }
 
-static int resize_array(allocman_t *alloc, size_t num, void **array, size_t *size, size_t *count, size_t item_size) {
+static int resize_array(allocman_t *alloc, size_t num, void **array, size_t *size, size_t *count, size_t item_size)
+{
     int root = _start_operation(alloc);
     void *new_array;
     int error;
@@ -490,27 +505,35 @@ static int resize_array(allocman_t *alloc, size_t num, void **array, size_t *siz
     return error;
 }
 
-static int resize_slots_array(allocman_t *alloc, size_t num, cspacepath_t **slots, size_t *size, size_t *count) {
+static int resize_slots_array(allocman_t *alloc, size_t num, cspacepath_t **slots, size_t *size, size_t *count)
+{
     return resize_array(alloc, num, (void**)slots, size, count, sizeof(cspacepath_t));
 }
 
-int allocman_configure_cspace_reserve(allocman_t *alloc, size_t num) {
+int allocman_configure_cspace_reserve(allocman_t *alloc, size_t num)
+{
     return resize_slots_array(alloc, num, &alloc->cspace_slots, &alloc->desired_cspace_slots, &alloc->num_cspace_slots);
 }
 
-int allocman_configure_max_freed_slots(allocman_t *alloc, size_t num) {
+int allocman_configure_max_freed_slots(allocman_t *alloc, size_t num)
+{
     return resize_slots_array(alloc, num, &alloc->freed_slots, &alloc->desired_freed_slots, &alloc->num_freed_slots);
 }
 
-int  allocman_configure_max_freed_memory_chunks(allocman_t *alloc, size_t num) {
-    return resize_array(alloc, num, (void**)&alloc->freed_mspace_chunks, &alloc->desired_freed_mspace_chunks, &alloc->num_freed_mspace_chunks, sizeof(struct allocman_freed_mspace_chunk));
+int  allocman_configure_max_freed_memory_chunks(allocman_t *alloc, size_t num)
+{
+    return resize_array(alloc, num, (void**)&alloc->freed_mspace_chunks, &alloc->desired_freed_mspace_chunks,
+                        &alloc->num_freed_mspace_chunks, sizeof(struct allocman_freed_mspace_chunk));
 }
 
-int  allocman_configure_max_freed_untyped_chunks(allocman_t *alloc, size_t num) {
-    return resize_array(alloc, num, (void**)&alloc->freed_utspace_chunks, &alloc->desired_freed_utspace_chunks, &alloc->num_freed_utspace_chunks, sizeof(struct allocman_freed_utspace_chunk));
+int  allocman_configure_max_freed_untyped_chunks(allocman_t *alloc, size_t num)
+{
+    return resize_array(alloc, num, (void**)&alloc->freed_utspace_chunks, &alloc->desired_freed_utspace_chunks,
+                        &alloc->num_freed_utspace_chunks, sizeof(struct allocman_freed_utspace_chunk));
 }
 
-int allocman_configure_utspace_reserve(allocman_t *alloc, struct allocman_utspace_chunk chunk) {
+int allocman_configure_utspace_reserve(allocman_t *alloc, struct allocman_utspace_chunk chunk)
+{
     int root = _start_operation(alloc);
     size_t i;
     struct allocman_utspace_chunk *new_chunk;
@@ -522,14 +545,16 @@ int allocman_configure_utspace_reserve(allocman_t *alloc, struct allocman_utspac
      * icnreasing reservations, but I cannot see the use case for that */
     for (i = 0; i < alloc->num_utspace_chunks; i++) {
         if (alloc->utspace_chunk[i].size_bits == chunk.size_bits && alloc->utspace_chunk[i].type == chunk.type) {
-            ZF_LOGE("Failed to set reserve for {type: %d size_bits: %d} as one already exists.", chunk.type, chunk.size_bits);
+            ZF_LOGE("Failed to set reserve for {type: %"SEL4_PRIu_word" size_bits: %zu} as one already exists.", chunk.type,
+                    chunk.size_bits);
             ZF_LOGE("Ignoring this could cause the allocator to break in hard-to-identify ways.");
             error = 1;
             goto exit;
         }
     }
     /* tack this chunk on */
-    new_chunk = allocman_mspace_alloc(alloc, sizeof(struct allocman_utspace_chunk) * (alloc->num_utspace_chunks + 1), &error);
+    new_chunk = allocman_mspace_alloc(alloc, sizeof(struct allocman_utspace_chunk) * (alloc->num_utspace_chunks + 1),
+                                      &error);
     if (error) {
         goto exit;
     }
@@ -538,7 +563,8 @@ int allocman_configure_utspace_reserve(allocman_t *alloc, struct allocman_utspac
         allocman_mspace_free(alloc, new_chunk, sizeof(struct allocman_utspace_chunk) * (alloc->num_utspace_chunks + 1));
         goto exit;
     }
-    new_chunks = allocman_mspace_alloc(alloc, sizeof(struct allocman_utspace_allocation *) * (alloc->num_utspace_chunks + 1), &error);
+    new_chunks = allocman_mspace_alloc(alloc,
+                                       sizeof(struct allocman_utspace_allocation *) * (alloc->num_utspace_chunks + 1), &error);
     if (error) {
         allocman_mspace_free(alloc, new_chunk, sizeof(struct allocman_utspace_chunk) * (alloc->num_utspace_chunks + 1));
         allocman_mspace_free(alloc, new_counts, sizeof(size_t) * (alloc->num_utspace_chunks + 1));
@@ -557,7 +583,8 @@ int allocman_configure_utspace_reserve(allocman_t *alloc, struct allocman_utspac
         memcpy(new_chunks, alloc->utspace_chunks, sizeof(struct allocman_utspace_allocation *) * alloc->num_utspace_chunks);
         allocman_mspace_free(alloc, alloc->utspace_chunk, sizeof(struct allocman_utspace_chunk) * alloc->num_utspace_chunks);
         allocman_mspace_free(alloc, alloc->utspace_chunk_count, sizeof(size_t) * alloc->num_utspace_chunks);
-        allocman_mspace_free(alloc, alloc->utspace_chunks, sizeof(struct allocman_utspace_allocation *) * alloc->num_utspace_chunks);
+        allocman_mspace_free(alloc, alloc->utspace_chunks,
+                             sizeof(struct allocman_utspace_allocation *) * alloc->num_utspace_chunks);
     }
     new_chunk[alloc->num_utspace_chunks] = chunk;
     new_counts[alloc->num_utspace_chunks] = 0;
@@ -572,7 +599,8 @@ exit:
     return error;
 }
 
-int allocman_configure_mspace_reserve(allocman_t *alloc, struct allocman_mspace_chunk chunk) {
+int allocman_configure_mspace_reserve(allocman_t *alloc, struct allocman_mspace_chunk chunk)
+{
     int root = _start_operation(alloc);
     size_t i;
     struct allocman_mspace_chunk *new_chunk;
@@ -584,7 +612,7 @@ int allocman_configure_mspace_reserve(allocman_t *alloc, struct allocman_mspace_
      * icnreasing reservations, but I cannot see the use case for that */
     for (i = 0; i < alloc->num_mspace_chunks; i++) {
         if (alloc->mspace_chunk[i].size == chunk.size) {
-            ZF_LOGE("Failed to set reserve for {size: %d} as one already exists.", chunk.size);
+            ZF_LOGE("Failed to set reserve for {size: %zu} as one already exists.", chunk.size);
             ZF_LOGE("Ignoring this could cause the allocator to break in hard-to-identify ways.");
             error = 1;
             goto exit;
@@ -640,8 +668,8 @@ int allocman_add_untypeds_from_timer_objects(allocman_t *alloc, timer_objects_t 
     for (size_t i = 0; i < to->nobjs; i++) {
         cspacepath_t path = allocman_cspace_make_path(alloc, to->objs[i].obj.cptr);
         error = allocman_utspace_add_uts(alloc, 1, &path, &to->objs[i].obj.size_bits,
-                                        (uintptr_t *) &to->objs[i].region.base_addr,
-                                        ALLOCMAN_UT_DEV);
+                                         (uintptr_t *) &to->objs[i].region.base_addr,
+                                         ALLOCMAN_UT_DEV);
         if (error) {
             ZF_LOGE("Failed to add ut to allocman");
             return error;

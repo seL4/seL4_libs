@@ -22,7 +22,7 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
-  cparser:
+  simulation:
     name: Simulation
     runs-on: ubuntu-latest
     strategy:

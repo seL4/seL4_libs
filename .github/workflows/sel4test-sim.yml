@@ -13,6 +13,14 @@ on:
     branches: [master]
   pull_request:
 
+
+# Cancel older runs of this workflow that are still not finished for the
+# current PR. This reduces the CI load. For deployment to the master branch,
+# the workflow will run on each push, but no cancellation happens here.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.number) || format('run-{0}', github.run_id) }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   cparser:
     name: Simulation

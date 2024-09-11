@@ -93,18 +93,19 @@ static inline seL4_MessageInfo_t api_nbsend_wait(UNUSED seL4_CPtr send, UNUSED s
 #endif
 }
 
-static inline seL4_Error api_tcb_configure(seL4_CPtr tcb, seL4_CPtr ep, UNUSED seL4_CPtr timeout_ep,
-                                           UNUSED seL4_CPtr sc, seL4_CPtr cspace,
-                                           seL4_Word cdata, seL4_CPtr vspace, seL4_Word vdata,
+static inline seL4_Error api_tcb_configure(seL4_CPtr tcb, seL4_CPtr ep, UNUSED seL4_Word epdata,
+                                           UNUSED seL4_CapRights_t eprights, UNUSED seL4_CPtr timeout_ep,
+                                           UNUSED seL4_Word tfdata, UNUSED seL4_CapRights_t tfrights, UNUSED seL4_CPtr sc,
+                                           seL4_CPtr cspace, seL4_Word cdata, seL4_CPtr vspace, seL4_Word vdata,
                                            seL4_Word ipc_buffer_addr, seL4_CPtr ipc_buffer_cap)
 {
 #ifdef CONFIG_KERNEL_MCS
-    seL4_Error error = seL4_TCB_SetSpace(tcb, ep, cspace, cdata, vspace, vdata);
+    seL4_Error error = seL4_TCB_SetSpace(tcb, ep, epdata, eprights, cspace, cdata, vspace, vdata);
     if (!error) {
         error = seL4_TCB_SetIPCBuffer(tcb, ipc_buffer_addr, ipc_buffer_cap);
     }
     if (!error) {
-        error = seL4_TCB_SetTimeoutEndpoint(tcb, timeout_ep);
+        error = seL4_TCB_SetTimeoutEndpoint(tcb, timeout_ep, tfdata, tfrights);
     }
     if (!error && sc != seL4_CapNull) {
         error = seL4_SchedContext_Bind(sc, tcb);
@@ -117,21 +118,26 @@ static inline seL4_Error api_tcb_configure(seL4_CPtr tcb, seL4_CPtr ep, UNUSED s
 }
 
 static inline seL4_Error api_tcb_set_sched_params(seL4_CPtr tcb, seL4_CPtr auth, seL4_Word prio,
-                                                  seL4_Word mcp, UNUSED seL4_CPtr sc, UNUSED seL4_CPtr ep)
+                                                  seL4_Word mcp, UNUSED seL4_CPtr sc, UNUSED seL4_CPtr ep,
+                                                  UNUSED seL4_Word epdata, UNUSED seL4_CapRights_t eprights)
 {
 #ifdef CONFIG_KERNEL_MCS
-    return seL4_TCB_SetSchedParams(tcb, auth, mcp, prio, sc, ep);
+    return seL4_TCB_SetSchedParams(tcb, auth, mcp, prio, sc, ep, epdata, eprights);
 #else
     return seL4_TCB_SetSchedParams(tcb, auth, mcp, prio);
 #endif
 
 }
 
-static inline seL4_Error api_tcb_set_space(seL4_CPtr tcb, seL4_CPtr ep,
-                                           seL4_CPtr cspace,
+static inline seL4_Error api_tcb_set_space(seL4_CPtr tcb, seL4_CPtr ep, seL4_Word epdata,
+                                           seL4_CapRights_t eprights, seL4_CPtr cspace,
                                            seL4_Word cdata, seL4_CPtr vspace, seL4_Word vdata)
 {
+#ifdef CONFIG_KERNEL_MCS
+    return seL4_TCB_SetSpace(tcb, ep, epdata, eprights, cspace, cdata, vspace, vdata);
+#else
     return seL4_TCB_SetSpace(tcb, ep, cspace, cdata, vspace, vdata);
+#endif
 }
 
 static inline seL4_Error api_sc_bind(UNUSED seL4_CPtr sc, UNUSED seL4_CPtr tcb)

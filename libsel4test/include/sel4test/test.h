@@ -96,10 +96,17 @@ typedef struct test_type {
     test_result_t (*run_test)(struct testcase *test, uintptr_t e);
 } ALIGN(32) test_type_t;
 
+#if defined(__has_attribute) && __has_attribute(retain)
+#define ATTR_USED_RETAIN __attribute__((used,retain))
+#else
+#define ATTR_USED_RETAIN __attribute__((used))
+#endif
+
 /* Declare a test type.
  * For now, we put the test types in a separate elf section. */
 #define DEFINE_TEST_TYPE(_name, _id, _set_up_test_type, _tear_down_test_type, _set_up, _tear_down, _run_test) \
-    __attribute__((used)) __attribute__((section("_test_type"))) struct test_type TEST_TYPE_ ##_name = { \
+    ATTR_USED_RETAIN __attribute__((section("_test_type"))) \
+    struct test_type TEST_TYPE_ ##_name = { \
     .name = #_name, \
     .id = _id, \
     .set_up_test_type = _set_up_test_type, \
@@ -134,7 +141,8 @@ typedef struct testcase ALIGN(sizeof(struct testcase)) testcase_t;
  * that it is accepted by C++ compilers.
  */
 #define DEFINE_TEST_WITH_TYPE(_name, _description, _function, _test_type, _enabled) \
-    __attribute__((used)) __attribute__((section("_test_case"))) struct testcase TEST_ ## _name = { \
+    ATTR_USED_RETAIN __attribute__((section("_test_case"))) \
+    struct testcase TEST_ ## _name = { \
     #_name, \
     _description, \
     (test_fn)_function, \

@@ -268,8 +268,12 @@ static void __serial_setup()
     case NOT_INITIALIZED:
 #ifdef CONFIG_LIB_SEL4_PLAT_SUPPORT_USE_SEL4_DEBUG_PUTCHAR
         setup_status = SETUP_COMPLETE;
-        printf("\nWarning: using printf before serial is set up. This only works as your\n");
-        printf("printf is backed by seL4_Debug_PutChar()\n");
+        /*
+         * Don't call any stdio functions here, it will cause unexpected recursion
+         * that will mess up the internal file buffer!
+         */
+        seL4_DebugPutString("\nWarning: using printf before serial is set up. This only works as your\n"
+                            "printf is backed by seL4_Debug_PutChar()\n");
         started_regular = 1;
 #else
         /* attempt failsafe initialization and print something out */

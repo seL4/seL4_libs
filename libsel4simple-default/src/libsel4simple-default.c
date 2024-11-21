@@ -71,6 +71,9 @@ int simple_default_cap_count(void *data)
            + (bi->userImageFrames.end - bi->userImageFrames.start)
            + (bi->userImagePaging.end - bi->userImagePaging.start)
            + (bi->untyped.end - bi->untyped.start)
+#ifdef CONFIG_KERNEL_MCS
+           + (bi->schedcontrol.end - bi->schedcontrol.start)
+#endif
            + SIMPLE_NUM_INIT_CAPS; //Include all the init caps
 }
 
@@ -83,6 +86,9 @@ seL4_CPtr simple_default_nth_cap(void *data, int n)
     size_t user_img_frame_range = bi->userImageFrames.end - bi->userImageFrames.start + shared_frame_range;
     size_t user_img_paging_range = bi->userImagePaging.end - bi->userImagePaging.start + user_img_frame_range;
     size_t untyped_range = bi->untyped.end - bi->untyped.start + user_img_paging_range;
+#ifdef CONFIG_KERNEL_MCS
+    size_t sched_ctrl_range = bi->schedcontrol.end - bi->schedcontrol.start + untyped_range;
+#endif
 
     seL4_CPtr true_return = seL4_CapNull;
 
@@ -128,6 +134,10 @@ seL4_CPtr simple_default_nth_cap(void *data, int n)
         return bi->userImagePaging.start + (n - user_img_frame_range);
     } else if (n < untyped_range) {
         return bi->untyped.start + (n - user_img_paging_range);
+#ifdef CONFIG_KERNEL_MCS
+    } else if (n < sched_ctrl_range) {
+        return bi->schedcontrol.start + (n - untyped_range);
+#endif
     }
 
     return true_return;

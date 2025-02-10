@@ -428,11 +428,8 @@ static int safe_addition(int a, int b)
            !(a < 0 && b < INT_MAX - a);
 }
 
-long sys_lseek(va_list ap)
+long sys_lseek_impl(int fd, off_t offset, int whence)
 {
-    int fd = va_arg(ap, int);
-    off_t offset = va_arg(ap, off_t);
-    int whence = va_arg(ap, int);
 
     if (!valid_fd(fd)) {
         return -EBADF;
@@ -486,7 +483,14 @@ long sys_lseek(va_list ap)
     return new_offset;
 }
 
-long syscall(long n, ...);
+long sys_lseek(va_list ap)
+{
+    int fd = va_arg(ap, int);
+    off_t offset = va_arg(ap, off_t);
+    int whence = va_arg(ap, int);
+    return sys_lseek_impl(fd, offset, whence);
+}
+
 
 long sys__llseek(va_list ap)
 {
@@ -495,17 +499,9 @@ long sys__llseek(va_list ap)
     uint32_t offset_low = va_arg(ap, uint32_t);
     off_t *result = va_arg(ap, off_t *);
     int whence = va_arg(ap, int);
-    /* need to directly call syscall to prevent circular call to this function. the llseek function
-     * is used when off_t is a 64bit type (see the lseek definition in muslc), Underneath the
-     * hood all syscall arguments get cast to a 32bit long before the actual syscall function
-     * gets called. This makes calling the old lseek syscall awkward as it will attempt to pull
-     * a 64bit off_t off its syscall args, but we had all our arguments forced down to 32bits
-     * before they got passed over. Therefore we can actually just pass the high and low
-     * and everything will work. Assumptions on endianess */
-    long ret = syscall(SYS_lseek, fd, (uint32_t)offset_low, (uint32_t)offset_high, whence);
-    if (ret == -1) {
-        /* propogate error up. see __syscall_ret to understand */
-        return -errno;
+    long ret = sys_lseek_impl(fd, ((uint64_t)offset_high << 32) | (uint64_t)offset_low, whence);
+    if (ret < 0) {
+        return ret;
     }
     if (result) {
         *result = (off_t)ret;

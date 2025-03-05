@@ -63,6 +63,10 @@ long sys_brk(va_list ap)
    here to support that. We make a bunch of assumptions in the process */
 long sys_mmap_impl(void *addr, size_t length, int prot, int flags, int fd, off_t offset)
 {
+    if (length == 0) {
+        // It is an error to request a length 0 in most mmap specs.
+        return -EINVAL;
+    }
     if (flags & MAP_ANONYMOUS) {
         /* Check that we don't try and allocate more than exists */
         if (length > morecore_top - morecore_base) {
@@ -228,6 +232,10 @@ static long sys_mmap_impl_dynamic(void *addr, size_t length, int prot, int flags
 
 long sys_mmap_impl(void *addr, size_t length, int prot, int flags, int fd, off_t offset)
 {
+    if (length == 0) {
+        // It is an error to request a length 0 in most mmap specs.
+        return -EINVAL;
+    }
     if (morecore_area != NULL) {
         return sys_mmap_impl_static(addr, length, prot, flags, fd, offset);
     } else if (muslc_this_vspace != NULL) {

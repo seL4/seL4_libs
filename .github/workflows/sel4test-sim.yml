@@ -9,28 +9,13 @@
 name: seL4Test
 
 on:
-  push:
-    branches: [master]
   pull_request:
-
-
-# Cancel older runs of this workflow that are still not finished for the
-# current PR. This reduces the CI load. For deployment to the master branch,
-# the workflow will run on each push, but no cancellation happens here.
-concurrency:
-  group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.number) || format('run-{0}', github.run_id) }}
-  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+    paths-ignore:
+      - 'LICENSES/**'
+      - '*.md'
+  workflow_dispatch:
 
 jobs:
-  simulation:
-    name: Simulation
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        march: [armv7a, armv8a, nehalem, rv32imac, rv64imac]
-        compiler: [gcc, clang]
-    steps:
-    - uses: seL4/ci-actions/sel4test-sim@master
-      with:
-        march: ${{ matrix.march }}
-        compiler: ${{ matrix.compiler }}
+  sim:
+    name: Sim
+    uses: seL4/ci-actions/.github/workflows/sel4test-sim.yml@master

@@ -26,11 +26,12 @@ static inline void seL4_BenchmarkTraceDumpFullLog(benchmark_tracepoint_log_entry
 
     while ((index * sizeof(benchmark_tracepoint_log_entry_t)) < logSize) {
         if (logBuffer[index].duration != 0) {
-            fprintf(fd, "tracepoint id = %u \tduration = %u\n", logBuffer[index].id, logBuffer[index].duration);
+            fprintf(fd, "tracepoint id = %"SEL4_PRIu_word" \tduration = %"SEL4_PRIu_word"\n",
+                    logBuffer[index].id, logBuffer[index].duration);
         }
         index++;
     }
 
-    fprintf(fd, "Dumped entire log, size %" PRIu32 "\n", index);
+    fprintf(fd, "Dumped entire log, size %"SEL4_PRIu_word"\n", index);
 }
 #endif /* CONFIG_BENCHMARK_TRACEPOINTS */

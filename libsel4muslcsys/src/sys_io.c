@@ -21,6 +21,7 @@
 #include <sys/resource.h>
 #include <sys/mman.h>
 #include <sys/uio.h>
+#include <sys/stat.h>
 
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -258,6 +259,28 @@ long sys_close(va_list ap)
     return 0;
 }
 
+long sys_fstat(va_list ap)
+{
+    int fd = va_arg(ap, int);
+    struct stat *statbuf = va_arg(ap, struct stat *);
+
+    if (fd == STDIN_FILENO || fd == STDOUT_FILENO || fd == STDERR_FILENO) {
+        memset(statbuf, 0, sizeof(struct stat));
+
+        if (fd == STDIN_FILENO) {
+            statbuf->st_mode = S_IRUSR;
+        } else {
+            statbuf->st_mode = S_IWUSR;
+        }
+
+        return 0;
+    } else if (valid_fd(fd)) {
+        assert(!"not implemented");
+        return -EBADF;
+    } else {
+        return -EBADF;
+    }
+}
 
 static write_buf_fn stdio_write = sys_platform_write;
 

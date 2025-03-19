@@ -134,6 +134,7 @@ static muslcsys_syscall_t syscall_table[MUSLC_NUM_SYSCALLS] = {
     [__NR_openat] = sys_openat,
 #endif
     [__NR_close] = sys_close,
+    [__NR_fstat] = sys_fstat,
     [__NR_readv] = sys_readv,
     [__NR_read] = sys_read,
     [__NR_ioctl] = sys_ioctl,

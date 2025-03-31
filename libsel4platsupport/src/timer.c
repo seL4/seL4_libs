@@ -146,6 +146,7 @@ int sel4platsupport_init_default_timer_ops(vka_t *vka, UNUSED vspace_t *vspace, 
         return EINVAL;
     }
 
+#ifndef CONFIG_LIB_PLAT_SUPPORT_NO_PLATFORM_LTIMER
     error = ltimer_default_describe(&timer->ltimer, ops);
 
     if (!error) {
@@ -162,6 +163,10 @@ int sel4platsupport_init_default_timer_ops(vka_t *vka, UNUSED vspace_t *vspace, 
     if (!error)  {
         error = ltimer_default_init(&timer->ltimer, ops, NULL, NULL);
     }
+#else
+    error = ENOSYS;
+#endif
+
     return error;
 }
 
@@ -209,11 +214,15 @@ int sel4platsupport_init_default_timer_caps(vka_t *vka, vspace_t *vspace, simple
 
     /* Allocate timer irqs. */
     ltimer_t ltimer;
+#ifndef CONFIG_LIB_PLAT_SUPPORT_NO_PLATFORM_LTIMER
     error = ltimer_default_describe(&ltimer, ops);
     if (error) {
         ZF_LOGE("Failed to describe default timer");
         return error;
     }
+#else
+    return ENOSYS;
+#endif /* CONFIG_LIB_PLAT_SUPPORT_NO_PLATFORM_LTIMER */
 
     /* set up the irq caps the timer needs */
     size_t nirqs = get_nirqs(&ltimer);

@@ -21,11 +21,12 @@
 #include <sys/resource.h>
 #include <sys/mman.h>
 #include <sys/uio.h>
-#include <sys/stat.h>
 
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <bits/syscall.h>
+
+#include "kstat.h"
 
 #include <sel4utils/util.h>
 
@@ -262,10 +263,10 @@ long sys_close(va_list ap)
 long sys_fstat(va_list ap)
 {
     int fd = va_arg(ap, int);
-    struct stat *statbuf = va_arg(ap, struct stat *);
+    struct kstat *statbuf = va_arg(ap, struct kstat *);
 
     if (fd == STDIN_FILENO || fd == STDOUT_FILENO || fd == STDERR_FILENO) {
-        memset(statbuf, 0, sizeof(struct stat));
+        memset(statbuf, 0, sizeof(struct kstat));
 
         if (fd == STDIN_FILENO) {
             statbuf->st_mode = S_IRUSR;

@@ -96,7 +96,7 @@ typedef struct test_type {
     test_result_t (*run_test)(struct testcase *test, uintptr_t e);
 } ALIGN(32) test_type_t;
 
-#if defined(__has_attribute) && __has_attribute(retain)
+#if defined(__has_attribute) && __has_attribute(retain) && defined(__clang__)
 #define ATTR_USED_RETAIN __attribute__((used,retain))
 #else
 #define ATTR_USED_RETAIN __attribute__((used))

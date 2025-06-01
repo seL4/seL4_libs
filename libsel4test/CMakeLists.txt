@@ -38,6 +38,12 @@ file(GLOB deps src/*.c)
 list(SORT deps)
 
 add_library(sel4test STATIC EXCLUDE_FROM_ALL ${deps})
+if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
+    target_compile_definitions(sel4test PUBLIC "LIBSEL4TEST_ATTR_RETAIN=__attribute__((used,retain))")
+else()
+    target_compile_definitions(sel4test PUBLIC "LIBSEL4TEST_ATTR_RETAIN=__attribute__((used))")
+endif()
+
 target_include_directories(sel4test PUBLIC include)
 target_link_libraries(
     sel4test

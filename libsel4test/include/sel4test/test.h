@@ -256,10 +256,12 @@ static inline void print_error_in_ipc(seL4_Error e)
              test_op_type(_a, _b, op, "%llu", a, b, unsigned long long); \
          } else if (TYPES_COMPATIBLE(typeof(_a), char)) {\
              test_op_type(_a, _b, op, "%c", a, b, char); \
+         } else if (TYPES_COMPATIBLE(typeof(_a), unsigned char)) {\
+             test_op_type(_a, _b, op, "%c", a, b, unsigned char); \
          } else if (TYPES_COMPATIBLE(typeof(_a), uintptr_t)) {\
              test_op_type(_a, _b, op, "0x%" PRIxPTR, a, b, uintptr_t);\
          } else { \
-             _test_error("Cannot use test_op on this type", __FILE__, __LINE__);\
+             _test_abort("Cannot use test_op on this type", __FILE__, __LINE__);\
          }\
     } while (0)
 

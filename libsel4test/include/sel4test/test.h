@@ -240,14 +240,9 @@ static inline void print_error_in_ipc(seL4_Error e)
     do { \
          typeof (a) _a = (a); \
          typeof (b) _b = (b); \
-         if (sizeof(_a) != sizeof(_b)) { \
-             int len = snprintf(NULL, 0, "%s (size %zu) != %s (size %zu), use of test_eq incorrect", #a,\
-                     sizeof(_a), #b, sizeof(_b)) + 1;\
-             char buffer[len];\
-             snprintf(buffer, len, "%s (size %zu) != %s (size %zu), use of test_eq incorrect", #a, sizeof(_a),\
-                     #b, sizeof(_b));\
-             _test_error(buffer, __FILE__, __LINE__);\
-         } else if (TYPES_COMPATIBLE(typeof(_a), int)) {\
+         _Static_assert(sizeof(_a) == sizeof(_b), \
+                        "sizeof(" #a ") does not match sizeof(" #b "), use of test_eq incorrect"); \
+         if (TYPES_COMPATIBLE(typeof(_a), int)) {\
              test_op_type(_a, _b, op, "%d", a, b, int); \
          } else if (TYPES_COMPATIBLE(typeof(_a), long)) {\
              test_op_type(_a, _b, op, "%ld", a, b, long); \
@@ -302,4 +297,3 @@ static inline void print_error_in_ipc(seL4_Error e)
 #define test_strleq(a, b) test_strop(a, b, <=)
 
 env_t sel4test_get_env(void);
-

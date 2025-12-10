@@ -78,7 +78,8 @@ static FASTFN seL4_Word sel4bench_get_num_counters()
 #ifdef CORTEX_A8
     return 4;
 #else //CORTEX_A8
-    return SEL4BENCH_ARMV7A_PMCR_N(sel4bench_private_read_pmcr());
+    // PMCR is always enabled
+    return SEL4BENCH_ARMV7A_PMCR_N(sel4bench_private_read_pmcr()) + 1;
 #endif //CORTEX_A8
 }
 

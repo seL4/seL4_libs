@@ -71,7 +71,8 @@ static FASTFN void sel4bench_destroy()
 
 static FASTFN seL4_Word sel4bench_get_num_counters()
 {
-    return SEL4BENCH_ARMV8A_PMCR_N(sel4bench_private_read_pmcr());
+    // PMCR is always enabled
+    return SEL4BENCH_ARMV8A_PMCR_N(sel4bench_private_read_pmcr()) + 1;
 }
 
 static FASTFN ccnt_t sel4bench_get_cycle_count()

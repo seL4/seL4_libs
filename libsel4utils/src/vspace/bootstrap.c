@@ -268,6 +268,9 @@ static int bootstrap_page_table(vspace_t *vspace)
     data->next_bootstrap_vaddr = VSPACE_RESERVE_START;
     /* Allocate top level paging structure */
     data->top_level = alloc_and_map(vspace, sizeof(vspace_mid_level_t));
+    if (data->top_level == NULL) {
+        return -1;
+    }
 
     /* Try and mark reserved our entire reserve region */
     if (reserve_range(vspace, VSPACE_RESERVE_START, VSPACE_RESERVE_START + VSPACE_RESERVE_SIZE)) {

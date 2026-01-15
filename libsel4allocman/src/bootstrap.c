@@ -342,6 +342,7 @@ static int bootstrap_allocate_cnode(bootstrap_info_t *bs, size_t size, cspacepat
         }
     }
     if (best == -1) {
+        LOG_ERROR("no UT big enough to allocate bootstrap cnode");
         return 1;
     }
     best_size = bs->ut_size_bits[best];

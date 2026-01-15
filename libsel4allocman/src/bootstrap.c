@@ -68,7 +68,8 @@ typedef struct add_untypeds_state {
     utspace_interface_t ut_interface;
 } add_untypeds_state_t;
 
-static void bootstrap_free_info(bootstrap_info_t *bs) {
+static void bootstrap_free_info(bootstrap_info_t *bs)
+{
     if (bs->uts) {
         allocman_mspace_free(bs->alloc, bs->uts, sizeof(cspacepath_t) * bs->num_uts);
         allocman_mspace_free(bs->alloc, bs->ut_size_bits, sizeof(size_t) * bs->num_uts);
@@ -76,7 +77,8 @@ static void bootstrap_free_info(bootstrap_info_t *bs) {
     allocman_mspace_free(bs->alloc, bs, sizeof(bootstrap_info_t));
 }
 
-allocman_t *bootstrap_create_allocman(size_t pool_size, void *pool) {
+allocman_t *bootstrap_create_allocman(size_t pool_size, void *pool)
+{
     uintptr_t cur_pool = (uintptr_t)pool;
     uintptr_t pool_top = cur_pool + pool_size;
     mspace_dual_pool_t *mspace;
@@ -85,16 +87,18 @@ allocman_t *bootstrap_create_allocman(size_t pool_size, void *pool) {
     /* first align the pool */
     cur_pool = ALIGN_UP(cur_pool, sizeof(size_t));
     /* carve off some of the pool for the allocman and memory allocator itself */
-    alloc = (allocman_t*)cur_pool;
+    alloc = (allocman_t *)cur_pool;
     cur_pool += sizeof(*alloc);
-    mspace = (mspace_dual_pool_t*)cur_pool;
+    mspace = (mspace_dual_pool_t *)cur_pool;
     cur_pool += sizeof(*mspace);
     if (cur_pool >= pool_top) {
         LOG_ERROR("Initial memory pool too small");
         return NULL;
     }
     /* create the allocator */
-    mspace_dual_pool_create(mspace, (struct mspace_fixed_pool_config){(void*)cur_pool, pool_top - cur_pool});
+    mspace_dual_pool_create(mspace, (struct mspace_fixed_pool_config) {
+        (void *)cur_pool, pool_top - cur_pool
+    });
     error = allocman_create(alloc, mspace_dual_pool_make_interface(mspace));
     if (error) {
         return NULL;
@@ -102,16 +106,18 @@ allocman_t *bootstrap_create_allocman(size_t pool_size, void *pool) {
     return alloc;
 }
 
-int bootstrap_set_boot_cspace(bootstrap_info_t *bs, cspace_interface_t cspace, cspacepath_t root_cnode) {
+int bootstrap_set_boot_cspace(bootstrap_info_t *bs, cspace_interface_t cspace, cspacepath_t root_cnode)
+{
     bs->boot_cspace = cspace;
     bs->boot_cnode = root_cnode;
     bs->have_boot_cspace = 1;
     return 0;
 }
 
-static int bootstrap_create_temp_bootinfo_cspace_at(bootstrap_info_t *bs, seL4_BootInfo *bi, seL4_CPtr root_cnode) {
+static int bootstrap_create_temp_bootinfo_cspace_at(bootstrap_info_t *bs, seL4_BootInfo *bi, seL4_CPtr root_cnode)
+{
     /* create a cspace to represent the bootinfo cspace. */
-    cspace_simple1level_create(&bs->maybe_boot_cspace, (struct cspace_simple1level_config){
+    cspace_simple1level_create(&bs->maybe_boot_cspace, (struct cspace_simple1level_config) {
         .cnode = root_cnode,
         .cnode_size_bits = bi->initThreadCNodeSizeBits,
         .cnode_guard_bits = seL4_WordBits - bi->initThreadCNodeSizeBits,
@@ -120,15 +126,17 @@ static int bootstrap_create_temp_bootinfo_cspace_at(bootstrap_info_t *bs, seL4_B
     });
     return bootstrap_set_boot_cspace(bs,
                                      cspace_simple1level_make_interface(
-                                        &bs->maybe_boot_cspace),
-                                        _cspace_simple1level_make_path(&bs->maybe_boot_cspace, root_cnode));
+                                         &bs->maybe_boot_cspace),
+                                     _cspace_simple1level_make_path(&bs->maybe_boot_cspace, root_cnode));
 }
 
-static int bootstrap_create_temp_bootinfo_cspace(bootstrap_info_t *bs, seL4_BootInfo *bi) {
+static int bootstrap_create_temp_bootinfo_cspace(bootstrap_info_t *bs, seL4_BootInfo *bi)
+{
     return bootstrap_create_temp_bootinfo_cspace_at(bs, bi, seL4_CapInitThreadCNode);
 }
 
-static bootstrap_info_t *_create_info(allocman_t *alloc) {
+static bootstrap_info_t *_create_info(allocman_t *alloc)
+{
     int error;
     bootstrap_info_t *bs = allocman_mspace_alloc(alloc, sizeof(bootstrap_info_t), &error);
     if (error) {
@@ -142,7 +150,8 @@ static bootstrap_info_t *_create_info(allocman_t *alloc) {
     return bs;
 }
 
-static int _add_ut(bootstrap_info_t *bs, cspacepath_t slot, size_t size_bits, uintptr_t paddr, bool isDevice) {
+static int _add_ut(bootstrap_info_t *bs, cspacepath_t slot, size_t size_bits, uintptr_t paddr, bool isDevice)
+{
     cspacepath_t *new_uts;
     size_t *new_size_bits;
     uintptr_t *new_paddr;
@@ -190,7 +199,9 @@ static int _add_ut(bootstrap_info_t *bs, cspacepath_t slot, size_t size_bits, ui
     return 0;
 }
 
-int bootstrap_add_untypeds(bootstrap_info_t *bs, size_t num, const cspacepath_t *uts, size_t *size_bits, uintptr_t *paddr, bool isDevice) {
+int bootstrap_add_untypeds(bootstrap_info_t *bs, size_t num, const cspacepath_t *uts, size_t *size_bits,
+                           uintptr_t *paddr, bool isDevice)
+{
     size_t i;
     int error;
     for (i = 0; i < num; i++) {
@@ -202,7 +213,8 @@ int bootstrap_add_untypeds(bootstrap_info_t *bs, size_t num, const cspacepath_t 
     return 0;
 }
 
-int bootstrap_add_untypeds_from_bootinfo(bootstrap_info_t *bs, seL4_BootInfo *bi) {
+int bootstrap_add_untypeds_from_bootinfo(bootstrap_info_t *bs, seL4_BootInfo *bi)
+{
     int error;
     seL4_CPtr i;
     /* if we do not have a boot cspace, or we have added some uts that aren't in the
@@ -225,7 +237,8 @@ int bootstrap_add_untypeds_from_bootinfo(bootstrap_info_t *bs, seL4_BootInfo *bi
     return 0;
 }
 
-static int bootstrap_add_untypeds_from_simple(bootstrap_info_t *bs, simple_t *simple) {
+static int bootstrap_add_untypeds_from_simple(bootstrap_info_t *bs, simple_t *simple)
+{
     int error;
     int i;
     /* if we do not have a boot cspace, or we have added some uts that aren't in the
@@ -249,7 +262,8 @@ static int bootstrap_add_untypeds_from_simple(bootstrap_info_t *bs, simple_t *si
     return 0;
 }
 
-static int _remove_ut(bootstrap_info_t *bs, size_t i) {
+static int _remove_ut(bootstrap_info_t *bs, size_t i)
+{
     cspacepath_t *new_uts = NULL;
     size_t *new_size_bits = NULL;
     uintptr_t *new_paddr = NULL;
@@ -299,7 +313,8 @@ static int _remove_ut(bootstrap_info_t *bs, size_t i) {
     return 0;
 }
 
-static int _split_ut(bootstrap_info_t *bs, cspacepath_t ut, cspacepath_t p1, cspacepath_t p2, size_t size) {
+static int _split_ut(bootstrap_info_t *bs, cspacepath_t ut, cspacepath_t p1, cspacepath_t p2, size_t size)
+{
     int error;
     error = seL4_Untyped_Retype(ut.capPtr, seL4_UntypedObject, size, p1.root, p1.dest, p1.destDepth, p1.offset, 1);
     if (error != seL4_NoError) {
@@ -312,7 +327,8 @@ static int _split_ut(bootstrap_info_t *bs, cspacepath_t ut, cspacepath_t p1, csp
     return 0;
 }
 
-static int _retype_cnode(bootstrap_info_t *bs, cspacepath_t ut, cspacepath_t cnode, seL4_Word sel4_size) {
+static int _retype_cnode(bootstrap_info_t *bs, cspacepath_t ut, cspacepath_t cnode, seL4_Word sel4_size)
+{
     int error;
     error = seL4_Untyped_Retype(ut.capPtr, seL4_CapTableObject, sel4_size,
                                 cnode.root, cnode.dest, cnode.destDepth, cnode.offset, 1);
@@ -322,7 +338,8 @@ static int _retype_cnode(bootstrap_info_t *bs, cspacepath_t ut, cspacepath_t cno
     return 0;
 }
 
-static int bootstrap_allocate_cnode(bootstrap_info_t *bs, size_t size, cspacepath_t *slot) {
+static int bootstrap_allocate_cnode(bootstrap_info_t *bs, size_t size, cspacepath_t *slot)
+{
     size_t ut_size;
     int i;
     int best = -1;
@@ -337,7 +354,8 @@ static int bootstrap_allocate_cnode(bootstrap_info_t *bs, size_t size, cspacepat
     ut_size = size + seL4_SlotBits;
     /* find the smallest untyped to allocate from */
     for (i = 0; i < bs->num_uts; i++) {
-        if (bs->ut_size_bits[i] >= ut_size && ( best == -1 || (bs->ut_size_bits[best] > bs->ut_size_bits[i]) ) && !bs->ut_isDevice[i]) {
+        if (bs->ut_size_bits[i] >= ut_size && (best == -1 || (bs->ut_size_bits[best] > bs->ut_size_bits[i]))
+            && !bs->ut_isDevice[i]) {
             best = i;
         }
     }
@@ -355,7 +373,7 @@ static int bootstrap_allocate_cnode(bootstrap_info_t *bs, size_t size, cspacepat
     if (error) {
         return error;
     }
-    while(best_size > ut_size) {
+    while (best_size > ut_size) {
         /* split the untyped in half */
         cspacepath_t slot1, slot2;
         size_t temp_size;
@@ -391,7 +409,8 @@ static int bootstrap_allocate_cnode(bootstrap_info_t *bs, size_t size, cspacepat
     return error;
 }
 
-static int bootstrap_use_current_cspace(bootstrap_info_t *bs, cspace_interface_t cspace) {
+static int bootstrap_use_current_cspace(bootstrap_info_t *bs, cspace_interface_t cspace)
+{
     int error;
     error = allocman_attach_cspace(bs->alloc, cspace);
     if (error) {
@@ -402,7 +421,9 @@ static int bootstrap_use_current_cspace(bootstrap_info_t *bs, cspace_interface_t
     return 0;
 }
 
-static int bootstrap_use_current_1level_cspace(bootstrap_info_t *bs, seL4_CPtr cnode, size_t size_bits, size_t start_free_index, size_t end_free_index) {
+static int bootstrap_use_current_1level_cspace(bootstrap_info_t *bs, seL4_CPtr cnode, size_t size_bits,
+                                               size_t start_free_index, size_t end_free_index)
+{
     cspace_single_level_t *cspace;
     int error;
     cspace = allocman_mspace_alloc(bs->alloc, sizeof(*cspace), &error);
@@ -410,7 +431,7 @@ static int bootstrap_use_current_1level_cspace(bootstrap_info_t *bs, seL4_CPtr c
         LOG_ERROR("Initial memory pool too small to allocate cspace allocator");
         return error;
     }
-    error = cspace_single_level_create(bs->alloc, cspace, (struct cspace_single_level_config){
+    error = cspace_single_level_create(bs->alloc, cspace, (struct cspace_single_level_config) {
         .cnode = cnode,
         .cnode_size_bits = size_bits,
         .cnode_guard_bits = seL4_WordBits - size_bits,
@@ -428,7 +449,8 @@ static int bootstrap_use_current_1level_cspace(bootstrap_info_t *bs, seL4_CPtr c
     return error;
 }
 
-static int bootstrap_new_1level_cspace(bootstrap_info_t *bs, int size) {
+static int bootstrap_new_1level_cspace(bootstrap_info_t *bs, int size)
+{
     cspacepath_t node;
     cspace_single_level_t *cspace;
     int error;
@@ -440,26 +462,26 @@ static int bootstrap_new_1level_cspace(bootstrap_info_t *bs, int size) {
     /* put a cap back to ourselves */
     seL4_CPtr new_cnode = SEL4UTILS_CNODE_SLOT;
     error = seL4_CNode_Mint(
-        node.capPtr, new_cnode, size,
-        node.root, node.capPtr, node.capDepth,
-        seL4_AllRights, api_make_guard_skip_word(seL4_WordBits - size));
+                node.capPtr, new_cnode, size,
+                node.root, node.capPtr, node.capDepth,
+                seL4_AllRights, api_make_guard_skip_word(seL4_WordBits - size));
     if (error != seL4_NoError) {
         return 1;
     }
     /* put our old cnode into the final slot in our cnode */
     seL4_CPtr old_cnode_slot = BIT(size) - 1u;
     error = seL4_CNode_Copy(
-        node.capPtr, old_cnode_slot, size,
-        bs->boot_cnode.root, bs->boot_cnode.capPtr, bs->boot_cnode.capDepth,
-        seL4_AllRights);
+                node.capPtr, old_cnode_slot, size,
+                bs->boot_cnode.root, bs->boot_cnode.capPtr, bs->boot_cnode.capDepth,
+                seL4_AllRights);
     if (error != seL4_NoError) {
         return 1;
     }
     /* now we can call set space */
     error = api_tcb_set_space(bs->tcb.capPtr, 0,
-                node.capPtr,
-                api_make_guard_skip_word(seL4_WordBits - size),
-                bs->pd.capPtr, seL4_NilData);
+                              node.capPtr,
+                              api_make_guard_skip_word(seL4_WordBits - size),
+                              bs->pd.capPtr, seL4_NilData);
     if (error != seL4_NoError) {
         return 1;
     }
@@ -468,12 +490,13 @@ static int bootstrap_new_1level_cspace(bootstrap_info_t *bs, int size) {
     if (error) {
         return error;
     }
-    error = cspace_single_level_create(bs->alloc, cspace, (struct cspace_single_level_config){
+    error = cspace_single_level_create(bs->alloc, cspace, (struct cspace_single_level_config) {
         .cnode = new_cnode,
         .cnode_size_bits = size,
         .cnode_guard_bits = seL4_WordBits - size,
         .first_slot = simple_last_valid_cap(bs->simple) + 1,
-        .end_slot = BIT(size) - 2u}); // subtract 2 as the last slot is occupied
+        .end_slot = BIT(size) - 2u
+    }); // subtract 2 as the last slot is occupied
     if (error) {
         return error;
     }
@@ -489,22 +512,25 @@ static int bootstrap_new_1level_cspace(bootstrap_info_t *bs, int size) {
     bs->uts_in_current_cspace = 0;
     return 0;
 }
-int bootstrap_transfer_caps_simple(bootstrap_info_t *bs, simple_t *simple, int levels) {
+int bootstrap_transfer_caps_simple(bootstrap_info_t *bs, simple_t *simple, int levels)
+{
 
     int error;
     size_t i;
     size_t cap_count = simple_get_cap_count(simple);
     seL4_CPtr cnode = simple_get_cnode(simple);
 
-    for(i = 0ul; i < cap_count; i++) {
-        seL4_CPtr pos = simple_get_nth_cap(simple,i);
+    for (i = 0ul; i < cap_count; i++) {
+        seL4_CPtr pos = simple_get_nth_cap(simple, i);
 
         /* Because we are going to switch root cnodes don't move the old cnode cap
          * The cap to the real root cnode is already there.
          * Also don't move any untyped caps, the untyped allocator is looking
          * after those now.
          */
-        if (pos == cnode || simple_is_untyped_cap(simple, pos)) continue;
+        if (pos == cnode || simple_is_untyped_cap(simple, pos)) {
+            continue;
+        }
 
         cspacepath_t slot;
         if (levels == 1) {
@@ -516,14 +542,14 @@ int bootstrap_transfer_caps_simple(bootstrap_info_t *bs, simple_t *simple, int l
             return 1;
         }
 
-        if(pos == bs->tcb.capPtr || pos == bs->pd.capPtr) {
+        if (pos == bs->tcb.capPtr || pos == bs->pd.capPtr) {
             error = seL4_CNode_Copy(slot.root, pos, slot.capDepth,
-                    bs->old_cnode.capPtr, pos, bs->old_cnode.capDepth,
-                    seL4_AllRights);
+                                    bs->old_cnode.capPtr, pos, bs->old_cnode.capDepth,
+                                    seL4_AllRights);
         } else {
             error = seL4_CNode_Move(
-                    slot.root, pos, slot.capDepth,
-                    bs->old_cnode.capPtr, pos, bs->old_cnode.capDepth);
+                        slot.root, pos, slot.capDepth,
+                        bs->old_cnode.capPtr, pos, bs->old_cnode.capDepth);
         }
         if (error != seL4_NoError) {
             return 1;
@@ -532,7 +558,9 @@ int bootstrap_transfer_caps_simple(bootstrap_info_t *bs, simple_t *simple, int l
     return 0;
 }
 
-static int bootstrap_new_2level_cspace(bootstrap_info_t *bs, size_t l1size, size_t l2size, seL4_CPtr cnode, seL4_CPtr old_cnode, size_t total_caps) {
+static int bootstrap_new_2level_cspace(bootstrap_info_t *bs, size_t l1size, size_t l2size, seL4_CPtr cnode,
+                                       seL4_CPtr old_cnode, size_t total_caps)
+{
     cspacepath_t l1node;
     cspacepath_t l2node;
     cspace_two_level_t *cspace;
@@ -551,17 +579,17 @@ static int bootstrap_new_2level_cspace(bootstrap_info_t *bs, size_t l1size, size
     }
     /* put a cap back to the level 1 in the level 2. That way we have a cap at depth 32 to our cspace */
     error = seL4_CNode_Mint(
-        l2node.capPtr, cnode, l2size,
-        l1node.root, l1node.capPtr, l1node.capDepth,
-        seL4_AllRights, api_make_guard_skip_word(seL4_WordBits - l1size - l2size));
+                l2node.capPtr, cnode, l2size,
+                l1node.root, l1node.capPtr, l1node.capDepth,
+                seL4_AllRights, api_make_guard_skip_word(seL4_WordBits - l1size - l2size));
     if (error != seL4_NoError) {
         return 1;
     }
 
-    for(i = 0; i < (total_caps / BIT(l2size)) + 1; i++) {
-        if(i != 0) {
+    for (i = 0; i < (total_caps / BIT(l2size)) + 1; i++) {
+        if (i != 0) {
             error = bootstrap_allocate_cnode(bs, l2size, &l2node);
-            if(error) {
+            if (error) {
                 return error;
             }
         }
@@ -572,9 +600,9 @@ static int bootstrap_new_2level_cspace(bootstrap_info_t *bs, size_t l1size, size
         }
         /* put the level 2 slot into the level 1 */
         error = seL4_CNode_Copy(
-            l1node.capPtr, i, l1size,
-            l2node.root, l2node.capPtr, l2node.capDepth,
-            seL4_AllRights);
+                    l1node.capPtr, i, l1size,
+                    l2node.root, l2node.capPtr, l2node.capDepth,
+                    seL4_AllRights);
         if (error != seL4_NoError) {
             return 1;
         }
@@ -583,17 +611,17 @@ static int bootstrap_new_2level_cspace(bootstrap_info_t *bs, size_t l1size, size
     size_t end_existing_index = i;
     /* put our old cnode into a slot in the level 2 one */
     error = seL4_CNode_Copy(
-        l2nodeforbackpointer, old_cnode & MASK(l2size), l2size,
-        bs->boot_cnode.root, bs->boot_cnode.capPtr,
-        bs->boot_cnode.capDepth, seL4_AllRights);
+                l2nodeforbackpointer, old_cnode & MASK(l2size), l2size,
+                bs->boot_cnode.root, bs->boot_cnode.capPtr,
+                bs->boot_cnode.capDepth, seL4_AllRights);
     if (error != seL4_NoError) {
         return 1;
     }
     /* now we can call set space */
     error = api_tcb_set_space(bs->tcb.capPtr, 0,
-                l1node.capPtr,
-                api_make_guard_skip_word(seL4_WordBits - l1size - l2size),
-                bs->pd.capPtr, seL4_NilData);
+                              l1node.capPtr,
+                              api_make_guard_skip_word(seL4_WordBits - l1size - l2size),
+                              bs->pd.capPtr, seL4_NilData);
     if (error != seL4_NoError) {
         return 1;
     }
@@ -602,7 +630,7 @@ static int bootstrap_new_2level_cspace(bootstrap_info_t *bs, size_t l1size, size
     if (error) {
         return error;
     }
-    error = cspace_two_level_create(bs->alloc, cspace, (struct cspace_two_level_config){
+    error = cspace_two_level_create(bs->alloc, cspace, (struct cspace_two_level_config) {
         .cnode = cnode,
         .cnode_size_bits = l1size,
         .cnode_guard_bits = seL4_WordBits - l1size - l2size,
@@ -612,7 +640,8 @@ static int bootstrap_new_2level_cspace(bootstrap_info_t *bs, size_t l1size, size
         .start_existing_index = 0,
         .end_existing_index = end_existing_index,
         .start_existing_slot = 0,
-        .end_existing_slot = last_cap + 1});
+        .end_existing_slot = last_cap + 1
+    });
     if (error) {
         return error;
     }
@@ -629,24 +658,28 @@ static int bootstrap_new_2level_cspace(bootstrap_info_t *bs, size_t l1size, size
     return 0;
 }
 
-static void bootstrap_update_untypeds(bootstrap_info_t *bs) {
+static void bootstrap_update_untypeds(bootstrap_info_t *bs)
+{
     int i;
     for (i = 0; i < bs->num_uts; i++) {
         bs->uts[i].root = bs->old_cnode.capPtr;
     }
 }
 
-static void bootstrap_set_pd_tcb_bootinfo(bootstrap_info_t *bs) {
+static void bootstrap_set_pd_tcb_bootinfo(bootstrap_info_t *bs)
+{
     bs->pd = bs->boot_cspace.make_path(bs->boot_cspace.cspace, seL4_CapInitThreadPD);
     bs->tcb = bs->boot_cspace.make_path(bs->boot_cspace.cspace, seL4_CapInitThreadTCB);
 }
 
-static void bootstrap_set_pd_tcb(bootstrap_info_t *bs, cspacepath_t pd, cspacepath_t tcb) {
+static void bootstrap_set_pd_tcb(bootstrap_info_t *bs, cspacepath_t pd, cspacepath_t tcb)
+{
     bs->pd = pd;
     bs->tcb = tcb;
 }
 
-static int bootstrap_move_untypeds(bootstrap_info_t *bs) {
+static int bootstrap_move_untypeds(bootstrap_info_t *bs)
+{
     int i;
     int error;
     for (i = 0; i < bs->num_uts; i++) {
@@ -665,7 +698,8 @@ static int bootstrap_move_untypeds(bootstrap_info_t *bs) {
     return 0;
 }
 
-static int bootstrap_create_utspace(bootstrap_info_t *bs) {
+static int bootstrap_create_utspace(bootstrap_info_t *bs)
+{
     int error;
     int i;
     UTMAN_TYPE *utspace;
@@ -682,7 +716,8 @@ static int bootstrap_create_utspace(bootstrap_info_t *bs) {
     }
 
     for (i = 0; i < bs->num_uts; i++) {
-        error = UTMAN_ADD_UTS(bs->alloc, utspace, 1, &bs->uts[i], &bs->ut_size_bits[i], &bs->ut_paddr[i], bs->ut_isDevice[i] ? ALLOCMAN_UT_DEV : ALLOCMAN_UT_KERNEL);
+        error = UTMAN_ADD_UTS(bs->alloc, utspace, 1, &bs->uts[i], &bs->ut_size_bits[i], &bs->ut_paddr[i],
+                              bs->ut_isDevice[i] ? ALLOCMAN_UT_DEV : ALLOCMAN_UT_KERNEL);
         if (error) {
             LOG_ERROR("Failed to add untypeds to untyped allocator");
             return error;
@@ -691,7 +726,8 @@ static int bootstrap_create_utspace(bootstrap_info_t *bs) {
     return 0;
 }
 
-bootstrap_info_t *bootstrap_create_info(size_t pool_size, void *pool) {
+bootstrap_info_t *bootstrap_create_info(size_t pool_size, void *pool)
+{
     allocman_t *alloc;
     bootstrap_info_t *info;
     /* bootstrap an allocman from the pool */
@@ -707,7 +743,8 @@ bootstrap_info_t *bootstrap_create_info(size_t pool_size, void *pool) {
     return info;
 }
 
-static int _slot_memory_reservations(allocman_t *alloc) {
+static int _slot_memory_reservations(allocman_t *alloc)
+{
     int error;
     /* these numbers are pulled completely out of my arse (although given I wrote
      * the allocators my gut feeling should have some weight...) */
@@ -730,12 +767,17 @@ static int _slot_memory_reservations(allocman_t *alloc) {
     return 0;
 }
 
-static int _cnode_reservation(allocman_t *alloc, size_t cnode_size) {
+static int _cnode_reservation(allocman_t *alloc, size_t cnode_size)
+{
     /* assume one extra level 2 cnode is all we need to keep around */
-    return allocman_configure_utspace_reserve(alloc, (struct allocman_utspace_chunk) {cnode_size + seL4_SlotBits, seL4_CapTableObject, 1});
+    return allocman_configure_utspace_reserve(alloc, (struct allocman_utspace_chunk) {
+        cnode_size + seL4_SlotBits, seL4_CapTableObject, 1
+    });
 }
 
-allocman_t *bootstrap_use_current_1level(seL4_CPtr root_cnode, size_t cnode_size, seL4_CPtr start_slot, seL4_CPtr end_slot, size_t pool_size, void *pool) {
+allocman_t *bootstrap_use_current_1level(seL4_CPtr root_cnode, size_t cnode_size, seL4_CPtr start_slot,
+                                         seL4_CPtr end_slot, size_t pool_size, void *pool)
+{
     allocman_t *alloc;
     int error;
     bootstrap_info_t *info;
@@ -772,7 +814,8 @@ allocman_t *bootstrap_use_current_1level(seL4_CPtr root_cnode, size_t cnode_size
     return alloc;
 }
 
-static allocman_t *_post_new_cspace_common(bootstrap_info_t *info, cspacepath_t *oldroot) {
+static allocman_t *_post_new_cspace_common(bootstrap_info_t *info, cspacepath_t *oldroot)
+{
     allocman_t *alloc;
     int error;
     /* update any resources */
@@ -803,7 +846,9 @@ static allocman_t *_post_new_cspace_common(bootstrap_info_t *info, cspacepath_t 
 }
 
 /* this does not free the underlying 'info' */
-static allocman_t *_bootstrap_new_level1(bootstrap_info_t *info, size_t cnode_size, cspacepath_t tcb, cspacepath_t pd, cspacepath_t *oldroot) {
+static allocman_t *_bootstrap_new_level1(bootstrap_info_t *info, size_t cnode_size, cspacepath_t tcb, cspacepath_t pd,
+                                         cspacepath_t *oldroot)
+{
     int error;
     /* set the pd and tcb */
     bootstrap_set_pd_tcb(info, pd, tcb);
@@ -817,7 +862,9 @@ static allocman_t *_bootstrap_new_level1(bootstrap_info_t *info, size_t cnode_si
 }
 
 /* this does not free the underlying 'info' */
-static allocman_t *_bootstrap_new_level2(bootstrap_info_t *info, size_t l1size, size_t l2size, cspacepath_t tcb, cspacepath_t pd, cspacepath_t *oldroot) {
+static allocman_t *_bootstrap_new_level2(bootstrap_info_t *info, size_t l1size, size_t l2size, cspacepath_t tcb,
+                                         cspacepath_t pd, cspacepath_t *oldroot)
+{
     int error;
     allocman_t *alloc;
     /* set the pd and tcb */
@@ -826,7 +873,7 @@ static allocman_t *_bootstrap_new_level2(bootstrap_info_t *info, size_t l1size, 
      * place the cap to the root cnode at slot 2 and the cap to the old cnode at slot 1
      */
     size_t total_caps = info->num_uts;
-    if(info->have_boot_cspace) {
+    if (info->have_boot_cspace) {
         cspacepath_t to_slot;
         info->boot_cspace.alloc(info->alloc, info->boot_cspace.cspace, &to_slot);
         total_caps += MAX(2, to_slot.capPtr);
@@ -851,7 +898,9 @@ static allocman_t *_bootstrap_new_level2(bootstrap_info_t *info, size_t l1size, 
     return alloc;
 }
 
-allocman_t *bootstrap_new_1level(bootstrap_info_t *info, size_t cnode_size, cspacepath_t tcb, cspacepath_t pd, cspacepath_t *oldroot) {
+allocman_t *bootstrap_new_1level(bootstrap_info_t *info, size_t cnode_size, cspacepath_t tcb, cspacepath_t pd,
+                                 cspacepath_t *oldroot)
+{
     allocman_t *alloc = _bootstrap_new_level1(info, cnode_size, tcb, pd, oldroot);
     if (!alloc) {
         return NULL;
@@ -860,7 +909,9 @@ allocman_t *bootstrap_new_1level(bootstrap_info_t *info, size_t cnode_size, cspa
     return alloc;
 }
 
-allocman_t *bootstrap_new_2level(bootstrap_info_t *info, size_t l1size, size_t l2size, cspacepath_t tcb, cspacepath_t pd, cspacepath_t *oldroot) {
+allocman_t *bootstrap_new_2level(bootstrap_info_t *info, size_t l1size, size_t l2size, cspacepath_t tcb,
+                                 cspacepath_t pd, cspacepath_t *oldroot)
+{
     allocman_t *alloc = _bootstrap_new_level2(info, l1size, l2size, tcb, pd, oldroot);
     if (!alloc) {
         return NULL;
@@ -869,7 +920,8 @@ allocman_t *bootstrap_new_2level(bootstrap_info_t *info, size_t l1size, size_t l
     return alloc;
 }
 
-static bootstrap_info_t *_start_new_from_bootinfo(seL4_BootInfo *bi, size_t pool_size, void *pool) {
+static bootstrap_info_t *_start_new_from_bootinfo(seL4_BootInfo *bi, size_t pool_size, void *pool)
+{
     int error;
     bootstrap_info_t *info;
     /* create the bootstrapping info */
@@ -890,7 +942,8 @@ static bootstrap_info_t *_start_new_from_bootinfo(seL4_BootInfo *bi, size_t pool
     return info;
 }
 
-static allocman_t *_new_from_bootinfo_common(bootstrap_info_t *info, cspace_simple1level_t **old_cspace) {
+static allocman_t *_new_from_bootinfo_common(bootstrap_info_t *info, cspace_simple1level_t **old_cspace)
+{
     int error;
     allocman_t *alloc;
     /* allocate old cspace if desired */
@@ -908,7 +961,9 @@ static allocman_t *_new_from_bootinfo_common(bootstrap_info_t *info, cspace_simp
     return alloc;
 }
 
-allocman_t *bootstrap_new_1level_bootinfo(seL4_BootInfo *bi, size_t cnode_size, size_t pool_size, void *pool, cspace_simple1level_t **old_cspace) {
+allocman_t *bootstrap_new_1level_bootinfo(seL4_BootInfo *bi, size_t cnode_size, size_t pool_size, void *pool,
+                                          cspace_simple1level_t **old_cspace)
+{
     allocman_t *alloc;
     bootstrap_info_t *info;
     /* create the bootstrapping info and fill in as much from bootinfo as we can */
@@ -929,7 +984,9 @@ allocman_t *bootstrap_new_1level_bootinfo(seL4_BootInfo *bi, size_t cnode_size, 
     return _new_from_bootinfo_common(info, old_cspace);
 }
 
-allocman_t *bootstrap_new_2level_bootinfo(seL4_BootInfo *bi, size_t l1size, size_t l2size, size_t pool_size, void *pool, cspace_simple1level_t **old_cspace) {
+allocman_t *bootstrap_new_2level_bootinfo(seL4_BootInfo *bi, size_t l1size, size_t l2size, size_t pool_size, void *pool,
+                                          cspace_simple1level_t **old_cspace)
+{
     allocman_t *alloc;
     bootstrap_info_t *info;
     /* create the bootstrapping info and fill in as much from bootinfo as we can */
@@ -951,7 +1008,8 @@ allocman_t *bootstrap_new_2level_bootinfo(seL4_BootInfo *bi, size_t l1size, size
     return _new_from_bootinfo_common(info, old_cspace);
 }
 
-static size_t get_next_alignment_bits(uintptr_t base, uintptr_t goal, size_t max_alignment) {
+static size_t get_next_alignment_bits(uintptr_t base, uintptr_t goal, size_t max_alignment)
+{
     /* Calculate alignment of our base pointer */
     uintptr_t alignment = (base == 0) ? max_alignment : MIN(CTZL((long)base), max_alignment);
 
@@ -963,7 +1021,8 @@ static size_t get_next_alignment_bits(uintptr_t base, uintptr_t goal, size_t max
     /* The largest untyped we can make is the highest power of 2 component of next_size */
     size_t next_size_bits = seL4_WordBits - 1 - CLZL((long)next_size);
 
-    ZF_LOGD("goal 0x%zx, base: 0x%zx, next_size: 0x%zx, 0x%zx, 0x%zx, 0x%zx", goal, base, (uintptr_t) BIT(next_size_bits), next_size, CLZL((long)next_size),alignment);
+    ZF_LOGD("goal 0x%zx, base: 0x%zx, next_size: 0x%zx, 0x%zx, 0x%zx, 0x%zx", goal, base, (uintptr_t) BIT(next_size_bits),
+            next_size, CLZL((long)next_size), alignment);
     return next_size_bits;
 }
 
@@ -974,7 +1033,8 @@ static size_t get_next_alignment_bits(uintptr_t base, uintptr_t goal, size_t max
     and ALLOCMAN_UT_DEV.
  */
 static ssize_t perform_sub_allocation(uintptr_t base, uintptr_t goal, allocman_t *alloc,
-                        utspace_interface_t *ut_space, utspace_split_t *token, int untyped_type) {
+                                      utspace_interface_t *ut_space, utspace_split_t *token, int untyped_type)
+{
     size_t next_size_bits = get_next_alignment_bits(base, goal, seL4_MaxUntypedBits);
     cspacepath_t path;
     int error = allocman_cspace_alloc(alloc, &path);
@@ -1002,7 +1062,9 @@ static ssize_t perform_sub_allocation(uintptr_t base, uintptr_t goal, allocman_t
  * @param  alloc     handle to an already initialised allocman.
  * @return           0 for success, otherwise error.
  */
-static int handle_device_untyped_cap(add_untypeds_state_t *state, uintptr_t paddr, size_t size_bits, cspacepath_t *path, allocman_t *alloc ) {
+static int handle_device_untyped_cap(add_untypeds_state_t *state, uintptr_t paddr, size_t size_bits, cspacepath_t *path,
+                                     allocman_t *alloc)
+{
     bool cap_tainted = false;
     int error;
     uintptr_t ut_end = paddr + BIT(size_bits);
@@ -1021,7 +1083,8 @@ static int handle_device_untyped_cap(add_untypeds_state_t *state, uintptr_t padd
             }
             // We have an untyped that is overlapping with some ram.  Lets break it up into sub parts
             ZF_LOGD("basepaddr 0x%zx framesize: %zd", paddr, size_bits);
-            ZF_LOGD("\tPhysical Memory Region from %"PRIx64" size %"PRIx64" type %d", region->base_addr, region->length, region->type);
+            ZF_LOGD("\tPhysical Memory Region from %"PRIx64" size %"PRIx64" type %d", region->base_addr, region->length,
+                    region->type);
 
             uintptr_t top = MIN(region_end, ut_end);
             while (paddr < top) {
@@ -1044,7 +1107,7 @@ static int handle_device_untyped_cap(add_untypeds_state_t *state, uintptr_t padd
     if (!cap_tainted) {
         error = allocman_utspace_add_uts(alloc, 1, path, &size_bits, &paddr, ALLOCMAN_UT_DEV);
         ZF_LOGF_IF(error, "allocman_utspace_add_uts failed");
-    } else if (paddr != ut_end){
+    } else if (paddr != ut_end) {
         // Got to allocate the rest of our untyped as UT_DEV
         while (paddr < ut_end) {
             ssize_t result = perform_sub_allocation(paddr, ut_end, alloc, &state->ut_interface, &state->split_ut, ALLOCMAN_UT_DEV);
@@ -1055,7 +1118,8 @@ static int handle_device_untyped_cap(add_untypeds_state_t *state, uintptr_t padd
     return 0;
 }
 
-static void free_device_untyped_cap_state(allocman_t *alloc, add_untypeds_state_t *state) {
+static void free_device_untyped_cap_state(allocman_t *alloc, add_untypeds_state_t *state)
+{
     if (state == NULL) {
         ZF_LOGE("free_device_untyped_cap_state with NULL state");
         return;
@@ -1080,7 +1144,9 @@ static void free_device_untyped_cap_state(allocman_t *alloc, add_untypeds_state_
  * @param  region_list     an array of regions. If NULL this will call sel4platsupport_get_pmem_region_list.
  * @return                 0 for success, otherwise error.
  */
-static int prepare_handle_device_untyped_cap(allocman_t *alloc, simple_t *simple, add_untypeds_state_t **token, int num_regions, pmem_region_t *region_list) {
+static int prepare_handle_device_untyped_cap(allocman_t *alloc, simple_t *simple, add_untypeds_state_t **token,
+                                             int num_regions, pmem_region_t *region_list)
+{
     int error;
     add_untypeds_state_t *state = allocman_mspace_alloc(alloc, sizeof(add_untypeds_state_t), &error);
     ZF_LOGF_IF(error, "Failed to allocate add_untypeds_state_t");
@@ -1107,7 +1173,9 @@ static int prepare_handle_device_untyped_cap(allocman_t *alloc, simple_t *simple
     return 0;
 }
 
-int allocman_add_simple_untypeds_with_regions(allocman_t *alloc, simple_t *simple, int num_regions, pmem_region_t *region_list) {
+int allocman_add_simple_untypeds_with_regions(allocman_t *alloc, simple_t *simple, int num_regions,
+                                              pmem_region_t *region_list)
+{
     add_untypeds_state_t *state = NULL;
     int error = prepare_handle_device_untyped_cap(alloc, simple, &state, num_regions, region_list);
     ZF_LOGF_IF(error, "bootstrap_prepare_handle_device_untyped_cap Failed");
@@ -1115,7 +1183,7 @@ int allocman_add_simple_untypeds_with_regions(allocman_t *alloc, simple_t *simpl
     size_t i;
     size_t total_untyped = simple_get_untyped_count(simple);
 
-    for(i = 0; i < total_untyped; i++) {
+    for (i = 0; i < total_untyped; i++) {
         size_t size_bits;
         uintptr_t paddr;
         bool device;
@@ -1137,15 +1205,18 @@ int allocman_add_simple_untypeds_with_regions(allocman_t *alloc, simple_t *simpl
     return 0;
 }
 
-int allocman_add_simple_untypeds(allocman_t *alloc, simple_t *simple) {
+int allocman_add_simple_untypeds(allocman_t *alloc, simple_t *simple)
+{
     return allocman_add_simple_untypeds_with_regions(alloc, simple, 0, NULL);
 }
 
-allocman_t *bootstrap_use_current_simple(simple_t *simple, size_t pool_size, void *pool) {
+allocman_t *bootstrap_use_current_simple(simple_t *simple, size_t pool_size, void *pool)
+{
     allocman_t *allocman;
     int error;
     /* Initialize inside the current 1 level cspace as defined by simple */
-    allocman = bootstrap_use_current_1level(simple_get_cnode(simple), simple_get_cnode_size_bits(simple), simple_last_valid_cap(simple) + 1, BIT(simple_get_cnode_size_bits(simple)), pool_size, pool);
+    allocman = bootstrap_use_current_1level(simple_get_cnode(simple), simple_get_cnode_size_bits(simple),
+                                            simple_last_valid_cap(simple) + 1, BIT(simple_get_cnode_size_bits(simple)), pool_size, pool);
     if (!allocman) {
         LOG_ERROR("Failed to initialize an allocman");
         return allocman;
@@ -1159,7 +1230,9 @@ allocman_t *bootstrap_use_current_simple(simple_t *simple, size_t pool_size, voi
     return allocman;
 }
 
-static allocman_t *bootstrap_new_simple(simple_t *simple, int levels, size_t l1size, size_t l2size, size_t pool_size, void *pool) {
+static allocman_t *bootstrap_new_simple(simple_t *simple, int levels, size_t l1size, size_t l2size, size_t pool_size,
+                                        void *pool)
+{
     allocman_t *alloc;
     int error;
 
@@ -1173,16 +1246,17 @@ static allocman_t *bootstrap_new_simple(simple_t *simple, int levels, size_t l1s
     }
     bootstrap->simple = simple;
 
-    cspace_simple1level_create(&bootstrap->maybe_boot_cspace, (struct cspace_simple1level_config){
-            .cnode = simple_get_cnode(simple),
-            .cnode_size_bits = simple_get_cnode_size_bits(simple),
-            .cnode_guard_bits = seL4_WordBits - simple_get_cnode_size_bits(simple),
-            .first_slot = simple_last_valid_cap(simple) + 1,
-            .end_slot = BIT(simple_get_cnode_size_bits(simple))
+    cspace_simple1level_create(&bootstrap->maybe_boot_cspace, (struct cspace_simple1level_config) {
+        .cnode = simple_get_cnode(simple),
+        .cnode_size_bits = simple_get_cnode_size_bits(simple),
+        .cnode_guard_bits = seL4_WordBits - simple_get_cnode_size_bits(simple),
+        .first_slot = simple_last_valid_cap(simple) + 1,
+        .end_slot = BIT(simple_get_cnode_size_bits(simple))
     });
 
     cspacepath_t init_cnode_path = _cspace_simple1level_make_path(&bootstrap->maybe_boot_cspace, simple_get_cnode(simple));
-    bootstrap_set_boot_cspace(bootstrap, cspace_simple1level_make_interface(&bootstrap->maybe_boot_cspace), init_cnode_path);
+    bootstrap_set_boot_cspace(bootstrap, cspace_simple1level_make_interface(&bootstrap->maybe_boot_cspace),
+                              init_cnode_path);
 
     /* Tell the boostrapping allocator about the untypeds in the system */
     bootstrap_add_untypeds_from_simple(bootstrap, simple);
@@ -1201,7 +1275,7 @@ static allocman_t *bootstrap_new_simple(simple_t *simple, int levels, size_t l1s
 
     /* Take all the caps in the boot cnode and put in them in the same location in the new cspace */
     error = bootstrap_transfer_caps_simple(bootstrap, simple, levels);
-    if(error) {
+    if (error) {
         return NULL;
     }
 
@@ -1211,15 +1285,18 @@ static allocman_t *bootstrap_new_simple(simple_t *simple, int levels, size_t l1s
     return alloc;
 }
 
-allocman_t *bootstrap_new_1level_simple(simple_t *simple, size_t l1size, size_t pool_size, void *pool) {
+allocman_t *bootstrap_new_1level_simple(simple_t *simple, size_t l1size, size_t pool_size, void *pool)
+{
     return bootstrap_new_simple(simple, 1, l1size, 0, pool_size, pool);
 }
 
-allocman_t *bootstrap_new_2level_simple(simple_t *simple, size_t l1size, size_t l2size, size_t pool_size, void *pool) {
+allocman_t *bootstrap_new_2level_simple(simple_t *simple, size_t l1size, size_t l2size, size_t pool_size, void *pool)
+{
     return bootstrap_new_simple(simple, 2, l1size, l2size, pool_size, pool);
 }
 
-static int allocman_add_bootinfo_untypeds(allocman_t *alloc, seL4_BootInfo *bi) {
+static int allocman_add_bootinfo_untypeds(allocman_t *alloc, seL4_BootInfo *bi)
+{
     seL4_CPtr i;
     int error;
     for (i = bi->untyped.start; i < bi->untyped.end; i++) {
@@ -1230,7 +1307,8 @@ static int allocman_add_bootinfo_untypeds(allocman_t *alloc, seL4_BootInfo *bi) 
         slot = allocman_cspace_make_path(alloc, i);
         size_bits = bi->untypedList[index].sizeBits;
         paddr = bi->untypedList[index].paddr;
-        error = allocman_utspace_add_uts(alloc, 1, &slot, &size_bits, &paddr, bi->untypedList[index].isDevice ? ALLOCMAN_UT_DEV : ALLOCMAN_UT_KERNEL);
+        error = allocman_utspace_add_uts(alloc, 1, &slot, &size_bits, &paddr,
+                                         bi->untypedList[index].isDevice ? ALLOCMAN_UT_DEV : ALLOCMAN_UT_KERNEL);
         if (error) {
             return error;
         }
@@ -1238,7 +1316,8 @@ static int allocman_add_bootinfo_untypeds(allocman_t *alloc, seL4_BootInfo *bi) 
     return 0;
 }
 
-allocman_t *bootstrap_use_bootinfo(seL4_BootInfo *bi, size_t pool_size, void *pool) {
+allocman_t *bootstrap_use_bootinfo(seL4_BootInfo *bi, size_t pool_size, void *pool)
+{
     allocman_t *alloc;
     int error;
     /* use the current single level cspace as described by boot info */
@@ -1259,21 +1338,26 @@ allocman_t *bootstrap_use_bootinfo(seL4_BootInfo *bi, size_t pool_size, void *po
     return alloc;
 }
 
-void bootstrap_configure_virtual_pool(allocman_t *alloc, void *vstart, size_t vsize, seL4_CPtr pd) {
+void bootstrap_configure_virtual_pool(allocman_t *alloc, void *vstart, size_t vsize, seL4_CPtr pd)
+{
     /* configure reservation for the virtual pool */
     /* assume we are using 4k pages. maybe this should be a Kconfig option at some point?
      * we ignore any errors */
-    allocman_configure_utspace_reserve(alloc, (struct allocman_utspace_chunk) {vka_get_object_size(seL4_ARCH_4KPage, 0), seL4_ARCH_4KPage, 3});
+    allocman_configure_utspace_reserve(alloc, (struct allocman_utspace_chunk) {
+        vka_get_object_size(seL4_ARCH_4KPage, 0), seL4_ARCH_4KPage, 3
+    });
 #ifndef CONFIG_ARCH_AARCH64
-    allocman_configure_utspace_reserve(alloc, (struct allocman_utspace_chunk) {vka_get_object_size(seL4_ARCH_PageTableObject, 0), seL4_ARCH_PageTableObject, 1});
+    allocman_configure_utspace_reserve(alloc, (struct allocman_utspace_chunk) {
+        vka_get_object_size(seL4_ARCH_PageTableObject, 0), seL4_ARCH_PageTableObject, 1
+    });
 #endif
     allocman_sel4_arch_configure_reservations(alloc);
     mspace_dual_pool_attach_virtual(
-            (mspace_dual_pool_t*)alloc->mspace.mspace,
-            (struct mspace_virtual_pool_config){
-                .vstart = vstart,
-                .size = vsize,
-                .pd = pd
-            }
+        (mspace_dual_pool_t *)alloc->mspace.mspace,
+    (struct mspace_virtual_pool_config) {
+        .vstart = vstart,
+        .size = vsize,
+        .pd = pd
+    }
     );
 }

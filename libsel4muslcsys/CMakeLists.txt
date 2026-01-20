@@ -92,5 +92,7 @@ target_link_libraries(
         utils
         sel4utils
         sel4muslcsys_Config
-    PRIVATE sel4_autoconf
+    PRIVATE
+        muslcinternal
+        sel4_autoconf
 )

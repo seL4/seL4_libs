@@ -480,6 +480,7 @@ int sel4utils_configure_process_custom(sel4utils_process_t *process, vka_t *vka,
 {
     int error;
     sel4utils_alloc_data_t *data = NULL;
+    assert(process != NULL);
     memset(process, 0, sizeof(sel4utils_process_t));
     seL4_Word cspace_root_data = api_make_guard_skip_word(seL4_WordBits - config.one_level_cspace_size_bits);
 
@@ -539,6 +540,10 @@ int sel4utils_configure_process_custom(sel4utils_process_t *process, vka_t *vka,
         unsigned long size;
         unsigned long cpio_len = _cpio_archive_end - _cpio_archive;
         char const *file = cpio_get_file(_cpio_archive, cpio_len, config.image_name, &size);
+        if (file == NULL) {
+            ZF_LOGE("failed to load elf file: '%s' does not exist in CPIO", config.image_name);
+            goto error;
+        }
         elf_t elf;
         elf_newFile(file, size, &elf);
 

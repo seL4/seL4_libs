@@ -26,6 +26,8 @@
 #include <sys/socket.h>
 #include <bits/syscall.h>
 
+#include "kstat.h"
+
 #include <sel4utils/util.h>
 
 #include <muslcsys/io.h>
@@ -258,6 +260,28 @@ long sys_close(va_list ap)
     return 0;
 }
 
+long sys_fstat(va_list ap)
+{
+    int fd = va_arg(ap, int);
+    struct kstat *statbuf = va_arg(ap, struct kstat *);
+
+    if (fd == STDIN_FILENO || fd == STDOUT_FILENO || fd == STDERR_FILENO) {
+        memset(statbuf, 0, sizeof(struct kstat));
+
+        if (fd == STDIN_FILENO) {
+            statbuf->st_mode = S_IRUSR;
+        } else {
+            statbuf->st_mode = S_IWUSR;
+        }
+
+        return 0;
+    } else if (valid_fd(fd)) {
+        assert(!"not implemented");
+        return -EBADF;
+    } else {
+        return -EBADF;
+    }
+}
 
 static write_buf_fn stdio_write = sys_platform_write;
 

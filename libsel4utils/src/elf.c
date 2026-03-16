@@ -460,7 +460,7 @@ void *sel4utils_elf_reserve(vspace_t *loadee, const elf_t *elf_file, sel4utils_e
     int num_regions = count_loadable_regions(elf_file);
 
     /* Create reservations in vspace using internal functions */
-    int error = elf_reserve_regions_in_vspace(loadee, elf_file, num_regions, regions, 0);
+    int error = elf_reserve_regions_in_vspace(loadee, elf_file, num_regions, regions, 1);
     if (error) {
         ZF_LOGE("Failed to reserve regions");
         return NULL;

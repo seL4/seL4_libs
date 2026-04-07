@@ -223,15 +223,41 @@ static inline void print_error_in_ipc(seL4_Error e)
 #define test_check(e) if (!(e)) _test_error(#e, __FILE__, __LINE__)
 #define test_assert_fatal(e) if (!(e)) return _test_abort(#e, __FILE__, __LINE__)
 
+#define _test_format_of(value)                                                 \
+    _Generic((value),                                                          \
+        int: "%d",                                                             \
+        long: "%ld",                                                           \
+        long long: "%lld",                                                     \
+        unsigned int: "%u",                                                    \
+        unsigned long: "%lu",                                                  \
+        unsigned long long: "%llu",                                            \
+        char: "%c",                                                            \
+        unsigned char: "%c",                                                   \
+        signed char: "%c",                                                     \
+        short: "%hd",                                                          \
+        unsigned short: "%hu"                                                  \
+    )
+
+/**
+ * Explicitly no do-while as we want don't want to declare an inner-scope so
+ * as to leak the buffer into the outer scope.
+ **/
+#define format_type_str_buf(bufname, value)                                     \
+    int bufname ## _len = 1 + snprintf(NULL, 0, _test_format_of(value), value); \
+    char bufname[bufname ## _len];                                              \
+    snprintf(bufname, bufname ## _len, _test_format_of(value), value);
+
 #define __TEST_BUFFER_SIZE 200
-#define test_op_type(a, b, op, t, name_a, name_b, cast) \
-    do {\
-        if (!(a op b)) { \
-            int len = snprintf(NULL, 0, "Check %s(" t ") %s %s(" t ") failed.",\
-                               #name_a, (cast) a, #op, #name_b, (cast) b) + 1; \
-            char buffer[len]; \
-            snprintf(buffer, len, "Check %s(" t ") %s %s(" t ") failed.",\
-                     #name_a, (cast) a, #op, #name_b, (cast) b); \
+#define test_op_type(a, b, op, name_a, name_b)                                   \
+    do {                                                                         \
+        if (!(a op b)) {                                                         \
+            const char *fstring =                                                \
+                "Check " #name_a "(%s) " #op " " #name_b "(%s) failed.";         \
+            format_type_str_buf(str_a, a);                                       \
+            format_type_str_buf(str_b, b);                                       \
+            int len = 1 + snprintf(NULL, 0, fstring, str_a, str_b);              \
+            char buffer[len];                                                    \
+            snprintf(buffer, len, fstring, str_a, str_b);                        \
             _test_error(buffer, __FILE__, __LINE__); \
         }\
     } while (0)
@@ -240,29 +266,7 @@ static inline void print_error_in_ipc(seL4_Error e)
     do { \
          typeof (a) _a = (a); \
          typeof (b) _b = (b); \
-         _Static_assert(sizeof(_a) == sizeof(_b), \
-                        "sizeof(" #a ") does not match sizeof(" #b "), use of test_eq incorrect"); \
-         if (TYPES_COMPATIBLE(typeof(_a), int)) {\
-             test_op_type(_a, _b, op, "%d", a, b, int); \
-         } else if (TYPES_COMPATIBLE(typeof(_a), long)) {\
-             test_op_type(_a, _b, op, "%ld", a, b, long); \
-         } else if (TYPES_COMPATIBLE(typeof(_a), long long)) {\
-             test_op_type(_a, _b, op, "%lld", a, b, long long); \
-         } else if (TYPES_COMPATIBLE(typeof(_a), unsigned int)) {\
-             test_op_type(_a, _b, op, "%u", a, b, unsigned int); \
-         } else if (TYPES_COMPATIBLE(typeof(_a), unsigned long)) {\
-             test_op_type(_a, _b, op, "%lu", a, b, unsigned long); \
-         } else if (TYPES_COMPATIBLE(typeof(_a), unsigned long long)) {\
-             test_op_type(_a, _b, op, "%llu", a, b, unsigned long long); \
-         } else if (TYPES_COMPATIBLE(typeof(_a), char)) {\
-             test_op_type(_a, _b, op, "%c", a, b, char); \
-         } else if (TYPES_COMPATIBLE(typeof(_a), unsigned char)) {\
-             test_op_type(_a, _b, op, "%c", a, b, unsigned char); \
-         } else if (TYPES_COMPATIBLE(typeof(_a), uintptr_t)) {\
-             test_op_type(_a, _b, op, "0x%" PRIxPTR, a, b, uintptr_t);\
-         } else { \
-             _test_abort("Cannot use test_op on this type", __FILE__, __LINE__);\
-         }\
+         test_op_type(_a, _b, op, a, b); \
     } while (0)
 
 /* Pretty printed test_check wrapper macros for basic comparisons on base types,

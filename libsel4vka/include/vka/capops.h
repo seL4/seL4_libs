@@ -128,6 +128,12 @@ static inline int vka_untyped_retype(vka_object_t *untyped, int type, int size_b
                                      const cspacepath_t *dest)
 {
     size_bits = vka_get_object_size(type, size_bits);
+
+    if (type == seL4_CapTableObject) {
+        // The slot bits will be re-added during the syscall
+        size_bits -= seL4_SlotBits;
+    }
+
     return seL4_Untyped_Retype(untyped->cptr, type, size_bits, dest->root, dest->dest, dest->destDepth, dest->offset,
                                num_objects);
 }

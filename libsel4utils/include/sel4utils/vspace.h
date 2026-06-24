@@ -35,7 +35,7 @@
 /* These definitions are only here so that you can take the size of them.
  * TOUCHING THESE DATA STRUCTURES IN ANY WAY WILL BREAK THE WORLD
  */
-#define KERNEL_RESERVED_START (ALIGN_DOWN(seL4_UserTop, PAGE_SIZE_4K))
+#define KERNEL_RESERVED_START (seL4_UserVSpaceTop + 1)
 #define VSPACE_LEVEL_SIZE BIT(VSPACE_LEVEL_BITS)
 
 typedef struct vspace_mid_level {

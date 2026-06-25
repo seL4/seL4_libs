@@ -24,8 +24,11 @@
 #define INDEX_FOR_LEVEL(addr, l) ( ( (addr) >> ((l) * VSPACE_LEVEL_BITS + PAGE_BITS_4K)) & MASK(VSPACE_LEVEL_BITS))
 #define TOP_LEVEL_INDEX(x) INDEX_FOR_LEVEL(x, VSPACE_NUM_LEVELS - 1)
 
-#define BYTES_FOR_LEVEL(l) BIT(VSPACE_LEVEL_BITS * (l) + PAGE_BITS_4K)
-#define ALIGN_FOR_LEVEL(l) (~(MASK(VSPACE_LEVEL_BITS * (l) + PAGE_BITS_4K)))
+#define BITS_FOR_LEVEL(l) (VSPACE_LEVEL_BITS * (l) + PAGE_BITS_4K)
+#define BYTES_FOR_LEVEL(l) BIT(BITS_FOR_LEVEL(l))
+#define ALIGN_FOR_LEVEL(l) (~(MASK(BITS_FOR_LEVEL(l))))
+
+#define VSPACE_VA_TOP (MASK(BITS_FOR_LEVEL(VSPACE_NUM_LEVELS)))
 
 void *create_level(vspace_t *vspace, size_t size);
 void *bootstrap_create_level(vspace_t *vspace, size_t size);

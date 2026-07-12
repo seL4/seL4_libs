@@ -199,6 +199,10 @@ static long sys_mmap_impl_static(void *addr, size_t length, int prot, int flags,
         uintptr_t adjusted_length = pages * PAGE_SIZE_4K;
 
         /* Steal from the top */
+        /* Guard against unsigned underflow/wrap */
+        if (adjusted_length > morecore_top) {
+            return -ENOMEM;
+        }
         uintptr_t base = morecore_top - adjusted_length;
         if (base < morecore_base) {
             return -ENOMEM;

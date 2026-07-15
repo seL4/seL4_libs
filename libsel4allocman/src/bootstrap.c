@@ -1067,7 +1067,7 @@ static int handle_device_untyped_cap(add_untypeds_state_t *state, uintptr_t padd
 {
     bool cap_tainted = false;
     int error;
-    uintptr_t ut_end = paddr + BIT(size_bits);
+    uint64_t ut_end = (uint64_t)paddr + BIT(size_bits);
     int num_regions = 0;
     if (state != NULL) {
         num_regions = state->num_regions;

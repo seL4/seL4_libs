@@ -137,7 +137,7 @@ static int _refill_pool(allocman_t *alloc, utspace_split_t *split, struct utspac
             if (node->paddr == ALLOCMAN_NO_PADDR) {
                 continue;
             }
-            if (node->paddr <= paddr && paddr < node->paddr + BIT(size_bits)) {
+            if (node->paddr <= paddr && paddr <= node->paddr + MASK(size_bits)) {
                 return 0;
             }
         }
@@ -159,7 +159,7 @@ static int _refill_pool(allocman_t *alloc, utspace_split_t *split, struct utspac
         node = heads[size_bits + 1];
     } else {
         for (node = heads[size_bits + 1]; node && (node->paddr == ALLOCMAN_NO_PADDR || !(node->paddr <= paddr
-                                                                                         && paddr < node->paddr + BIT(size_bits + 1))); node = node->next);
+                                                                                         && paddr <= node->paddr + MASK(size_bits + 1))); node = node->next);
         /* _refill_pool should not have returned if this wasn't possible */
         assert(node);
     }
@@ -227,7 +227,7 @@ static struct utspace_split_node **find_head_for_paddr(struct utspace_split_node
                 /* skip nodes with no physical address */
                 continue;
             }
-            if (node->paddr <= paddr && paddr + BIT(size_bits) <= node->paddr + BIT(i)) {
+            if (node->paddr <= paddr && paddr + MASK(size_bits) <= node->paddr + MASK(i)) {
                 return head;
             }
         }

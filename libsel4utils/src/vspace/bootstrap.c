@@ -52,12 +52,20 @@ static int common_init(vspace_t *vspace, vka_t *vka, seL4_CPtr vspace_root,
 static void common_init_post_bootstrap(vspace_t *vspace, sel4utils_map_page_fn map_page)
 {
     sel4utils_alloc_data_t *data = get_alloc_data(vspace);
-    /* reserve the kernel region, we do this by marking the
-     * top level entry as RESERVED */
-    if (!data->is_empty) {
-        for (int i = TOP_LEVEL_INDEX(KERNEL_RESERVED_START);
-             i < VSPACE_LEVEL_SIZE; i++) {
-            data->top_level->table[i] = RESERVED;
+
+    /* We only have regions to reserve if the seL4_UserVSpaceTop is less than
+     * the top of the VA range. This happens for for AArch64 hyp-mode with
+     * a PA Range of 2^40. Otherwise, we would be reserving random indices
+     * at the bottom of the virtual address range due to wrapping.
+     */
+    if (seL4_UserVSpaceTop <= VSPACE_VA_TOP) {
+        /* reserve the kernel region, we do this by marking the
+         * top level entry as RESERVED */
+        if (!data->is_empty) {
+            for (int i = TOP_LEVEL_INDEX(KERNEL_RESERVED_START);
+                 i < VSPACE_LEVEL_SIZE; i++) {
+                data->top_level->table[i] = RESERVED;
+            }
         }
     }
 

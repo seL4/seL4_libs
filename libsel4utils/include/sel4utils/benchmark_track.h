@@ -39,10 +39,10 @@ static inline void seL4_BenchmarkTrackDumpSummary(benchmark_track_kernel_entry_t
         index++;
     }
 
-    fprintf(fd, "Number of system call invocations %d\n", syscall_entries);
-    fprintf(fd, "Number of interrupt invocations %d\n", interrupt_entries);
-    fprintf(fd, "Number of user-level faults %d\n", userlevelfault_entries);
-    fprintf(fd, "Number of VM faults %d\n", vmfault_entries);
+    fprintf(fd, "Number of system call invocations %lu\n", (unsigned long) syscall_entries);
+    fprintf(fd, "Number of interrupt invocations %lu\n", (unsigned long) interrupt_entries);
+    fprintf(fd, "Number of user-level faults %lu\n", (unsigned long) userlevelfault_entries);
+    fprintf(fd, "Number of VM faults %lu\n", (unsigned long) vmfault_entries);
 }
 
 /* Print out logged system call invocations */
@@ -62,14 +62,14 @@ static inline void seL4_BenchmarkTrackDumpFullSyscallLog(benchmark_track_kernel_
 
     while (logBuffer[index].start_time != 0 && (index * sizeof(benchmark_track_kernel_entry_t)) < logSize) {
         if (logBuffer[index].entry.path == Entry_Syscall) {
-            fprintf(fd, "|     %-15d|     %-15d|     %-15llu|     %-15d|     %-15d|     %-15d|     %-15d|\n",
-                    index,
-                    logBuffer[index].entry.syscall_no,
-                    (uint64_t) logBuffer[index].start_time,
-                    logBuffer[index].duration,
-                    logBuffer[index].entry.cap_type,
-                    logBuffer[index].entry.invocation_tag,
-                    logBuffer[index].entry.is_fastpath);
+            fprintf(fd, "|     %-15lu|     %-15lu|     %-15"PRIu64"|     %-15lu|     %-15lu|     %-15lu|     %-15lu|\n",
+                    (unsigned long) index,
+                    (unsigned long) logBuffer[index].entry.syscall_no,
+                    logBuffer[index].start_time,
+                    (unsigned long) logBuffer[index].duration,
+                    (unsigned long) logBuffer[index].entry.cap_type,
+                    (unsigned long) logBuffer[index].entry.invocation_tag,
+                    (unsigned long) logBuffer[index].entry.is_fastpath);
         }
         index++;
     }
@@ -91,11 +91,11 @@ static inline void seL4_BenchmarkTrackDumpFullInterruptLog(benchmark_track_kerne
 
     while (logBuffer[index].start_time != 0 && (index * sizeof(benchmark_track_kernel_entry_t)) < logSize) {
         if (logBuffer[index].entry.path == Entry_Interrupt) {
-            fprintf(fd, "|     %-15d|     %-15d|     %-15llu|     %-15d|\n", \
-                    index,
-                    logBuffer[index].entry.word,
+            fprintf(fd, "|     %-15lu|     %-15lu|     %-15"PRIu64"|     %-15lu|\n", \
+                    (unsigned long) index,
+                    (unsigned long) logBuffer[index].entry.word,
                     logBuffer[index].start_time,
-                    logBuffer[index].duration);
+                    (unsigned long) logBuffer[index].duration);
         }
         index++;
     }

@@ -93,6 +93,13 @@ typedef union {
     uint32_t raw;
 } ia32_pmc_perfevtsel_t;
 
+#define IA32_PERF_GLOBAL_CTRL_MSR 0x38F
+#define IA32_FIXED_CTR1_EN BIT(33)
+
+#define IA32_FIXED_CTR_CTRL_MSR 0x38D
+#define IA32_FIXED_CTR1_COUNT_OS BIT(4)
+#define IA32_FIXED_CTR1_COUNT_USER BIT(5)
+
 //Convenient execution of CPUID instruction. The first version isn't volatile, so is for querying the processor; the second version just serialises.
 //This looks slow, but gcc inlining is smart enough to optimise away all the memory references, and takes unused information into account.
 static FASTFN void sel4bench_private_cpuid(uint32_t leaf, uint32_t subleaf, uint32_t * eax, uint32_t * ebx, uint32_t * ecx, uint32_t * edx)
@@ -125,16 +132,6 @@ static FASTFN void sel4bench_private_cpuid_serial()
 static FASTFN void sel4bench_private_lfence()
 {
     asm volatile("lfence");
-}
-
-static FASTFN uint64_t sel4bench_private_rdtsc()
-{
-    uint32_t lo, hi;
-    asm volatile (
-        "rdtsc"
-        : "=a"(lo), "=d"(hi)
-    );
-    return (((uint64_t)hi << 32ull) | (uint64_t)lo);
 }
 
 static FASTFN uint64_t sel4bench_private_rdpmc(uint32_t counter)

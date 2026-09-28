@@ -1,5 +1,6 @@
 /*
  * Copyright 2017, Data61, CSIRO (ABN 41 687 119 230)
+ * Copyright 2026, UNSW
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -13,24 +14,7 @@
 #include <sel4bench/types.h>
 
 #define SEL4BENCH_READ_CCNT(var) do { \
-    uint32_t low, high; \
-    asm volatile( \
-        "movl $0, %%eax \n" \
-        "movl $0, %%ecx \n" \
-        "cpuid \n" \
-        "rdtsc \n" \
-        "movl %%edx, %0 \n" \
-        "movl %%eax, %1 \n" \
-        "movl $0, %%eax \n" \
-        "movl $0, %%ecx \n" \
-        "cpuid \n" \
-        : \
-         "=r"(high), \
-         "=r"(low) \
-        : \
-        : "eax", "ebx", "ecx", "edx" \
-    ); \
-    (var) = (((uint64_t)high) << 32ull) | ((uint64_t)low); \
+    (var) = sel4bench_get_cycle_count(); \
 } while(0)
 
 /* Intel docs are somewhat unclear as to exactly how to serialize PMCs.
@@ -113,15 +97,70 @@ static FASTFN void sel4bench_init()
 #ifndef CONFIG_EXPORT_PMC_USER
     seL4_DebugRun(&sel4bench_private_enable_user_pmc, NULL);
 #endif
+
+    /* Enable the cycle counter
+     * Documents referenced:
+     * 1. Intel® 64 and IA-32 Architectures Software Developer’s Manual
+     *    Combined Volumes: 1, 2A, 2B, 2C, 2D, 3A, 3B, 3C, 3D, and 4
+     *    Order Number: 325462-091US March 2026
+     */
+    sel4bench_private_cpuid(IA32_CPUID_LEAF_PMC, 0, &cpuid_eax, &cpuid_ebx, &cpuid_ecx, &cpuid_edx);
+    uint8_t version = cpuid_eax & 0xFFUL;
+    /* Need at least version 2 for fixed-function performance counter register.
+     * Section "22.2.2 Architectural Performance Monitoring Version 2"
+     * Chapter "PERFORMANCE MONITORING"
+     * Page "Vol. 3B 22-5" */
+    if (version < 2)
+    {
+        ZF_LOGE("CPU does not support cycle counting: version 0x%x < required 2.\n", version);
+        return;
+    }
+
+    /* We care about IA32_FIXED_CTR1, also known as CPU_CLK_UNHALTED.THREAD.
+     * Description from SDM: "The CPU_CLK_UNHALTED.THREAD event counts the
+     * number of core cycles while the logical processor is not in a
+     * halt state."
+     * Table 22-1. Association of Fixed-Function Performance Counters with Architectural Performance Events
+     * Chapter "PERFORMANCE MONITORING"
+     * Page "Vol. 3B 22-7"
+     */
+    seL4_Uint8 num_fixed_ctrs = cpuid_edx & 0x1F;
+    if (num_fixed_ctrs < 2 && !(cpuid_ecx & BIT(1)))
+    {
+        ZF_LOGE("CPU does not support IA32_FIXED_CTR1: NUM_FIXED_CTRS %u, ECX bitmap 0x%x.\n",
+                num_fixed_ctrs, cpuid_ecx);
+        return;
+    }
+
+    /* Configure the counter to count both OS and user code. See layout at:
+     * Figure 22-2. Layout of IA32_FIXED_CTR_CTRL MSR
+     * Chapter "PERFORMANCE MONITORING"
+     * Page "22-6 Vol. 3B"
+     */
+    seL4_Uint64 ctrl = sel4bench_x86_rdmsr(IA32_FIXED_CTR_CTRL_MSR);
+    ctrl &= ~(0xFULL << 4);
+    ctrl |= IA32_FIXED_CTR1_COUNT_OS | IA32_FIXED_CTR1_COUNT_USER;
+    sel4bench_x86_wrmsr(IA32_FIXED_CTR_CTRL_MSR, ctrl);
+
+    /*
+     * Enable globally via IA32_PERF_GLOBAL_CTRL, see layout at:
+     * Figure 22-3. Layout of IA32_PERF_GLOBAL_CTRL MSR
+     * Chapter "PERFORMANCE MONITORING"
+     * Page "Vol. 3B 22-7"
+     */
+    sel4bench_x86_wrmsr(IA32_PERF_GLOBAL_CTRL_MSR, sel4bench_x86_rdmsr(IA32_PERF_GLOBAL_CTRL_MSR) | IA32_FIXED_CTR1_EN);
 }
 
 static FASTFN ccnt_t sel4bench_get_cycle_count()
 {
+    uint32_t pmc_fixed = BIT(30);
+    uint32_t ia32_fixed_ctr1 = 1;
+
     sel4bench_private_serialize_pmc(); /* Serialise all preceding instructions */
-    uint64_t time = sel4bench_private_rdtsc();
+    uint64_t result = sel4bench_private_rdpmc(pmc_fixed | ia32_fixed_ctr1);
     sel4bench_private_serialize_pmc(); /* Serialise all following instructions */
 
-    return time;
+    return result;
 }
 
 static FASTFN seL4_Word sel4bench_get_num_counters()
@@ -166,7 +205,7 @@ static CACHESENSFN ccnt_t sel4bench_get_counters(counter_bitfield_t mask, ccnt_t
             values[counter] = sel4bench_private_rdpmc(counter);
         }
 
-    uint64_t time = sel4bench_private_rdtsc();
+    uint64_t time = sel4bench_get_cycle_count();
     sel4bench_private_serialize_pmc();    /* Serialise all following instructions */
 
     return time;

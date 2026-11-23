@@ -291,6 +291,29 @@ typedef int (*vspace_deferred_rights_map_pages_at_vaddr_fn)(vspace_t *vspace, se
                                                             void *vaddr, size_t num_pages,
                                                             size_t size_bits, seL4_CapRights_t rights, reservation_t reservation);
 
+/**
+ * Map in existing page capabilities, using contiguous virtual memory at the specified vaddr.
+ * Mapping is performed with the rights given by the caller since we don't have a reservation.
+ * NOTE: be careful. we don't check that the memory is reserved here
+ *
+ * This will FAIL if the virtual address is already mapped in.
+ *`
+ * @param vspace the virtual memory allocator used.
+ * @param seL4_CPtr caps array of caps to map in
+ * @param uintptr_t cookies array of allocation cookies. Populate this if you want the vspace to
+ *                         be able to free the caps for you with a vka. NULL acceptable.
+ * @param size_bits size, in bits, of an individual page -- all pages must be the same size.
+ * @param num_pages the number of pages to map in (must correspond to the size of the array).
+ * @param rights the rights to map the pages in.
+ * @param cacheable cacheable attribute to map pages into the vspace with
+ *
+ * @return seL4_NoError on success. -1 on failure.
+ */
+typedef int (*vspace_map_pages_at_vaddr_no_res_fn)(vspace_t *vspace, seL4_CPtr caps[],
+                                                   uintptr_t cookies[], void *vaddr,
+                                                   size_t num_pages, size_t size_bits,
+                                                   seL4_CapRights_t rights, int cacheable);
+
 /* potential values for vspace_unmap_pages */
 #define VSPACE_FREE ((vka_t *) 0xffffffff)
 #define VSPACE_PRESERVE ((vka_t *) 0)
@@ -474,6 +497,7 @@ struct vspace {
 
     vspace_map_pages_at_vaddr_fn map_pages_at_vaddr;
     vspace_deferred_rights_map_pages_at_vaddr_fn deferred_rights_map_pages_at_vaddr;
+    vspace_map_pages_at_vaddr_no_res_fn map_pages_at_vaddr_no_res;
 
     vspace_unmap_pages_fn unmap_pages;
     vspace_tear_down_fn tear_down;
@@ -659,6 +683,34 @@ static inline int vspace_deferred_rights_map_pages_at_vaddr(vspace_t *vspace, se
 
     return vspace->deferred_rights_map_pages_at_vaddr(vspace, caps, cookies, vaddr, num_pages,
                                                       size_bits, rights, reservation);
+}
+
+static inline int vspace_map_pages_at_vaddr_no_res(vspace_t *vspace, seL4_CPtr caps[],
+                                                   uintptr_t cookies[], void *vaddr,
+                                                   size_t num_pages, size_t size_bits,
+                                                   seL4_CapRights_t rights, int cacheable)
+{
+    if (vspace == NULL) {
+        ZF_LOGE("vspace is NULL");
+        return -1;
+    }
+
+    if (num_pages == 0) {
+        ZF_LOGW("Attempt to map 0 pages");
+        return -1;
+    }
+
+    if (vaddr == NULL) {
+        ZF_LOGW("Mapping NULL");
+    }
+
+    if (vspace->map_pages_at_vaddr_no_res == NULL) {
+        ZF_LOGW("Unimplemented\n");
+        return -1;
+    }
+
+    return vspace->map_pages_at_vaddr_no_res(vspace, caps, cookies, vaddr, num_pages, size_bits,
+                                             rights, cacheable);
 }
 
 static inline void vspace_unmap_pages(vspace_t *vspace, void *vaddr, size_t num_pages, size_t size_bits, vka_t *vka)

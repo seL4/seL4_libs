@@ -386,6 +386,19 @@ int sel4utils_deferred_rights_map_pages_at_vaddr(vspace_t *vspace, seL4_CPtr cap
                               rights, res->cacheable);
 }
 
+int sel4utils_map_pages_at_vaddr_no_res(vspace_t *vspace, seL4_CPtr caps[], uintptr_t cookies[],
+                                        void *vaddr, size_t num_pages, size_t size_bits,
+                                        seL4_CapRights_t rights, int cacheable)
+{
+    if (!sel4_valid_size_bits(size_bits)) {
+        ZF_LOGE("Invalid size_bits %zu", size_bits);
+        return -1;
+    }
+
+    return map_pages_at_vaddr(vspace, caps, cookies, vaddr, num_pages, size_bits, rights,
+                              cacheable);
+}
+
 void *sel4utils_map_pages(vspace_t *vspace, seL4_CPtr caps[], uintptr_t cookies[],
                           seL4_CapRights_t rights, size_t num_pages, size_t size_bits,
                           int cacheable)
